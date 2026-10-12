@@ -15,9 +15,9 @@ let lastSweep = 0;
 function sweep(now: number) {
   if (now - lastSweep < 60_000) return;
   lastSweep = now;
-  for (const [key, bucket] of buckets) {
+  buckets.forEach((bucket, key) => {
     if (bucket.resetAt <= now) buckets.delete(key);
-  }
+  });
 }
 
 export interface RateLimitResult {

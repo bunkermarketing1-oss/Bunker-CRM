@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/auth";
+import { clientBelongsToOrg, leadBelongsToOrg } from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +12,36 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
+    const clientId = searchParams.get("clientId");
+    const leadId = searchParams.get("leadId");
 
-    const where: any = {
-      OR: [
+    const where: any = {};
+
+    if (clientId) {
+      const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
+      if (!belongs) {
+        return NextResponse.json(
+          { success: false, error: "Cliente no pertenece a su organización." },
+          { status: 404 }
+        );
+      }
+      where.clientId = clientId;
+    } else if (leadId) {
+      const belongs = await leadBelongsToOrg(user!.organizationId, leadId);
+      if (!belongs) {
+        return NextResponse.json(
+          { success: false, error: "Prospecto no pertenece a su organización." },
+          { status: 404 }
+        );
+      }
+      where.leadId = leadId;
+    } else {
+      where.OR = [
         { client: { organizationId: user!.organizationId } },
         { lead: { organizationId: user!.organizationId } },
         { user: { memberships: { some: { organizationId: user!.organizationId } } } },
-      ],
-    };
+      ];
+    }
 
     if (status && status !== "all") {
       where.status = status;

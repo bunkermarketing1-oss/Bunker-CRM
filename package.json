@@ -13,6 +13,7 @@
     "test:auth": "node tests/auth-suite.js",
     "test:leads": "node tests/leads-suite.js",
     "test:audit": "node tests/audit-suite.js",
+    "test:clients": "node tests/clients-suite.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

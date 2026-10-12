@@ -86,6 +86,8 @@ async function main() {
     ["GET", "/api/leads"], ["POST", "/api/leads"], ["PUT", "/api/leads"], ["DELETE", "/api/leads?id=x"],
     ["GET", "/api/leads/check-duplicate?email=a@b.co"], ["POST", "/api/leads/00000000-0000-0000-0000-000000000000/convert"],
     ["GET", "/api/clients"], ["POST", "/api/clients"], ["PUT", "/api/clients"], ["DELETE", "/api/clients?id=x"],
+    ["GET", "/api/clients/00000000-0000-0000-0000-000000000000"], ["PUT", "/api/clients/00000000-0000-0000-0000-000000000000"], ["DELETE", "/api/clients/00000000-0000-0000-0000-000000000000"],
+    ["GET", "/api/contacts"], ["POST", "/api/contacts"], ["PUT", "/api/contacts"], ["DELETE", "/api/contacts?id=x"],
     ["GET", "/api/pipeline"], ["POST", "/api/pipeline"], ["PUT", "/api/pipeline"], ["DELETE", "/api/pipeline?id=x"],
     ["GET", "/api/dashboard"], ["GET", "/api/users"], ["GET", "/api/activities"], ["POST", "/api/activities"],
     ["GET", "/api/tasks"], ["POST", "/api/tasks"], ["PUT", "/api/tasks"], ["DELETE", "/api/tasks?id=x"],
@@ -189,6 +191,12 @@ async function main() {
   if (cOwnerJ.client) created.clients.push(cOwnerJ.client.id);
   record("CLIENT-OWNER-ISO", cOwner.status === 400, `POST clients con ownerId de otra org -> HTTP ${cOwner.status} (esperado 400)`);
 
+  // ---------- Contacts cross-org isolation ----------
+  const cContact = await req("/api/contacts", { method: "POST", headers: jh(token), body: JSON.stringify({ clientId: foreignClient.id, firstName: "Audit Contact" }) });
+  const cContactJ = await cContact.json().catch(() => ({}));
+  if (cContactJ.contact) created.contacts.push(cContactJ.contact.id);
+  record("CONTACT-CLIENT-ISO", cContact.status === 404, `POST contact con clientId de otra org -> HTTP ${cContact.status} (esperado 404)`);
+
   // ---------- Convert: foreign stage, idempotency, atomicity ----------
   const convLead = await (await req("/api/leads", { method: "POST", headers: jh(token), body: JSON.stringify({ name: `Audit Convert ${STAMP}`, email: `convert.${stamp}@audit.test`, estimatedValue: 100 }) })).json();
   created.leads.push(convLead.lead.id);
@@ -225,6 +233,7 @@ async function main() {
   } finally {
     // Cleanup: only what this run created
     try {
+      if (created.contacts.length) await prisma.contact.deleteMany({ where: { id: { in: created.contacts } } });
       if (created.opps.length) await prisma.opportunity.deleteMany({ where: { id: { in: created.opps } } });
       const strayClients = await prisma.client.findMany({ where: { OR: [{ id: { in: created.clients } }, { notes: { contains: `Audit Convert ${STAMP}` } }, { name: { contains: String(STAMP) } }] }, select: { id: true } });
       const cids = strayClients.map((c) => c.id);

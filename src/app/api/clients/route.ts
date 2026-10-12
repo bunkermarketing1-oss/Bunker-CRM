@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status");
+    const industry = searchParams.get("industry");
+    const ownerId = searchParams.get("ownerId");
+    const sort = searchParams.get("sort") || "newest";
 
     const where: any = {
       organizationId: user!.organizationId,
@@ -23,25 +26,41 @@ export async function GET(req: NextRequest) {
       where.status = status;
     }
 
-    if (search) {
+    if (industry && industry !== "all") {
+      where.industry = industry;
+    }
+
+    if (ownerId && ownerId !== "all") {
+      where.ownerId = ownerId;
+    }
+
+    if (search.trim()) {
+      const cleanSearch = search.trim();
       where.AND = [
         {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { companyName: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-            { industry: { contains: search, mode: "insensitive" } },
+            { name: { contains: cleanSearch, mode: "insensitive" } },
+            { companyName: { contains: cleanSearch, mode: "insensitive" } },
+            { email: { contains: cleanSearch, mode: "insensitive" } },
+            { phone: { contains: cleanSearch, mode: "insensitive" } },
+            { industry: { contains: cleanSearch, mode: "insensitive" } },
           ],
         },
       ];
     }
 
+    let orderBy: any = { createdAt: "desc" };
+    if (sort === "name_asc") orderBy = { name: "asc" };
+    else if (sort === "name_desc") orderBy = { name: "desc" };
+    else if (sort === "revenue_desc") orderBy = { revenue: "desc" };
+    else if (sort === "revenue_asc") orderBy = { revenue: "asc" };
+    else if (sort === "oldest") orderBy = { createdAt: "asc" };
+
     const clients = await prisma.client.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       include: {
-        owner: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true, role: true } },
         contacts: { where: { isDeleted: false } },
         opportunities: { where: { isDeleted: false }, include: { stage: true } },
         activities: { take: 5, orderBy: { performedAt: "desc" } },

@@ -36,7 +36,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           where: { isDeleted: false },
           include: {
             stage: { select: { id: true, name: true, color: true } },
-            owner: { select: { id: true, name: true, email: true } },
           },
           orderBy: { createdAt: "desc" },
         },
