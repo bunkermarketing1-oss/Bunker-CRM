@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
       let score = 65;
       const reason = [];
 
-      if (val > 50000) {
+      if (val >= 3000) {
         score += 20;
-        reason.push("Presupuesto de inversión superior al promedio ($50K+ MXN)");
-      } else if (val > 25000) {
+        reason.push("Presupuesto de inversión superior al promedio ($3K+ USD)");
+      } else if (val >= 1500) {
         score += 10;
-        reason.push("Presupuesto viable para servicios de pauta y contenido");
+        reason.push("Presupuesto viable para servicios de pauta y contenido ($1.5K+ USD)");
       }
 
       if (source === "referral") {

@@ -31,7 +31,7 @@ export default function ReportsPage() {
             <Target className="w-4 h-4 text-[#D97757]" />
           </div>
           <div className="text-3xl font-serif font-normal text-[#1F1E1D]">
-            $1,850 <span className="text-xs font-sans text-[#82807C]">MXN</span>
+            $120 <span className="text-xs font-sans text-[#82807C]">USD</span>
           </div>
           <div className="text-xs text-emerald-800 font-medium flex items-center gap-1">
             <span>▼ 18% optimizado mediante scoring con IA</span>
@@ -44,7 +44,7 @@ export default function ReportsPage() {
             <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-3xl font-serif font-normal text-[#1F1E1D]">
-            $58,000 <span className="text-xs font-sans text-[#82807C]">MXN</span>
+            $3,500 <span className="text-xs font-sans text-[#82807C]">USD</span>
           </div>
           <div className="text-xs text-emerald-800 font-medium flex items-center gap-1">
             <span>▲ 24% respecto al mes anterior</span>
@@ -72,10 +72,10 @@ export default function ReportsPage() {
         </h2>
         <div className="space-y-4">
           {[
-            { channel: "Meta Ads (Instagram & Facebook)", share: 48, leads: 58, revenue: "$280,000 MXN", color: "bg-[#D97757]" },
-            { channel: "Google Search & Display Ads", share: 32, leads: 39, revenue: "$195,000 MXN", color: "bg-blue-600" },
-            { channel: "Recomendaciones Directas (Referrals)", share: 15, leads: 18, revenue: "$140,000 MXN", color: "bg-emerald-600" },
-            { channel: "TikTok Ads & Orgánico", share: 5, leads: 6, revenue: "$32,000 MXN", color: "bg-purple-600" },
+            { channel: "Meta Ads (Instagram & Facebook)", share: 48, leads: 58, revenue: "$18,500 USD", color: "bg-[#D97757]" },
+            { channel: "Google Search & Display Ads", share: 32, leads: 39, revenue: "$12,800 USD", color: "bg-blue-600" },
+            { channel: "Recomendaciones Directas (Referrals)", share: 15, leads: 18, revenue: "$9,200 USD", color: "bg-emerald-600" },
+            { channel: "TikTok Ads & Orgánico", share: 5, leads: 6, revenue: "$2,100 USD", color: "bg-purple-600" },
           ].map((item, idx) => (
             <div key={idx} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">

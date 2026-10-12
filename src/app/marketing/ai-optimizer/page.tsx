@@ -155,7 +155,7 @@ export default function MetaAiOptimizerPage() {
                     <div className="flex items-center gap-6 text-xs">
                       <div>
                         <div className="text-[10px] text-[#9C9890] uppercase font-semibold">Inversión Diaria</div>
-                        <div className="font-bold text-[#1F1E1D]">${camp.budgetDaily} MXN/día</div>
+                        <div className="font-bold text-[#1F1E1D]">${camp.budgetDaily} USD/día</div>
                       </div>
                       <div>
                         <div className="text-[10px] text-[#9C9890] uppercase font-semibold">Leads Generados</div>
@@ -166,7 +166,7 @@ export default function MetaAiOptimizerPage() {
                         <div className={`font-black ${
                           camp.costPerLead <= camp.targetCpl ? "text-emerald-700" : "text-[#C15F3C]"
                         }`}>
-                          ${camp.costPerLead.toFixed(2)} MXN
+                          ${camp.costPerLead.toFixed(2)} USD
                         </div>
                       </div>
                       <div>

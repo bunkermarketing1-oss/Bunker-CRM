@@ -83,7 +83,7 @@ export default function LeadsPage() {
     phone: "",
     source: "meta_ads",
     campaign: "",
-    estimatedValue: "45000",
+    estimatedValue: "2500",
     ownerId: "",
     notes: "",
   });
@@ -220,7 +220,7 @@ export default function LeadsPage() {
         phone: "",
         source: "meta_ads",
         campaign: "",
-        estimatedValue: "45000",
+        estimatedValue: "2500",
         ownerId: "",
         notes: "",
       });
@@ -390,7 +390,7 @@ export default function LeadsPage() {
       "Origen",
       "Campana",
       "Estado",
-      "Presupuesto_MXN",
+      "Presupuesto_USD",
       "Score_IA",
       "Asesor",
       "Fecha_Registro",
@@ -523,7 +523,7 @@ export default function LeadsPage() {
           </div>
           <div className="text-2xl font-bold text-[#141414] tracking-tight">
             ${totalPipelineVal.toLocaleString()}{" "}
-            <span className="text-xs font-normal text-[#8C887E]">MXN</span>
+            <span className="text-xs font-normal text-[#8C887E]">USD</span>
           </div>
           <div className="text-[11px] text-[#9A7320] font-medium">
             Presupuesto estimado de pautas
@@ -814,7 +814,7 @@ export default function LeadsPage() {
                         <div className="font-bold text-[#141414]">
                           ${lead.estimatedValue?.toLocaleString() || 0}
                         </div>
-                        <div className="text-[10px] text-[#8C887E]">MXN / mes</div>
+                        <div className="text-[10px] text-[#8C887E]">USD / mes</div>
                       </td>
 
                       {/* Status */}
@@ -1077,7 +1077,7 @@ export default function LeadsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#141414] mb-1">
-                    Presupuesto Mensual ($ MXN)
+                    Presupuesto Mensual ($ USD)
                   </label>
                   <input
                     type="number"
@@ -1292,7 +1292,7 @@ export default function LeadsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#141414] mb-1">
-                    Presupuesto ($ MXN)
+                    Presupuesto ($ USD)
                   </label>
                   <input
                     type="number"
@@ -1408,7 +1408,7 @@ export default function LeadsPage() {
                   Presupuesto Estimado
                 </div>
                 <div className="font-bold text-[#141414]">
-                  ${selectedLead.estimatedValue?.toLocaleString()} MXN
+                  ${selectedLead.estimatedValue?.toLocaleString()} USD
                 </div>
               </div>
             </div>

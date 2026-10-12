@@ -18,7 +18,7 @@ export default function PipelinePage() {
 
   const [dealForm, setDealForm] = useState({
     title: "",
-    value: "50000",
+    value: "3000",
     stageId: "",
     probability: "50",
   });
@@ -76,7 +76,7 @@ export default function PipelinePage() {
         setIsCreateOpen(false);
         setDealForm({
           title: "",
-          value: "50000",
+          value: "3000",
           stageId: stages[0]?.id || "",
           probability: "50",
         });
@@ -108,7 +108,7 @@ export default function PipelinePage() {
           <div className="text-right hidden sm:block">
             <div className="text-[10px] text-[#9C9890] uppercase font-semibold">Valor Total</div>
             <div className="text-sm font-bold text-[#C15F3C]">
-              ${stats.totalPipelineValue.toLocaleString()} MXN
+              ${stats.totalPipelineValue.toLocaleString()} USD
             </div>
           </div>
 
@@ -143,7 +143,7 @@ export default function PipelinePage() {
                     <span className="font-semibold text-[#1F1E1D] text-xs">{stage.name}</span>
                   </div>
                   <div className="text-[10px] text-[#716F6A] mt-0.5">
-                    ${stageTotal.toLocaleString()} MXN
+                    ${stageTotal.toLocaleString()} USD
                   </div>
                 </div>
                 <span className="text-[10px] bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] px-2 py-0.5 rounded-full font-bold">
@@ -235,7 +235,7 @@ export default function PipelinePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor Comercial ($ MXN)</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor Comercial ($ USD)</label>
                   <input
                     type="number"
                     required

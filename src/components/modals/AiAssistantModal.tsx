@@ -17,7 +17,7 @@ export default function AiAssistantModal({ isOpen, onClose }: AiModalProps) {
   // Form states
   const [leadData, setLeadData] = useState({
     companyName: "Inmobiliaria Mar Azul",
-    estimatedValue: "75000",
+    estimatedValue: "3500",
     source: "meta_ads",
     notes: "Buscan captar inversionistas para preventa de condominios en Cancún.",
   });
@@ -159,7 +159,7 @@ export default function AiAssistantModal({ isOpen, onClose }: AiModalProps) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Presupuesto Estimado ($ MXN)</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Presupuesto Estimado ($ USD)</label>
                   <input
                     type="number"
                     value={leadData.estimatedValue}

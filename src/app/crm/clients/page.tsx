@@ -29,7 +29,7 @@ export default function ClientsPage() {
     phone: "",
     website: "",
     industry: "Bienes Raíces",
-    revenue: "50000",
+    revenue: "3000",
     notes: "",
   });
 
@@ -77,7 +77,7 @@ export default function ClientsPage() {
           phone: "",
           website: "",
           industry: "Bienes Raíces",
-          revenue: "50000",
+          revenue: "3000",
           notes: "",
         });
         setFeedback("¡Cliente comercial registrado con éxito!");
@@ -219,7 +219,7 @@ export default function ClientsPage() {
                 <div>
                   <span className="text-[10px] text-[#9C9890] block uppercase font-medium">Facturación</span>
                   <span className="text-xs font-bold text-[#1F1E1D]">
-                    ${client.revenue?.toLocaleString() || 0} MXN
+                    ${client.revenue?.toLocaleString() || 0} USD
                   </span>
                 </div>
 
@@ -274,7 +274,7 @@ export default function ClientsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor Contratado ($ MXN)</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor Contratado ($ USD)</label>
                   <input
                     type="number"
                     value={formData.revenue}
