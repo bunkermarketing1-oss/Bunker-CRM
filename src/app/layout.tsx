@@ -19,8 +19,9 @@ export default function RootLayout({
       <head>
         <title>Bunker Agency — CRM Híbrido con Automatización e IA</title>
         <meta name="description" content="Plataforma empresarial de Bunker Marketing para gestión comercial, pipeline, marketing multicanal e inteligencia artificial." />
+        <link rel="icon" href="/bunker-logo.png" />
       </head>
-      <body className="bg-[#FAF9F5] text-[#1F1E1D] min-h-screen">
+      <body className="bg-[#F6F5F2] text-[#141414] min-h-screen">
         <div className="flex">
           {/* Claude Style Sidebar */}
           <Sidebar onOpenAiModal={() => setIsAiModalOpen(true)} />

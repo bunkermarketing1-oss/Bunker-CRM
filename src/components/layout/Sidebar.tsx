@@ -57,6 +57,20 @@ export default function Sidebar({ onOpenAiModal }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-[#F0EFEA] border-r border-[#ECEAE3] flex flex-col h-screen fixed left-0 top-0 z-30 select-none p-4">
+      {/* Official Bunker Logo Brand Header */}
+      <div className="flex items-center justify-between px-2 pt-1 pb-3 mb-1">
+        <Link href="/dashboard" className="flex items-center gap-2 group">
+          <img
+            src="/bunker-logo.png"
+            alt="Bunker"
+            className="h-6 w-auto object-contain transition-transform group-hover:scale-105"
+          />
+          <span className="text-[10px] font-mono font-bold tracking-wider text-[#9A7320] bg-[#FAF0D7] border border-[#F2E5C4] px-1.5 py-0.5 rounded-md uppercase">
+            CRM
+          </span>
+        </Link>
+      </div>
+
       {/* Top Profile Card (Exact match to reference) */}
       <div className="bg-white rounded-2xl border border-[#ECEAE3] p-2.5 flex items-center justify-between shadow-xs mb-4">
         <div className="flex items-center gap-2.5 min-w-0">

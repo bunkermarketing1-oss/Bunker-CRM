@@ -16,8 +16,13 @@ export default function Topbar({ currentRole, onRoleChange, onOpenAiModal }: Top
 
   return (
     <header className="h-16 bg-[#F6F5F2]/95 backdrop-blur-md border-b border-[#ECEAE3] fixed top-0 right-0 left-64 z-20 px-8 flex items-center justify-between">
-      {/* Left: Friendly Greeting (Exact match to reference) */}
+      {/* Left: Friendly Greeting with Bunker Logo */}
       <div className="flex items-center gap-3">
+        <img
+          src="/bunker-logo.png"
+          alt="Bunker"
+          className="h-5 w-auto object-contain hidden md:block opacity-90 mr-1"
+        />
         <h1 className="text-lg font-bold text-[#141414] tracking-tight flex items-center gap-2">
           <span>👋</span>
           <span>Buenos días, Bunker Agency !</span>
