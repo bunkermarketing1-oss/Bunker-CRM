@@ -17,12 +17,113 @@
   --text-muted: #9C988F;
 }
 
+.dark {
+  --bg-main: #111113;
+  --bg-sidebar: #18181B;
+  --bg-card: #1E1E22;
+  --border-subtle: #2E2E34;
+  --border-gold: rgba(229, 193, 88, 0.5);
+  --accent-gold: #E5C158;
+  --accent-gold-light: #2A2415;
+  --btn-black: #FAF8F3;
+  --btn-black-hover: #FFFFFF;
+  --text-primary: #FAF8F3;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+}
+
 body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.dark body {
+  background-color: #111113 !important;
+  color: #FAF8F3 !important;
+}
+
+.dark header {
+  background-color: rgba(24, 24, 27, 0.95) !important;
+  border-color: #2E2E34 !important;
+}
+
+.dark aside {
+  background-color: #18181B !important;
+  border-color: #2E2E34 !important;
+}
+
+.dark .bg-\[\#FFFFFF\],
+.dark .bg-white {
+  background-color: #1E1E22 !important;
+  color: #FAF8F3;
+}
+
+.dark .bg-\[\#FAF9F5\],
+.dark .bg-\[\#F0EFEA\],
+.dark .bg-\[\#F6F5F2\],
+.dark .bg-\[\#FAF8F2\],
+.dark .bg-\[\#FAF8F3\],
+.dark .bg-\[\#F4F3EE\] {
+  background-color: #161619 !important;
+}
+
+.dark .text-\[\#1F1E1D\],
+.dark .text-\[\#141414\],
+.dark .text-\[\#1A1918\] {
+  color: #FAF8F3 !important;
+}
+
+.dark .text-\[\#716F6A\],
+.dark .text-\[\#6B6861\],
+.dark .text-\[\#8C887E\] {
+  color: #A1A1AA !important;
+}
+
+.dark .text-\[\#9C9890\],
+.dark .text-\[\#9C988F\],
+.dark .text-\[\#B3AFA5\] {
+  color: #71717A !important;
+}
+
+.dark .border-\[\#E8E6DF\],
+.dark .border-\[\#ECEAE3\],
+.dark .border-\[\#E6E2D8\],
+.dark .border-\[\#F0EEE6\],
+.dark .border-\[\#DDD9CF\] {
+  border-color: #2E2E34 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #161619 !important;
+  color: #FAF8F3 !important;
+  border-color: #2E2E34 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #71717A !important;
+}
+
+.dark .card-marfil {
+  background-color: #1E1E22 !important;
+  border-color: #2E2E34 !important;
+}
+
+.dark .btn-black-gold {
+  background-color: #26262B !important;
+  color: #FAF8F3 !important;
+  border-color: rgba(229, 193, 88, 0.45) !important;
+}
+
+.dark .btn-black-gold:hover {
+  background-color: #323238 !important;
+  border-color: rgba(229, 193, 88, 0.75) !important;
 }
 
 /* Minimal Scrollbar */
@@ -39,6 +140,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #BFBCB2;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3F3F46;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525B;
 }
 
 /* Luxury Obsidian Black & Gold Ivory Buttons */
