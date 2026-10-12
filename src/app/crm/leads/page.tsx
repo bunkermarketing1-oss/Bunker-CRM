@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Users,
   Plus,
   Search,
-  Filter,
   Trash2,
   ArrowRightCircle,
-  Phone,
   Mail,
   Building,
   X,
@@ -18,138 +16,414 @@ import {
   DollarSign,
   MessageCircle,
   ExternalLink,
-  ShieldCheck,
-  Calendar,
-  MoreVertical,
   Download,
   Flame,
+  Edit,
+  AlertTriangle,
+  UserCheck,
+  Tag,
+  Loader2,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+
+interface Lead {
+  id: string;
+  name: string;
+  companyName: string | null;
+  email: string | null;
+  phone: string | null;
+  normalizedPhone: string | null;
+  source: string;
+  campaign: string | null;
+  externalLeadId: string | null;
+  status: string;
+  qualification: number;
+  aiSummary: string | null;
+  estimatedValue: number;
+  notes: string | null;
+  isDemo: boolean;
+  createdAt: string;
+  ownerId: string | null;
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<any[]>([]);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
 
-  // Create Modal
+  // Notifications & Feedback
+  const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [createData, setCreateData] = useState({
     name: "",
     companyName: "",
     email: "",
     phone: "",
     source: "meta_ads",
+    campaign: "",
     estimatedValue: "45000",
+    ownerId: "",
     notes: "",
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string[]>>({});
+  const [duplicateWarning, setDuplicateWarning] = useState<any[] | null>(null);
+  const [submittingCreate, setSubmittingCreate] = useState(false);
 
-  // Detail Modal
-  const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  // Edit Modal State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    id: "",
+    name: "",
+    companyName: "",
+    email: "",
+    phone: "",
+    source: "manual",
+    status: "new",
+    campaign: "",
+    estimatedValue: "0",
+    ownerId: "",
+    notes: "",
+  });
+  const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string[]>>({});
+  const [submittingEdit, setSubmittingEdit] = useState(false);
 
-  const fetchLeads = async () => {
+  // Detail Drawer/Modal State
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  const showNotification = (text: string, type: "success" | "error" = "success") => {
+    setFeedback({ text, type });
+    setTimeout(() => setFeedback(null), 5000);
+  };
+
+  // Fetch Team Members
+  const fetchTeam = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (json.success && json.users) {
+        setTeamMembers(json.users);
+      }
+    } catch (e) {
+      console.error("Error fetching team members:", e);
+    }
+  }, []);
+
+  // Fetch Leads
+  const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
+      if (search.trim()) params.append("search", search.trim());
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (sourceFilter !== "all") params.append("source", sourceFilter);
+      if (ownerFilter !== "all") params.append("ownerId", ownerFilter);
 
       const res = await fetch(`/api/leads?${params.toString()}`);
       const json = await res.json();
       if (json.success) {
         setLeads(json.leads);
+      } else {
+        console.error("Fetch leads failed:", json.error);
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, sourceFilter, ownerFilter]);
+
+  useEffect(() => {
+    fetchTeam();
+  }, [fetchTeam]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchLeads();
-    }, 200);
+    }, 250);
     return () => clearTimeout(timer);
-  }, [search, statusFilter, sourceFilter]);
+  }, [fetchLeads]);
 
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  // Handle Create Lead Submission
+  const handleCreateLead = async (e: React.FormEvent, force: boolean = false) => {
+    if (e) e.preventDefault();
+    setSubmittingCreate(true);
+    setCreateFieldErrors({});
+
     try {
+      const payload: any = {
+        name: createData.name,
+        companyName: createData.companyName || null,
+        email: createData.email || null,
+        phone: createData.phone || null,
+        source: createData.source,
+        campaign: createData.campaign || null,
+        estimatedValue: parseFloat(createData.estimatedValue) || 0,
+        ownerId: createData.ownerId || null,
+        notes: createData.notes || null,
+        forceDuplicate: force,
+      };
+
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
+
       const json = await res.json();
-      if (json.success) {
-        setIsCreateOpen(false);
-        setFormData({
-          name: "",
-          companyName: "",
-          email: "",
-          phone: "",
-          source: "meta_ads",
-          estimatedValue: "45000",
-          notes: "",
-        });
-        setFeedback("¡Prospecto registrado exitosamente en la base de datos de Bunker!");
-        setTimeout(() => setFeedback(null), 4000);
-        fetchLeads();
-      } else {
-        alert(json.error);
+
+      if (res.status === 409 && json.duplicateDetected) {
+        // Duplicate detected
+        setDuplicateWarning(json.matches);
+        setSubmittingCreate(false);
+        return;
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+
+      if (!res.ok || !json.success) {
+        if (json.fieldErrors) {
+          setCreateFieldErrors(json.fieldErrors);
+        }
+        showNotification(json.error || "Error al registrar prospecto.", "error");
+        setSubmittingCreate(false);
+        return;
+      }
+
+      // Success
+      setIsCreateOpen(false);
+      setDuplicateWarning(null);
+      setCreateData({
+        name: "",
+        companyName: "",
+        email: "",
+        phone: "",
+        source: "meta_ads",
+        campaign: "",
+        estimatedValue: "45000",
+        ownerId: "",
+        notes: "",
+      });
+      showNotification("¡Prospecto registrado exitosamente con validación internacional!");
+      fetchLeads();
+    } catch (err: any) {
+      showNotification(err.message || "Error al conectar con el servidor", "error");
     } finally {
-      setSubmitting(false);
+      setSubmittingCreate(false);
     }
   };
 
+  // Open Edit Modal
+  const handleOpenEdit = (lead: Lead) => {
+    setEditingLead(lead);
+    setEditFormData({
+      id: lead.id,
+      name: lead.name,
+      companyName: lead.companyName || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      source: lead.source,
+      status: lead.status,
+      campaign: lead.campaign || "",
+      estimatedValue: (lead.estimatedValue || 0).toString(),
+      ownerId: lead.ownerId || "",
+      notes: lead.notes || "",
+    });
+    setEditFieldErrors({});
+    setIsEditOpen(true);
+  };
+
+  // Handle Edit Lead Submission
+  const handleUpdateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingEdit(true);
+    setEditFieldErrors({});
+
+    try {
+      const payload: any = {
+        id: editFormData.id,
+        name: editFormData.name,
+        companyName: editFormData.companyName || null,
+        email: editFormData.email || null,
+        phone: editFormData.phone || null,
+        source: editFormData.source,
+        status: editFormData.status,
+        campaign: editFormData.campaign || null,
+        estimatedValue: parseFloat(editFormData.estimatedValue) || 0,
+        ownerId: editFormData.ownerId || null,
+        notes: editFormData.notes || null,
+      };
+
+      const res = await fetch("/api/leads", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        if (json.fieldErrors) {
+          setEditFieldErrors(json.fieldErrors);
+        }
+        showNotification(json.error || "Error al actualizar prospecto.", "error");
+        setSubmittingEdit(false);
+        return;
+      }
+
+      setIsEditOpen(false);
+      setEditingLead(null);
+      showNotification("Prospecto actualizado correctamente.");
+      fetchLeads();
+      if (selectedLead && selectedLead.id === json.lead.id) {
+        setSelectedLead(json.lead);
+      }
+    } catch (err: any) {
+      showNotification(err.message || "Error de conexión", "error");
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  // Convert Lead to Client & Opportunity
   const handleConvert = async (leadId: string) => {
-    if (!confirm("¿Deseas convertir este prospecto en Cliente y crear su Oportunidad comercial en el Pipeline?")) return;
+    if (
+      !confirm(
+        "¿Deseas convertir este prospecto en Cliente Activo y abrir su Oportunidad en el Pipeline?"
+      )
+    )
+      return;
+
     try {
       const res = await fetch(`/api/leads/${leadId}/convert`, { method: "POST" });
       const json = await res.json();
       if (json.success) {
-        setFeedback("¡Prospecto convertido con éxito a Cliente Activo!");
-        setTimeout(() => setFeedback(null), 4000);
+        showNotification("¡Prospecto convertido exitosamente a Cliente y Oportunidad comercial!");
         fetchLeads();
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead(null);
+        }
       } else {
-        alert(json.error);
+        showNotification(json.error || "No se pudo convertir el prospecto.", "error");
       }
     } catch (e: any) {
-      alert("Error: " + e.message);
+      showNotification("Error: " + e.message, "error");
     }
   };
 
+  // Delete Lead (Restricted to Admin)
   const handleDelete = async (leadId: string) => {
-    if (!confirm("¿Eliminar este prospecto?")) return;
+    if (!isAdmin) {
+      showNotification("Solo los administradores poseen permisos para eliminar prospectos.", "error");
+      return;
+    }
+
+    if (!confirm("¿Está seguro de eliminar lógicamente este prospecto? La acción será registrada en auditoría."))
+      return;
+
     try {
       const res = await fetch(`/api/leads?id=${leadId}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
+        showNotification("Prospecto eliminado de forma segura.");
         fetchLeads();
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead(null);
+        }
+      } else {
+        showNotification(json.error || "Error al eliminar prospecto.", "error");
       }
     } catch (e: any) {
-      alert("Error: " + e.message);
+      showNotification("Error: " + e.message, "error");
     }
   };
 
-  const cleanPhoneForWa = (phone: string) => {
-    if (!phone) return "";
-    return phone.replace(/[^0-9]/g, "");
+  // Helper for WhatsApp Phone Clean Format
+  const getWhatsAppNumber = (lead: Lead) => {
+    const raw = lead.normalizedPhone || lead.phone;
+    if (!raw) return "";
+    return raw.replace(/[^0-9]/g, "");
   };
 
   // Metrics Calculations
   const totalLeadsCount = leads.length;
-  const qualifiedCount = leads.filter((l) => l.status === "qualified" || (l.qualification || 0) >= 70).length;
+  const qualifiedCount = leads.filter(
+    (l) => l.status === "qualified" || (l.qualification || 0) >= 70
+  ).length;
   const totalPipelineVal = leads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
-  const conversionRate = totalLeadsCount > 0 ? Math.round((leads.filter((l) => l.status === "converted").length / totalLeadsCount) * 100) : 0;
+  const conversionRate =
+    totalLeadsCount > 0
+      ? Math.round(
+          (leads.filter((l) => l.status === "converted").length / totalLeadsCount) * 100
+        )
+      : 0;
+
+  // Export CSV
+  const handleExportCSV = () => {
+    const headers = [
+      "ID",
+      "Nombre",
+      "Empresa",
+      "Email",
+      "Telefono",
+      "Telefono_E164",
+      "Origen",
+      "Campana",
+      "Estado",
+      "Presupuesto_MXN",
+      "Score_IA",
+      "Asesor",
+      "Fecha_Registro",
+    ];
+
+    const rows = leads.map((l) => [
+      `"${l.id}"`,
+      `"${l.name.replace(/"/g, '""')}"`,
+      `"${(l.companyName || "").replace(/"/g, '""')}"`,
+      `"${l.email || ""}"`,
+      `"${l.phone || ""}"`,
+      `"${l.normalizedPhone || ""}"`,
+      `"${l.source}"`,
+      `"${(l.campaign || "").replace(/"/g, '""')}"`,
+      `"${l.status}"`,
+      `"${l.estimatedValue || 0}"`,
+      `"${l.qualification || 0}"`,
+      `"${(l.owner?.name || "Sin asignar").replace(/"/g, '""')}"`,
+      `"${new Date(l.createdAt).toLocaleDateString()}"`,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `bunker_leads_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -165,23 +439,13 @@ export default function LeadsPage() {
             Gestión de Leads & Prospectos
           </h1>
           <p className="text-xs text-[#6B6861] mt-0.5">
-            Captación multicanal desde Meta Ads, scoring algorítmico con IA y seguimiento comercial directo.
+            Captación multicanal desde Meta Ads, scoring con IA, validación telefónica E.164 y prevención de duplicados.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => {
-              const csvContent = "data:text/csv;charset=utf-8," + ["Nombre,Empresa,Email,Telefono,Canal,Presupuesto,Score"].concat(
-                leads.map(l => `"${l.name}","${l.companyName || ''}","${l.email}","${l.phone}","${l.source}","${l.estimatedValue}","${l.qualification}"`)
-              ).join("\n");
-              const encodedUri = encodeURI(csvContent);
-              const link = document.createElement("a");
-              link.setAttribute("href", encodedUri);
-              link.setAttribute("download", `bunker_leads_${new Date().toISOString().slice(0,10)}.csv`);
-              document.body.appendChild(link);
-              link.click();
-            }}
+            onClick={handleExportCSV}
             className="px-3.5 py-2 rounded-2xl bg-white border border-[#ECEAE3] text-[#141414] hover:bg-[#FAF9F5] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
           >
             <Download className="w-3.5 h-3.5 text-[#8C887E]" />
@@ -189,7 +453,11 @@ export default function LeadsPage() {
           </button>
 
           <button
-            onClick={() => setIsCreateOpen(true)}
+            onClick={() => {
+              setDuplicateWarning(null);
+              setCreateFieldErrors({});
+              setIsCreateOpen(true);
+            }}
             className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-xs"
           >
             <Plus className="w-4 h-4 text-[#E5C158]" />
@@ -198,14 +466,25 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {/* Global Feedback Banner */}
       {feedback && (
-        <div className="p-3.5 bg-[#EBF5EE] border border-[#C2E2CC] rounded-2xl text-emerald-800 text-xs font-medium flex items-center gap-2 shadow-xs">
-          <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>{feedback}</span>
+        <div
+          className={`p-3.5 rounded-2xl border text-xs font-medium flex items-center gap-2 shadow-xs animate-in slide-in-from-top-1 ${
+            feedback.type === "success"
+              ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          )}
+          <span>{feedback.text}</span>
         </div>
       )}
 
-      {/* KPI Metric Strip Cards (Luxury Rounded Marfil) */}
+      {/* KPI Metric Strip Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Leads */}
         <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-2">
@@ -231,9 +510,7 @@ export default function LeadsPage() {
             </div>
           </div>
           <div className="text-2xl font-bold text-[#141414] tracking-tight">{qualifiedCount}</div>
-          <div className="text-[11px] text-[#6B6861]">
-            Alta probabilidad de cierre comercial
-          </div>
+          <div className="text-[11px] text-[#6B6861]">Alta probabilidad de cierre comercial</div>
         </div>
 
         {/* Pipeline Estimado */}
@@ -245,7 +522,8 @@ export default function LeadsPage() {
             </div>
           </div>
           <div className="text-2xl font-bold text-[#141414] tracking-tight">
-            ${totalPipelineVal.toLocaleString()} <span className="text-xs font-normal text-[#8C887E]">MXN</span>
+            ${totalPipelineVal.toLocaleString()}{" "}
+            <span className="text-xs font-normal text-[#8C887E]">MXN</span>
           </div>
           <div className="text-[11px] text-[#9A7320] font-medium">
             Presupuesto estimado de pautas
@@ -261,9 +539,7 @@ export default function LeadsPage() {
             </div>
           </div>
           <div className="text-2xl font-bold text-[#141414] tracking-tight">{conversionRate}%</div>
-          <div className="text-[11px] text-[#6B6861]">
-            Leads convertidos a clientes activos
-          </div>
+          <div className="text-[11px] text-[#6B6861]">Leads convertidos a clientes activos</div>
         </div>
       </div>
 
@@ -277,7 +553,7 @@ export default function LeadsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, correo, empresa o teléfono..."
+              placeholder="Buscar por nombre, correo, empresa, teléfono o notas..."
               className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#141414] placeholder-[#8C887E] focus:outline-none focus:border-[#D4AF37]/70 transition-all"
             />
           </div>
@@ -316,22 +592,48 @@ export default function LeadsPage() {
             >
               <option value="all">Todos los Canales</option>
               <option value="meta_ads">Meta Ads (Instagram / FB)</option>
+              <option value="facebook_ads">Facebook Ads</option>
+              <option value="instagram_ads">Instagram Ads</option>
               <option value="google_ads">Google Ads</option>
-              <option value="referral">Recomendación</option>
+              <option value="tiktok_ads">TikTok Ads</option>
+              <option value="whatsapp">WhatsApp Directo</option>
               <option value="website">Formulario Web</option>
+              <option value="referral">Recomendación</option>
+              <option value="sales_outreach">Prospección Comercial</option>
+              <option value="import">Importación</option>
+              <option value="manual">Registro Manual</option>
+              <option value="other">Otro</option>
             </select>
+
+            {/* Owner Dropdown */}
+            {teamMembers.length > 0 && (
+              <select
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="bg-[#F6F5F2] border border-[#ECEAE3] rounded-2xl px-3 py-1.5 text-xs text-[#141414] focus:outline-none font-medium"
+              >
+                <option value="all">Todos los Asesores</option>
+                {teamMembers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Leads Table (Designed like Reference UI) */}
+      {/* Main Leads Table */}
       <div className="bg-white rounded-3xl border border-[#ECEAE3] shadow-xs overflow-hidden">
         <div className="p-4 border-b border-[#F4F3EE] flex items-center justify-between bg-[#FDFDFC]">
           <div className="text-xs font-bold text-[#141414]">
-            Directorio de Prospectos <span className="text-[#8C887E] font-normal">({leads.length})</span>
+            Directorio de Prospectos{" "}
+            <span className="text-[#8C887E] font-normal">({leads.length})</span>
           </div>
-          <div className="text-[11px] text-[#8C887E]">
-            Conectado a PostgreSQL Supabase Cloud
+          <div className="text-[11px] text-[#8C887E] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Sincronizado con Supabase PostgreSQL</span>
           </div>
         </div>
 
@@ -341,7 +643,8 @@ export default function LeadsPage() {
               <tr className="border-b border-[#F4F3EE] text-[11px] font-semibold text-[#8C887E]">
                 <th className="py-3.5 px-4 font-semibold">Prospecto / Empresa</th>
                 <th className="py-3.5 px-4 font-semibold">Contacto & WhatsApp</th>
-                <th className="py-3.5 px-4 font-semibold">Canal</th>
+                <th className="py-3.5 px-4 font-semibold">Origen & Campaña</th>
+                <th className="py-3.5 px-4 font-semibold">Asesor Asignado</th>
                 <th className="py-3.5 px-4 font-semibold">Scoring IA</th>
                 <th className="py-3.5 px-4 font-semibold">Presupuesto</th>
                 <th className="py-3.5 px-4 font-semibold">Estado</th>
@@ -351,13 +654,14 @@ export default function LeadsPage() {
             <tbody className="divide-y divide-[#F4F3EE]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#8C887E] text-xs">
-                    Cargando prospectos en tiempo real...
+                  <td colSpan={8} className="py-12 text-center text-[#8C887E] text-xs">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-[#D4AF37] mb-2" />
+                    <span>Cargando prospectos en tiempo real...</span>
                   </td>
                 </tr>
               ) : leads.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#8C887E] text-xs">
+                  <td colSpan={8} className="py-12 text-center text-[#8C887E] text-xs">
                     No se encontraron prospectos con los filtros actuales.
                   </td>
                 </tr>
@@ -369,10 +673,11 @@ export default function LeadsPage() {
                         .map((n: string) => n[0])
                         .slice(0, 2)
                         .join("")
+                        .toUpperCase()
                     : "LD";
 
                   const score = lead.qualification || 75;
-                  const waNumber = cleanPhoneForWa(lead.phone);
+                  const waNumber = getWhatsAppNumber(lead);
 
                   return (
                     <tr
@@ -382,7 +687,7 @@ export default function LeadsPage() {
                       {/* Profile / Company */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] border border-[#D4AF37]/40 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] border border-[#D4AF37]/40 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
                             {initials}
                           </div>
                           <div>
@@ -402,21 +707,32 @@ export default function LeadsPage() {
                         </div>
                       </td>
 
-                      {/* Contact & Direct WhatsApp Link */}
+                      {/* Contact & WhatsApp */}
                       <td className="py-3.5 px-4 text-[11px]">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-[#141414] font-medium">
-                            <Mail className="w-3 h-3 text-[#8C887E] flex-shrink-0" />
-                            <a href={`mailto:${lead.email}`} className="hover:underline truncate max-w-[170px]">
-                              {lead.email}
-                            </a>
-                          </div>
+                          {lead.email ? (
+                            <div className="flex items-center gap-1.5 text-[#141414] font-medium">
+                              <Mail className="w-3 h-3 text-[#8C887E] flex-shrink-0" />
+                              <a
+                                href={`mailto:${lead.email}`}
+                                className="hover:underline truncate max-w-[170px]"
+                              >
+                                {lead.email}
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-[#A39F93] italic">Sin correo</span>
+                          )}
 
                           <div className="flex items-center gap-2">
-                            <span className="text-[#6B6861] font-mono">{lead.phone || "Sin teléfono"}</span>
+                            <span className="text-[#6B6861] font-mono">
+                              {lead.phone || lead.normalizedPhone || "Sin teléfono"}
+                            </span>
                             {waNumber && (
                               <a
-                                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola ${lead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento comercial.`)}`}
+                                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
+                                  `Hola ${lead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento comercial.`
+                                )}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EBF5EE] text-emerald-800 border border-[#C2E2CC] hover:bg-emerald-100 transition-colors text-[10px] font-semibold"
@@ -430,32 +746,63 @@ export default function LeadsPage() {
                         </div>
                       </td>
 
-                      {/* Channel / Source */}
+                      {/* Channel & Campaign Traceability */}
                       <td className="py-3.5 px-4">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                          lead.source === "meta_ads" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
-                          lead.source === "google_ads" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                          lead.source === "referral" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                          "bg-stone-50 text-stone-700 border-stone-200"
-                        }`}>
-                          {lead.source.replace("_", " ")}
-                        </span>
+                        <div className="space-y-1">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase inline-block ${
+                              lead.source.includes("meta") ||
+                              lead.source.includes("facebook") ||
+                              lead.source.includes("instagram")
+                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                : lead.source.includes("google")
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : lead.source.includes("tiktok")
+                                ? "bg-pink-50 text-pink-700 border-pink-200"
+                                : lead.source === "referral"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-stone-50 text-stone-700 border-stone-200"
+                            }`}
+                          >
+                            {lead.source.replace(/_/g, " ")}
+                          </span>
+                          {lead.campaign && (
+                            <p className="text-[10px] text-[#8C887E] truncate max-w-[130px] font-medium flex items-center gap-1">
+                              <Tag className="w-2.5 h-2.5 text-[#8C887E]" />
+                              <span>{lead.campaign}</span>
+                            </p>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Assigned Advisor */}
+                      <td className="py-3.5 px-4 text-[11px]">
+                        {lead.owner ? (
+                          <div className="flex items-center gap-1.5 text-[#141414] font-medium">
+                            <UserCheck className="w-3 h-3 text-[#D4AF37]" />
+                            <span className="truncate max-w-[120px]">{lead.owner.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[#A39F93] italic">Sin asignar</span>
+                        )}
                       </td>
 
                       {/* AI Scoring */}
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
-                              score >= 80 ? "bg-[#EBF5EE] text-emerald-800 border-[#C2E2CC]" :
-                              score >= 60 ? "bg-[#FAF0D7] text-[#9A7320] border-[#F2E5C4]" :
-                              "bg-[#FEE2E2] text-red-800 border-[#FECACA]"
-                            }`}>
-                              {score}/100
-                            </span>
-                          </div>
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded-md border inline-block ${
+                              score >= 80
+                                ? "bg-[#EBF5EE] text-emerald-800 border-[#C2E2CC]"
+                                : score >= 60
+                                ? "bg-[#FAF0D7] text-[#9A7320] border-[#F2E5C4]"
+                                : "bg-[#FEE2E2] text-red-800 border-[#FECACA]"
+                            }`}
+                          >
+                            {score}/100
+                          </span>
                           {lead.aiSummary && (
-                            <p className="text-[10px] text-[#6B6861] line-clamp-1 max-w-xs">
+                            <p className="text-[10px] text-[#6B6861] line-clamp-1 max-w-[140px]">
                               {lead.aiSummary}
                             </p>
                           )}
@@ -472,15 +819,28 @@ export default function LeadsPage() {
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase border ${
-                          lead.status === "qualified" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          lead.status === "contacted" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                          lead.status === "converted" ? "bg-purple-50 text-purple-700 border-purple-200" :
-                          "bg-stone-100 text-stone-700 border-stone-200"
-                        }`}>
-                          {lead.status === "qualified" ? "Calificado" :
-                           lead.status === "contacted" ? "Contactado" :
-                           lead.status === "converted" ? "Convertido" : "Nuevo"}
+                        <span
+                          className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase border inline-block ${
+                            lead.status === "qualified"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : lead.status === "contacted"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : lead.status === "converted"
+                              ? "bg-purple-50 text-purple-700 border-purple-200"
+                              : lead.status === "lost"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : "bg-stone-100 text-stone-700 border-stone-200"
+                          }`}
+                        >
+                          {lead.status === "qualified"
+                            ? "Calificado"
+                            : lead.status === "contacted"
+                            ? "Contactado"
+                            : lead.status === "converted"
+                            ? "Convertido"
+                            : lead.status === "lost"
+                            ? "Perdido"
+                            : "Nuevo"}
                         </span>
                       </td>
 
@@ -490,13 +850,21 @@ export default function LeadsPage() {
                           {lead.status !== "converted" && (
                             <button
                               onClick={() => handleConvert(lead.id)}
-                              className="btn-black-gold rounded-xl px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1 shadow-xs"
+                              className="btn-black-gold rounded-xl px-2 py-1 text-[11px] font-semibold flex items-center gap-1 shadow-xs"
                               title="Convertir a Cliente y crear Negocio"
                             >
                               <ArrowRightCircle className="w-3 h-3 text-[#E5C158]" />
                               <span>Convertir</span>
                             </button>
                           )}
+
+                          <button
+                            onClick={() => handleOpenEdit(lead)}
+                            className="p-1.5 rounded-xl bg-[#F6F5F2] hover:bg-white text-[#6B6861] hover:text-[#141414] border border-[#ECEAE3] transition-colors"
+                            title="Editar prospecto"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
 
                           <button
                             onClick={() => setSelectedLead(lead)}
@@ -506,13 +874,15 @@ export default function LeadsPage() {
                             <ExternalLink className="w-3.5 h-3.5" />
                           </button>
 
-                          <button
-                            onClick={() => handleDelete(lead.id)}
-                            className="p-1.5 rounded-xl text-[#8C887E] hover:text-red-600 hover:bg-red-50 transition-colors"
-                            title="Eliminar prospecto"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDelete(lead.id)}
+                              className="p-1.5 rounded-xl text-[#8C887E] hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Eliminar prospecto (Solo Admin)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -527,7 +897,7 @@ export default function LeadsPage() {
       {/* Modal: Registrar Prospecto */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
               <div>
                 <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
@@ -535,7 +905,7 @@ export default function LeadsPage() {
                   Registrar Nuevo Prospecto
                 </h2>
                 <p className="text-[11px] text-[#6B6861] mt-0.5">
-                  Los datos se guardan directamente en Supabase PostgreSQL.
+                  Validación internacional con Zod y persistencia segura en Supabase PostgreSQL.
                 </p>
               </div>
               <button
@@ -546,86 +916,211 @@ export default function LeadsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateLead} className="p-6 space-y-4">
+            {/* Duplicate Detected Warning Alert */}
+            {duplicateWarning && duplicateWarning.length > 0 && (
+              <div className="p-4 mx-6 mt-4 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-900 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-amber-950">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  <span>Posible prospecto duplicado detectado</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-800">
+                  Ya existe un registro con correo o teléfono similar en su organización:
+                </p>
+                <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200 text-[11px] space-y-1">
+                  {duplicateWarning.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between">
+                      <span className="font-semibold text-[#141414]">
+                        {m.name} ({m.companyName || "Sin empresa"})
+                      </span>
+                      <span className="text-[#8C887E] font-mono">
+                        {m.email || m.phone}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-1 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateWarning(null)}
+                    className="px-2.5 py-1 text-[11px] rounded-xl bg-white border border-amber-300 font-medium text-amber-900 hover:bg-amber-100"
+                  >
+                    Corregir datos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleCreateLead(e, true)}
+                    className="btn-black-gold rounded-xl px-3 py-1 text-[11px] font-semibold shadow-xs"
+                  >
+                    Guardar de todos modos
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={(e) => handleCreateLead(e, false)} className="p-6 space-y-4">
+              {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">Nombre Completo *</label>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Nombre Completo *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="ej. Lic. Roberto Mendoza"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="ej. Lic. Roberto Garza"
+                  value={createData.name}
+                  onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
                   className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                 />
+                {createFieldErrors.name && (
+                  <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.name[0]}</p>
+                )}
               </div>
 
+              {/* Company */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">Empresa / Negocio</label>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Empresa / Negocio
+                </label>
                 <input
                   type="text"
-                  placeholder="ej. Inmobiliaria Premier o Marca de Ropa"
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  placeholder="ej. Cadena Restaurantes Sonora Grill"
+                  value={createData.companyName}
+                  onChange={(e) =>
+                    setCreateData({ ...createData, companyName: e.target.value })
+                  }
                   className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
+              {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">Correo Electrónico</label>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Correo Electrónico
+                  </label>
                   <input
                     type="email"
                     placeholder="contacto@empresa.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    value={createData.email}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, email: e.target.value })
+                    }
                     className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                   />
+                  {createFieldErrors.email && (
+                    <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.email[0]}</p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">Teléfono / WhatsApp</label>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Teléfono / WhatsApp (Internacional)
+                  </label>
                   <input
                     type="tel"
                     placeholder="+52 55 1234 5678"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    value={createData.phone}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, phone: e.target.value })
+                    }
                     className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                   />
+                  {createFieldErrors.phone && (
+                    <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.phone[0]}</p>
+                  )}
                 </div>
               </div>
 
+              {/* Source & Campaign */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">Canal de Origen</label>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Canal de Origen *
+                  </label>
                   <select
-                    value={formData.source}
-                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                    value={createData.source}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, source: e.target.value })
+                    }
                     className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                   >
                     <option value="meta_ads">Meta Ads (Instagram / FB)</option>
+                    <option value="facebook_ads">Facebook Ads</option>
+                    <option value="instagram_ads">Instagram Ads</option>
                     <option value="google_ads">Google Ads</option>
-                    <option value="referral">Recomendación</option>
+                    <option value="tiktok_ads">TikTok Ads</option>
+                    <option value="whatsapp">WhatsApp Directo</option>
                     <option value="website">Formulario Web</option>
-                    <option value="manual">Prospección Directa</option>
+                    <option value="referral">Recomendación</option>
+                    <option value="sales_outreach">Prospección Comercial</option>
+                    <option value="import">Importación</option>
+                    <option value="manual">Registro Manual</option>
+                    <option value="other">Otro</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">Presupuesto ($ MXN)</label>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Campaña de Origen
+                  </label>
                   <input
-                    type="number"
-                    value={formData.estimatedValue}
-                    onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
+                    type="text"
+                    placeholder="ej. Preventa Luxury 2026"
+                    value={createData.campaign}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, campaign: e.target.value })
+                    }
                     className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
 
+              {/* Budget & Owner */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Presupuesto Mensual ($ MXN)
+                  </label>
+                  <input
+                    type="number"
+                    value={createData.estimatedValue}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, estimatedValue: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Asesor Responsable
+                  </label>
+                  <select
+                    value={createData.ownerId}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, ownerId: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="">Asignar a mí mismo</option>
+                    {teamMembers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">Requerimientos o Notas</label>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Observaciones Comerciales
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="ej. Quiere pauta de reels para captar citas de ortodoncia..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="ej. Interesado en captación para 8 sucursales..."
+                  value={createData.notes}
+                  onChange={(e) =>
+                    setCreateData({ ...createData, notes: e.target.value })
+                  }
                   className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -640,10 +1135,233 @@ export default function LeadsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="btn-black-gold rounded-2xl px-5 py-2 text-xs font-semibold shadow-xs"
+                  disabled={submittingCreate}
+                  className="btn-black-gold rounded-2xl px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
                 >
-                  {submitting ? "Guardando..." : "Guardar Prospecto"}
+                  {submittingCreate ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Prospecto</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Prospecto */}
+      {isEditOpen && editingLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
+              <div>
+                <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-[#D4AF37]" />
+                  Editar Prospecto
+                </h2>
+                <p className="text-[11px] text-[#6B6861] mt-0.5">
+                  Actualización de información comercial y trazabilidad de cambios.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="text-[#8C887E] hover:text-[#141414] p-1 rounded-xl hover:bg-[#F6F5F2]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateLead} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.name}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, name: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                />
+                {editFieldErrors.name && (
+                  <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.name[0]}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Empresa / Negocio
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.companyName}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, companyName: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, email: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  {editFieldErrors.email && (
+                    <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.email[0]}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Teléfono / WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, phone: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  {editFieldErrors.phone && (
+                    <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.phone[0]}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Estado Comercial
+                  </label>
+                  <select
+                    value={editFormData.status}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, status: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="new">Nuevo</option>
+                    <option value="contacted">Contactado</option>
+                    <option value="qualified">Calificado</option>
+                    <option value="lost">Perdido</option>
+                    <option value="converted">Convertido</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Canal de Origen
+                  </label>
+                  <select
+                    value={editFormData.source}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, source: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="meta_ads">Meta Ads (Instagram / FB)</option>
+                    <option value="facebook_ads">Facebook Ads</option>
+                    <option value="instagram_ads">Instagram Ads</option>
+                    <option value="google_ads">Google Ads</option>
+                    <option value="tiktok_ads">TikTok Ads</option>
+                    <option value="whatsapp">WhatsApp Directo</option>
+                    <option value="website">Formulario Web</option>
+                    <option value="referral">Recomendación</option>
+                    <option value="sales_outreach">Prospección Comercial</option>
+                    <option value="import">Importación</option>
+                    <option value="manual">Registro Manual</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Presupuesto ($ MXN)
+                  </label>
+                  <input
+                    type="number"
+                    value={editFormData.estimatedValue}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        estimatedValue: e.target.value,
+                      })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Asesor Responsable
+                  </label>
+                  <select
+                    value={editFormData.ownerId}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, ownerId: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="">Sin asignar</option>
+                    {teamMembers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  Observaciones Comerciales
+                </label>
+                <textarea
+                  rows={2}
+                  value={editFormData.notes}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, notes: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-2xl bg-[#F6F5F2] border border-[#ECEAE3] text-[#6B6861] hover:text-[#141414] text-xs font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingEdit}
+                  className="btn-black-gold rounded-2xl px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
+                >
+                  {submittingEdit ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Actualizando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Cambios</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -654,10 +1372,10 @@ export default function LeadsPage() {
       {/* Modal: Ficha Detallada del Prospecto */}
       {selectedLead && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4">
+          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between pb-3 border-b border-[#F4F3EE]">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#141414] text-[#E5C158] border border-[#D4AF37]/50 flex items-center justify-center font-bold text-sm">
+                <div className="w-11 h-11 rounded-full bg-[#141414] text-[#E5C158] border border-[#D4AF37]/50 flex items-center justify-center font-bold text-sm shadow-xs">
                   {selectedLead.name ? selectedLead.name.slice(0, 2).toUpperCase() : "LD"}
                 </div>
                 <div>
@@ -678,15 +1396,41 @@ export default function LeadsPage() {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 bg-[#F6F5F2] rounded-2xl border border-[#ECEAE3] space-y-1">
-                <div className="text-[10px] text-[#8C887E] font-medium uppercase">Canal de Captación</div>
-                <div className="font-bold text-[#141414] uppercase">{selectedLead.source}</div>
+                <div className="text-[10px] text-[#8C887E] font-medium uppercase">
+                  Canal de Captación
+                </div>
+                <div className="font-bold text-[#141414] uppercase">
+                  {selectedLead.source.replace(/_/g, " ")}
+                </div>
               </div>
               <div className="p-3 bg-[#F6F5F2] rounded-2xl border border-[#ECEAE3] space-y-1">
-                <div className="text-[10px] text-[#8C887E] font-medium uppercase">Presupuesto Estimado</div>
-                <div className="font-bold text-[#141414]">${selectedLead.estimatedValue?.toLocaleString()} MXN</div>
+                <div className="text-[10px] text-[#8C887E] font-medium uppercase">
+                  Presupuesto Estimado
+                </div>
+                <div className="font-bold text-[#141414]">
+                  ${selectedLead.estimatedValue?.toLocaleString()} MXN
+                </div>
               </div>
             </div>
 
+            {selectedLead.campaign && (
+              <div className="p-3 bg-[#FAF9F5] rounded-2xl border border-[#ECEAE3] text-xs flex items-center gap-2">
+                <Tag className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span className="text-[#8C887E]">Campaña:</span>
+                <span className="font-semibold text-[#141414]">{selectedLead.campaign}</span>
+              </div>
+            )}
+
+            {selectedLead.notes && (
+              <div className="p-3 bg-[#FAF9F5] rounded-2xl border border-[#ECEAE3] text-xs space-y-1">
+                <span className="text-[10px] text-[#8C887E] font-medium uppercase">
+                  Observaciones Comerciales:
+                </span>
+                <p className="text-[#141414] leading-relaxed">{selectedLead.notes}</p>
+              </div>
+            )}
+
+            {/* AI Algorithm Score */}
             <div className="p-4 bg-[#FAF0D7]/40 rounded-2xl border border-[#F2E5C4] space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#9A7320] flex items-center gap-1.5">
@@ -698,34 +1442,52 @@ export default function LeadsPage() {
                 </span>
               </div>
               <p className="text-xs text-[#6B6861] leading-relaxed pt-1">
-                {selectedLead.aiSummary || "Prospecto calificado con potencial positivo para campaña publicitaria y embudo de conversión."}
+                {selectedLead.aiSummary ||
+                  "Prospecto calificado con potencial positivo para campaña publicitaria y embudo de conversión."}
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              {cleanPhoneForWa(selectedLead.phone) && (
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F4F3EE]">
+              <button
+                onClick={() => {
+                  const leadToEdit = selectedLead;
+                  setSelectedLead(null);
+                  handleOpenEdit(leadToEdit);
+                }}
+                className="px-3.5 py-2 rounded-2xl bg-[#F6F5F2] hover:bg-[#FAF9F5] text-[#141414] border border-[#ECEAE3] text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <Edit className="w-3.5 h-3.5 text-[#8C887E]" />
+                <span>Editar</span>
+              </button>
+
+              {getWhatsAppNumber(selectedLead) && (
                 <a
-                  href={`https://wa.me/${cleanPhoneForWa(selectedLead.phone)}`}
+                  href={`https://wa.me/${getWhatsAppNumber(selectedLead)}?text=${encodeURIComponent(
+                    `Hola ${selectedLead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento comercial.`
+                  )}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3.5 py-2 rounded-2xl bg-[#EBF5EE] text-emerald-800 border border-[#C2E2CC] text-xs font-semibold flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-2xl bg-[#EBF5EE] text-emerald-800 border border-[#C2E2CC] text-xs font-semibold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Chatear en WhatsApp</span>
+                  <span>WhatsApp</span>
                 </a>
               )}
 
-              <button
-                onClick={() => {
-                  const leadId = selectedLead.id;
-                  setSelectedLead(null);
-                  handleConvert(leadId);
-                }}
-                className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
-              >
-                <ArrowRightCircle className="w-3.5 h-3.5 text-[#E5C158]" />
-                <span>Convertir a Cliente</span>
-              </button>
+              {selectedLead.status !== "converted" && (
+                <button
+                  onClick={() => {
+                    const leadId = selectedLead.id;
+                    setSelectedLead(null);
+                    handleConvert(leadId);
+                  }}
+                  className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+                >
+                  <ArrowRightCircle className="w-3.5 h-3.5 text-[#E5C158]" />
+                  <span>Convertir a Cliente</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

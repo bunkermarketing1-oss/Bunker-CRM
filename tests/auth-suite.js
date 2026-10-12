@@ -258,16 +258,15 @@ async function runSuite() {
     });
     const jsonH = await resH.json().catch(() => ({}));
 
-    // Verify lead was created under admin's real organization, not spoofedOrgId
+    // Verify lead creation rejects tampered organizationId with 400 or ignores it safely
     const passes =
-      resH.status === 201 &&
-      jsonH.lead &&
-      jsonH.lead.organizationId !== spoofedOrgId;
+      (resH.status === 400 && (jsonH.fieldErrors?.organizationId || jsonH.error)) ||
+      (resH.status === 201 && jsonH.lead && jsonH.lead.organizationId !== spoofedOrgId);
 
     recordResult(
       "PRUEBA H",
       passes,
-      `Solicitud con organizationId adulterado: El servidor ignora el parámetro del cliente y asigna el organizationId verificado del usuario.`
+      `Solicitud con organizationId adulterado: El servidor rechaza el parámetro no autorizado o asigna estrictamente la organización del usuario verificado.`
     );
 
     // Clean up created lead

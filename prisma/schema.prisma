@@ -124,7 +124,14 @@ model Lead {
   companyName    String?
   email          String?
   phone          String?
-  source         String       @default("website") // website, referral, meta_ads, google_ads, manual
+  normalizedPhone String?
+  source         String       @default("website") // website, referral, meta_ads, google_ads, manual, etc.
+  campaign       String?
+  externalLeadId String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  notes          String?
   status         String       @default("new") // new, contacted, qualified, lost, converted
   qualification  Int          @default(0) // 0-100 AI Score
   aiSummary      String?
