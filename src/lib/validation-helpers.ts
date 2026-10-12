@@ -43,3 +43,11 @@ export async function leadBelongsToOrg(organizationId: string, leadId: string): 
   const lead = await prisma.lead.findFirst({ where: { id: leadId, organizationId, isDeleted: false } });
   return Boolean(lead);
 }
+
+export async function contactBelongsToOrg(organizationId: string, contactId: string): Promise<boolean> {
+  const contact = await prisma.contact.findFirst({ where: { id: contactId, organizationId, isDeleted: false } });
+  return Boolean(contact);
+}
+
+export const TASK_STATUSES = ["pending", "completed", "cancelled"] as const;
+export const ACTIVITY_TYPES = ["call", "meeting", "email", "note", "follow_up"] as const;
