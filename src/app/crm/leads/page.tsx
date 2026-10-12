@@ -224,7 +224,7 @@ export default function LeadsPage() {
         ownerId: "",
         notes: "",
       });
-      showNotification("¡Prospecto registrado exitosamente con validación internacional!");
+      showNotification("¡Prospecto registrado exitosamente!");
       fetchLeads();
     } catch (err: any) {
       showNotification(err.message || "Error al conectar con el servidor", "error");
@@ -631,10 +631,6 @@ export default function LeadsPage() {
             Directorio de Prospectos{" "}
             <span className="text-[#8C887E] font-normal">({leads.length})</span>
           </div>
-          <div className="text-[11px] text-[#8C887E] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Sincronizado con Supabase PostgreSQL</span>
-          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -905,7 +901,7 @@ export default function LeadsPage() {
                   Registrar Nuevo Prospecto
                 </h2>
                 <p className="text-[11px] text-[#6B6861] mt-0.5">
-                  Validación internacional con Zod y persistencia segura en Supabase PostgreSQL.
+                  Completa los datos del contacto y asigna un asesor comercial.
                 </p>
               </div>
               <button
