@@ -157,7 +157,10 @@ async function main() {
 
   // ---------- Audit trail for relevant changes ----------
   await req("/api/leads", { method: "PUT", headers: jh(token), body: JSON.stringify({ id: base.lead.id, status: "qualified", estimatedValue: 250 }) });
-  const trail = await prisma.auditLog.findFirst({ where: { entityId: base.lead.id, action: "lead_updated" } });
+  const trail = await prisma.auditLog.findFirst({
+    where: { entityId: base.lead.id, action: "lead_updated" },
+    orderBy: { createdAt: "desc" },
+  });
   record("AUDIT-TRAIL", !!trail && String(trail.detailsJson).includes("qualified"), "Cambio de estado/presupuesto registrado en auditoría (lead_updated)");
 
   // ---------- Pipeline cross-org references ----------
