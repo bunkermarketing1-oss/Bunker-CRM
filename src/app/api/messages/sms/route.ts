@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(req.url);
     const clientId = searchParams.get("clientId");
     const leadId = searchParams.get("leadId");
 
     const where: any = {
+      organizationId: user!.organizationId,
       channel: "sms",
     };
 
@@ -28,17 +35,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, messages });
   } catch (error: any) {
     console.error("GET /api/messages/sms error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar mensajes SMS." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { recipient, message, clientId, leadId, contactId } = body;
 
     // 1. Validation
-    if (!recipient || recipient.trim() === "") {
+    if (!recipient || typeof recipient !== "string" || recipient.trim() === "") {
       return NextResponse.json({ success: false, error: "El número telefónico destinatario es obligatorio." }, { status: 400 });
     }
 
@@ -48,7 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "El formato del número telefónico no es válido (ej. +525549123011)." }, { status: 400 });
     }
 
-    if (!message || message.trim() === "") {
+    if (!message || typeof message !== "string" || message.trim() === "") {
       return NextResponse.json({ success: false, error: "El cuerpo del mensaje no puede estar vacío." }, { status: 400 });
     }
 
@@ -56,15 +66,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "El mensaje supera el límite máximo de caracteres para SMS (480)." }, { status: 400 });
     }
 
-    const org = await prisma.organization.findFirst();
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organización no encontrada." }, { status: 400 });
-    }
-
-    // 2. Duplicate prevention (Look back 2 minutes for identical text to identical number)
+    // 2. Duplicate prevention (Look back 2 minutes for identical text to identical number within same org)
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
     const existingDuplicate = await prisma.message.findFirst({
       where: {
+        organizationId: user!.organizationId,
         recipient: cleanPhone,
         body: message.trim(),
         createdAt: { gte: twoMinutesAgo },
@@ -89,7 +95,6 @@ export async function POST(req: NextRequest) {
 
     if (accountSid && authToken && fromPhone) {
       try {
-        // Real Twilio API Call
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
         const params = new URLSearchParams();
         params.append("To", cleanPhone);
@@ -109,8 +114,6 @@ export async function POST(req: NextRequest) {
         const twilioData = await twilioResponse.json();
 
         if (twilioResponse.ok) {
-          // Rule #3: "No marques un mensaje como entregado únicamente porque la API aceptó la solicitud."
-          // Mark as "sent" (sent to provider), delivered only when confirmed
           status = "sent";
           providerMsgId = twilioData.sid;
         } else {
@@ -122,17 +125,14 @@ export async function POST(req: NextRequest) {
         errorMessage = err.message || "Fallo de conexión al enviar SMS";
       }
     } else {
-      // No credentials yet: per Section 3:
-      // "Si todavía no existen credenciales, desarrolla el módulo, configura las variables de entorno necesarias y prepara una prueba de integración"
-      // Record as test mode pending configuration
       status = "failed";
-      errorMessage = "Faltan credenciales del proveedor (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN en .env). Configúralas para el envío en red celular.";
+      errorMessage = "Faltan credenciales del proveedor (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN en variables de entorno).";
     }
 
-    // 4. Save to Database
+    // 4. Save to Database with authenticated organization
     const savedMessage = await prisma.message.create({
       data: {
-        organizationId: org.id,
+        organizationId: user!.organizationId,
         clientId: clientId || null,
         leadId: leadId || null,
         contactId: contactId || null,
@@ -151,12 +151,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 5. Also log as Activity if associated with a client or lead
+    // 5. Log as Activity
     if (clientId || leadId) {
       await prisma.activity.create({
         data: {
           clientId: clientId || null,
           leadId: leadId || null,
+          userId: user!.id,
           type: "sms",
           title: `SMS enviado a ${cleanPhone}`,
           description: message.trim(),
@@ -167,11 +168,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: status === "sent",
-      message: status === "sent" ? "SMS enviado correctamente al proveedor de telecomunicaciones." : errorMessage,
+      message: status === "sent" ? "SMS enviado correctamente al proveedor." : errorMessage,
       data: savedMessage,
     }, { status: status === "sent" ? 200 : 400 });
   } catch (error: any) {
     console.error("POST /api/messages/sms error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al procesar envío de SMS." }, { status: 500 });
   }
 }

@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, requireRole } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
-    const where: any = {};
+    const where: any = {
+      OR: [
+        { client: { organizationId: user!.organizationId } },
+        { lead: { organizationId: user!.organizationId } },
+        { user: { memberships: { some: { organizationId: user!.organizationId } } } },
+      ],
+    };
+
     if (status && status !== "all") {
       where.status = status;
     }
@@ -24,17 +37,38 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, tasks });
   } catch (error: any) {
     console.error("GET /api/tasks error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar tareas." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { title, description, dueDate, priority, clientId, leadId, userId } = body;
 
-    if (!title || title.trim() === "") {
-      return NextResponse.json({ success: false, error: "Título de la tarea es requerido" }, { status: 400 });
+    if (!title || typeof title !== "string" || title.trim() === "") {
+      return NextResponse.json({ success: false, error: "Título de la tarea es requerido." }, { status: 400 });
+    }
+
+    if (clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: clientId, organizationId: user!.organizationId },
+      });
+      if (!client) {
+        return NextResponse.json({ success: false, error: "Cliente no pertenece a su organización." }, { status: 404 });
+      }
+    }
+
+    if (leadId) {
+      const lead = await prisma.lead.findFirst({
+        where: { id: leadId, organizationId: user!.organizationId },
+      });
+      if (!lead) {
+        return NextResponse.json({ success: false, error: "Prospecto no pertenece a su organización." }, { status: 404 });
+      }
     }
 
     const task = await prisma.task.create({
@@ -46,7 +80,7 @@ export async function POST(req: NextRequest) {
         status: "pending",
         clientId: clientId || null,
         leadId: leadId || null,
-        userId: userId || null,
+        userId: userId || user!.id,
       },
       include: {
         user: { select: { id: true, name: true } },
@@ -58,29 +92,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, task }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/tasks error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al registrar tarea." }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { id, status, title, priority, dueDate } = body;
 
     if (!id) {
-      return NextResponse.json({ success: false, error: "ID es requerido" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "ID es requerido." }, { status: 400 });
+    }
+
+    const existing = await prisma.task.findFirst({
+      where: {
+        id,
+        OR: [
+          { client: { organizationId: user!.organizationId } },
+          { lead: { organizationId: user!.organizationId } },
+          { user: { memberships: { some: { organizationId: user!.organizationId } } } },
+        ],
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Tarea no encontrada en su organización." }, { status: 404 });
     }
 
     const data: any = {};
     if (status) {
       data.status = status;
-      if (status === "completed") {
-        data.completedAt = new Date();
-      } else {
-        data.completedAt = null;
-      }
+      data.completedAt = status === "completed" ? new Date() : null;
     }
-    if (title) data.title = title;
+    if (title) data.title = title.trim();
     if (priority) data.priority = priority;
     if (dueDate) data.dueDate = new Date(dueDate);
 
@@ -92,6 +140,44 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, task });
   } catch (error: any) {
     console.error("PUT /api/tasks error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al actualizar tarea." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    if (errorResponse) return errorResponse;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "ID es requerido." }, { status: 400 });
+    }
+
+    const existing = await prisma.task.findFirst({
+      where: {
+        id,
+        OR: [
+          { client: { organizationId: user!.organizationId } },
+          { lead: { organizationId: user!.organizationId } },
+          { user: { memberships: { some: { organizationId: user!.organizationId } } } },
+        ],
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Tarea no encontrada en su organización." }, { status: 404 });
+    }
+
+    const task = await prisma.task.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, task });
+  } catch (error: any) {
+    console.error("DELETE /api/tasks error:", error);
+    return NextResponse.json({ success: false, error: "Error al eliminar tarea." }, { status: 500 });
   }
 }

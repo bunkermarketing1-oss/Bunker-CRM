@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, requireRole } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const org = await prisma.organization.findFirst();
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organización no encontrada" }, { status: 404 });
-    }
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
 
     const stages = await prisma.pipelineStage.findMany({
-      where: { organizationId: org.id },
+      where: { organizationId: user!.organizationId },
       orderBy: { order: "asc" },
       include: {
         opportunities: {
@@ -50,27 +51,34 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("GET /api/pipeline error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar pipeline comercial." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { title, value, stageId, clientId, leadId, probability, expectedClose } = body;
 
     if (!title || !stageId) {
-      return NextResponse.json({ success: false, error: "Título y etapa son obligatorios" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Título y etapa son obligatorios." }, { status: 400 });
     }
 
-    const org = await prisma.organization.findFirst();
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organización no encontrada" }, { status: 404 });
+    // Verify stage belongs to user's org
+    const stage = await prisma.pipelineStage.findFirst({
+      where: { id: stageId, organizationId: user!.organizationId },
+    });
+
+    if (!stage) {
+      return NextResponse.json({ success: false, error: "Etapa de pipeline no válida para su organización." }, { status: 400 });
     }
 
     const opportunity = await prisma.opportunity.create({
       data: {
-        organizationId: org.id,
+        organizationId: user!.organizationId,
         stageId,
         clientId: clientId || null,
         leadId: leadId || null,
@@ -91,17 +99,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, opportunity }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/pipeline error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al registrar oportunidad." }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { id, stageId, status, value, probability } = body;
 
     if (!id) {
-      return NextResponse.json({ success: false, error: "ID es obligatorio" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "ID es obligatorio." }, { status: 400 });
+    }
+
+    const existing = await prisma.opportunity.findFirst({
+      where: { id, organizationId: user!.organizationId, isDeleted: false },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Oportunidad no encontrada en su organización." }, { status: 404 });
     }
 
     const data: any = {};
@@ -121,6 +140,38 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, opportunity });
   } catch (error: any) {
     console.error("PUT /api/pipeline error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al actualizar oportunidad." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    if (errorResponse) return errorResponse;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "ID es obligatorio." }, { status: 400 });
+    }
+
+    const existing = await prisma.opportunity.findFirst({
+      where: { id, organizationId: user!.organizationId, isDeleted: false },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Oportunidad no encontrada en su organización." }, { status: 404 });
+    }
+
+    const opportunity = await prisma.opportunity.update({
+      where: { id },
+      data: { isDeleted: true, deletedAt: new Date() },
+    });
+
+    return NextResponse.json({ success: true, opportunity });
+  } catch (error: any) {
+    console.error("DELETE /api/pipeline error:", error);
+    return NextResponse.json({ success: false, error: "Error al eliminar oportunidad." }, { status: 500 });
   }
 }

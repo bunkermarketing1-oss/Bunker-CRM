@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const orgId = user!.organizationId;
+
     const [
       totalLeads,
       activeClients,
@@ -14,14 +22,30 @@ export async function GET(req: NextRequest) {
       recentActivities,
       recentLeads,
     ] = await Promise.all([
-      prisma.lead.count({ where: { isDeleted: false } }),
-      prisma.client.count({ where: { isDeleted: false, status: "active" } }),
-      prisma.opportunity.findMany({ where: { isDeleted: false }, include: { stage: true } }),
-      prisma.task.count({ where: { status: "pending" } }),
-      prisma.message.count({ where: { channel: "sms" } }),
-      prisma.socialPost.count({ where: { status: "scheduled" } }),
-      prisma.integration.findMany(),
+      prisma.lead.count({ where: { organizationId: orgId, isDeleted: false } }),
+      prisma.client.count({ where: { organizationId: orgId, isDeleted: false, status: "active" } }),
+      prisma.opportunity.findMany({ where: { organizationId: orgId, isDeleted: false }, include: { stage: true } }),
+      prisma.task.count({
+        where: {
+          status: "pending",
+          OR: [
+            { client: { organizationId: orgId } },
+            { lead: { organizationId: orgId } },
+            { user: { memberships: { some: { organizationId: orgId } } } },
+          ],
+        },
+      }),
+      prisma.message.count({ where: { organizationId: orgId, channel: "sms" } }),
+      prisma.socialPost.count({ where: { organizationId: orgId, status: "scheduled" } }),
+      prisma.integration.findMany({ where: { organizationId: orgId } }),
       prisma.activity.findMany({
+        where: {
+          OR: [
+            { client: { organizationId: orgId } },
+            { lead: { organizationId: orgId } },
+            { user: { memberships: { some: { organizationId: orgId } } } },
+          ],
+        },
         take: 6,
         orderBy: { performedAt: "desc" },
         include: {
@@ -31,8 +55,8 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.lead.findMany({
+        where: { organizationId: orgId, isDeleted: false },
         take: 5,
-        where: { isDeleted: false },
         orderBy: { createdAt: "desc" },
         include: { owner: { select: { name: true } } },
       }),
@@ -80,6 +104,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Dashboard API error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al cargar métricas del panel principal." }, { status: 500 });
   }
 }

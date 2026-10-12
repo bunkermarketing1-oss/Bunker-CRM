@@ -1,24 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
     const leadId = params.id;
     const body = await req.json().catch(() => ({}));
 
-    const lead = await prisma.lead.findUnique({
-      where: { id: leadId },
+    const lead = await prisma.lead.findFirst({
+      where: {
+        id: leadId,
+        organizationId: user!.organizationId,
+        isDeleted: false,
+      },
     });
 
-    if (!lead || lead.isDeleted) {
-      return NextResponse.json({ success: false, error: "Lead no encontrado" }, { status: 404 });
+    if (!lead) {
+      return NextResponse.json({ success: false, error: "Prospecto no encontrado en su organización." }, { status: 404 });
     }
 
     // 1. Create or Find Client
     const client = await prisma.client.create({
       data: {
-        organizationId: lead.organizationId,
-        ownerId: lead.ownerId,
+        organizationId: user!.organizationId,
+        ownerId: lead.ownerId || user!.id,
         name: lead.companyName || lead.name,
         companyName: lead.companyName || lead.name,
         email: lead.email,
@@ -33,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // 2. Create Contact for Client
     await prisma.contact.create({
       data: {
-        organizationId: lead.organizationId,
+        organizationId: user!.organizationId,
         clientId: client.id,
         firstName: lead.name,
         email: lead.email,
@@ -44,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // 3. Create Opportunity in First or Specified Pipeline Stage
     const defaultStage = await prisma.pipelineStage.findFirst({
-      where: { organizationId: lead.organizationId },
+      where: { organizationId: user!.organizationId },
       orderBy: { order: "asc" },
     });
 
@@ -52,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (defaultStage) {
       opportunity = await prisma.opportunity.create({
         data: {
-          organizationId: lead.organizationId,
+          organizationId: user!.organizationId,
           stageId: body.stageId || defaultStage.id,
           clientId: client.id,
           title: `Negocio: ${client.name}`,
@@ -73,7 +81,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // 5. Audit Log
     await prisma.auditLog.create({
       data: {
-        organizationId: lead.organizationId,
+        organizationId: user!.organizationId,
+        userId: user!.id,
         action: "lead_converted_to_client",
         entityType: "Client",
         entityId: client.id,
@@ -89,6 +98,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
   } catch (error: any) {
     console.error("Convert lead error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al convertir prospecto." }, { status: 500 });
   }
 }

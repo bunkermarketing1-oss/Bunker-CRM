@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, requireRole } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
-    const where: any = {};
+    const where: any = {
+      organizationId: user!.organizationId,
+    };
     if (status && status !== "all") {
       where.status = status;
     }
@@ -24,22 +32,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, posts });
   } catch (error: any) {
     console.error("GET /api/posts error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar publicaciones." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { content, platforms, scheduledFor, connectedAccountId, publishNow, mediaUrl } = body;
 
-    if (!content || content.trim() === "") {
+    if (!content || typeof content !== "string" || content.trim() === "") {
       return NextResponse.json({ success: false, error: "El contenido de la publicación es obligatorio." }, { status: 400 });
-    }
-
-    const org = await prisma.organization.findFirst();
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organización no encontrada." }, { status: 404 });
     }
 
     let status = "draft";
@@ -53,13 +59,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (publishNow) {
-      // Check if there is an active connected account
       if (!connectedAccountId) {
         status = "failed";
         errorMessage = "Para publicar inmediatamente debes seleccionar una cuenta conectada autorizada.";
       } else {
-        const account = await prisma.connectedAccount.findUnique({
-          where: { id: connectedAccountId },
+        const account = await prisma.connectedAccount.findFirst({
+          where: { id: connectedAccountId, organizationId: user!.organizationId },
           include: { integration: true },
         });
 
@@ -67,8 +72,6 @@ export async function POST(req: NextRequest) {
           status = "failed";
           errorMessage = "La cuenta seleccionada no tiene permisos vigentes de publicación.";
         } else {
-          // As required by Section 3, Priority 4:
-          // Check platform permissions / token
           status = "published";
           publishedAt = new Date();
         }
@@ -77,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const post = await prisma.socialPost.create({
       data: {
-        organizationId: org.id,
+        organizationId: user!.organizationId,
         connectedAccountId: connectedAccountId || null,
         content: content.trim(),
         platformsJson: JSON.stringify(platforms || ["instagram", "facebook"]),
@@ -96,17 +99,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/posts error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al crear publicación." }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { id, content, status, scheduledFor } = body;
 
     if (!id) {
-      return NextResponse.json({ success: false, error: "ID es obligatorio" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "ID es obligatorio." }, { status: 400 });
+    }
+
+    const existing = await prisma.socialPost.findFirst({
+      where: { id, organizationId: user!.organizationId },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Publicación no encontrada en su organización." }, { status: 404 });
     }
 
     const data: any = {};
@@ -122,6 +136,37 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, post });
   } catch (error: any) {
     console.error("PUT /api/posts error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al actualizar publicación." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { user, errorResponse } = await requireRole(req, ["admin", "marketing_specialist"]);
+    if (errorResponse) return errorResponse;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "ID es obligatorio." }, { status: 400 });
+    }
+
+    const existing = await prisma.socialPost.findFirst({
+      where: { id, organizationId: user!.organizationId },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Publicación no encontrada en su organización." }, { status: 404 });
+    }
+
+    const post = await prisma.socialPost.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, post });
+  } catch (error: any) {
+    console.error("DELETE /api/posts error:", error);
+    return NextResponse.json({ success: false, error: "Error al eliminar publicación." }, { status: 500 });
   }
 }

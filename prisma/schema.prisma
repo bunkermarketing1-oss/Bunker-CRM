@@ -17,6 +17,7 @@ model User {
   role         String   @default("sales_rep") // admin, sales_rep, marketing_specialist, analyst
   avatarUrl    String?
   isActive     Boolean  @default(true)
+  supabaseAuthId String? @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

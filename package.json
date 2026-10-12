@@ -9,6 +9,8 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
+    "auth:provision": "node prisma/provision-users.js",
+    "test:auth": "node tests/auth-suite.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

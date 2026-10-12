@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
     const clientId = searchParams.get("clientId");
     const leadId = searchParams.get("leadId");
 
-    const where: any = {};
+    const where: any = {
+      OR: [
+        { client: { organizationId: user!.organizationId } },
+        { lead: { organizationId: user!.organizationId } },
+        { user: { memberships: { some: { organizationId: user!.organizationId } } } },
+      ],
+    };
+
     if (type && type !== "all") where.type = type;
     if (clientId) where.clientId = clientId;
     if (leadId) where.leadId = leadId;
@@ -27,17 +40,39 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, activities });
   } catch (error: any) {
     console.error("GET /api/activities error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar actividades." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { type, title, description, outcome, clientId, leadId, userId } = body;
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
+    const { type, title, description, outcome, clientId, leadId } = body;
 
     if (!title || !type) {
-      return NextResponse.json({ success: false, error: "Título y tipo son requeridos" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Título y tipo son requeridos." }, { status: 400 });
+    }
+
+    // Verify client or lead belongs to user's org if provided
+    if (clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: clientId, organizationId: user!.organizationId },
+      });
+      if (!client) {
+        return NextResponse.json({ success: false, error: "Cliente no pertenece a su organización." }, { status: 404 });
+      }
+    }
+
+    if (leadId) {
+      const lead = await prisma.lead.findFirst({
+        where: { id: leadId, organizationId: user!.organizationId },
+      });
+      if (!lead) {
+        return NextResponse.json({ success: false, error: "Prospecto no pertenece a su organización." }, { status: 404 });
+      }
     }
 
     const activity = await prisma.activity.create({
@@ -48,7 +83,7 @@ export async function POST(req: NextRequest) {
         outcome: outcome || "completed",
         clientId: clientId || null,
         leadId: leadId || null,
-        userId: userId || null,
+        userId: user!.id,
       },
       include: {
         user: { select: { id: true, name: true } },
@@ -60,6 +95,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, activity }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/activities error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al registrar actividad." }, { status: 500 });
   }
 }

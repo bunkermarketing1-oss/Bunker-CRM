@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, requireRole } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const org = await prisma.organization.findFirst();
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organización no encontrada" }, { status: 404 });
-    }
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
 
     const integrations = await prisma.integration.findMany({
-      where: { organizationId: org.id },
+      where: { organizationId: user!.organizationId },
       include: {
         connectedAccounts: true,
       },
       orderBy: { createdAt: "asc" },
     });
 
-    // Check system environment variables to verify actual availability of credentials
     const credentialStatus = {
       meta: Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET),
       google_ads: Boolean(process.env.GOOGLE_ADS_CLIENT_ID && process.env.GOOGLE_ADS_DEVELOPER_TOKEN),
@@ -31,21 +31,24 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("GET /api/integrations error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al consultar integraciones." }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { id, action, credentials } = body;
 
-    const integration = await prisma.integration.findUnique({
-      where: { id },
+    const integration = await prisma.integration.findFirst({
+      where: { id, organizationId: user!.organizationId },
     });
 
     if (!integration) {
-      return NextResponse.json({ success: false, error: "Integración no encontrada" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Integración no encontrada en su organización." }, { status: 404 });
     }
 
     if (action === "disconnect") {
@@ -58,14 +61,14 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Remove connected accounts for this integration
       await prisma.connectedAccount.deleteMany({
         where: { integrationId: id },
       });
 
       await prisma.auditLog.create({
         data: {
-          organizationId: integration.organizationId,
+          organizationId: user!.organizationId,
+          userId: user!.id,
           action: "integration_disconnected",
           entityType: "Integration",
           entityId: integration.id,
@@ -81,18 +84,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "connect") {
-      // Validate credentials provided
-      // As required by Section 3, Rule 6: No simular conexiones exitosas si faltan credenciales
       const { apiKey, apiSecret, accountId } = credentials || {};
 
       if (!apiKey || !apiSecret) {
         return NextResponse.json({
           success: false,
-          error: "Faltan credenciales obligatorias: Clave API (Client ID) y Clave Secreta (Secret).",
+          error: "Faltan credenciales obligatorias: Clave API y Clave Secreta.",
         }, { status: 400 });
       }
 
-      // Check if credentials match minimal length / real syntax format
       if (apiKey.length < 8 || apiSecret.length < 8) {
         return NextResponse.json({
           success: false,
@@ -100,7 +100,6 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      // If valid syntax, save and mark as connected with connected account
       const updated = await prisma.integration.update({
         where: { id },
         data: {
@@ -112,7 +111,7 @@ export async function POST(req: NextRequest) {
 
       await prisma.connectedAccount.create({
         data: {
-          organizationId: integration.organizationId,
+          organizationId: user!.organizationId,
           integrationId: id,
           accountName: `Cuenta Oficial (${integration.provider.toUpperCase()})`,
           externalId: accountId || `acc_${Date.now()}`,
@@ -122,7 +121,8 @@ export async function POST(req: NextRequest) {
 
       await prisma.auditLog.create({
         data: {
-          organizationId: integration.organizationId,
+          organizationId: user!.organizationId,
+          userId: user!.id,
           action: "integration_connected",
           entityType: "Integration",
           entityId: integration.id,
@@ -137,9 +137,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: false, error: "Acción no reconocida" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Acción no reconocida." }, { status: 400 });
   } catch (error: any) {
     console.error("POST /api/integrations error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al actualizar integración." }, { status: 500 });
   }
 }

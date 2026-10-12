@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
     const { id } = body;
 
-    const integration = await prisma.integration.findUnique({
-      where: { id },
+    const integration = await prisma.integration.findFirst({
+      where: { id, organizationId: user!.organizationId },
     });
 
     if (!integration) {
-      return NextResponse.json({ success: false, error: "Integración no encontrada" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Integración no encontrada en su organización." }, { status: 404 });
     }
 
     if (integration.status !== "connected") {
@@ -31,7 +35,8 @@ export async function POST(req: NextRequest) {
 
     await prisma.auditLog.create({
       data: {
-        organizationId: integration.organizationId,
+        organizationId: user!.organizationId,
+        userId: user!.id,
         action: "integration_synced",
         entityType: "Integration",
         entityId: integration.id,
@@ -46,6 +51,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Sync error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error durante la sincronización." }, { status: 500 });
   }
 }
