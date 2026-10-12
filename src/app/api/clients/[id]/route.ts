@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireAuth, requireAdmin } from "@/lib/auth";
 import { CLIENT_STATUSES, isOrgMember, parseAmount } from "@/lib/validation-helpers";
 import { validateAndNormalizePhone } from "@/lib/phone";
 
@@ -18,6 +18,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const { id } = params;
     if (!id) {
       return NextResponse.json({ success: false, error: "ID de cliente no proporcionado." }, { status: 400 });
+    }
+
+    if (user!.isClientUser && user!.clientId !== id) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No tiene permisos para consultar la empresa de otro cliente." },
+        { status: 403 }
+      );
     }
 
     const client = await prisma.client.findFirst({
@@ -78,6 +85,14 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (errorResponse) return errorResponse;
 
     const { id } = params;
+
+    if (user!.isClientUser && user!.clientId !== id) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No tiene permisos para modificar la empresa de otro cliente." },
+        { status: 403 }
+      );
+    }
+
     const existing = await prisma.client.findFirst({
       where: {
         id,
@@ -191,7 +206,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
-    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
     const { id } = params;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { stageBelongsToOrg } from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ class AlreadyConvertedError extends Error {}
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { user, errorResponse } = await requireAuth(req);
+    const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
     const leadId = params.id;

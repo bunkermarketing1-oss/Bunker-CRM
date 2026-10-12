@@ -7,7 +7,10 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
-  role: string; // admin, sales_rep, marketing_specialist, analyst
+  role: string; // admin, sales_rep, marketing_specialist, analyst, client_user, client_admin
+  clientId?: string | null;
+  clientName?: string | null;
+  isClientUser?: boolean;
   organizationId: string;
   organizationName: string;
   organizationSlug: string;

@@ -14,7 +14,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
-  role         String   @default("sales_rep") // admin, sales_rep, marketing_specialist, analyst, client_user, client_admin
+  role         String   @default("ADMIN") // Only two functional roles: ADMIN (Bunker Agency internal), CLIENT (Client commercial portal)
   clientId     String?
   avatarUrl    String?
   isActive     Boolean  @default(true)
@@ -89,6 +89,7 @@ model Client {
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   owner          User?         @relation("ClientOwner", fields: [ownerId], references: [id])
   portalUsers    User[]        @relation("ClientPortalUsers")
+  leads          Lead[]
   contacts       Contact[]
   opportunities  Opportunity[]
   activities     Activity[]
@@ -147,6 +148,8 @@ model Lead {
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   owner          User?        @relation("LeadOwner", fields: [ownerId], references: [id])
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   contacts       Contact[]
   opportunities  Opportunity[]
   activities     Activity[]

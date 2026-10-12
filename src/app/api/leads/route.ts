@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireAuth, requireAdmin } from "@/lib/auth";
 import { createLeadSchema, updateLeadSchema } from "@/lib/validations/lead";
 import { validateAndNormalizePhone } from "@/lib/phone";
 import { findDuplicateLeads } from "@/lib/validations/duplicate-detector";
@@ -22,6 +22,14 @@ export async function GET(req: NextRequest) {
       organizationId: user!.organizationId,
       isDeleted: false,
     };
+
+    // Client user is restricted strictly to leads belonging to their company
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, leads: [] });
+      }
+      where.clientId = user!.clientId;
+    }
 
     if (status && status !== "all") {
       where.status = status;
@@ -159,10 +167,20 @@ export async function POST(req: NextRequest) {
     }
     qualification = Math.min(100, Math.max(0, qualification));
 
-    // 6. Create Lead in Database with Strict Organization Isolation
+    // Resolve target clientId
+    let targetClientId = (rawBody as any)?.clientId || null;
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
+      }
+      targetClientId = user!.clientId;
+    }
+
+    // 6. Create Lead in Database with Strict Organization and Client Isolation
     const lead = await prisma.lead.create({
       data: {
         organizationId: user!.organizationId, // Non-tamperable
+        clientId: targetClientId,
         name: data.name,
         companyName: data.companyName,
         email: data.email,
@@ -252,6 +270,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Prospecto no encontrado en su organización." },
         { status: 404 }
+      );
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede modificar prospectos de otra empresa." },
+        { status: 403 }
       );
     }
 
@@ -403,7 +428,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(req.url);

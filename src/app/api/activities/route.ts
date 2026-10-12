@@ -17,7 +17,12 @@ export async function GET(req: NextRequest) {
 
     const where: any = {};
 
-    if (clientId) {
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, activities: [] });
+      }
+      where.clientId = user!.clientId;
+    } else if (clientId) {
       const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
       if (!belongs) {
         return NextResponse.json(
@@ -75,8 +80,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Título y tipo son requeridos." }, { status: 400 });
     }
 
-    // Verify client or lead belongs to user's org if provided
-    if (clientId) {
+    let targetClientId = clientId;
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
+      }
+      targetClientId = user!.clientId;
+    } else if (clientId) {
       const client = await prisma.client.findFirst({
         where: { id: clientId, organizationId: user!.organizationId },
       });
@@ -100,7 +110,7 @@ export async function POST(req: NextRequest) {
         title: title.trim(),
         description: description?.trim() || null,
         outcome: outcome || "completed",
-        clientId: clientId || null,
+        clientId: targetClientId || null,
         leadId: leadId || null,
         userId: user!.id,
       },

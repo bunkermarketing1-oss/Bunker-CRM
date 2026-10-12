@@ -6,11 +6,38 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 export const AUTH_COOKIE_NAME = "bunker_session";
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
 
+export const ROLES = {
+  ADMIN: "ADMIN",
+  CLIENT: "CLIENT",
+} as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+export function normalizeRole(role?: string | null): UserRole {
+  if (!role) return ROLES.ADMIN;
+  const upper = role.toUpperCase();
+  if (upper === "CLIENT" || upper === "CLIENT_USER" || upper === "CLIENT_ADMIN") {
+    return ROLES.CLIENT;
+  }
+  return ROLES.ADMIN;
+}
+
+export function isClientRole(role?: string | null): boolean {
+  return normalizeRole(role) === ROLES.CLIENT;
+}
+
+export function isBunkerRole(role?: string | null): boolean {
+  return normalizeRole(role) === ROLES.ADMIN;
+}
+
 export interface AuthenticatedUser {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: UserRole;
+  clientId: string | null;
+  clientName: string | null;
+  isClientUser: boolean;
   supabaseAuthId: string;
   organizationId: string;
   organizationName: string;
@@ -78,6 +105,7 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
       isActive: true,
     },
     include: {
+      client: { select: { id: true, name: true } },
       memberships: {
         include: {
           organization: true,
@@ -96,6 +124,7 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
       where: { id: dbUser.id },
       data: { supabaseAuthId: supabaseUser.id },
       include: {
+        client: { select: { id: true, name: true } },
         memberships: {
           include: {
             organization: true,
@@ -132,11 +161,17 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
     return null;
   }
 
+  const role = normalizeRole(dbUser.role);
+  const isClient = role === ROLES.CLIENT || Boolean(dbUser.clientId);
+
   return {
     id: dbUser.id,
     email: dbUser.email,
     name: dbUser.name,
-    role: dbUser.role, // Server-verified role from DB
+    role: isClient ? ROLES.CLIENT : ROLES.ADMIN, // Server-verified canonical role
+    clientId: dbUser.clientId || null,
+    clientName: dbUser.client?.name || null,
+    isClientUser: isClient,
     supabaseAuthId: supabaseUser.id,
     organizationId: primaryMembership.organization.id,
     organizationName: primaryMembership.organization.name,
@@ -165,7 +200,8 @@ export async function requireAuth(req: NextRequest): Promise<{
 }
 
 /**
- * Middleware helper for Route Handlers requiring specific roles.
+ * Validates that the authenticated user has one of the allowed roles.
+ * Normalizes all role strings to canonical ADMIN or CLIENT.
  */
 export async function requireRole(
   req: NextRequest,
@@ -179,7 +215,8 @@ export async function requireRole(
     return { user: null, errorResponse };
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  const normalizedAllowed = allowedRoles.map((r) => normalizeRole(r));
+  if (!normalizedAllowed.includes(user.role)) {
     return {
       user: null,
       errorResponse: NextResponse.json(
@@ -196,8 +233,35 @@ export async function requireRole(
 }
 
 /**
- * Shorthand for admin-only operations.
+ * Restricts access to ADMIN role (Bunker Agency internal administration).
+ * Explicitly rejects CLIENT users with HTTP 403 Forbidden.
  */
-export async function requireAdmin(req: NextRequest) {
-  return requireRole(req, ["admin"]);
+export async function requireAdmin(req: NextRequest): Promise<{
+  user: AuthenticatedUser | null;
+  errorResponse: NextResponse | null;
+}> {
+  const { user, errorResponse } = await requireAuth(req);
+  if (errorResponse || !user) {
+    return { user: null, errorResponse };
+  }
+
+  if (user.isClientUser || user.role !== ROLES.ADMIN) {
+    return {
+      user: null,
+      errorResponse: NextResponse.json(
+        {
+          success: false,
+          error: "Acceso denegado. Este módulo o recurso está reservado exclusivamente para administradores internos de Bunker Agency.",
+        },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { user, errorResponse: null };
 }
+
+/**
+ * Alias for requireAdmin ensuring all Bunker internal modules require ADMIN role.
+ */
+export const requireBunkerRole = requireAdmin;

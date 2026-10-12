@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireAuth, requireAdmin } from "@/lib/auth";
 import { CLIENT_STATUSES, isOrgMember, parseAmount } from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,14 @@ export async function GET(req: NextRequest) {
       organizationId: user!.organizationId,
       isDeleted: false,
     };
+
+    // Client users can only see their own company
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, clients: [] });
+      }
+      where.id = user!.clientId;
+    }
 
     if (status && status !== "all") {
       where.status = status;
@@ -79,6 +87,13 @@ export async function POST(req: NextRequest) {
   try {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
+
+    if (user!.isClientUser) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. La creación de clientes está reservada para administradores de Bunker Agency." },
+        { status: 403 }
+      );
+    }
 
     const body = await req.json().catch(() => ({}));
     const { name, companyName, email, phone, website, industry, revenue, notes, ownerId } = body;
@@ -159,6 +174,15 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Cliente no encontrado en su organización." }, { status: 404 });
     }
 
+    if (user!.isClientUser) {
+      if (!user!.clientId || existing.id !== user!.clientId) {
+        return NextResponse.json(
+          { success: false, error: "Acceso denegado. No puede modificar información de otra empresa." },
+          { status: 403 }
+        );
+      }
+    }
+
     if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
       return NextResponse.json({ success: false, error: "El nombre del cliente es obligatorio." }, { status: 400 });
     }
@@ -201,7 +225,7 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { user, errorResponse } = await requireRole(req, ["admin"]);
+    const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(req.url);

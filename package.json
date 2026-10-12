@@ -14,6 +14,7 @@
     "test:leads": "node tests/leads-suite.js",
     "test:audit": "node tests/audit-suite.js",
     "test:clients": "node tests/clients-suite.js",
+    "test:portal": "node tests/two-role-architecture-suite.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

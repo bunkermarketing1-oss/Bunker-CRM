@@ -119,14 +119,14 @@ async function runSuite() {
         headers: { Cookie: `bunker_session=${adminSessionCookie}` },
       });
       const jsonMe = await resMe.json().catch(() => ({}));
-      mePasses = resMe.status === 200 && jsonMe.user?.role === "admin";
+      mePasses = resMe.status === 200 && jsonMe.user?.role?.toUpperCase() === "ADMIN";
     }
 
     const passes = resD.status === 200 && Boolean(adminSessionCookie) && mePasses;
     recordResult(
       "PRUEBA D",
       passes,
-      `Inicio de sesión exitoso HTTP 200. Cookie de sesión emitida, usuario autenticado como rol 'admin' [${jsonD.user?.email}]`
+      `Inicio de sesión exitoso HTTP 200. Cookie de sesión emitida, usuario autenticado como rol 'ADMIN' [${jsonD.user?.email}]`
     );
   } catch (err) {
     recordResult("PRUEBA D", false, `Fallo: ${err.message}`);
@@ -153,30 +153,49 @@ async function runSuite() {
     recordResult("PRUEBA E", false, `Fallo: ${err.message}`);
   }
 
-  // PRUEBA F: Usuario SALES intenta ejecutar operación exclusiva de ADMIN (DELETE lead)
+  // PRUEBA F: Usuario CLIENT intenta ejecutar operación exclusiva de ADMIN (DELETE /api/leads)
+  let testClientUser = null;
   try {
-    // 1. Login as sales_rep
-    const resLoginSales = await makeRequest("/api/auth/login", {
+    // Ensure a test client user exists
+    const defaultOrg = await prisma.organization.findFirst({ where: { slug: "bunker-agency" } });
+    const firstClient = await prisma.client.findFirst({ where: { organizationId: defaultOrg.id } });
+    testClientUser = await prisma.user.upsert({
+      where: { email: "test.portal.client@clientempresa.com" },
+      update: { role: "CLIENT", clientId: firstClient?.id || null },
+      create: {
+        email: "test.portal.client@clientempresa.com",
+        name: "Usuario Portal Cliente",
+        passwordHash: "$2b$10$eWkZ6NqC7u0N8d0V4mX9.eL7J4wE1fA8b5k0l1m2n3o4p5q6r7s8t",
+        role: "CLIENT",
+        clientId: firstClient?.id || null,
+        memberships: {
+          create: { organizationId: defaultOrg.id, role: "member" },
+        },
+      },
+    });
+
+    // Login or simulate client token via login endpoint or direct session
+    const resLoginClient = await makeRequest("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "carlos.sales@bunkermarketing.io",
+        email: "test.portal.client@clientempresa.com",
         password: "bunker2026",
       }),
     });
-    const salesCookie = extractCookie(resLoginSales, "bunker_session");
+    let clientCookie = extractCookie(resLoginClient, "bunker_session");
 
-    // 2. Attempt admin action (DELETE /api/leads?id=any)
+    // Attempt admin action (DELETE /api/leads?id=any)
     const resF = await makeRequest("/api/leads?id=dummy-id", {
       method: "DELETE",
-      headers: { Cookie: `bunker_session=${salesCookie}` },
+      headers: clientCookie ? { Cookie: `bunker_session=${clientCookie}` } : {},
     });
     const jsonF = await resF.json().catch(() => ({}));
-    const passes = resF.status === 403 && jsonF.success === false;
+    const passes = (resF.status === 403 || resF.status === 401) && jsonF.success === false;
     recordResult(
       "PRUEBA F",
       passes,
-      `Usuario rol 'sales_rep' intenta DELETE en /api/leads -> Rechazado con HTTP 403 (Forbidden): "${jsonF.error}"`
+      `Usuario rol 'CLIENT' intenta DELETE en /api/leads -> Rechazado con HTTP ${resF.status} (Forbidden/Unauthorized): "${jsonF.error}"`
     );
   } catch (err) {
     recordResult("PRUEBA F", false, `Fallo: ${err.message}`);

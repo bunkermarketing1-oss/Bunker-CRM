@@ -42,6 +42,24 @@ function isTokenValid(token: string): boolean {
   }
 }
 
+function getJwtPayload(token: string): any {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -57,6 +75,7 @@ export function middleware(request: NextRequest) {
   }
 
   const sessionCookie = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const tokenPayload = sessionCookie ? getJwtPayload(sessionCookie) : null;
   const isAuthenticated = Boolean(sessionCookie && isTokenValid(sessionCookie));
 
   // 2. Handle root route "/"
@@ -71,7 +90,6 @@ export function middleware(request: NextRequest) {
   // 3. Handle login page access
   if (pathname === "/login") {
     if (isAuthenticated) {
-      // User is already logged in, redirect to dashboard
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
@@ -89,12 +107,25 @@ export function middleware(request: NextRequest) {
 
   if (isProtectedPath) {
     if (!isAuthenticated) {
-      // Redirect to login with safe internal callbackUrl
       const loginUrl = new URL("/login", request.url);
       if (pathname !== "/dashboard") {
         loginUrl.searchParams.set("callbackUrl", pathname);
       }
       return NextResponse.redirect(loginUrl);
+    }
+
+    // 5. Client role redirection from internal Bunker Agency admin pages
+    const userRole = tokenPayload?.user_metadata?.role?.toUpperCase();
+    const hasClientId = Boolean(tokenPayload?.user_metadata?.clientId);
+    const isClientUser = userRole === "CLIENT" || hasClientId;
+
+    const isAdminOnlyPath =
+      pathname.startsWith("/marketing") ||
+      pathname.startsWith("/settings") ||
+      pathname.startsWith("/automations");
+
+    if (isClientUser && isAdminOnlyPath) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 

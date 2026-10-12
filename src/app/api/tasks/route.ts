@@ -17,7 +17,12 @@ export async function GET(req: NextRequest) {
 
     const where: any = {};
 
-    if (clientId) {
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, tasks: [] });
+      }
+      where.clientId = user!.clientId;
+    } else if (clientId) {
       const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
       if (!belongs) {
         return NextResponse.json(
@@ -76,7 +81,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Título de la tarea es requerido." }, { status: 400 });
     }
 
-    if (clientId) {
+    let targetClientId = clientId;
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
+      }
+      targetClientId = user!.clientId;
+    } else if (clientId) {
       const client = await prisma.client.findFirst({
         where: { id: clientId, organizationId: user!.organizationId },
       });
@@ -101,7 +112,7 @@ export async function POST(req: NextRequest) {
         dueDate: dueDate ? new Date(dueDate) : null,
         priority: priority || "medium",
         status: "pending",
-        clientId: clientId || null,
+        clientId: targetClientId || null,
         leadId: leadId || null,
         userId: userId || user!.id,
       },
@@ -144,6 +155,13 @@ export async function PUT(req: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "Tarea no encontrada en su organización." }, { status: 404 });
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede modificar tareas de otra empresa." },
+        { status: 403 }
+      );
     }
 
     const data: any = {};
@@ -192,6 +210,13 @@ export async function DELETE(req: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "Tarea no encontrada en su organización." }, { status: 404 });
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede eliminar tareas de otra empresa." },
+        { status: 403 }
+      );
     }
 
     const task = await prisma.task.delete({

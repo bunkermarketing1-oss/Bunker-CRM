@@ -62,7 +62,7 @@ interface TeamMember {
 
 export default function LeadsPage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN" && !user?.isClientUser;
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);

@@ -20,14 +20,17 @@ export async function GET(req: NextRequest) {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
+    const oppWhere: any = { isDeleted: false, organizationId: user!.organizationId };
+    if (user!.isClientUser) {
+      oppWhere.clientId = user!.clientId || "__NO_CLIENT__";
+    }
+
     const stages = await prisma.pipelineStage.findMany({
       where: { organizationId: user!.organizationId },
       orderBy: { order: "asc" },
       include: {
         opportunities: {
-          // Defense in depth: never surface opportunities of another organization,
-          // even if one was linked to this stage.
-          where: { isDeleted: false, organizationId: user!.organizationId },
+          where: oppWhere,
           include: {
             client: { select: { id: true, name: true, phone: true } },
             lead: { select: { id: true, name: true, phone: true } },
@@ -101,12 +104,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let targetClientId = clientId;
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return badRequest("Usuario cliente no tiene empresa asociada.");
+      }
+      targetClientId = user!.clientId;
+    } else {
+      if (clientId && !(await clientBelongsToOrg(user!.organizationId, String(clientId)))) {
+        return badRequest("El cliente indicado no pertenece a su organización.");
+      }
+    }
+
     // Every referenced record must belong to the authenticated user's organization.
     if (!(await stageBelongsToOrg(user!.organizationId, stageId))) {
       return badRequest("Etapa de pipeline no válida para su organización.");
-    }
-    if (clientId && !(await clientBelongsToOrg(user!.organizationId, String(clientId)))) {
-      return badRequest("El cliente indicado no pertenece a su organización.");
     }
     if (leadId && !(await leadBelongsToOrg(user!.organizationId, String(leadId)))) {
       return badRequest("El prospecto indicado no pertenece a su organización.");
@@ -116,7 +128,7 @@ export async function POST(req: NextRequest) {
       data: {
         organizationId: user!.organizationId,
         stageId,
-        clientId: clientId || null,
+        clientId: targetClientId || null,
         leadId: leadId || null,
         title: title.trim(),
         value: amount,
@@ -157,6 +169,13 @@ export async function PUT(req: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "Oportunidad no encontrada en su organización." }, { status: 404 });
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede modificar oportunidades de otra empresa." },
+        { status: 403 }
+      );
     }
 
     const data: any = {};
@@ -224,6 +243,13 @@ export async function DELETE(req: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "Oportunidad no encontrada en su organización." }, { status: 404 });
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede eliminar oportunidades de otra empresa." },
+        { status: 403 }
+      );
     }
 
     const opportunity = await prisma.opportunity.update({

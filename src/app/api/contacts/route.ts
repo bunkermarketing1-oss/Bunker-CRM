@@ -19,7 +19,12 @@ export async function GET(req: NextRequest) {
       isDeleted: false,
     };
 
-    if (clientId) {
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, contacts: [] });
+      }
+      where.clientId = user!.clientId;
+    } else if (clientId) {
       const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
       if (!belongs) {
         return NextResponse.json(
@@ -56,19 +61,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { clientId, firstName, lastName, email, phone, jobTitle, isPrimary } = body;
 
-    if (!clientId || typeof clientId !== "string") {
-      return NextResponse.json(
-        { success: false, error: "El cliente asociado es obligatorio." },
-        { status: 400 }
-      );
-    }
+    let targetClientId = clientId;
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json(
+          { success: false, error: "Usuario cliente no tiene empresa asociada." },
+          { status: 403 }
+        );
+      }
+      targetClientId = user!.clientId;
+    } else {
+      if (!targetClientId || typeof targetClientId !== "string") {
+        return NextResponse.json(
+          { success: false, error: "El cliente asociado es obligatorio." },
+          { status: 400 }
+        );
+      }
 
-    const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
-    if (!belongs) {
-      return NextResponse.json(
-        { success: false, error: "El cliente especificado no pertenece a su organización." },
-        { status: 404 }
-      );
+      const belongs = await clientBelongsToOrg(user!.organizationId, targetClientId);
+      if (!belongs) {
+        return NextResponse.json(
+          { success: false, error: "El cliente especificado no pertenece a su organización." },
+          { status: 404 }
+        );
+      }
     }
 
     if (!firstName || typeof firstName !== "string" || firstName.trim().length < 2) {
@@ -122,7 +138,7 @@ export async function POST(req: NextRequest) {
       const created = await tx.contact.create({
         data: {
           organizationId: user!.organizationId,
-          clientId,
+          clientId: targetClientId,
           firstName: firstName.trim(),
           lastName: lastName?.trim() || null,
           email: email?.trim().toLowerCase() || null,
@@ -181,6 +197,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Contacto no encontrado en su organización." },
         { status: 404 }
+      );
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede modificar contactos de otra empresa." },
+        { status: 403 }
       );
     }
 
@@ -274,6 +297,13 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Contacto no encontrado en su organización." },
         { status: 404 }
+      );
+    }
+
+    if (user!.isClientUser && existing.clientId !== user!.clientId) {
+      return NextResponse.json(
+        { success: false, error: "Acceso denegado. No puede eliminar contactos de otra empresa." },
+        { status: 403 }
       );
     }
 
