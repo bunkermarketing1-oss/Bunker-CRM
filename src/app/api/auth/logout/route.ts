@@ -8,12 +8,16 @@ export async function POST(req: NextRequest) {
       message: "Sesión cerrada correctamente.",
     });
 
+    const isHttps =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.nextUrl.protocol === "https:";
+
     // Clear session cookie
     response.cookies.set({
       name: AUTH_COOKIE_NAME,
       value: "",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       sameSite: "lax",
       maxAge: 0,
       path: "/",

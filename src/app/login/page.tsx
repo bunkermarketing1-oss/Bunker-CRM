@@ -43,10 +43,11 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
         setErrorMessage(data.error || "Credenciales incorrectas o acceso no autorizado.");
@@ -54,9 +55,8 @@ function LoginForm() {
         return;
       }
 
-      // Successful login -> Redirect to dashboard or callbackUrl
-      router.push(callbackUrl);
-      router.refresh();
+      // Successful login -> Immediate full page navigation with newly set cookie
+      window.location.href = callbackUrl;
     } catch (err: any) {
       setErrorMessage("Error de conexión con el servidor. Intente nuevamente.");
       setIsLoading(false);
