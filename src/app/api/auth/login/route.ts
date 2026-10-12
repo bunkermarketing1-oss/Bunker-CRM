@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, AUTH_COOKIE_MAX_AGE } from "@/lib/auth";
+import { getClientIp, peekRateLimit, registerAttempt, resetRateLimit } from "@/lib/rate-limit";
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILURES_PER_ACCOUNT = 5; // per IP + email
+const MAX_FAILURES_PER_IP = 30;
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +22,23 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.trim().toLowerCase();
 
+    // Brute-force protection (best effort, in-memory, per process)
+    const ip = getClientIp(req.headers);
+    const accountKey = `login:acct:${ip}:${cleanEmail}`;
+    const ipKey = `login:ip:${ip}`;
+    const accountCheck = peekRateLimit(accountKey, MAX_FAILURES_PER_ACCOUNT);
+    const ipCheck = peekRateLimit(ipKey, MAX_FAILURES_PER_IP);
+    if (!accountCheck.allowed || !ipCheck.allowed) {
+      const retryAfter = Math.max(accountCheck.retryAfterSeconds, ipCheck.retryAfterSeconds);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Demasiados intentos fallidos. Espere unos minutos antes de volver a intentarlo.",
+        },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
+    }
+
     // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -24,12 +46,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (error || !data.session || !data.user) {
+      registerAttempt(accountKey, LOGIN_WINDOW_MS);
+      registerAttempt(ipKey, LOGIN_WINDOW_MS);
       // Generic error response to prevent user enumeration
       return NextResponse.json(
         { success: false, error: "Credenciales inválidas o acceso no autorizado." },
         { status: 401 }
       );
     }
+
+    resetRateLimit(accountKey);
 
     // Verify user status in Prisma database
     const dbUser = await prisma.user.findFirst({
@@ -88,13 +114,19 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-forwarded-proto") === "https" ||
       req.nextUrl.protocol === "https:";
 
+    // The cookie must never outlive the access token it carries.
+    const tokenLifetime =
+      typeof data.session.expires_in === "number" && data.session.expires_in > 0
+        ? data.session.expires_in
+        : 3600;
+
     response.cookies.set({
       name: AUTH_COOKIE_NAME,
       value: data.session.access_token,
       httpOnly: true,
       secure: isHttps,
       sameSite: "lax",
-      maxAge: AUTH_COOKIE_MAX_AGE,
+      maxAge: Math.min(AUTH_COOKIE_MAX_AGE, tokenLifetime),
       path: "/",
     });
 

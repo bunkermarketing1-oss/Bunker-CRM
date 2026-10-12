@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
+    // Revoke the session in Supabase Auth so a copied token cannot be reused after logout.
+    // Best effort: failing to revoke must never prevent the cookie from being cleared.
+    const authHeader = req.headers.get("authorization");
+    const token =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.substring(7).trim()
+        : req.cookies.get(AUTH_COOKIE_NAME)?.value;
+
+    if (token) {
+      try {
+        // scope "local": only this session is revoked (other devices keep working).
+        await getSupabaseAdmin().auth.admin.signOut(token, "local");
+      } catch (revokeError) {
+        console.error("No se pudo revocar la sesión en Supabase:", revokeError);
+      }
+    }
+
     const response = NextResponse.json({
       success: true,
       message: "Sesión cerrada correctamente.",

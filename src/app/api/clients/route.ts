@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/auth";
+import { CLIENT_STATUSES, isOrgMember, parseAmount } from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "El nombre del cliente es obligatorio." }, { status: 400 });
     }
 
+    const revenueAmount = parseAmount(revenue);
+    if (revenueAmount === null) {
+      return NextResponse.json(
+        { success: false, error: "El valor contratado debe ser un número mayor o igual a 0 (USD)." },
+        { status: 400 }
+      );
+    }
+
+    // The owner must be a member of the authenticated user's organization.
+    if (ownerId && (typeof ownerId !== "string" || !(await isOrgMember(user!.organizationId, ownerId)))) {
+      return NextResponse.json(
+        { success: false, error: "El responsable asignado no pertenece a su organización." },
+        { status: 400 }
+      );
+    }
+
     const client = await prisma.client.create({
       data: {
         organizationId: user!.organizationId,
@@ -76,7 +93,7 @@ export async function POST(req: NextRequest) {
         phone: phone?.trim() || null,
         website: website?.trim() || null,
         industry: industry?.trim() || "General",
-        revenue: revenue ? parseFloat(revenue) : 0,
+        revenue: revenueAmount,
         notes: notes?.trim() || null,
         ownerId: ownerId || user!.id,
         status: "active",
@@ -111,7 +128,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { id, name, companyName, email, phone, website, industry, status, revenue, notes } = body;
 
-    if (!id) {
+    if (!id || typeof id !== "string") {
       return NextResponse.json({ success: false, error: "ID es requerido." }, { status: 400 });
     }
 
@@ -121,6 +138,24 @@ export async function PUT(req: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "Cliente no encontrado en su organización." }, { status: 404 });
+    }
+
+    if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
+      return NextResponse.json({ success: false, error: "El nombre del cliente es obligatorio." }, { status: 400 });
+    }
+    if (status !== undefined && !(CLIENT_STATUSES as readonly string[]).includes(status)) {
+      return NextResponse.json({ success: false, error: "El estado del cliente no es válido." }, { status: 400 });
+    }
+    let revenueAmount: number | undefined = undefined;
+    if (revenue !== undefined) {
+      const parsed = parseAmount(revenue);
+      if (parsed === null) {
+        return NextResponse.json(
+          { success: false, error: "El valor contratado debe ser un número mayor o igual a 0 (USD)." },
+          { status: 400 }
+        );
+      }
+      revenueAmount = parsed;
     }
 
     const client = await prisma.client.update({
@@ -133,7 +168,7 @@ export async function PUT(req: NextRequest) {
         website: website !== undefined ? website?.trim() || null : undefined,
         industry: industry !== undefined ? industry?.trim() || "General" : undefined,
         status: status !== undefined ? status : undefined,
-        revenue: revenue !== undefined ? parseFloat(revenue) : undefined,
+        revenue: revenueAmount,
         notes: notes !== undefined ? notes?.trim() || null : undefined,
       },
     });

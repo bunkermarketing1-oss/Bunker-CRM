@@ -88,6 +88,13 @@ export default function MetaAiOptimizerPage() {
         </button>
       </div>
 
+      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium flex items-center gap-2">
+        <span className="font-bold uppercase tracking-wide">Datos de ejemplo</span>
+        <span>
+          Las campañas y cifras de esta pantalla son simuladas (aún no hay conexión con Meta Ads). No representan inversión ni resultados reales.
+        </span>
+      </div>
+
       {feedback && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />

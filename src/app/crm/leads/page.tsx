@@ -25,6 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { buildCsv } from "@/lib/csv";
 
 interface Lead {
   id: string;
@@ -397,32 +398,33 @@ export default function LeadsPage() {
     ];
 
     const rows = leads.map((l) => [
-      `"${l.id}"`,
-      `"${l.name.replace(/"/g, '""')}"`,
-      `"${(l.companyName || "").replace(/"/g, '""')}"`,
-      `"${l.email || ""}"`,
-      `"${l.phone || ""}"`,
-      `"${l.normalizedPhone || ""}"`,
-      `"${l.source}"`,
-      `"${(l.campaign || "").replace(/"/g, '""')}"`,
-      `"${l.status}"`,
-      `"${l.estimatedValue || 0}"`,
-      `"${l.qualification || 0}"`,
-      `"${(l.owner?.name || "Sin asignar").replace(/"/g, '""')}"`,
-      `"${new Date(l.createdAt).toLocaleDateString()}"`,
+      l.id,
+      l.name,
+      l.companyName || "",
+      l.email || "",
+      l.phone || "",
+      l.normalizedPhone || "",
+      l.source,
+      l.campaign || "",
+      l.status,
+      l.estimatedValue || 0,
+      l.qualification || 0,
+      l.owner?.name || "Sin asignar",
+      new Date(l.createdAt).toLocaleDateString(),
     ]);
 
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
+    // buildCsv neutralises spreadsheet formulas (=, +, -, @) and escapes quotes.
+    // A Blob is used instead of a data: URI so characters such as '#' never truncate the file.
+    const csvContent = "\uFEFF" + buildCsv(headers, rows);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `bunker_leads_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -1255,7 +1257,10 @@ export default function LeadsPage() {
                     <option value="contacted">Contactado</option>
                     <option value="qualified">Calificado</option>
                     <option value="lost">Perdido</option>
-                    <option value="converted">Convertido</option>
+                    {/* 'Convertido' is only reachable through the Convert action (atomic Client + Opportunity) */}
+                    {editingLead?.status === "converted" && (
+                      <option value="converted">Convertido</option>
+                    )}
                   </select>
                 </div>
                 <div>

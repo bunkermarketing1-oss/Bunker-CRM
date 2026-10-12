@@ -286,12 +286,16 @@ async function runLeadsSuite() {
   }
 
   // 9. Conversión de Lead a Cliente (POST /api/leads/[id]/convert)
+  let convertedClientId = null;
+  let convertedOpportunityId = null;
   try {
     const res9 = await makeRequest(`/api/leads/${createdLeadId}/convert`, {
       method: "POST",
       headers: { Cookie: `bunker_session=${adminCookie}` },
     });
     const json9 = await res9.json().catch(() => ({}));
+    convertedClientId = json9.client?.id || null;
+    convertedOpportunityId = json9.opportunity?.id || null;
 
     const convertedLead = await prisma.lead.findUnique({
       where: { id: createdLeadId },
@@ -311,6 +315,16 @@ async function runLeadsSuite() {
     );
   } catch (e) {
     record("CONVERT-01", false, e.message);
+  }
+
+  // Cleanup: remove ONLY the records created by this run (no residue in the real database)
+  if (convertedOpportunityId) {
+    await prisma.opportunity.delete({ where: { id: convertedOpportunityId } }).catch(() => {});
+  }
+  if (convertedClientId) {
+    await prisma.contact.deleteMany({ where: { clientId: convertedClientId } }).catch(() => {});
+    await prisma.auditLog.deleteMany({ where: { entityId: convertedClientId } }).catch(() => {});
+    await prisma.client.delete({ where: { id: convertedClientId } }).catch(() => {});
   }
 
   // Cleanup test leads

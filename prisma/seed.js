@@ -22,7 +22,7 @@ async function main() {
     create: {
       email: "admin@bunkermarketing.io",
       name: "Dirección Bunker",
-      passwordHash: "bunker2026", // Plain for simple demo or bcrypt if needed
+      passwordHash: "managed_by_supabase_auth", // Authentication is handled by Supabase Auth; never store passwords here
       role: "admin",
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
     },
@@ -34,7 +34,7 @@ async function main() {
     create: {
       email: "carlos.sales@bunkermarketing.io",
       name: "Carlos Méndez (Comercial)",
-      passwordHash: "bunker2026",
+      passwordHash: "managed_by_supabase_auth",
       role: "sales_rep",
       avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
     },
@@ -46,7 +46,7 @@ async function main() {
     create: {
       email: "sofia.marketing@bunkermarketing.io",
       name: "Sofía Castillo (Marketing)",
-      passwordHash: "bunker2026",
+      passwordHash: "managed_by_supabase_auth",
       role: "marketing_specialist",
       avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
     },

@@ -12,6 +12,7 @@
     "auth:provision": "node prisma/provision-users.js",
     "test:auth": "node tests/auth-suite.js",
     "test:leads": "node tests/leads-suite.js",
+    "test:audit": "node tests/audit-suite.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

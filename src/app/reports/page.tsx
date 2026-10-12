@@ -23,6 +23,13 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium flex items-center gap-2">
+        <span className="font-bold uppercase tracking-wide">Datos de ejemplo</span>
+        <span>
+          Las cifras de este reporte (CAC, ticket promedio e ingresos por canal, en USD) son valores ilustrativos fijos y aún no se calculan a partir de los registros del CRM.
+        </span>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] space-y-2 shadow-sm">

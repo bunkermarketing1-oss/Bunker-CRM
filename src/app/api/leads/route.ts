@@ -148,13 +148,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Calculate algorithmic AI qualification score
+    // 5. Calculate algorithmic AI qualification score (budget thresholds expressed in USD)
     let qualification = data.qualification !== undefined ? data.qualification : 50;
     if (data.qualification === undefined) {
       if (data.email && data.phone) qualification += 20;
       if (data.companyName) qualification += 10;
-      if (data.estimatedValue >= 50000) qualification += 15;
-      else if (data.estimatedValue >= 20000) qualification += 10;
+      if (data.estimatedValue >= 3000) qualification += 15;
+      else if (data.estimatedValue >= 1500) qualification += 10;
       if (data.source === "referral") qualification += 10;
     }
     qualification = Math.min(100, Math.max(0, qualification));
@@ -291,52 +291,105 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // 5. Traceability: Track source change in audit log if modified
-    if (data.source && data.source !== existing.source) {
-      await prisma.auditLog.create({
-        data: {
-          organizationId: user!.organizationId,
-          userId: user!.id,
-          action: "lead_source_modified",
-          entityType: "Lead",
-          entityId: existing.id,
-          detailsJson: JSON.stringify({
-            previousSource: existing.source,
-            newSource: data.source,
-          }),
+    // 5. Conversion must go through the dedicated endpoint so that the Client and the
+    //    Opportunity are created atomically. Setting the status by hand would leave a
+    //    "converted" lead without any client and hide the Convert action.
+    if (data.status === "converted" && existing.status !== "converted") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Para marcar un prospecto como convertido use la acción \"Convertir a Cliente\".",
         },
-      });
+        { status: 400 }
+      );
     }
 
-    // 6. Update Lead
-    const updatedLead = await prisma.lead.update({
-      where: { id: data.id },
-      data: {
-        name: data.name !== undefined ? data.name : undefined,
-        companyName: data.companyName !== undefined ? data.companyName : undefined,
-        email: data.email !== undefined ? data.email : undefined,
-        phone: formattedPhone !== undefined ? formattedPhone : undefined,
-        normalizedPhone: normalizedPhone !== undefined ? normalizedPhone : undefined,
-        source: data.source !== undefined ? data.source : undefined,
-        status: data.status !== undefined ? data.status : undefined,
-        estimatedValue:
-          data.estimatedValue !== undefined ? data.estimatedValue : undefined,
-        qualification:
-          data.qualification !== undefined ? data.qualification : undefined,
-        ownerId: data.ownerId !== undefined ? data.ownerId : undefined,
-        notes: data.notes !== undefined ? data.notes : undefined,
-        campaign: data.campaign !== undefined ? data.campaign : undefined,
-        externalLeadId:
-          data.externalLeadId !== undefined ? data.externalLeadId : undefined,
-        utmSource: data.utmSource !== undefined ? data.utmSource : undefined,
-        utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
-        utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
-        aiSummary: data.aiSummary !== undefined ? data.aiSummary : undefined,
-      },
-      include: {
-        owner: { select: { id: true, name: true, email: true, role: true } },
-      },
-    });
+    // 6. Traceability: record relevant changes (field names for PII, values for business fields)
+    const businessChanges: Record<string, { from: unknown; to: unknown }> = {};
+    const trackBusiness = (field: string, from: unknown, to: unknown) => {
+      if (to !== undefined && from !== to) businessChanges[field] = { from, to };
+    };
+    trackBusiness("status", existing.status, data.status);
+    trackBusiness("ownerId", existing.ownerId, data.ownerId);
+    trackBusiness("estimatedValue", existing.estimatedValue, data.estimatedValue);
+
+    const changedFields: string[] = [];
+    const trackField = (field: string, from: unknown, to: unknown) => {
+      if (to !== undefined && (from ?? null) !== (to ?? null)) changedFields.push(field);
+    };
+    trackField("name", existing.name, data.name);
+    trackField("companyName", existing.companyName, data.companyName);
+    trackField("email", existing.email, data.email);
+    trackField("phone", existing.phone, formattedPhone);
+    trackField("campaign", existing.campaign, data.campaign);
+    trackField("notes", existing.notes, data.notes);
+
+    const auditOperations: any[] = [];
+    if (data.source && data.source !== existing.source) {
+      auditOperations.push(
+        prisma.auditLog.create({
+          data: {
+            organizationId: user!.organizationId,
+            userId: user!.id,
+            action: "lead_source_modified",
+            entityType: "Lead",
+            entityId: existing.id,
+            detailsJson: JSON.stringify({
+              previousSource: existing.source,
+              newSource: data.source,
+            }),
+          },
+        })
+      );
+    }
+    if (Object.keys(businessChanges).length > 0 || changedFields.length > 0) {
+      auditOperations.push(
+        prisma.auditLog.create({
+          data: {
+            organizationId: user!.organizationId,
+            userId: user!.id,
+            action: "lead_updated",
+            entityType: "Lead",
+            entityId: existing.id,
+            detailsJson: JSON.stringify({ changes: businessChanges, changedFields }),
+          },
+        })
+      );
+    }
+
+    // 7. Update Lead and write the audit trail atomically
+    const [updatedLead] = await prisma.$transaction([
+      prisma.lead.update({
+        where: { id: data.id },
+        data: {
+          name: data.name !== undefined ? data.name : undefined,
+          companyName: data.companyName !== undefined ? data.companyName : undefined,
+          email: data.email !== undefined ? data.email : undefined,
+          phone: formattedPhone !== undefined ? formattedPhone : undefined,
+          normalizedPhone: normalizedPhone !== undefined ? normalizedPhone : undefined,
+          source: data.source !== undefined ? data.source : undefined,
+          status: data.status !== undefined ? data.status : undefined,
+          estimatedValue:
+            data.estimatedValue !== undefined ? data.estimatedValue : undefined,
+          qualification:
+            data.qualification !== undefined ? data.qualification : undefined,
+          ownerId: data.ownerId !== undefined ? data.ownerId : undefined,
+          notes: data.notes !== undefined ? data.notes : undefined,
+          campaign: data.campaign !== undefined ? data.campaign : undefined,
+          externalLeadId:
+            data.externalLeadId !== undefined ? data.externalLeadId : undefined,
+          utmSource: data.utmSource !== undefined ? data.utmSource : undefined,
+          utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
+          utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
+          aiSummary: data.aiSummary !== undefined ? data.aiSummary : undefined,
+        },
+        include: {
+          owner: { select: { id: true, name: true, email: true, role: true } },
+        },
+      }),
+      ...auditOperations,
+    ]);
 
     return NextResponse.json({ success: true, lead: updatedLead });
   } catch (error: any) {

@@ -65,25 +65,29 @@ async function provisionUsers() {
     }
   }
 
-  // Pre-configured default users
+  // Pre-configured users. Initial passwords MUST come from the environment (min. 12 chars);
+  // there is intentionally no default so a well-known password is never provisioned.
   const seedUsers = [
     {
       email: "admin@bunkermarketing.io",
       name: "Dirección Bunker",
       role: "admin",
-      defaultPassword: process.env.ADMIN_INITIAL_PASSWORD || "bunker2026",
+      envName: "ADMIN_INITIAL_PASSWORD",
+      defaultPassword: process.env.ADMIN_INITIAL_PASSWORD,
     },
     {
       email: "carlos.sales@bunkermarketing.io",
       name: "Carlos Méndez (Comercial)",
       role: "sales_rep",
-      defaultPassword: process.env.SALES_INITIAL_PASSWORD || "bunker2026",
+      envName: "SALES_INITIAL_PASSWORD",
+      defaultPassword: process.env.SALES_INITIAL_PASSWORD,
     },
     {
       email: "sofia.marketing@bunkermarketing.io",
       name: "Sofía Castillo (Marketing)",
       role: "marketing_specialist",
-      defaultPassword: process.env.MKT_INITIAL_PASSWORD || "bunker2026",
+      envName: "MKT_INITIAL_PASSWORD",
+      defaultPassword: process.env.MKT_INITIAL_PASSWORD,
     },
   ];
 
@@ -92,6 +96,12 @@ async function provisionUsers() {
     let authUser = authUsersByEmail.get(emailLower);
 
     if (!authUser) {
+      if (!su.defaultPassword || su.defaultPassword.length < 12) {
+        console.error(
+          `❌ ${su.email}: defina ${su.envName} (mínimo 12 caracteres) para crear este usuario. Omitido.`
+        );
+        continue;
+      }
       console.log(`👤 Creando usuario en Supabase Auth: ${su.email}...`);
       const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: emailLower,

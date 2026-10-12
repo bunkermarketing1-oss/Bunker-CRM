@@ -37,6 +37,10 @@ function LoginForm() {
       return;
     }
 
+    // Never leave the form spinning forever if the server/Supabase does not answer.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     try {
       setIsLoading(true);
 
@@ -45,6 +49,7 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email: email.trim(), password }),
+        signal: controller.signal,
       });
 
       const data = await res.json().catch(() => ({}));
@@ -58,8 +63,14 @@ function LoginForm() {
       // Successful login -> Immediate full page navigation with newly set cookie
       window.location.href = callbackUrl;
     } catch (err: any) {
-      setErrorMessage("Error de conexión con el servidor. Intente nuevamente.");
+      setErrorMessage(
+        err?.name === "AbortError"
+          ? "El servidor tardó demasiado en responder. Intente nuevamente."
+          : "Error de conexión con el servidor. Intente nuevamente."
+      );
       setIsLoading(false);
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 

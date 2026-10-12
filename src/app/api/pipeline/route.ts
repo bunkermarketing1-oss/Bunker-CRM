@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/auth";
+import {
+  OPPORTUNITY_STATUSES,
+  parseAmount,
+  parseProbability,
+  stageBelongsToOrg,
+  clientBelongsToOrg,
+  leadBelongsToOrg,
+} from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
+
+const badRequest = (error: string) =>
+  NextResponse.json({ success: false, error }, { status: 400 });
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +25,9 @@ export async function GET(req: NextRequest) {
       orderBy: { order: "asc" },
       include: {
         opportunities: {
-          where: { isDeleted: false },
+          // Defense in depth: never surface opportunities of another organization,
+          // even if one was linked to this stage.
+          where: { isDeleted: false, organizationId: user!.organizationId },
           include: {
             client: { select: { id: true, name: true, phone: true } },
             lead: { select: { id: true, name: true, phone: true } },
@@ -63,17 +76,40 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { title, value, stageId, clientId, leadId, probability, expectedClose } = body;
 
-    if (!title || !stageId) {
-      return NextResponse.json({ success: false, error: "Título y etapa son obligatorios." }, { status: 400 });
+    if (typeof title !== "string" || title.trim() === "" || typeof stageId !== "string" || !stageId) {
+      return badRequest("Título y etapa son obligatorios.");
+    }
+    if (title.trim().length > 150) {
+      return badRequest("El título no puede exceder 150 caracteres.");
     }
 
-    // Verify stage belongs to user's org
-    const stage = await prisma.pipelineStage.findFirst({
-      where: { id: stageId, organizationId: user!.organizationId },
-    });
+    const amount = parseAmount(value);
+    if (amount === null) {
+      return badRequest("El valor comercial debe ser un número mayor o igual a 0 (USD).");
+    }
 
-    if (!stage) {
-      return NextResponse.json({ success: false, error: "Etapa de pipeline no válida para su organización." }, { status: 400 });
+    const prob = parseProbability(probability);
+    if (prob === null) {
+      return badRequest("La probabilidad debe ser un entero entre 0 y 100.");
+    }
+
+    let closeDate: Date | null = null;
+    if (expectedClose) {
+      closeDate = new Date(expectedClose);
+      if (isNaN(closeDate.getTime())) {
+        return badRequest("La fecha estimada de cierre no es válida.");
+      }
+    }
+
+    // Every referenced record must belong to the authenticated user's organization.
+    if (!(await stageBelongsToOrg(user!.organizationId, stageId))) {
+      return badRequest("Etapa de pipeline no válida para su organización.");
+    }
+    if (clientId && !(await clientBelongsToOrg(user!.organizationId, String(clientId)))) {
+      return badRequest("El cliente indicado no pertenece a su organización.");
+    }
+    if (leadId && !(await leadBelongsToOrg(user!.organizationId, String(leadId)))) {
+      return badRequest("El prospecto indicado no pertenece a su organización.");
     }
 
     const opportunity = await prisma.opportunity.create({
@@ -83,9 +119,9 @@ export async function POST(req: NextRequest) {
         clientId: clientId || null,
         leadId: leadId || null,
         title: title.trim(),
-        value: value ? parseFloat(value) : 0,
-        probability: probability ? parseInt(probability) : 50,
-        expectedClose: expectedClose ? new Date(expectedClose) : null,
+        value: amount,
+        probability: prob,
+        expectedClose: closeDate,
         status: "open",
         isDemo: false,
       },
@@ -111,8 +147,8 @@ export async function PUT(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { id, stageId, status, value, probability } = body;
 
-    if (!id) {
-      return NextResponse.json({ success: false, error: "ID es obligatorio." }, { status: 400 });
+    if (!id || typeof id !== "string") {
+      return badRequest("ID es obligatorio.");
     }
 
     const existing = await prisma.opportunity.findFirst({
@@ -124,10 +160,36 @@ export async function PUT(req: NextRequest) {
     }
 
     const data: any = {};
-    if (stageId) data.stageId = stageId;
-    if (status) data.status = status;
-    if (value !== undefined) data.value = parseFloat(value);
-    if (probability !== undefined) data.probability = parseInt(probability);
+
+    if (stageId !== undefined && stageId !== null && stageId !== "") {
+      if (typeof stageId !== "string" || !(await stageBelongsToOrg(user!.organizationId, stageId))) {
+        return badRequest("Etapa de pipeline no válida para su organización.");
+      }
+      data.stageId = stageId;
+    }
+
+    if (status !== undefined && status !== null && status !== "") {
+      if (!(OPPORTUNITY_STATUSES as readonly string[]).includes(status)) {
+        return badRequest("El estado de la oportunidad no es válido.");
+      }
+      data.status = status;
+    }
+
+    if (value !== undefined) {
+      const amount = parseAmount(value);
+      if (amount === null) {
+        return badRequest("El valor comercial debe ser un número mayor o igual a 0 (USD).");
+      }
+      data.value = amount;
+    }
+
+    if (probability !== undefined) {
+      const prob = parseProbability(probability);
+      if (prob === null) {
+        return badRequest("La probabilidad debe ser un entero entre 0 y 100.");
+      }
+      data.probability = prob;
+    }
 
     const opportunity = await prisma.opportunity.update({
       where: { id },
