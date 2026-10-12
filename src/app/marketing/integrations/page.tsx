@@ -121,20 +121,24 @@ export default function IntegrationsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
         <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-bunker-400" />
+          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+            <span>Marketing</span>
+            <span>/</span>
+            <span className="text-[#1F1E1D] font-medium">Integraciones</span>
+          </div>
+          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
             Centro de Conexiones & APIs Externas
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-[#6B6966] mt-0.5">
             Integraciones oficiales con Meta Ads, Google Ads, TikTok y proveedores de mensajería SMS.
           </p>
         </div>
 
         <button
           onClick={fetchIntegrations}
-          className="px-3.5 py-2 rounded-xl bg-[#141d30] border border-[#23314d] text-gray-300 hover:text-white text-xs font-semibold flex items-center gap-2"
+          className="px-3.5 py-2 rounded-xl bg-white border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-2 shadow-sm transition-all"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           <span>Verificar Estado</span>
@@ -142,13 +146,13 @@ export default function IntegrationsPage() {
       </div>
 
       {feedback && (
-        <div className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+        <div className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${
           feedback.type === "success"
-            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-            : "bg-red-500/10 border-red-500/30 text-red-300"
+            ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
+            : "bg-[#FDF2F2] border-[#F8D7DA] text-red-800"
         }`}>
-          {feedback.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
-          {feedback.message}
+          {feedback.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+          <span>{feedback.message}</span>
         </div>
       )}
 
@@ -160,83 +164,79 @@ export default function IntegrationsPage() {
           return (
             <div
               key={it.id}
-              className="p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] hover:border-[#263754] transition-all flex flex-col justify-between space-y-4 shadow-lg"
+              className="p-5 rounded-2xl bg-white border border-[#E8E6DF] hover:border-[#D1CFCA] transition-all flex flex-col justify-between space-y-4 shadow-sm"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                    <h3 className="font-serif font-normal text-base text-[#1F1E1D]">
                       {it.name}
                     </h3>
-                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#6B6966] mt-1 leading-relaxed">
                       {it.description}
                     </p>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase flex-shrink-0 ${
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase flex-shrink-0 ${
                     isConnected
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}>
                     {isConnected ? "CONECTADO" : "PENDIENTE"}
                   </span>
                 </div>
 
-                {/* Status and Error Details (As required: No fake success) */}
-                <div className="mt-4 p-3 rounded-xl bg-[#080d16] border border-[#182338] text-[11px] space-y-1.5">
-                  <div className="flex items-center justify-between text-gray-400">
+                {/* Status and Error Details */}
+                <div className="mt-4 p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[11px] space-y-1.5">
+                  <div className="flex items-center justify-between text-[#82807C]">
                     <span>Última sincronización:</span>
-                    <span className="text-white font-mono">
+                    <span className="text-[#1F1E1D] font-mono">
                       {it.lastSyncAt ? new Date(it.lastSyncAt).toLocaleString() : "Sin sincronizar"}
                     </span>
                   </div>
 
                   {!isConnected && it.errorMessage && (
-                    <div className="text-amber-400 flex items-start gap-1.5 pt-1 border-t border-[#162033]">
-                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <div className="text-amber-800 flex items-start gap-1.5 pt-1 border-t border-[#E8E6DF]">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
                       <span>{it.errorMessage}</span>
                     </div>
                   )}
 
                   {isConnected && (
-                    <div className="text-emerald-400 flex items-center gap-1.5 pt-1 border-t border-[#162033] font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Credenciales seguras activas en el servidor</span>
+                    <div className="text-emerald-800 flex items-center gap-1.5 pt-1 border-t border-[#E8E6DF]">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Credenciales activas y respondiendo</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="pt-3 border-t border-[#172238] flex items-center justify-between">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-3 border-t border-[#F0EFEA] text-xs">
                 {isConnected ? (
-                  <div className="flex items-center gap-2 w-full justify-between">
+                  <>
                     <button
                       onClick={() => handleSync(it.id)}
                       disabled={syncingId === it.id}
-                      className="px-3 py-1.5 rounded-lg bg-bunker-600/20 hover:bg-bunker-600/40 text-bunker-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1.5 rounded-xl bg-[#F4F3EE] hover:bg-[#ECEAE3] text-[#1F1E1D] font-medium flex items-center gap-1.5 transition-all text-xs"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${syncingId === it.id ? "animate-spin" : ""}`} />
-                      <span>Sincronizar Datos</span>
+                      <span>{syncingId === it.id ? "Sincronizando..." : "Sincronizar"}</span>
                     </button>
-
                     <button
                       onClick={() => handleDisconnect(it.id)}
-                      className="text-xs text-red-400 hover:text-red-300 font-semibold"
+                      className="text-xs text-[#82807C] hover:text-red-700 font-medium"
                     >
                       Desconectar
                     </button>
-                  </div>
+                  </>
                 ) : (
                   <button
-                    onClick={() => {
-                      setSelectedIntegration(it);
-                      setCreds({ apiKey: "", apiSecret: "", accountId: "" });
-                    }}
-                    className="w-full py-2 rounded-xl bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-bunker-600/20 transition-all"
+                    onClick={() => setSelectedIntegration(it)}
+                    className="w-full py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all"
                   >
                     <Key className="w-3.5 h-3.5" />
-                    <span>Configurar y Conectar Cuenta</span>
+                    <span>Configurar Credenciales</span>
                   </button>
                 )}
               </div>
@@ -247,55 +247,41 @@ export default function IntegrationsPage() {
 
       {/* Connect Modal */}
       {selectedIntegration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0b101d] border border-[#23314d] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#1c263c] flex items-center justify-between">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Key className="w-4 h-4 text-bunker-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
+              <h2 className="text-sm font-serif font-normal text-[#1F1E1D]">
                 Conectar {selectedIntegration.name}
               </h2>
-              <button onClick={() => setSelectedIntegration(null)} className="text-gray-400 hover:text-white">
+              <button
+                onClick={() => setSelectedIntegration(null)}
+                className="text-[#82807C] hover:text-[#1F1E1D] p-1 rounded-lg hover:bg-[#F4F3EE]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleConnectSubmit} className="p-5 space-y-3">
-              <div className="text-[11px] text-gray-400 bg-[#121929] p-3 rounded-lg border border-[#222f47] leading-relaxed">
-                Ingresa las credenciales de la API oficial. Serán almacenadas únicamente de forma segura en las variables de servidor.
-              </div>
-
+            <form onSubmit={handleConnectSubmit} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">Clave API / Client ID *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ej. meta_app_991823101..."
-                  value={creds.apiKey}
-                  onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">Clave Secreta / Client Secret *</label>
+                <label className="block text-xs font-medium text-[#4D4C48] mb-1">API Key / Access Token</label>
                 <input
                   type="password"
                   required
-                  placeholder="••••••••••••••••••••••••"
-                  value={creds.apiSecret}
-                  onChange={(e) => setCreds({ ...creds, apiSecret: e.target.value })}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500 font-mono"
+                  placeholder="Token de acceso oficial..."
+                  value={creds.apiKey}
+                  onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
+                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">ID de Cuenta Publicitaria (Opcional)</label>
+                <label className="block text-xs font-medium text-[#4D4C48] mb-1">Account ID / ID de Cuenta Publicitaria</label>
                 <input
                   type="text"
-                  placeholder="act_1829038102"
+                  placeholder="ej. act_1234567890"
                   value={creds.accountId}
                   onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500 font-mono"
+                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
                 />
               </div>
 
@@ -303,16 +289,16 @@ export default function IntegrationsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedIntegration(null)}
-                  className="px-3 py-2 rounded-lg bg-[#141d30] border border-[#23314d] text-gray-300 hover:text-white text-xs"
+                  className="px-3.5 py-2 rounded-xl bg-[#F4F3EE] border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={connecting}
-                  className="px-4 py-2 rounded-lg bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold shadow-md"
+                  className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium shadow-sm transition-all"
                 >
-                  {connecting ? "Validando..." : "Autorizar Conexión"}
+                  {connecting ? "Validando..." : "Guardar & Conectar"}
                 </button>
               </div>
             </form>

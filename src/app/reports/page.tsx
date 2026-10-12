@@ -6,61 +6,83 @@ import { BarChart3, TrendingUp, DollarSign, Users, Award, Target, ArrowUpRight }
 export default function ReportsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-xl font-black text-white flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-indigo-400" />
-          Reportes Comerciales & Retorno de Inversión
-        </h1>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Métricas de desempeño para la reunión ejecutiva con clientes e inversionistas.
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
+        <div>
+          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+            <span>Analítica</span>
+            <span>/</span>
+            <span className="text-[#1F1E1D] font-medium">Reportes</span>
+          </div>
+          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+            Reportes Comerciales & Retorno de Inversión
+          </h1>
+          <p className="text-xs text-[#6B6966] mt-0.5">
+            Métricas clave de adquisición de clientes, tickets de venta y desempeño atribuible a pautas digitales.
+          </p>
+        </div>
       </div>
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-2">
-          <div className="text-xs font-semibold text-gray-400 flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] space-y-2 shadow-sm">
+          <div className="text-xs font-medium text-[#6B6966] flex items-center justify-between">
             <span>CAC Promedio (Costo Adquisición)</span>
-            <Target className="w-4 h-4 text-bunker-400" />
+            <Target className="w-4 h-4 text-[#D97757]" />
           </div>
-          <div className="text-2xl font-black text-white">$1,850 <span className="text-xs text-gray-400">MXN</span></div>
-          <div className="text-[11px] text-emerald-400 font-medium">▼ 18% optimizado mediante scoring con IA</div>
+          <div className="text-3xl font-serif font-normal text-[#1F1E1D]">
+            $1,850 <span className="text-xs font-sans text-[#82807C]">MXN</span>
+          </div>
+          <div className="text-xs text-emerald-800 font-medium flex items-center gap-1">
+            <span>▼ 18% optimizado mediante scoring con IA</span>
+          </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-2">
-          <div className="text-xs font-semibold text-gray-400 flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] space-y-2 shadow-sm">
+          <div className="text-xs font-medium text-[#6B6966] flex items-center justify-between">
             <span>Ticket Promedio de Cierre</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-white">$58,000 <span className="text-xs text-gray-400">MXN</span></div>
-          <div className="text-[11px] text-emerald-400 font-medium">▲ 24% respecto al mes anterior</div>
+          <div className="text-3xl font-serif font-normal text-[#1F1E1D]">
+            $58,000 <span className="text-xs font-sans text-[#82807C]">MXN</span>
+          </div>
+          <div className="text-xs text-emerald-800 font-medium flex items-center gap-1">
+            <span>▲ 24% respecto al mes anterior</span>
+          </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-2">
-          <div className="text-xs font-semibold text-gray-400 flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] space-y-2 shadow-sm">
+          <div className="text-xs font-medium text-[#6B6966] flex items-center justify-between">
             <span>Tiempo de Respuesta Comercial</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
+            <TrendingUp className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-black text-white">4.2 <span className="text-xs text-gray-400">minutos</span></div>
-          <div className="text-[11px] text-emerald-400 font-medium">Automatizado con SMS de primer contacto</div>
+          <div className="text-3xl font-serif font-normal text-[#1F1E1D]">
+            4.2 <span className="text-xs font-sans text-[#82807C]">minutos</span>
+          </div>
+          <div className="text-xs text-emerald-800 font-medium flex items-center gap-1">
+            <span>Automatizado con SMS de primer contacto</span>
+          </div>
         </div>
       </div>
 
       {/* Attribution Channels Breakdown */}
-      <div className="p-6 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-4">
-        <h2 className="text-sm font-bold text-white">Desglose de Conversión por Canal de Captación</h2>
-        <div className="space-y-3">
+      <div className="p-6 rounded-2xl bg-white border border-[#E8E6DF] space-y-5 shadow-sm">
+        <h2 className="text-base font-serif font-normal text-[#1F1E1D]">
+          Desglose de Conversión por Canal de Captación
+        </h2>
+        <div className="space-y-4">
           {[
-            { channel: "Meta Ads (Instagram & Facebook)", share: 48, leads: 58, revenue: "$280,000 MXN", color: "bg-bunker-500" },
-            { channel: "Google Search & Display Ads", share: 32, leads: 39, revenue: "$195,000 MXN", color: "bg-indigo-500" },
-            { channel: "Recomendaciones Directas (Referrals)", share: 15, leads: 18, revenue: "$140,000 MXN", color: "bg-emerald-500" },
-            { channel: "TikTok Ads & Orgánico", share: 5, leads: 6, revenue: "$32,000 MXN", color: "bg-pink-500" },
+            { channel: "Meta Ads (Instagram & Facebook)", share: 48, leads: 58, revenue: "$280,000 MXN", color: "bg-[#D97757]" },
+            { channel: "Google Search & Display Ads", share: 32, leads: 39, revenue: "$195,000 MXN", color: "bg-blue-600" },
+            { channel: "Recomendaciones Directas (Referrals)", share: 15, leads: 18, revenue: "$140,000 MXN", color: "bg-emerald-600" },
+            { channel: "TikTok Ads & Orgánico", share: 5, leads: 6, revenue: "$32,000 MXN", color: "bg-purple-600" },
           ].map((item, idx) => (
-            <div key={idx} className="space-y-1">
+            <div key={idx} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-white">{item.channel}</span>
-                <span className="text-gray-300 font-mono">{item.revenue} ({item.share}%)</span>
+                <span className="font-medium text-[#1F1E1D]">{item.channel}</span>
+                <span className="text-[#6B6966] font-mono">{item.revenue} ({item.share}%)</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-[#141c2c] overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] overflow-hidden">
                 <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.share}%` }}></div>
               </div>
             </div>

@@ -101,45 +101,51 @@ export default function SmsMessagingPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Header */}
-      <div>
-        <h1 className="text-xl font-black text-white flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-emerald-400" />
-          Módulo de Mensajería SMS Oficial
-        </h1>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Envío real de notificaciones comerciales, confirmación de reuniones y alertas transaccionales.
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
+        <div>
+          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+            <span>Mensajería</span>
+            <span>/</span>
+            <span className="text-[#1F1E1D] font-medium">SMS Oficial</span>
+          </div>
+          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+            Canal de Mensajería SMS Comercial
+          </h1>
+          <p className="text-xs text-[#6B6966] mt-0.5">
+            Envío directo de notificaciones comerciales, confirmación de reuniones y alertas transaccionales.
+          </p>
+        </div>
       </div>
 
       {feedback && (
-        <div className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+        <div className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${
           feedback.type === "success"
-            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-            : "bg-red-500/10 border-red-500/30 text-red-300"
+            ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
+            : "bg-[#FDF2F2] border-[#F8D7DA] text-red-800"
         }`}>
-          {feedback.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertTriangle className="w-4 h-4 text-red-400" />}
-          {feedback.message}
+          {feedback.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-red-600" />}
+          <span>{feedback.message}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Send SMS Composer (2 cols) */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-4 shadow-xl">
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
-            <Send className="w-4 h-4 text-bunker-400" />
+        {/* Send SMS Composer */}
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
+          <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
+            <Send className="w-4 h-4 text-[#D97757]" />
             Redactar Mensaje SMS
           </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             <div>
-              <label className="block text-xs font-medium text-gray-300 mb-1">
+              <label className="block text-xs font-medium text-[#4D4C48] mb-1">
                 Seleccionar Contacto Registrado
               </label>
               <select
                 value={selectedContact}
                 onChange={handleContactSelect}
-                className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
               >
                 <option value="">Selección manual / Directo</option>
                 {contacts.map((c) => (
@@ -151,27 +157,27 @@ export default function SmsMessagingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-300 mb-1">
+              <label className="block text-xs font-medium text-[#4D4C48] mb-1">
                 Número Telefónico Destinatario (Formato E.164) *
               </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Phone className="w-4 h-4 text-[#82807C] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   required
                   placeholder="+52 55 1234 5678"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500 font-mono"
+                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-gray-300">Cuerpo del Mensaje *</label>
-                <span className={`text-[10px] ${messageText.length > 160 ? "text-amber-400 font-semibold" : "text-gray-500"}`}>
-                  {messageText.length} / 480 caracteres
+                <label className="text-xs font-medium text-[#4D4C48]">Cuerpo del Mensaje *</label>
+                <span className={`text-[10px] font-mono ${messageText.length > 160 ? "text-amber-700 font-semibold" : "text-[#82807C]"}`}>
+                  {messageText.length} / 480 car.
                 </span>
               </div>
               <textarea
@@ -181,18 +187,18 @@ export default function SmsMessagingPage() {
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder="Escribe el texto del mensaje..."
-                className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
               />
             </div>
 
-            {/* Compliance warning */}
-            <div className="p-3 bg-[#080d16] border border-[#19243a] rounded-xl text-[10px] text-gray-400 space-y-1">
-              <div className="text-gray-300 font-semibold flex items-center gap-1">
-                <ShieldAlert className="w-3 h-3 text-amber-400" />
-                Normativa de Telecomunicaciones & Prevención
+            {/* Compliance box */}
+            <div className="p-3 bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl text-[11px] text-[#6B6966] space-y-1">
+              <div className="text-[#1F1E1D] font-medium flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                <span>Normativa & Auditoría</span>
               </div>
               <p>
-                Cuenta con protección anti-duplicados (2 minutos) y registro de auditoría en base de datos.
+                Cuenta con protección anti-duplicados (2 minutos) y registro de trazabilidad en base de datos.
               </p>
             </div>
 
@@ -205,7 +211,7 @@ export default function SmsMessagingPage() {
                 setShowConfirm(true);
               }}
               disabled={sending}
-              className="w-full py-2.5 rounded-xl bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-bunker-600/30 transition-all disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               <span>{sending ? "Enviando..." : "Validar y Enviar SMS"}</span>
@@ -213,55 +219,55 @@ export default function SmsMessagingPage() {
           </div>
         </div>
 
-        {/* History Log (3 cols) */}
-        <div className="lg:col-span-3 p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-4 shadow-xl">
+        {/* History Log */}
+        <div className="lg:col-span-3 p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <History className="w-4 h-4 text-emerald-400" />
-              Historial & Estado de Entregas
+            <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
+              <History className="w-4 h-4 text-emerald-600" />
+              Historial de Envíos
             </h2>
-            <span className="text-[11px] text-gray-400">{messages.length} mensajes</span>
+            <span className="text-[11px] text-[#82807C] font-mono">{messages.length} mensajes</span>
           </div>
 
-          <div className="divide-y divide-[#162033] overflow-y-auto max-h-[500px]">
+          <div className="divide-y divide-[#F0EFEA] overflow-y-auto max-h-[500px]">
             {loading ? (
-              <div className="py-8 text-center text-gray-500 text-xs">Cargando historial...</div>
+              <div className="py-12 text-center text-[#82807C] text-xs">Cargando historial de envíos...</div>
             ) : messages.length === 0 ? (
-              <div className="py-8 text-center text-gray-500 text-xs">No hay mensajes enviados aún.</div>
+              <div className="py-12 text-center text-[#82807C] text-xs">No hay mensajes enviados aún.</div>
             ) : (
               messages.map((msg) => (
-                <div key={msg.id} className="py-3.5 space-y-2 hover:bg-[#111827]/40 px-2 rounded-xl transition-colors">
+                <div key={msg.id} className="py-3.5 space-y-2 hover:bg-[#FAF9F5] px-2 rounded-xl transition-colors">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-gray-500" />
+                    <span className="text-xs font-semibold text-[#1F1E1D] font-mono flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-[#82807C]" />
                       {msg.recipient}
                     </span>
 
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
-                      msg.status === "delivered" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                      msg.status === "sent" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-                      msg.status === "failed" ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                      "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase border ${
+                      msg.status === "delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                      msg.status === "sent" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      msg.status === "failed" ? "bg-red-50 text-red-700 border-red-200" :
+                      "bg-amber-50 text-amber-700 border-amber-200"
                     }`}>
-                      {msg.status === "sent" ? "ENVIADO AL PROVEEDOR" :
-                       msg.status === "delivered" ? "CONFIRMADO ENTREGADO" :
+                      {msg.status === "sent" ? "ENVIADO" :
+                       msg.status === "delivered" ? "ENTREGADO" :
                        msg.status === "failed" ? "FALLIDO" : msg.status}
                     </span>
                   </div>
 
-                  <p className="text-xs text-gray-300 leading-relaxed bg-[#080d16] p-2.5 rounded-lg border border-[#162033]">
+                  <p className="text-xs text-[#4D4C48] leading-relaxed bg-[#FAF9F5] p-3 rounded-xl border border-[#E8E6DF]">
                     {msg.body}
                   </p>
 
                   {msg.errorMessage && (
-                    <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                    <div className="text-[11px] text-red-700 bg-red-50 p-2.5 rounded-xl border border-red-200">
                       <strong>Causa:</strong> {msg.errorMessage}
                     </div>
                   )}
 
-                  <div className="text-[10px] text-gray-500 flex items-center justify-between">
+                  <div className="text-[10px] text-[#82807C] flex items-center justify-between">
                     <span>{new Date(msg.createdAt).toLocaleString()}</span>
-                    {msg.isDemo && <span className="text-amber-400">[Modo Demo / Sandbox]</span>}
+                    {msg.isDemo && <span className="text-amber-700 font-medium">[Modo Sandbox]</span>}
                   </div>
                 </div>
               ))
@@ -272,28 +278,28 @@ export default function SmsMessagingPage() {
 
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0b101d] border border-[#23314d] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
+            <h3 className="text-sm font-serif font-normal text-[#1F1E1D] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
               Confirmar Envío de Mensaje SMS
             </h3>
 
-            <div className="text-xs text-gray-300 space-y-2 bg-[#121929] p-3 rounded-xl border border-[#222f47]">
-              <div><strong>Destinatario:</strong> {phone}</div>
+            <div className="text-xs text-[#4D4C48] space-y-2 bg-[#FAF9F5] p-3.5 rounded-xl border border-[#E8E6DF]">
+              <div><strong>Destinatario:</strong> <span className="font-mono">{phone}</span></div>
               <div><strong>Mensaje:</strong> &ldquo;{messageText}&rdquo;</div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="px-3 py-1.5 rounded-lg bg-[#141d30] border border-[#23314d] text-gray-300 hover:text-white text-xs"
+                className="px-3.5 py-1.5 rounded-xl bg-[#F4F3EE] border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSendSms}
-                className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md"
+                className="px-4 py-1.5 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium shadow-sm transition-all"
               >
                 Confirmar y Enviar
               </button>

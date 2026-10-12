@@ -7,12 +7,10 @@ import {
   Search,
   Filter,
   Trash2,
-  Sparkles,
   ArrowRightCircle,
   Phone,
   Mail,
   Building,
-  DollarSign,
   X,
   CheckCircle,
 } from "lucide-react";
@@ -24,7 +22,6 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
 
-  // Create Modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -35,8 +32,6 @@ export default function LeadsPage() {
     estimatedValue: "45000",
   });
   const [submitting, setSubmitting] = useState(false);
-
-  // Conversion toast / state
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const fetchLeads = async () => {
@@ -86,27 +81,26 @@ export default function LeadsPage() {
           source: "meta_ads",
           estimatedValue: "45000",
         });
-        setFeedback("¡Prospecto creado exitosamente en la base de datos!");
+        setFeedback("¡Prospecto registrado exitosamente en Supabase!");
         setTimeout(() => setFeedback(null), 4000);
         fetchLeads();
       } else {
         alert(json.error);
       }
     } catch (e: any) {
-      alert("Error al crear lead: " + e.message);
+      alert("Error: " + e.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleConvert = async (leadId: string) => {
-    if (!confirm("¿Deseas convertir este lead en Cliente y crear una oportunidad en el Pipeline de ventas?")) return;
-
+    if (!confirm("¿Deseas convertir este lead en Cliente y crear una oportunidad en el Pipeline?")) return;
     try {
       const res = await fetch(`/api/leads/${leadId}/convert`, { method: "POST" });
       const json = await res.json();
       if (json.success) {
-        setFeedback("¡Lead convertido exitosamente a Cliente y registrado en el Pipeline!");
+        setFeedback("¡Lead convertido con éxito a Cliente y Oportunidad en Pipeline!");
         setTimeout(() => setFeedback(null), 4000);
         fetchLeads();
       } else {
@@ -118,8 +112,7 @@ export default function LeadsPage() {
   };
 
   const handleDelete = async (leadId: string) => {
-    if (!confirm("¿Eliminar lógicamente este lead?")) return;
-
+    if (!confirm("¿Eliminar lógicamente este prospecto?")) return;
     try {
       const res = await fetch(`/api/leads?id=${leadId}`, { method: "DELETE" });
       const json = await res.json();
@@ -127,185 +120,173 @@ export default function LeadsPage() {
         fetchLeads();
       }
     } catch (e: any) {
-      alert("Error al eliminar: " + e.message);
+      alert("Error: " + e.message);
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E8E6DF]">
         <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-bunker-400" />
+          <h1 className="text-3xl font-serif font-bold text-[#1F1E1D] tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Captación multicanal, calificación inteligente y conversión a clientes comerciales.
+          <p className="text-xs text-[#716F6A] mt-1 max-w-xl">
+            Captación multicanal, calificación algorítmica con IA y conversión a clientes activos de la agencia.
           </p>
         </div>
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-bunker-600/30 transition-all"
+          className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Registrar Nuevo Lead</span>
+          <span>Registrar Prospecto</span>
         </button>
       </div>
 
       {feedback && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-600" />
           {feedback}
         </div>
       )}
 
       {/* Filter Toolbar */}
-      <div className="p-4 rounded-xl bg-[#0c111e] border border-[#1b2538] flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] flex flex-col md:flex-row gap-3 items-center justify-between shadow-sm">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, correo, empresa..."
-            className="w-full bg-[#121929] border border-[#222f47] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-bunker-500"
+            placeholder="Buscar por nombre, correo o empresa..."
+            className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#1F1E1D] placeholder-[#9C9890] focus:outline-none focus:border-[#D97757]"
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="flex items-center gap-3 w-full md:w-auto text-xs text-[#716F6A]">
+          <div className="flex items-center gap-1.5">
             <Filter className="w-3.5 h-3.5" />
             <span>Estado:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#121929] border border-[#222f47] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+              className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-lg px-2 py-1 text-xs text-[#1F1E1D] focus:outline-none"
             >
-              <option value="all">Todos los estados</option>
+              <option value="all">Todos</option>
               <option value="new">Nuevo</option>
               <option value="contacted">Contactado</option>
               <option value="qualified">Calificado</option>
               <option value="converted">Convertido</option>
-              <option value="lost">Perdido</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5">
             <span>Canal:</span>
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="bg-[#121929] border border-[#222f47] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+              className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-lg px-2 py-1 text-xs text-[#1F1E1D] focus:outline-none"
             >
-              <option value="all">Todos los canales</option>
+              <option value="all">Todos</option>
               <option value="meta_ads">Meta Ads</option>
               <option value="google_ads">Google Ads</option>
               <option value="referral">Recomendación</option>
-              <option value="website">Formulario Web</option>
+              <option value="website">Web</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Leads Table */}
-      <div className="rounded-2xl bg-[#0c111e] border border-[#1b2538] overflow-hidden shadow-xl">
+      {/* Table */}
+      <div className="rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-[#090d16] border-b border-[#1b2538] text-gray-400 font-semibold">
-                <th className="py-3 px-4">Prospecto / Contacto</th>
-                <th className="py-3 px-4">Canal</th>
-                <th className="py-3 px-4">Puntaje IA</th>
-                <th className="py-3 px-4">Presupuesto Estimado</th>
-                <th className="py-3 px-4">Estado</th>
-                <th className="py-3 px-4 text-right">Acciones</th>
+              <tr className="bg-[#FAF9F5] border-b border-[#E8E6DF] text-[#716F6A] font-semibold">
+                <th className="py-3.5 px-4 font-medium">Prospecto / Empresa</th>
+                <th className="py-3.5 px-4 font-medium">Canal</th>
+                <th className="py-3.5 px-4 font-medium">Score IA</th>
+                <th className="py-3.5 px-4 font-medium">Presupuesto</th>
+                <th className="py-3.5 px-4 font-medium">Estado</th>
+                <th className="py-3.5 px-4 text-right font-medium">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#162033]">
+            <tbody className="divide-y divide-[#F0EEE6]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                  <td colSpan={6} className="py-8 text-center text-[#9C9890]">
                     Cargando prospectos...
                   </td>
                 </tr>
               ) : leads.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
-                    No se encontraron leads con los criterios seleccionados.
+                  <td colSpan={6} className="py-8 text-center text-[#9C9890]">
+                    No se encontraron prospectos con los filtros actuales.
                   </td>
                 </tr>
               ) : (
                 leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-[#111827]/60 transition-colors">
-                    <td className="py-3 px-4">
+                  <tr key={lead.id} className="hover:bg-[#FAF9F5] transition-colors">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">{lead.name}</span>
+                        <span className="font-semibold text-[#1F1E1D]">{lead.name}</span>
                         {lead.isDemo && (
-                          <span className="text-[9px] bg-amber-500/10 text-amber-400 font-semibold px-1.5 py-0.5 rounded border border-amber-500/20">
+                          <span className="text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-1.5 py-0.2 rounded border border-[#F3D6CB]">
                             DEMO
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
-                        <Building className="w-3 h-3 text-gray-500" />
+                      <div className="text-[11px] text-[#716F6A] flex items-center gap-1.5 mt-0.5">
+                        <Building className="w-3 h-3 text-[#9C9890]" />
                         <span>{lead.companyName || "Sin empresa"}</span>
                       </div>
-                      <div className="text-[10px] text-gray-500 flex items-center gap-3 mt-1">
-                        {lead.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" /> {lead.email}
-                          </span>
-                        )}
-                        {lead.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" /> {lead.phone}
-                          </span>
-                        )}
+                      <div className="text-[10px] text-[#9C9890] flex items-center gap-3 mt-1">
+                        {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {lead.email}</span>}
+                        {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {lead.phone}</span>}
                       </div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-[#162033] text-gray-300">
+                    <td className="py-3.5 px-4">
+                      <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-[#F3F1EB] text-[#716F6A] border border-[#E8E6DF]">
                         {lead.source.replace("_", " ").toUpperCase()}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                          {lead.qualification}/100
-                        </span>
-                      </div>
+                    <td className="py-3.5 px-4">
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        {lead.qualification}/100
+                      </span>
                       {lead.aiSummary && (
-                        <p className="text-[10px] text-gray-400 line-clamp-1 max-w-xs mt-1">
+                        <p className="text-[10px] text-[#716F6A] line-clamp-1 max-w-xs mt-1">
                           {lead.aiSummary}
                         </p>
                       )}
                     </td>
 
-                    <td className="py-3 px-4 font-bold text-white">
+                    <td className="py-3.5 px-4 font-bold text-[#1F1E1D]">
                       ${lead.estimatedValue?.toLocaleString() || 0} MXN
                     </td>
 
-                    <td className="py-3 px-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        lead.status === "qualified" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                        lead.status === "contacted" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                        lead.status === "converted" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
-                        "bg-gray-500/10 text-gray-300 border border-gray-500/20"
+                    <td className="py-3.5 px-4">
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+                        lead.status === "qualified" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                        lead.status === "contacted" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                        lead.status === "converted" ? "bg-purple-50 text-purple-700 border border-purple-200" :
+                        "bg-stone-100 text-stone-700 border border-stone-200"
                       }`}>
                         {lead.status.toUpperCase()}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {lead.status !== "converted" && (
                           <button
                             onClick={() => handleConvert(lead.id)}
-                            className="p-1.5 rounded-lg bg-bunker-600/20 hover:bg-bunker-600/40 text-bunker-300 hover:text-white transition-all text-[11px] font-semibold flex items-center gap-1"
+                            className="px-2 py-1 rounded-lg bg-[#FAF9F5] hover:bg-[#FBF1ED] text-[#C15F3C] border border-[#E8E6DF] text-[11px] font-semibold flex items-center gap-1 transition-all"
                             title="Convertir a Cliente y crear Negocio"
                           >
                             <ArrowRightCircle className="w-3.5 h-3.5" />
@@ -314,8 +295,8 @@ export default function LeadsPage() {
                         )}
                         <button
                           onClick={() => handleDelete(lead.id)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Eliminar registro lógicamente"
+                          className="p-1 rounded-lg text-[#9C9890] hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Eliminar lógicamente"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -329,77 +310,72 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Create Lead Modal */}
+      {/* Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0b101d] border border-[#23314d] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#1c263c] flex items-center justify-between">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-bunker-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
+          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
+              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#D97757]" />
                 Registrar Nuevo Prospecto
               </h2>
-              <button
-                onClick={() => setIsCreateOpen(false)}
-                className="text-gray-400 hover:text-white"
-              >
+              <button onClick={() => setIsCreateOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateLead} className="p-5 space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">Nombre Completo *</label>
+                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Nombre Completo *</label>
                 <input
                   type="text"
                   required
                   placeholder="ej. Lic. Roberto Mendoza"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">Empresa / Negocio</label>
+                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Empresa / Negocio</label>
                 <input
                   type="text"
                   placeholder="ej. Inmobiliaria Premier"
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-1">Correo Electrónico</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Correo Electrónico</label>
                   <input
                     type="email"
-                    placeholder="contacto@empresa.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-1">Teléfono / WhatsApp</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Teléfono / WhatsApp</label>
                   <input
                     type="tel"
-                    placeholder="+52 55 1234 5678"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-1">Canal de Captación</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Canal de Captación</label>
                   <select
                     value={formData.source}
                     onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                    className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                   >
                     <option value="meta_ads">Meta Ads (Instagram / FB)</option>
                     <option value="google_ads">Google Ads</option>
@@ -409,12 +385,12 @@ export default function LeadsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-1">Presupuesto Estimado ($ MXN)</label>
+                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Presupuesto Estimado ($ MXN)</label>
                   <input
                     type="number"
                     value={formData.estimatedValue}
                     onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
-                    className="w-full bg-[#121929] border border-[#222f47] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-bunker-500"
+                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                   />
                 </div>
               </div>
@@ -423,14 +399,14 @@ export default function LeadsPage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-3 py-2 rounded-lg bg-[#141d30] border border-[#23314d] text-gray-300 hover:text-white text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] hover:text-[#1F1E1D] text-xs"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 rounded-lg bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold shadow-md"
+                  className="px-4 py-1.5 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white text-xs font-semibold shadow-sm"
                 >
                   {submitting ? "Guardando..." : "Guardar Prospecto"}
                 </button>

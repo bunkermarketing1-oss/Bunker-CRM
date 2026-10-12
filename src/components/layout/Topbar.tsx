@@ -21,62 +21,59 @@ export default function Topbar({ currentRole, onRoleChange, onOpenAiModal }: Top
   ];
 
   return (
-    <header className="h-16 bg-[#090d16]/90 backdrop-blur-md border-b border-[#1a2333] fixed top-0 right-0 left-64 z-20 px-6 flex items-center justify-between">
+    <header className="h-16 bg-[#FAF9F5]/90 backdrop-blur-md border-b border-[#E8E6DF] fixed top-0 right-0 left-64 z-20 px-8 flex items-center justify-between">
       {/* Search Input */}
       <div className="flex items-center gap-3 w-80">
         <div className="relative w-full">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar leads, clientes, negocios..."
-            className="w-full bg-[#0e1422] border border-[#1e293b] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-bunker-500 transition-colors"
+            placeholder="Buscar prospectos, clientes, negocios..."
+            className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#1F1E1D] placeholder-[#9C9890] focus:outline-none focus:border-[#D97757] transition-colors shadow-sm"
           />
         </div>
       </div>
 
-      {/* Center Demo Data Badge */}
+      {/* Center Demo Badge */}
       <div className="relative">
         <div
           onClick={() => setShowInfo(!showInfo)}
-          className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium cursor-pointer hover:bg-amber-500/20 transition-all select-none"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBF1ED] border border-[#F3D6CB] text-[#C15F3C] text-xs font-medium cursor-pointer hover:bg-[#F8E5DC] transition-all select-none"
         >
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>Modo Demostración Activo</span>
-          <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#D97757] animate-pulse"></span>
+          <span>Modo Demostración</span>
+          <HelpCircle className="w-3.5 h-3.5 text-[#D97757]" />
         </div>
 
         {showInfo && (
-          <div className="absolute top-9 left-1/2 -translate-x-1/2 w-80 bg-[#0d1322] border border-[#23314d] rounded-xl p-3.5 text-xs text-gray-300 shadow-2xl z-50">
-            <div className="font-bold text-white mb-1 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="absolute top-9 left-1/2 -translate-x-1/2 w-80 bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl p-4 text-xs text-[#716F6A] shadow-xl z-50">
+            <div className="font-semibold text-[#1F1E1D] mb-1 flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               Datos de Prueba para Cliente
             </div>
-            <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-              Los registros marcados con etiqueta <span className="text-amber-400 font-semibold">[DEMO]</span> son datos estructurados para la presentación del jueves. Cualquier registro nuevo que agregues se guardará de forma real y persistente.
+            <p className="text-[11px] text-[#716F6A] leading-relaxed mb-2">
+              Los registros marcados con etiqueta <span className="text-[#C15F3C] font-semibold">[DEMO]</span> son datos estructurados para la presentación. Cualquier registro nuevo que agregues se guardará de forma real en Supabase PostgreSQL.
             </p>
-            <div className="text-[10px] text-gray-500 font-mono">
-              Persistencia: SQLite / PostgreSQL en Dokploy
-            </div>
           </div>
         )}
       </div>
 
       {/* Right User & Role Selector */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Role Selector */}
         <div className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0e1422] border border-[#1e293b] text-xs text-gray-300 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs font-medium text-[#1F1E1D] hover:bg-[#FAF8F2] transition-colors shadow-sm"
           >
-            <Shield className="w-3.5 h-3.5 text-bunker-400" />
+            <Shield className="w-3.5 h-3.5 text-[#D97757]" />
             <span className="capitalize">{roles.find((r) => r.id === currentRole)?.name || currentRole}</span>
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 top-10 w-56 bg-[#0e1422] border border-[#1e293b] rounded-xl p-1.5 shadow-xl z-50">
-              <div className="px-2 py-1 text-[10px] font-bold text-gray-500 uppercase">
-                Simular Rol de Usuario
+            <div className="absolute right-0 top-10 w-56 bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl p-1.5 shadow-xl z-50">
+              <div className="px-2.5 py-1 text-[10px] font-semibold text-[#9C9890] uppercase tracking-wider">
+                Simular Rol
               </div>
               {roles.map((r) => (
                 <button
@@ -85,12 +82,12 @@ export default function Topbar({ currentRole, onRoleChange, onOpenAiModal }: Top
                     onRoleChange(r.id);
                     setShowRoleMenu(false);
                   }}
-                  className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition-colors ${
-                    currentRole === r.id ? "bg-bunker-600 text-white font-semibold" : "text-gray-300 hover:bg-[#151f33]"
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                    currentRole === r.id ? "bg-[#FBF1ED] text-[#C15F3C] font-semibold" : "text-[#716F6A] hover:bg-[#FAF8F2]"
                   }`}
                 >
-                  <div className="font-medium">{r.name}</div>
-                  <div className="text-[10px] opacity-75">{r.desc}</div>
+                  <div className="font-medium text-[#1F1E1D]">{r.name}</div>
+                  <div className="text-[10px] text-[#9C9890]">{r.desc}</div>
                 </button>
               ))}
             </div>
@@ -98,19 +95,19 @@ export default function Topbar({ currentRole, onRoleChange, onOpenAiModal }: Top
         </div>
 
         {/* Notifications */}
-        <button className="w-8 h-8 rounded-lg bg-[#0e1422] border border-[#1e293b] flex items-center justify-center text-gray-400 hover:text-white transition-colors relative">
-          <Bell className="w-4 h-4" />
-          <span className="w-2 h-2 rounded-full bg-bunker-500 absolute top-1.5 right-1.5"></span>
+        <button className="w-8 h-8 rounded-xl bg-[#FFFFFF] border border-[#E8E6DF] flex items-center justify-center text-[#716F6A] hover:text-[#1F1E1D] hover:bg-[#FAF8F2] transition-colors relative shadow-sm">
+          <Bell className="w-3.5 h-3.5" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#D97757] absolute top-2 right-2"></span>
         </button>
 
         {/* User Profile */}
-        <div className="flex items-center gap-2 pl-2 border-l border-[#1e293b]">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-bunker-600 to-indigo-500 flex items-center justify-center font-bold text-white text-xs">
+        <div className="flex items-center gap-2 pl-2 border-l border-[#E8E6DF]">
+          <div className="w-7 h-7 rounded-full bg-[#FBF1ED] border border-[#F3D6CB] flex items-center justify-center font-bold text-[#D97757] text-xs">
             BA
           </div>
           <div className="hidden sm:block text-left">
-            <div className="text-xs font-semibold text-white leading-tight">Bunker Agency</div>
-            <div className="text-[10px] text-gray-400">admin@bunkermarketing.io</div>
+            <div className="text-xs font-semibold text-[#1F1E1D] leading-tight">Bunker Agency</div>
+            <div className="text-[10px] text-[#9C9890]">admin@bunkermarketing.io</div>
           </div>
         </div>
       </div>

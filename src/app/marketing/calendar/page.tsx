@@ -19,29 +19,34 @@ export default function EditorialCalendarPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
         <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-pink-400" />
+          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+            <span>Marketing</span>
+            <span>/</span>
+            <span className="text-[#1F1E1D] font-medium">Calendario</span>
+          </div>
+          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
             Calendario Editorial de Contenidos
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Cronograma mensual de publicaciones en redes sociales de cuentas gestionadas por la agencia.
+          <p className="text-xs text-[#6B6966] mt-0.5">
+            Cronograma mensual de publicaciones y pautas gestionadas directamente por Bunker Agency.
           </p>
         </div>
 
         <Link
           href="/marketing/posts"
-          className="px-4 py-2.5 rounded-xl bg-bunker-600 hover:bg-bunker-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-bunker-600/30 transition-all"
+          className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center gap-2 shadow-sm transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Programar Nuevo Post</span>
+          <span>Programar Post</span>
         </Link>
       </div>
 
-      {/* Calendar Grid Representation */}
-      <div className="p-5 rounded-2xl bg-[#0c111e] border border-[#1b2538] space-y-4">
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400 pb-2 border-b border-[#1b2538]">
+      {/* Calendar Grid */}
+      <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-[#6B6966] pb-3 border-b border-[#E8E6DF]">
           {daysOfWeek.map((day) => (
             <div key={day} className="py-1">{day}</div>
           ))}
@@ -55,22 +60,22 @@ export default function EditorialCalendarPage() {
             return (
               <div
                 key={i}
-                className="min-h-[90px] p-2 rounded-xl bg-[#080d16] border border-[#172238] flex flex-col justify-between hover:border-[#243554] transition-colors"
+                className="min-h-[96px] p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex flex-col justify-between hover:border-[#D1CFCA] transition-colors"
               >
-                <span className="text-[11px] font-bold text-gray-400">{dayNum}</span>
+                <span className="text-[11px] font-mono font-medium text-[#82807C]">{dayNum}</span>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5 mt-1">
                   {dayPosts.map((dp) => (
                     <div
                       key={dp.id}
-                      className="p-1 rounded bg-bunker-600/20 border border-bunker-500/30 text-[9px] text-bunker-200 line-clamp-1"
+                      className="p-1.5 rounded-lg bg-white border border-[#E8E6DF] text-[10px] text-[#1F1E1D] line-clamp-1 shadow-xs"
                     >
                       {dp.content}
                     </div>
                   ))}
                   {dayNum === 15 && (
-                    <div className="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-[9px] text-emerald-300 font-semibold truncate">
-                      Lanzamiento Meta Ads
+                    <div className="p-1 rounded bg-[#EBF5EE] border border-[#C2E2CC] text-[10px] text-emerald-800 font-medium truncate">
+                      Meta Ads Campaña A
                     </div>
                   )}
                 </div>
