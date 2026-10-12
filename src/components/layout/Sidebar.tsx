@@ -50,6 +50,7 @@ export default function Sidebar({ onOpenAiModal }: SidebarProps) {
     {
       title: "MARKETING & REDES",
       items: [
+        { label: "Optimizador IA Pautas", href: "/marketing/ai-optimizer", icon: Sparkles },
         { label: "Cuentas Conectadas", href: "/marketing/integrations", icon: Share2 },
         { label: "Publicaciones", href: "/marketing/posts", icon: Layers },
         { label: "Calendario Editorial", href: "/marketing/calendar", icon: Calendar },
