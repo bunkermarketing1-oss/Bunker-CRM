@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Bell, Shield, User, HelpCircle, CheckCircle2 } from "lucide-react";
+import { Search, Bell, Shield, User, ChevronDown, Plus, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 interface TopbarProps {
   currentRole: string;
@@ -11,104 +12,78 @@ interface TopbarProps {
 
 export default function Topbar({ currentRole, onRoleChange, onOpenAiModal }: TopbarProps) {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-
-  const roles = [
-    { id: "admin", name: "Administrador", desc: "Acceso total y configuración" },
-    { id: "sales_rep", name: "Ejecutivo Comercial", desc: "Leads, pipeline y contactos" },
-    { id: "marketing_specialist", name: "Especialista Marketing", desc: "Publicaciones y campañas" },
-    { id: "analyst", name: "Analista", desc: "Reportes y métricas de rendimiento" },
-  ];
+  const [lang, setLang] = useState("Español");
 
   return (
-    <header className="h-16 bg-[#FAF9F5]/90 backdrop-blur-md border-b border-[#E8E6DF] fixed top-0 right-0 left-64 z-20 px-8 flex items-center justify-between">
-      {/* Search Input */}
-      <div className="flex items-center gap-3 w-80">
-        <div className="relative w-full">
-          <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Buscar prospectos, clientes, negocios..."
-            className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#1F1E1D] placeholder-[#9C9890] focus:outline-none focus:border-[#D97757] transition-colors shadow-sm"
-          />
-        </div>
-      </div>
-
-      {/* Center Demo Badge */}
-      <div className="relative">
-        <div
-          onClick={() => setShowInfo(!showInfo)}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBF1ED] border border-[#F3D6CB] text-[#C15F3C] text-xs font-medium cursor-pointer hover:bg-[#F8E5DC] transition-all select-none"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D97757] animate-pulse"></span>
-          <span>Modo Demostración</span>
-          <HelpCircle className="w-3.5 h-3.5 text-[#D97757]" />
-        </div>
-
-        {showInfo && (
-          <div className="absolute top-9 left-1/2 -translate-x-1/2 w-80 bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl p-4 text-xs text-[#716F6A] shadow-xl z-50">
-            <div className="font-semibold text-[#1F1E1D] mb-1 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Datos de Prueba para Cliente
-            </div>
-            <p className="text-[11px] text-[#716F6A] leading-relaxed mb-2">
-              Los registros marcados con etiqueta <span className="text-[#C15F3C] font-semibold">[DEMO]</span> son datos estructurados para la presentación. Cualquier registro nuevo que agregues se guardará de forma real en Supabase PostgreSQL.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Right User & Role Selector */}
+    <header className="h-16 bg-[#F6F5F2]/95 backdrop-blur-md border-b border-[#ECEAE3] fixed top-0 right-0 left-64 z-20 px-8 flex items-center justify-between">
+      {/* Left: Friendly Greeting (Exact match to reference) */}
       <div className="flex items-center gap-3">
-        {/* Role Selector */}
+        <h1 className="text-lg font-bold text-[#141414] tracking-tight flex items-center gap-2">
+          <span>👋</span>
+          <span>Buenos días, Bunker Agency !</span>
+        </h1>
+      </div>
+
+      {/* Right: Actions matching reference (Language dropdown + [ + ] + "+ Add person" black-gold button) */}
+      <div className="flex items-center gap-3">
+        {/* Language / Region Pill */}
         <div className="relative">
           <button
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs font-medium text-[#1F1E1D] hover:bg-[#FAF8F2] transition-colors shadow-sm"
+            onClick={() => setLang(lang === "Español" ? "English" : "Español")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white border border-[#ECEAE3] text-xs font-medium text-[#141414] hover:bg-[#FAF9F5] transition-colors shadow-xs"
           >
-            <Shield className="w-3.5 h-3.5 text-[#D97757]" />
-            <span className="capitalize">{roles.find((r) => r.id === currentRole)?.name || currentRole}</span>
+            <span>{lang}</span>
+            <ChevronDown className="w-3 h-3 text-[#8C887E]" />
+          </button>
+        </div>
+
+        {/* Square Black-Gold Plus Button (Exact match) */}
+        <Link
+          href="/crm/tasks"
+          className="w-8 h-8 rounded-2xl btn-black-gold flex items-center justify-center text-[#E5C158] hover:text-white"
+          title="Nueva Tarea Rápida"
+        >
+          <Plus className="w-4 h-4" />
+        </Link>
+
+        {/* Primary Black-Gold Button: + Registrar Lead (Exact match to "+ Add person") */}
+        <Link
+          href="/crm/leads"
+          className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
+        >
+          <User className="w-3.5 h-3.5 text-[#E5C158]" />
+          <span>+ Registrar Lead</span>
+        </Link>
+
+        {/* Role Switcher Pill */}
+        <div className="relative pl-2 border-l border-[#ECEAE3]">
+          <button
+            onClick={() => setShowRoleMenu(!showRoleMenu)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl bg-white border border-[#ECEAE3] text-xs font-medium text-[#141414] hover:bg-[#FAF9F5] shadow-xs"
+          >
+            <Shield className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="capitalize">{currentRole === "admin" ? "Admin" : currentRole}</span>
+            <ChevronDown className="w-3 h-3 text-[#8C887E]" />
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 top-10 w-56 bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl p-1.5 shadow-xl z-50">
-              <div className="px-2.5 py-1 text-[10px] font-semibold text-[#9C9890] uppercase tracking-wider">
-                Simular Rol
-              </div>
-              {roles.map((r) => (
+            <div className="absolute right-0 top-10 w-48 bg-white border border-[#ECEAE3] rounded-2xl p-1.5 shadow-xl z-50">
+              {["admin", "sales_rep", "marketing_specialist"].map((role) => (
                 <button
-                  key={r.id}
+                  key={role}
                   onClick={() => {
-                    onRoleChange(r.id);
+                    onRoleChange(role);
                     setShowRoleMenu(false);
                   }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
-                    currentRole === r.id ? "bg-[#FBF1ED] text-[#C15F3C] font-semibold" : "text-[#716F6A] hover:bg-[#FAF8F2]"
+                  className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                    currentRole === role ? "bg-[#FAF0D7] text-[#9A7320]" : "text-[#6B6861] hover:bg-[#FAF9F5]"
                   }`}
                 >
-                  <div className="font-medium text-[#1F1E1D]">{r.name}</div>
-                  <div className="text-[10px] text-[#9C9890]">{r.desc}</div>
+                  {role === "admin" ? "Administrador" : role === "sales_rep" ? "Ejecutivo Comercial" : "Especialista Pautas"}
                 </button>
               ))}
             </div>
           )}
-        </div>
-
-        {/* Notifications */}
-        <button className="w-8 h-8 rounded-xl bg-[#FFFFFF] border border-[#E8E6DF] flex items-center justify-center text-[#716F6A] hover:text-[#1F1E1D] hover:bg-[#FAF8F2] transition-colors relative shadow-sm">
-          <Bell className="w-3.5 h-3.5" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D97757] absolute top-2 right-2"></span>
-        </button>
-
-        {/* User Profile */}
-        <div className="flex items-center gap-2 pl-2 border-l border-[#E8E6DF]">
-          <div className="w-7 h-7 rounded-full bg-[#FBF1ED] border border-[#F3D6CB] flex items-center justify-center font-bold text-[#D97757] text-xs">
-            BA
-          </div>
-          <div className="hidden sm:block text-left">
-            <div className="text-xs font-semibold text-[#1F1E1D] leading-tight">Bunker Agency</div>
-            <div className="text-[10px] text-[#9C9890]">admin@bunkermarketing.io</div>
-          </div>
         </div>
       </div>
     </header>

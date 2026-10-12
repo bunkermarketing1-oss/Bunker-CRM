@@ -3,17 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #FAF9F5;
-  --bg-sidebar: #F3F1EB;
+  --bg-main: #F6F5F2;
+  --bg-sidebar: #F0EFEA;
   --bg-card: #FFFFFF;
-  --border-subtle: #E8E6DF;
-  --border-focus: #D97757;
-  --accent-terracotta: #D97757;
-  --accent-terracotta-hover: #C15F3C;
-  --accent-terracotta-light: #FBF1ED;
-  --text-primary: #1F1E1D;
-  --text-secondary: #716F6A;
-  --text-muted: #9C9890;
+  --border-subtle: #ECEAE3;
+  --border-gold: rgba(212, 175, 55, 0.45);
+  --accent-gold: #D4AF37;
+  --accent-gold-light: #FBF7ED;
+  --btn-black: #141414;
+  --btn-black-hover: #222222;
+  --text-primary: #141414;
+  --text-secondary: #6B6861;
+  --text-muted: #9C988F;
 }
 
 body {
@@ -24,7 +25,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Claude Style Minimal Scrollbar */
+/* Minimal Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -40,37 +41,47 @@ body {
   background: #BFBCB2;
 }
 
-.claude-card {
-  background: #FFFFFF;
-  border: 1px solid #E8E6DF;
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+/* Luxury Obsidian Black & Gold Ivory Buttons */
+.btn-black-gold {
+  background-color: #141414;
+  color: #FAF8F3;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.claude-card:hover {
-  border-color: #DDD9CF;
+.btn-black-gold:hover {
+  background-color: #222222;
+  border-color: rgba(212, 175, 55, 0.75);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.22);
+  transform: translateY(-1px);
 }
 
-.claude-btn-primary {
-  background-color: #D97757;
-  color: #FFFFFF;
-  border-radius: 10px;
-  transition: all 0.15s ease;
+.btn-black-gold:active {
+  transform: translateY(0);
 }
 
-.claude-btn-primary:hover {
-  background-color: #C15F3C;
-}
-
-.claude-btn-secondary {
-  background-color: #FFFFFF;
-  color: #1F1E1D;
-  border: 1px solid #E8E6DF;
-  border-radius: 10px;
-  transition: all 0.15s ease;
-}
-
-.claude-btn-secondary:hover {
+/* Ivory Marfil Button */
+.btn-marfil {
   background-color: #FAF8F2;
-  border-color: #DDD9CF;
+  color: #1A1918;
+  border: 1px solid #E6E2D8;
+  transition: all 0.2s ease;
+}
+
+.btn-marfil:hover {
+  background-color: #F1EDE2;
+  border-color: #DDD8CB;
+}
+
+/* Marfil Neo-Card */
+.card-marfil {
+  background: #FFFFFF;
+  border: 1px solid #ECEAE3;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+}
+
+.card-marfil:hover {
+  border-color: #DFDBD0;
 }

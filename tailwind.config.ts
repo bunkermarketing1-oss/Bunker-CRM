@@ -10,22 +10,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        claude: {
-          bg: "#FAF9F5",
-          sidebar: "#F3F1EB",
+        marfil: {
+          bg: "#F6F5F2",
+          sidebar: "#F0EFEA",
           card: "#FFFFFF",
-          cardHover: "#FAF8F2",
-          border: "#E8E6DF",
-          borderFocus: "#D97757",
-          text: "#1F1E1D",
-          textSecondary: "#716F6A",
-          muted: "#9C9890",
-          terracotta: "#D97757",
-          terracottaHover: "#C15F3C",
-          terracottaLight: "#FBF1ED",
-          terracottaBorder: "#F3D6CB",
-          sand: "#EFECE4",
-          surface: "#FBF9F5",
+          border: "#ECEAE3",
+          hover: "#F8F7F3",
+        },
+        gold: {
+          DEFAULT: "#D4AF37",
+          light: "#FBF7ED",
+          border: "rgba(212, 175, 55, 0.45)",
+          hover: "#E5C158",
+          dark: "#9A7320",
+        },
+        obsidian: {
+          DEFAULT: "#141414",
+          hover: "#222222",
+          card: "#1C1C1E",
         },
         bunker: {
           50: "#faf9f5",

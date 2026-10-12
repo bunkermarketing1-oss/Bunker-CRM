@@ -114,9 +114,9 @@ export default function PipelinePage() {
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-[#E5C158]" />
             <span>Nueva Oportunidad</span>
           </button>
         </div>
@@ -283,7 +283,7 @@ export default function PipelinePage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-1.5 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white text-xs font-semibold shadow-sm"
+                  className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold"
                 >
                   {submitting ? "Creando..." : "Crear Oportunidad"}
                 </button>

@@ -233,9 +233,9 @@ export default function IntegrationsPage() {
                 ) : (
                   <button
                     onClick={() => setSelectedIntegration(it)}
-                    className="w-full py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all"
+                    className="w-full py-2.5 rounded-2xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2"
                   >
-                    <Key className="w-3.5 h-3.5" />
+                    <Key className="w-3.5 h-3.5 text-[#E5C158]" />
                     <span>Configurar Credenciales</span>
                   </button>
                 )}
@@ -296,7 +296,7 @@ export default function IntegrationsPage() {
                 <button
                   type="submit"
                   disabled={connecting}
-                  className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium shadow-sm transition-all"
+                  className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold"
                 >
                   {connecting ? "Validando..." : "Guardar & Conectar"}
                 </button>

@@ -102,9 +102,9 @@ export default function TasksPage() {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center gap-2 shadow-sm transition-all"
+          className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-[#E5C158]" />
           <span>Nueva Tarea</span>
         </button>
       </div>
@@ -231,7 +231,7 @@ export default function TasksPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium shadow-sm transition-all"
+                  className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold"
                 >
                   {submitting ? "Creando..." : "Crear Tarea"}
                 </button>

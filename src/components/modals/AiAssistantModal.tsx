@@ -268,16 +268,16 @@ export default function AiAssistantModal({ isOpen, onClose }: AiModalProps) {
           <button
             onClick={handleRunAi}
             disabled={loading}
-            className="w-full py-2.5 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
+            className="w-full py-2.5 rounded-2xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+              <span className="flex items-center gap-2 text-[#FAF8F3]">
+                <span className="w-3.5 h-3.5 border-2 border-[#D4AF37]/40 border-t-[#D4AF37] rounded-full animate-spin"></span>
                 Pensando con Bunker AI...
               </span>
             ) : (
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-2 text-[#FAF8F3]">
+                <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
                 Ejecutar con Bunker AI
               </span>
             )}

@@ -211,9 +211,9 @@ export default function SmsMessagingPage() {
                 setShowConfirm(true);
               }}
               disabled={sending}
-              className="w-full py-2.5 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
+              className="w-full py-2.5 rounded-2xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 text-[#E5C158]" />
               <span>{sending ? "Enviando..." : "Validar y Enviar SMS"}</span>
             </button>
           </div>
@@ -299,7 +299,7 @@ export default function SmsMessagingPage() {
               </button>
               <button
                 onClick={handleSendSms}
-                className="px-4 py-1.5 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium shadow-sm transition-all"
+                className="px-4 py-1.5 rounded-xl btn-black-gold text-xs font-semibold"
               >
                 Confirmar y Enviar
               </button>

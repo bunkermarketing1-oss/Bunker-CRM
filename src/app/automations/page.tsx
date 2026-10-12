@@ -65,9 +65,9 @@ export default function AutomationsPage() {
 
         <button
           onClick={() => alert("En esta versión MVP las 4 reglas principales están pre-configuradas y activas.")}
-          className="px-4 py-2 rounded-xl bg-[#D97757] hover:bg-[#C86747] text-white text-xs font-medium flex items-center gap-2 shadow-sm transition-all"
+          className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-[#E5C158]" />
           <span>Nueva Automatización</span>
         </button>
       </div>

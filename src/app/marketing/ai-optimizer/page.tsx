@@ -221,16 +221,16 @@ export default function MetaAiOptimizerPage() {
                       <button
                         onClick={() => handleApplyOptimization(camp.id, camp.algorithmInsight.actionType)}
                         disabled={optimizingId === camp.id}
-                        className="w-full py-2.5 rounded-xl bg-[#D97757] hover:bg-[#C15F3C] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                        className="w-full py-2.5 rounded-2xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2"
                       >
                         {optimizingId === camp.id ? (
                           <span className="flex items-center gap-1.5">
-                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            <RefreshCw className="w-3 h-3 animate-spin text-[#E5C158]" />
                             Aplicando en Meta...
                           </span>
                         ) : (
                           <span className="flex items-center gap-1.5">
-                            <Zap className="w-3.5 h-3.5" />
+                            <Zap className="w-3.5 h-3.5 text-[#E5C158]" />
                             {camp.algorithmInsight.actionLabel}
                           </span>
                         )}
