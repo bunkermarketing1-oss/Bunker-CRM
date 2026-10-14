@@ -487,7 +487,7 @@ export default function ClientsPage() {
           <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] text-[11px] text-[#716F6A]">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-[#1F1E1D]">Filtros activos:</span>
-              {search && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Texto: "{search}"</span>}
+              {search && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Texto: &ldquo;{search}&rdquo;</span>}
               {statusFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Estado: {statusFilter}</span>}
               {industryFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Sector: {industryFilter}</span>}
               {ownerFilter !== "all" && (

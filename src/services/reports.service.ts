@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { LEAD_STATUS, OPPORTUNITY_STATUS, leadSourceLabel } from "@/lib/constants/crm";
 import { PAID_LEAD_SOURCES } from "@/lib/constants/reports";
-import { buildTrend, hoursBetween, median, percentage, singleCurrency } from "@/lib/reports";
-import type { ReportsData, SourceBreakdownRow, StageRow } from "@/types/reports";
+import { buildTrend, groupOpenDealsByStage, hoursBetween, median, percentage, singleCurrency } from "@/lib/reports";
+import type { ReportsData, SourceBreakdownRow } from "@/types/reports";
 import type { TenantScope } from "@/types/tenant";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -99,7 +99,7 @@ export async function buildCommercialReport(scope: TenantScope, days: number): P
       until,
       days
     ),
-    stages: groupByStage(stages, openDeals),
+    stages: groupOpenDealsByStage(stages, openDeals),
   };
 }
 
@@ -151,20 +151,4 @@ function breakdownBySource(
   return Array.from(rows.values())
     .map((row) => ({ ...row, conversionRate: percentage(row.converted, row.leads) }))
     .sort((a, b) => b.leads - a.leads);
-}
-
-function groupByStage(
-  stages: { id: string; name: string; color: string }[],
-  openDeals: { value: number; stageId: string }[]
-): StageRow[] {
-  return stages.map((stage) => {
-    const deals = openDeals.filter((deal) => deal.stageId === stage.id);
-    return {
-      stageId: stage.id,
-      name: stage.name,
-      color: stage.color,
-      deals: deals.length,
-      value: deals.reduce((sum, deal) => sum + deal.value, 0),
-    };
-  });
 }

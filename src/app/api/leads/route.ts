@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     const data = validationResult.data;
 
     // 2. Validate Assigned Owner if provided
-    let assignedOwnerId = data.ownerId || user!.id;
+    const assignedOwnerId = data.ownerId || user!.id;
     if (data.ownerId) {
       const isMember = await prisma.organizationMember.findFirst({
         where: {

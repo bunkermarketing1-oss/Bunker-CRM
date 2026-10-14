@@ -40,3 +40,48 @@ export const LEAD_SOURCE_LABEL: Record<string, string> = {
 export function leadSourceLabel(source: string): string {
   return LEAD_SOURCE_LABEL[source] ?? source;
 }
+
+export const LEAD_STATUS_LABEL: Record<LeadStatusValue, string> = {
+  new: "Nuevo",
+  contacted: "Contactado",
+  qualified: "Calificado",
+  lost: "Perdido",
+  converted: "Convertido",
+};
+
+export const CLIENT_STATUS = {
+  ACTIVE: "active",
+  CHURNED: "churned",
+  ON_HOLD: "on_hold",
+} as const;
+
+export const TASK_STATUS = {
+  PENDING: "pending",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+} as const;
+
+export const TASK_PRIORITY = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  URGENT: "urgent",
+} as const;
+export type TaskPriority = ValueOf<typeof TASK_PRIORITY>;
+
+export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+  urgent: "Urgente",
+};
+
+export const ACTIVITY_TYPE = {
+  CALL: "call",
+  MEETING: "meeting",
+  EMAIL: "email",
+  NOTE: "note",
+  SMS: "sms",
+} as const;
+export type ActivityType = ValueOf<typeof ACTIVITY_TYPE>;
+

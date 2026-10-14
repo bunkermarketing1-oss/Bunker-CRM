@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
+import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 
 interface Lead {
   id: string;
@@ -834,29 +835,7 @@ function LeadsPageContent() {
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
-                        <span
-                          className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase border inline-block ${
-                            lead.status === "qualified"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : lead.status === "contacted"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : lead.status === "converted"
-                              ? "bg-purple-50 text-purple-700 border-purple-200"
-                              : lead.status === "lost"
-                              ? "bg-red-50 text-red-700 border-red-200"
-                              : "bg-stone-100 text-stone-700 border-stone-200"
-                          }`}
-                        >
-                          {lead.status === "qualified"
-                            ? "Calificado"
-                            : lead.status === "contacted"
-                            ? "Contactado"
-                            : lead.status === "converted"
-                            ? "Convertido"
-                            : lead.status === "lost"
-                            ? "Perdido"
-                            : "Nuevo"}
-                        </span>
+                        <LeadStatusBadge status={lead.status} />
                       </td>
 
                       {/* Actions */}

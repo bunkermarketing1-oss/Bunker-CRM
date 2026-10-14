@@ -1,5 +1,5 @@
 import { WEEKLY_TREND_MAX_DAYS } from "@/lib/constants/reports";
-import type { TrendPoint } from "@/types/reports";
+import type { StageRow, TrendPoint } from "@/types/reports";
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -72,4 +72,21 @@ export function buildTrend(
   }
 
   return Array.from(buckets.values());
+}
+
+/** Negocios abiertos y su valor por etapa, en el orden de las etapas. */
+export function groupOpenDealsByStage(
+  stages: { id: string; name: string; color: string }[],
+  openDeals: { value: number; stageId: string }[]
+): StageRow[] {
+  return stages.map((stage) => {
+    const deals = openDeals.filter((deal) => deal.stageId === stage.id);
+    return {
+      stageId: stage.id,
+      name: stage.name,
+      color: stage.color,
+      deals: deals.length,
+      value: deals.reduce((sum, deal) => sum + deal.value, 0),
+    };
+  });
 }

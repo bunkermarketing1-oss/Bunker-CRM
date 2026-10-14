@@ -11,11 +11,11 @@ import {
   RefreshCw,
   Target,
   Users,
-  type LucideIcon,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
+import Panel from "@/components/ui/Panel";
 import RangeSelector from "@/components/reports/RangeSelector";
 import LeadsTrendChart from "@/components/reports/LeadsTrendChart";
 import SourceBreakdownTable from "@/components/reports/SourceBreakdownTable";
@@ -156,29 +156,6 @@ export default function ReportsPage() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-interface PanelProps {
-  icon: LucideIcon;
-  title: string;
-  action?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}
-
-function Panel({ icon: Icon, title, action, className = "", children }: PanelProps) {
-  return (
-    <section className={`p-5 sm:p-6 rounded-3xl bg-white border border-[#ECEAE3] ${className}`}>
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <h2 className="text-sm font-bold text-[#141414] flex items-center gap-2">
-          <Icon className="w-4 h-4 text-[#9A7320] dark:text-[#E5C158]" />
-          {title}
-        </h2>
-        {action}
-      </div>
-      {children}
-    </section>
   );
 }
 

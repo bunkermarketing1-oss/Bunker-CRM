@@ -1,5 +1,5 @@
 // tests/reports-search-suite.js
-// Reportes (/api/reports) y búsqueda global ⌘K (/api/search). Solo lectura: no crea datos.
+// Dashboard, reportes, búsqueda global ⌘K y configuración. Solo lectura: no crea datos.
 // Lo que protege: que un usuario CLIENT nunca vea cifras ni registros de otra empresa,
 // y que el reporte cuente lo mismo que la base.
 // Uso: TEST_BASE_URL=http://127.0.0.1:3005 node tests/reports-search-suite.js
@@ -59,7 +59,7 @@ async function run() {
   console.log("\n=== BUNKER CRM — SUITE: REPORTES & BÚSQUEDA GLOBAL ===\n");
 
   // Sin sesión no se filtra nada: ni cifras agregadas ni nombres de leads.
-  for (const endpoint of ["/api/reports", "/api/search?q=an"]) {
+  for (const endpoint of ["/api/reports", "/api/search?q=an", "/api/dashboard", "/api/settings"]) {
     const res = await req(endpoint);
     record(`ANON${endpoint}`, res.status === 401, `${endpoint} sin sesión responde 401 (recibido ${res.status})`);
   }
@@ -81,6 +81,14 @@ async function run() {
   const invalid = await (await req("/api/reports?days=7", adminCookie)).json();
   record("R4", invalid.days === 90, "Un período no permitido cae al valor por defecto en vez de fallar");
 
+  const dashboard = await (await req("/api/dashboard", adminCookie)).json();
+  const orgTotal = await prisma.lead.count({ where: { organizationId: orgId, isDeleted: false } });
+  record("D1", dashboard.metrics?.totalLeads === orgTotal, `Leads del dashboard = base (${dashboard.metrics?.totalLeads} vs ${orgTotal})`);
+
+  const settings = await (await req("/api/settings", adminCookie)).json();
+  const leaksValue = JSON.stringify(settings).includes(process.env.DATABASE_URL || "__unset__");
+  record("SET1", settings.success && Array.isArray(settings.environment) && !leaksValue, "Configuración responde al admin sin exponer valores de variables");
+
   const short = await (await req("/api/search?q=a", adminCookie)).json();
   record("S1", short.success && short.results.length === 0, "Búsquedas de 1 letra no consultan la base");
 
@@ -93,6 +101,13 @@ async function run() {
   record("CLIENT-LOGIN", Boolean(clientCookie), "El usuario CLIENT inicia sesión");
   if (!clientCookie) return;
   const clientUser = await prisma.user.findUnique({ where: { email: CLIENT_EMAIL } });
+
+  const settingsRes = await req("/api/settings", clientCookie);
+  record("C0", settingsRes.status === 403, `Un CLIENT no puede ver la configuración (recibido ${settingsRes.status})`);
+
+  const clientDashboard = await (await req("/api/dashboard", clientCookie)).json();
+  const ownTotal = await prisma.lead.count({ where: { organizationId: orgId, clientId: clientUser.clientId, isDeleted: false } });
+  record("C3", clientDashboard.metrics?.totalLeads === ownTotal && clientDashboard.integrations?.length === 0, "El dashboard del CLIENT solo cuenta su empresa y no ve integraciones");
 
   const clientReport = await (await req("/api/reports?days=365", clientCookie)).json();
   const ownLeads = await countLeadsSince({ organizationId: orgId, clientId: clientUser.clientId }, 365);

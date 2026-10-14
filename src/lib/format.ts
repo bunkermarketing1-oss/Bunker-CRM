@@ -35,3 +35,26 @@ export function formatHours(hours: number): string {
   if (hours < 48) return `${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(hours)} h`;
   return `${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(hours / 24)} días`;
 }
+
+const relativeTime = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 365 * 24 * 60 * 60],
+  ["month", 30 * 24 * 60 * 60],
+  ["week", 7 * 24 * 60 * 60],
+  ["day", 24 * 60 * 60],
+  ["hour", 60 * 60],
+  ["minute", 60],
+];
+
+/** "hace 3 horas", "mañana", "hace 2 semanas". `now` se inyecta para poder probarlo. */
+export function formatRelativeTime(date: Date | string, now: Date = new Date()): string {
+  const seconds = (new Date(date).getTime() - now.getTime()) / 1000;
+  for (const [unit, unitSeconds] of RELATIVE_UNITS) {
+    if (Math.abs(seconds) >= unitSeconds) return relativeTime.format(Math.round(seconds / unitSeconds), unit);
+  }
+  return "justo ahora";
+}
+
+export function formatShortDate(date: Date | string): string {
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short" }).format(new Date(date));
+}
