@@ -29,3 +29,6 @@ pnpm-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# TypeScript incremental build (Nixpacks monta una caché en esta ruta; no debe estar en git)
+*.tsbuildinfo
