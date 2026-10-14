@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
+import { AD_ACCOUNT_TYPES, CAMPAIGN_STATUS } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED_DAYS = [7, 30, 90];
-const AD_ACCOUNT_TYPES = ["meta_ad_account", "tiktok_advertiser"];
 
 /**
  * Campañas pagadas y métricas del rango seleccionado.
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
       accounts,
       campaigns: campaignRows,
       daily,
-      totals: { ...totals, activeCampaigns: campaigns.filter((c) => c.status === "active").length },
+      totals: { ...totals, activeCampaigns: campaigns.filter((c) => c.status === CAMPAIGN_STATUS.ACTIVE).length },
     });
   } catch (error: any) {
     console.error("GET /api/campaigns error:", error);

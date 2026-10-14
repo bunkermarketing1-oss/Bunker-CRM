@@ -7,6 +7,7 @@ import {
   listMetaCampaigns,
   type MetaCampaign,
 } from "@/lib/integrations/meta";
+import { ACCOUNT_STATUS, ACCOUNT_TYPE, CAMPAIGN_PLATFORM, CAMPAIGN_STATUS } from "@/lib/constants/integrations";
 
 // Primera sincronización trae 90 días de histórico; las siguientes, 30 (Meta ajusta
 // conversiones retroactivamente dentro de la ventana de atribución).
@@ -14,9 +15,9 @@ const INITIAL_SYNC_DAYS = 90;
 const SYNC_DAYS = 30;
 
 function mapCampaignStatus(c: MetaCampaign) {
-  if (c.status === "ACTIVE") return "active";
-  if (c.status === "PAUSED") return "paused";
-  return "completed"; // ARCHIVED, DELETED
+  if (c.status === "ACTIVE") return CAMPAIGN_STATUS.ACTIVE;
+  if (c.status === "PAUSED") return CAMPAIGN_STATUS.PAUSED;
+  return CAMPAIGN_STATUS.COMPLETED; // ARCHIVED, DELETED
 }
 
 function toIsoDate(d: Date) {
@@ -36,7 +37,7 @@ export interface SyncSummary {
  */
 export async function syncMetaIntegration(integrationId: string): Promise<SyncSummary> {
   const accounts = await prisma.connectedAccount.findMany({
-    where: { integrationId, accountType: "meta_ad_account", status: { not: "disabled" } },
+    where: { integrationId, accountType: ACCOUNT_TYPE.META_AD_ACCOUNT, status: { not: ACCOUNT_STATUS.DISABLED } },
   });
 
   const summary: SyncSummary = { accounts: 0, campaigns: 0, metricDays: 0, errors: [] };
@@ -59,7 +60,7 @@ export async function syncMetaIntegration(integrationId: string): Promise<SyncSu
         const budgetCents = parseInt(rc.daily_budget || rc.lifetime_budget || "0", 10) || 0;
         const data = {
           name: rc.name,
-          platform: "meta_ads",
+          platform: CAMPAIGN_PLATFORM.META_ADS,
           objective: rc.objective || null,
           currency: meta.currency || null,
           budget: budgetCents / 100,
@@ -120,7 +121,7 @@ export async function syncMetaIntegration(integrationId: string): Promise<SyncSu
 
       await prisma.connectedAccount.update({
         where: { id: account.id },
-        data: { status: "active", lastSyncAt: new Date() },
+        data: { status: ACCOUNT_STATUS.ACTIVE, lastSyncAt: new Date() },
       });
       summary.accounts++;
       summary.campaigns += remoteCampaigns.length;
@@ -128,7 +129,7 @@ export async function syncMetaIntegration(integrationId: string): Promise<SyncSu
       const expired = err instanceof MetaApiError && err.code === 190;
       await prisma.connectedAccount.update({
         where: { id: account.id },
-        data: { status: expired ? "expired" : "error" },
+        data: { status: expired ? ACCOUNT_STATUS.EXPIRED : ACCOUNT_STATUS.ERROR },
       });
       summary.errors.push(`${account.accountName}: ${err.message}`);
     }

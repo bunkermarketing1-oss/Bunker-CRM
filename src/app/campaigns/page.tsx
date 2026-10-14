@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { BarChart3, RefreshCw, Plug, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 
 type Metric = "spend" | "clicks" | "conversions" | "impressions";
 
@@ -180,7 +181,7 @@ export default function CampaignsPage() {
           <div className="flex flex-wrap gap-2 text-[11px]">
             {data.accounts.map((a: any) => (
               <span key={a.id} className="px-2.5 py-1 rounded-full bg-white border border-[#E8E6DF] text-[#4D4C48] flex items-center gap-1.5">
-                {a.status !== "active" && <AlertTriangle className="w-3 h-3 text-amber-600" />}
+                {a.status !== ACCOUNT_STATUS.ACTIVE && <AlertTriangle className="w-3 h-3 text-amber-600" />}
                 <span>{a.accountName}</span>
                 {!isClient && a.client && <span className="text-[#82807C]">· {a.client.name}</span>}
                 <span className="text-[#82807C]">

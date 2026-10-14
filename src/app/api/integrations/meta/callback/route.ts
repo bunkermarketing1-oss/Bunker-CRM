@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeMetaCode, listMetaAdAccounts, listMetaPages } from "@/lib/integrations/meta";
 import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
+import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS, type AccountType } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +37,13 @@ export async function GET(req: NextRequest) {
 
   try {
     let integration = await prisma.integration.findFirst({
-      where: { organizationId: user!.organizationId, provider: "meta" },
+      where: { organizationId: user!.organizationId, provider: INTEGRATION_PROVIDER.META },
     });
     if (!integration) {
       integration = await prisma.integration.create({
         data: {
           organizationId: user!.organizationId,
-          provider: "meta",
+          provider: INTEGRATION_PROVIDER.META,
           name: "Meta for Business (Facebook & Instagram)",
           description: "Páginas oficiales, catálogo de anuncios y sincronización de leads de Meta Ads.",
         },
@@ -54,10 +55,10 @@ export async function GET(req: NextRequest) {
 
     const userTokenEnc = encryptSecret(accessToken);
     const scopes = grantedScopes.join(",");
-    const base = { organizationId: user!.organizationId, integrationId: integration.id, scopes, status: "active" };
+    const base = { organizationId: user!.organizationId, integrationId: integration.id, scopes, status: ACCOUNT_STATUS.ACTIVE };
 
     const upsertAccount = (
-      accountType: string,
+      accountType: AccountType,
       externalId: string,
       data: { accountName: string; accessTokenEnc: string; tokenExpiresAt: Date | null; metadataJson: string | null }
     ) =>
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
       });
 
     for (const acc of adAccounts) {
-      await upsertAccount("meta_ad_account", acc.id, {
+      await upsertAccount(ACCOUNT_TYPE.META_AD_ACCOUNT, acc.id, {
         accountName: acc.name,
         accessTokenEnc: userTokenEnc,
         tokenExpiresAt: expiresAt,
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
     for (const page of pages) {
       // Los tokens de página derivados de un token de larga duración no expiran.
       const pageTokenEnc = encryptSecret(page.access_token);
-      await upsertAccount("facebook_page", page.id, {
+      await upsertAccount(ACCOUNT_TYPE.FACEBOOK_PAGE, page.id, {
         accountName: page.name,
         accessTokenEnc: pageTokenEnc,
         tokenExpiresAt: null,
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
       });
       if (page.instagram_business_account) {
         const ig = page.instagram_business_account;
-        await upsertAccount("instagram_business", ig.id, {
+        await upsertAccount(ACCOUNT_TYPE.INSTAGRAM_BUSINESS, ig.id, {
           accountName: ig.username ? `@${ig.username}` : `Instagram de ${page.name}`,
           accessTokenEnc: pageTokenEnc,
           tokenExpiresAt: null,
@@ -98,7 +99,7 @@ export async function GET(req: NextRequest) {
 
     await prisma.integration.update({
       where: { id: integration.id },
-      data: { status: "connected", errorMessage: null },
+      data: { status: INTEGRATION_STATUS.CONNECTED, errorMessage: null },
     });
 
     await prisma.auditLog.create({
@@ -109,7 +110,7 @@ export async function GET(req: NextRequest) {
         entityType: "Integration",
         entityId: integration.id,
         detailsJson: JSON.stringify({
-          provider: "meta",
+          provider: INTEGRATION_PROVIDER.META,
           adAccounts: adAccounts.length,
           pages: pages.length,
           scopes: grantedScopes,
@@ -122,7 +123,7 @@ export async function GET(req: NextRequest) {
     await prisma.integration.update({ where: { id: integration.id }, data: { lastSyncAt: new Date() } });
 
     return backToIntegrations(req, {
-      connected: "meta",
+      connected: INTEGRATION_PROVIDER.META,
       message: `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s).`,
     });
   } catch (err: any) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
+import { INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const integrations = await prisma.integration.findMany({
-    where: { provider: "meta", status: "connected" },
+    where: { provider: INTEGRATION_PROVIDER.META, status: INTEGRATION_STATUS.CONNECTED },
   });
 
   const results = [];

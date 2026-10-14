@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { ACCOUNT_STATUS, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
       const updated = await prisma.integration.update({
         where: { id },
         data: {
-          status: "disconnected",
+          status: INTEGRATION_STATUS.DISCONNECTED,
           lastSyncAt: null,
           errorMessage: null,
         },
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "connect") {
-      if (integration.provider === "meta") {
+      if (integration.provider === INTEGRATION_PROVIDER.META) {
         return NextResponse.json({
           success: false,
           error: "Meta se conecta mediante inicio de sesión con Facebook (OAuth), no con claves manuales.",
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
       const updated = await prisma.integration.update({
         where: { id },
         data: {
-          status: "connected",
+          status: INTEGRATION_STATUS.CONNECTED,
           lastSyncAt: new Date(),
           errorMessage: null,
         },
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
           integrationId: id,
           accountName: `Cuenta Oficial (${integration.provider.toUpperCase()})`,
           externalId: accountId || `acc_${Date.now()}`,
-          status: "active",
+          status: ACCOUNT_STATUS.ACTIVE,
         },
       });
 

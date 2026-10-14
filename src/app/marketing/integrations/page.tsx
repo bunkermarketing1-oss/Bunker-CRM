@@ -14,6 +14,7 @@ import {
   Radio,
   Check,
 } from "lucide-react";
+import { ACCOUNT_STATUS, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
 const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
@@ -211,7 +212,7 @@ export default function IntegrationsPage() {
       {/* Grid of integrations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {integrations.map((it) => {
-          const isConnected = it.status === "connected";
+          const isConnected = it.status === INTEGRATION_STATUS.CONNECTED;
 
           return (
             <div
@@ -278,9 +279,9 @@ export default function IntegrationsPage() {
                             <span className="text-[#82807C]">{ACCOUNT_TYPE_LABELS[acc.accountType] || "Cuenta"}:</span> {acc.accountName}
                           </span>
                           <span className={`flex-shrink-0 uppercase text-[10px] font-medium ${
-                            acc.status === "active" ? "text-emerald-700" : "text-red-700"
+                            acc.status === ACCOUNT_STATUS.ACTIVE ? "text-emerald-700" : "text-red-700"
                           }`}>
-                            {acc.status === "active" ? "activa" : acc.status === "expired" ? "token expirado" : "error"}
+                            {acc.status === ACCOUNT_STATUS.ACTIVE ? "activa" : acc.status === ACCOUNT_STATUS.EXPIRED ? "token expirado" : "error"}
                           </span>
                         </div>
                         <label className="flex items-center gap-2 text-[#82807C]">
