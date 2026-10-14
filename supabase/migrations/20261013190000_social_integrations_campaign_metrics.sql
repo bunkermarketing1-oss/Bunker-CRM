@@ -10,9 +10,10 @@
 -- =============================================================================
 
 -- AlterTable
+-- "clientId" usa IF NOT EXISTS: en producción ya existía (agregado fuera de migraciones, con su FK pero sin índice).
 ALTER TABLE "ConnectedAccount" ADD COLUMN     "accessTokenEnc" TEXT,
 ADD COLUMN     "accountType" TEXT,
-ADD COLUMN     "clientId" TEXT,
+ADD COLUMN IF NOT EXISTS "clientId" TEXT,
 ADD COLUMN     "lastSyncAt" TIMESTAMP(3),
 ADD COLUMN     "scopes" TEXT,
 ADD COLUMN     "tokenExpiresAt" TIMESTAMP(3);
@@ -51,8 +52,14 @@ CREATE UNIQUE INDEX "ConnectedAccount_integrationId_accountType_externalId_key" 
 -- CreateIndex
 CREATE UNIQUE INDEX "Campaign_connectedAccountId_externalId_key" ON "Campaign"("connectedAccountId", "externalId");
 
--- AddForeignKey
-ALTER TABLE "ConnectedAccount" ADD CONSTRAINT "ConnectedAccount_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- AddForeignKey (solo si no existe; ver nota de "clientId" arriba)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ConnectedAccount_clientId_fkey') THEN
+    ALTER TABLE "ConnectedAccount" ADD CONSTRAINT "ConnectedAccount_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END
+$$;
 
 -- AddForeignKey
 ALTER TABLE "CampaignMetric" ADD CONSTRAINT "CampaignMetric_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
