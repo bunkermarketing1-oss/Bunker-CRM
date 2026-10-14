@@ -12,7 +12,20 @@ export async function GET(req: NextRequest) {
     const integrations = await prisma.integration.findMany({
       where: { organizationId: user!.organizationId },
       include: {
-        connectedAccounts: true,
+        // Nunca exponer accessTokenEnc al cliente
+        connectedAccounts: {
+          select: {
+            id: true,
+            accountName: true,
+            accountType: true,
+            externalId: true,
+            status: true,
+            tokenExpiresAt: true,
+            lastSyncAt: true,
+            clientId: true,
+          },
+          orderBy: [{ accountType: "asc" }, { accountName: "asc" }],
+        },
       },
       orderBy: { createdAt: "asc" },
     });
@@ -84,6 +97,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "connect") {
+      if (integration.provider === "meta") {
+        return NextResponse.json({
+          success: false,
+          error: "Meta se conecta mediante inicio de sesión con Facebook (OAuth), no con claves manuales.",
+          oauthUrl: "/api/integrations/meta/connect",
+        }, { status: 400 });
+      }
+
       const { apiKey, apiSecret, accountId } = credentials || {};
 
       if (!apiKey || !apiSecret) {

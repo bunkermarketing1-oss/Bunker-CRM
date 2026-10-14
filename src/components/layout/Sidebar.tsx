@@ -19,6 +19,7 @@ import {
   ChevronDown,
   AlertCircle,
   X,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -41,6 +42,7 @@ export default function Sidebar({ onOpenAiModal }: SidebarProps) {
     { label: language === "es" ? "Mis Leads" : "My Leads", href: "/crm/leads", icon: Users },
     { label: language === "es" ? "Mi Empresa & Contactos" : "My Company & Contacts", href: "/crm/clients", icon: Building2 },
     { label: language === "es" ? "Pipeline Comercial" : "Sales Pipeline", href: "/crm/pipeline", icon: KanbanSquare },
+    { label: language === "es" ? "Mis Campañas & Métricas" : "My Campaigns & Metrics", href: "/campaigns", icon: BarChart3 },
     { label: language === "es" ? "Actividades & Llamadas" : "Activities & Calls", href: "/crm/activities", icon: Activity },
     { label: language === "es" ? "Tareas Pendientes" : "Pending Tasks", href: "/crm/tasks", icon: CheckSquare },
   ];
@@ -56,6 +58,7 @@ export default function Sidebar({ onOpenAiModal }: SidebarProps) {
   ];
 
   const adminMarketingNav = [
+    { label: language === "es" ? "Campañas & Métricas" : "Campaigns & Metrics", href: "/campaigns", icon: BarChart3 },
     { label: language === "es" ? "Pautas & Meta Ads (IA)" : "Ads & Meta Ads (AI)", href: "/marketing/ai-optimizer", icon: Sparkles },
     { label: language === "es" ? "Publicaciones Sociales" : "Social Posts", href: "/marketing/posts", icon: Share2 },
     { label: language === "es" ? "Integraciones Oficiales" : "Integrations Hub", href: "/marketing/integrations", icon: Plug },

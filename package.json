@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
-    "db:push": "prisma db push",
+    "db:push": "prisma db push && pnpm db:secure",
+    "db:secure": "prisma db execute --file prisma/supabase-rls.sql --schema prisma/schema.prisma",
     "db:seed": "node prisma/seed.js",
     "auth:provision": "node prisma/provision-users.js",
     "test:auth": "node tests/auth-suite.js",
@@ -15,6 +16,7 @@
     "test:audit": "node tests/audit-suite.js",
     "test:clients": "node tests/clients-suite.js",
     "test:portal": "node tests/two-role-architecture-suite.js",
+    "test:campaigns": "node tests/campaigns-suite.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

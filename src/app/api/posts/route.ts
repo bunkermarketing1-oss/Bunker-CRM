@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       include: {
         connectedAccount: {
-          include: { integration: true },
+          // Nunca exponer accessTokenEnc al cliente
+          select: { id: true, accountName: true, accountType: true, status: true, integration: true },
         },
       },
     });
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
         isDemo: false,
       },
       include: {
-        connectedAccount: true,
+        connectedAccount: { select: { id: true, accountName: true, accountType: true, status: true } },
       },
     });
 

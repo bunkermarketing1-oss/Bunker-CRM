@@ -103,6 +103,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/messaging") ||
     pathname.startsWith("/automations") ||
     pathname.startsWith("/reports") ||
+    pathname.startsWith("/campaigns") ||
     pathname.startsWith("/settings");
 
   if (isProtectedPath) {
