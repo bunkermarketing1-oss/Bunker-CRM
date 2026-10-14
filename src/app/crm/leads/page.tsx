@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Users,
   Plus,
@@ -60,14 +61,24 @@ interface TeamMember {
   role: string;
 }
 
+// Next 14 exige un Suspense alrededor de useSearchParams para prerenderizar la página (si no, falla el build).
 export default function LeadsPage() {
+  return (
+    <Suspense>
+      <LeadsPageContent />
+    </Suspense>
+  );
+}
+
+function LeadsPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const isAdmin = user?.role?.toUpperCase() === "ADMIN" && !user?.isClientUser;
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
@@ -133,6 +144,12 @@ export default function LeadsPage() {
   }, []);
 
   // Fetch Leads
+  // La búsqueda global (⌘K) navega aquí con ?search=; también si ya estás en esta página.
+  useEffect(() => {
+    const term = searchParams.get("search");
+    if (term !== null) setSearch(term);
+  }, [searchParams]);
+
   const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);

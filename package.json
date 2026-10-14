@@ -27,6 +27,7 @@
     "test:clients": "node tests/clients-suite.js",
     "test:portal": "node tests/two-role-architecture-suite.js",
     "test:campaigns": "node tests/campaigns-suite.js",
+    "test:reports": "node tests/reports-search-suite.js",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
