@@ -17,7 +17,7 @@ export default function PageHeader({ section, title, description, actions }: Pag
           <span aria-hidden>/</span>
           <span className="text-[#141414] font-medium">{title}</span>
         </div>
-        <h1 className="text-2xl sm:text-[28px] font-serif font-normal text-[#141414] tracking-tight leading-tight">{title}</h1>
+        <h1 className="text-2xl sm:text-[28px] font-semibold text-[#141414] tracking-tight leading-tight">{title}</h1>
         {description && <p className="text-xs text-[#6B6861] mt-1.5 max-w-2xl">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2 flex-shrink-0">{actions}</div>}

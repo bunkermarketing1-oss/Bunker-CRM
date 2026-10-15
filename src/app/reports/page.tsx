@@ -124,11 +124,11 @@ export default function ReportsPage() {
             <Panel icon={KanbanSquare} title="Pipeline abierto">
               <div className="flex items-baseline justify-between mb-5">
                 <div>
-                  <div className="text-2xl font-serif text-[#141414]">{formatCompactMoney(kpis.openPipelineValue)}</div>
+                  <div className="text-2xl text-[#141414]">{formatCompactMoney(kpis.openPipelineValue)}</div>
                   <div className="text-[11px] text-[#6B6861]">valor total abierto</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-base font-serif text-[#9A7320] dark:text-[#E5C158]">{formatCompactMoney(kpis.weightedPipelineValue)}</div>
+                  <div className="text-base text-[#9A7320] dark:text-[#E5C158]">{formatCompactMoney(kpis.weightedPipelineValue)}</div>
                   <div className="text-[11px] text-[#6B6861]">ponderado por probabilidad</div>
                 </div>
               </div>

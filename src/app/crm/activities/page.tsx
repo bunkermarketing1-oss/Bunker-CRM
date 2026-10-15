@@ -88,7 +88,7 @@ export default function ActivitiesPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Actividades</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Bitácora de Actividades Comerciales
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -163,7 +163,7 @@ export default function ActivitiesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
           <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
-              <h2 className="text-sm font-serif font-normal text-[#1F1E1D]">Registrar Actividad Comercial</h2>
+              <h2 className="text-sm font-semibold text-[#1F1E1D]">Registrar Actividad Comercial</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-[#82807C] hover:text-[#1F1E1D] p-1 rounded-lg hover:bg-[#F4F3EE]"

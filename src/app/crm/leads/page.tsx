@@ -455,7 +455,7 @@ function LeadsPageContent() {
             <span>/</span>
             <span className="text-[#141414] font-medium">Prospectos</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#141414] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#141414] tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
           <p className="text-xs text-[#6B6861] mt-0.5">
@@ -894,7 +894,7 @@ function LeadsPageContent() {
           <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
               <div>
-                <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#D4AF37]" />
                   Registrar Nuevo Prospecto
                 </h2>
@@ -1153,7 +1153,7 @@ function LeadsPageContent() {
           <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
               <div>
-                <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
                   <Edit className="w-4 h-4 text-[#D4AF37]" />
                   Editar Prospecto
                 </h2>

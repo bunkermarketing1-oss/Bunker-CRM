@@ -109,7 +109,7 @@ export default function SmsMessagingPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">SMS Oficial</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Canal de Mensajería SMS Comercial
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -280,7 +280,7 @@ export default function SmsMessagingPage() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
           <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
-            <h3 className="text-sm font-serif font-normal text-[#1F1E1D] flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600" />
               Confirmar Envío de Mensaje SMS
             </h3>

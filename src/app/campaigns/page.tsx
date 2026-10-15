@@ -107,7 +107,7 @@ export default function CampaignsPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Campañas</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Cliente"}
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -196,7 +196,7 @@ export default function CampaignsPage() {
             {kpis.map((k) => (
               <div key={k.label} className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
                 <div className="text-[11px] text-[#6B6966]">{k.label}</div>
-                <div className="text-xl font-serif text-[#1F1E1D] mt-1 tabular-nums">{k.value}</div>
+                <div className="text-xl text-[#1F1E1D] mt-1 tabular-nums">{k.value}</div>
                 {k.sub && <div className="text-[11px] text-[#82807C] mt-0.5">{k.sub}</div>}
               </div>
             ))}
@@ -205,7 +205,7 @@ export default function CampaignsPage() {
           {/* Daily chart */}
           <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-serif text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm text-[#1F1E1D] flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#D97757]" />
                 {METRICS.find((m) => m.key === metric)?.label} por día
               </h2>

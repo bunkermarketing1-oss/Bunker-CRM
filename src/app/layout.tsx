@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ROUTES } from "@/lib/constants/routes";
+import { inter } from "@/lib/fonts";
 
 export default function RootLayout({
   children,
@@ -18,7 +19,7 @@ export default function RootLayout({
   const isLoginPage = pathname === ROUTES.LOGIN;
 
   return (
-    <html lang="es">
+    <html lang="es" className={inter.variable}>
       <head>
         <title>Bunker Agency — CRM Híbrido con Automatización e IA</title>
         <meta

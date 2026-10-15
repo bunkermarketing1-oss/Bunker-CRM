@@ -29,7 +29,7 @@ export default function StatCard({ label, value, icon: Icon, hint, emphasis = fa
           <Icon className={`w-4 h-4 ${emphasis ? "text-[#E5C158]" : "text-[#9A7320] dark:text-[#E5C158]"}`} />
         </span>
       </div>
-      <div className={`text-3xl font-serif tracking-tight leading-none ${emphasis ? "text-[#FAF8F3]" : "text-[#141414]"}`}>{value}</div>
+      <div className={`text-3xl tracking-tight leading-none ${emphasis ? "text-[#FAF8F3]" : "text-[#141414]"}`}>{value}</div>
       {hint && <div className={`text-[11px] leading-snug ${emphasis ? "text-[#A09B90]" : "text-[#6B6861]"}`}>{hint}</div>}
     </div>
   );

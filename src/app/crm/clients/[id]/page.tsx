@@ -554,7 +554,7 @@ export default function ClientProfile360Page() {
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
         <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-2">
           <Shield className="w-8 h-8 text-rose-600 mx-auto" />
-          <h2 className="font-serif font-bold text-base text-rose-900">Acceso No Disponible</h2>
+          <h2 className="font-semibold text-base text-rose-900">Acceso No Disponible</h2>
           <p className="text-xs text-rose-700 leading-relaxed">
             {errorMsg || "El cliente solicitado no existe o no pertenece a la organización autenticada."}
           </p>
@@ -649,7 +649,7 @@ export default function ClientProfile360Page() {
               )}
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#1F1E1D] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-[#1F1E1D] tracking-tight">
               {client.name}
             </h1>
             {client.companyName && client.companyName !== client.name && (
@@ -661,14 +661,14 @@ export default function ClientProfile360Page() {
           <div className="flex items-center gap-3">
             <div className="px-4 py-2.5 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-right">
               <div className="text-[10px] font-medium uppercase text-[#9C9890]">Facturación MRR</div>
-              <div className="text-xl font-bold font-serif text-[#1F1E1D]">
+              <div className="text-xl font-semibold text-[#1F1E1D]">
                 ${(client.revenue || 0).toLocaleString("en-US")}{" "}
                 <span className="text-xs font-normal text-[#716F6A]">USD/mes</span>
               </div>
             </div>
             <div className="px-4 py-2.5 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-right hidden sm:block">
               <div className="text-[10px] font-medium uppercase text-[#9C9890]">ARR Anualizado</div>
-              <div className="text-lg font-bold font-serif text-[#1F1E1D]">
+              <div className="text-lg font-semibold text-[#1F1E1D]">
                 ${((client.revenue || 0) * 12).toLocaleString("en-US")}{" "}
                 <span className="text-xs font-normal text-[#716F6A]">USD</span>
               </div>
@@ -754,7 +754,7 @@ export default function ClientProfile360Page() {
           <div className="lg:col-span-2 space-y-6">
             {/* Notes Section */}
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D] flex items-center gap-2">
+              <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#D97757]" />
                 Notas Comerciales y Condiciones de Contrato
               </h3>
@@ -766,7 +766,7 @@ export default function ClientProfile360Page() {
             {/* Recent Activities Preview */}
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-serif font-bold text-sm text-[#1F1E1D] flex items-center gap-2">
+                <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
                   <Clock className="w-4 h-4 text-emerald-600" />
                   Últimas Actividades Registradas
                 </h3>
@@ -810,7 +810,7 @@ export default function ClientProfile360Page() {
           <div className="space-y-6">
             {/* Commercial Indicators */}
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">Indicadores de la Cuenta</h3>
+              <h3 className="font-semibold text-sm text-[#1F1E1D]">Indicadores de la Cuenta</h3>
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between py-1.5 border-b border-[#F0EEE6]">
                   <span className="text-[#716F6A]">Oportunidades Abiertas</span>
@@ -840,7 +840,7 @@ export default function ClientProfile360Page() {
             {/* Primary Contact Card */}
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">Contacto Principal</h3>
+                <h3 className="font-semibold text-sm text-[#1F1E1D]">Contacto Principal</h3>
                 <button
                   onClick={() => setActiveTab("contacts")}
                   className="text-xs text-[#D97757] hover:underline font-semibold"
@@ -892,7 +892,7 @@ export default function ClientProfile360Page() {
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">
+              <h3 className="font-semibold text-sm text-[#1F1E1D]">
                 Contactos Vinculados ({client.contacts?.length || 0})
               </h3>
               <p className="text-xs text-[#716F6A]">
@@ -936,7 +936,7 @@ export default function ClientProfile360Page() {
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-serif font-bold text-sm text-[#1F1E1D]">
+                        <h4 className="font-semibold text-sm text-[#1F1E1D]">
                           {contact.firstName} {contact.lastName || ""}
                         </h4>
                         {contact.jobTitle && (
@@ -1015,7 +1015,7 @@ export default function ClientProfile360Page() {
           {/* Quick Register Activity Form (Col 1) */}
           <div className="lg:col-span-1">
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3 sticky top-4">
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D] flex items-center gap-2">
+              <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
                 <Send className="w-4 h-4 text-[#D97757]" />
                 Registrar Interacción
               </h3>
@@ -1076,7 +1076,7 @@ export default function ClientProfile360Page() {
 
           {/* Activity Timeline Stream (Col 2-3) */}
           <div className="lg:col-span-2 space-y-4">
-            <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">
+            <h3 className="font-semibold text-sm text-[#1F1E1D]">
               Cronología de Interacciones ({client.activities?.length || 0})
             </h3>
 
@@ -1102,7 +1102,7 @@ export default function ClientProfile360Page() {
 
                       <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-serif font-bold text-xs text-[#1F1E1D]">{act.title}</h4>
+                          <h4 className="font-semibold text-xs text-[#1F1E1D]">{act.title}</h4>
                           <span className="text-[10px] font-semibold text-[#9C9890] whitespace-nowrap">
                             {new Date(act.performedAt).toLocaleString("es-MX", {
                               dateStyle: "medium",
@@ -1138,7 +1138,7 @@ export default function ClientProfile360Page() {
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">
+              <h3 className="font-semibold text-sm text-[#1F1E1D]">
                 Oportunidades en Pipeline ({client.opportunities?.length || 0})
               </h3>
               <p className="text-xs text-[#716F6A]">
@@ -1176,7 +1176,7 @@ export default function ClientProfile360Page() {
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-serif font-bold text-sm text-[#1F1E1D]">{opp.title}</h4>
+                        <h4 className="font-semibold text-sm text-[#1F1E1D]">{opp.title}</h4>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
                           {statusBadge.label}
                         </span>
@@ -1243,7 +1243,7 @@ export default function ClientProfile360Page() {
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-serif font-bold text-sm text-[#1F1E1D]">
+              <h3 className="font-semibold text-sm text-[#1F1E1D]">
                 Tareas Vinculadas a la Cuenta ({client.tasks?.length || 0})
               </h3>
               <p className="text-xs text-[#716F6A]">
@@ -1348,7 +1348,7 @@ export default function ClientProfile360Page() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <Edit className="w-4 h-4 text-[#D97757]" />
                 Modificar Ficha Comercial
               </h2>
@@ -1499,7 +1499,7 @@ export default function ClientProfile360Page() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D]">
+              <h2 className="text-sm font-semibold text-[#1F1E1D]">
                 {editingContact ? "Editar Contacto" : "Añadir Nuevo Contacto"}
               </h2>
               <button onClick={() => setIsContactModalOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
@@ -1604,7 +1604,7 @@ export default function ClientProfile360Page() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-blue-600" />
                 Nueva Oportunidad Comercial
               </h2>
@@ -1704,7 +1704,7 @@ export default function ClientProfile360Page() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <CheckSquare className="w-4 h-4 text-emerald-600" />
                 Agendar Tarea Comercial
               </h2>

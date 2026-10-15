@@ -290,7 +290,7 @@ export default function ClientsPage() {
             </span>
             <span className="text-xs text-[#9C9890]">• Fase 3 CRM</span>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-3xl font-semibold text-[#1F1E1D] tracking-tight">
             Centro de Gestión de Clientes
           </h1>
           <p className="text-xs text-[#716F6A] mt-1 max-w-2xl leading-relaxed">
@@ -324,7 +324,7 @@ export default function ClientsPage() {
             <span>Activos</span>
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
           </div>
-          <div className="text-xl font-bold font-serif text-[#1F1E1D] mt-1">{metrics.activeCount}</div>
+          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.activeCount}</div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">de {metrics.totalCount} clientes</div>
         </div>
 
@@ -333,7 +333,7 @@ export default function ClientsPage() {
             <span>En Pausa</span>
             <div className="w-2 h-2 rounded-full bg-amber-500" />
           </div>
-          <div className="text-xl font-bold font-serif text-[#1F1E1D] mt-1">{metrics.onHoldCount}</div>
+          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.onHoldCount}</div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">contratos suspendidos</div>
         </div>
 
@@ -342,7 +342,7 @@ export default function ClientsPage() {
             <span>Cancelados</span>
             <div className="w-2 h-2 rounded-full bg-rose-500" />
           </div>
-          <div className="text-xl font-bold font-serif text-[#1F1E1D] mt-1">{metrics.churnedCount}</div>
+          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.churnedCount}</div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">cuentas churned</div>
         </div>
 
@@ -351,7 +351,7 @@ export default function ClientsPage() {
             <span>MRR Activo</span>
             <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
           </div>
-          <div className="text-lg font-bold font-serif text-emerald-700 mt-1">
+          <div className="text-lg font-semibold text-emerald-700 mt-1">
             ${metrics.mrrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
           </div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">Facturación recurrente mensual</div>
@@ -362,7 +362,7 @@ export default function ClientsPage() {
             <span>ARR Proyectado</span>
             <TrendingUp className="w-3.5 h-3.5 text-[#D97757]" />
           </div>
-          <div className="text-lg font-bold font-serif text-[#1F1E1D] mt-1">
+          <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
             ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
           </div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">Anualizado (MRR x 12)</div>
@@ -373,7 +373,7 @@ export default function ClientsPage() {
             <span>Pipeline Cuentas</span>
             <Briefcase className="w-3.5 h-3.5 text-[#586ff6]" />
           </div>
-          <div className="text-lg font-bold font-serif text-[#1F1E1D] mt-1">
+          <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
             ${metrics.totalClientPipelineUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
           </div>
           <div className="text-[10px] text-[#9C9890] mt-0.5">Deals abiertos vinculados</div>
@@ -516,7 +516,7 @@ export default function ClientsPage() {
         ) : clients.length === 0 ? (
           <div className="col-span-full py-16 text-center text-[#9C9890] text-xs p-8 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] space-y-3">
             <Building className="w-10 h-10 text-[#DDD9CF] mx-auto" />
-            <div className="font-serif font-bold text-sm text-[#1F1E1D]">No se encontraron clientes</div>
+            <div className="font-semibold text-sm text-[#1F1E1D]">No se encontraron clientes</div>
             <p className="max-w-md mx-auto text-[#716F6A]">
               No hay cuentas comerciales que coincidan con los criterios de búsqueda o filtros seleccionados.
             </p>
@@ -562,7 +562,7 @@ export default function ClientsPage() {
                     <div className="space-y-0.5">
                       <Link
                         href={`/crm/clients/${client.id}`}
-                        className="font-serif font-bold text-[#1F1E1D] text-base group-hover:text-[#D97757] transition-colors flex items-center gap-1.5"
+                        className="font-semibold text-[#1F1E1D] text-base group-hover:text-[#D97757] transition-colors flex items-center gap-1.5"
                       >
                         <span>{client.name}</span>
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -656,7 +656,7 @@ export default function ClientsPage() {
                 <div className="pt-3 border-t border-[#F0EEE6] flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-[#9C9890] block uppercase font-medium">Facturación MRR</span>
-                    <span className="text-sm font-bold font-serif text-[#1F1E1D]">
+                    <span className="text-sm font-semibold text-[#1F1E1D]">
                       ${(client.revenue || 0).toLocaleString("en-US")} <span className="text-[10px] font-normal text-[#716F6A]">USD/mes</span>
                     </span>
                   </div>
@@ -690,7 +690,7 @@ export default function ClientsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-emerald-600" />
                 Registrar Nuevo Cliente Comercial
               </h2>
