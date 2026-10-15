@@ -142,6 +142,11 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
       {isActive && <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full bg-[#D4AF37]" />}
       <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#9A7320] dark:text-[#E5C158]" : "text-[#8C887E]"}`} />
       <span className="truncate">{label}</span>
+      {item.badge && (
+        <span className="ml-auto text-[9px] font-mono font-bold bg-[#FAF0D7] text-[#9A7320] px-1.5 rounded">
+          {item.badge}
+        </span>
+      )}
     </Link>
   );
 }

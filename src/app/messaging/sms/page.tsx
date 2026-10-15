@@ -23,7 +23,7 @@ export default function SmsMessagingPage() {
 
   // Form
   const [selectedContact, setSelectedContact] = useState<string>("");
-  const [phone, setPhone] = useState("+525549123011");
+  const [phone, setPhone] = useState("");
   const [messageText, setMessageText] = useState(
     "Hola, te confirmamos tu sesión estratégica con Bunker Agency para mañana a las 11:00 AM."
   );

@@ -12,6 +12,9 @@ export const ROUTES = {
   AI_OPTIMIZER: "/marketing/ai-optimizer",
   SOCIAL_POSTS: "/marketing/posts",
   INTEGRATIONS: "/marketing/integrations",
+  CONTENT_CALENDAR: "/marketing/calendar",
+  SMS: "/messaging/sms",
+  AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
 } as const;
 
