@@ -1,0 +1,14 @@
+# Build en Dokploy (Nixpacks).
+# - Node 22: Nixpacks usa Node 18 por defecto; pnpm 11 y @supabase/supabase-js >= 2.1xx
+#   necesitan Node 22 (WebSocket nativo).
+# - corepack reciente: el corepack 0.24.1 que instala Nixpacks no puede ejecutar pnpm 11
+#   (ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING). La versión de pnpm sale de "packageManager".
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.install]
+cmds = [
+  "npm install -g corepack@0.36.0",
+  "corepack enable",
+  "pnpm install --frozen-lockfile",
+]

@@ -14,6 +14,19 @@ import {
   Radio,
   Check,
 } from "lucide-react";
+import { ACCOUNT_STATUS, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+
+// Proveedores que se conectan con OAuth real en lugar de claves manuales
+const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
+  meta: { href: "/api/integrations/meta/connect", label: "Conectar con Facebook" },
+};
+
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  meta_ad_account: "Cuenta publicitaria",
+  facebook_page: "Página de Facebook",
+  instagram_business: "Instagram",
+  tiktok_advertiser: "TikTok Ads",
+};
 
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<any[]>([]);
@@ -21,6 +34,8 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
 
   // Connect Modal
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
@@ -43,8 +58,46 @@ export default function IntegrationsPage() {
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      const res = await fetch("/api/clients");
+      const json = await res.json();
+      if (json.success) setClients(json.clients.map((c: any) => ({ id: c.id, name: c.name })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAssignClient = async (accountId: string, clientId: string) => {
+    setAssigningId(accountId);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/integrations/accounts/${accountId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: clientId || null }),
+      });
+      const json = await res.json();
+      setFeedback({ type: json.success ? "success" : "error", message: json.success ? json.message : json.error });
+      if (json.success) fetchIntegrations();
+    } catch (e: any) {
+      setFeedback({ type: "error", message: e.message });
+    } finally {
+      setAssigningId(null);
+    }
+  };
+
   useEffect(() => {
     fetchIntegrations();
+    fetchClients();
+
+    // Resultado del flujo OAuth (redirect desde /api/integrations/*/callback)
+    const params = new URLSearchParams(window.location.search);
+    const oauthError = params.get("error");
+    const oauthMessage = params.get("message");
+    if (oauthError) setFeedback({ type: "error", message: oauthError });
+    else if (oauthMessage) setFeedback({ type: "success", message: oauthMessage });
+    if (oauthError || oauthMessage) window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
   const handleSync = async (id: string) => {
@@ -128,7 +181,7 @@ export default function IntegrationsPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Integraciones</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Centro de Conexiones & APIs Externas
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -159,7 +212,7 @@ export default function IntegrationsPage() {
       {/* Grid of integrations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {integrations.map((it) => {
-          const isConnected = it.status === "connected";
+          const isConnected = it.status === INTEGRATION_STATUS.CONNECTED;
 
           return (
             <div
@@ -169,7 +222,7 @@ export default function IntegrationsPage() {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-serif font-normal text-base text-[#1F1E1D]">
+                    <h3 className="font-semibold text-base text-[#1F1E1D]">
                       {it.name}
                     </h3>
                     <p className="text-xs text-[#6B6966] mt-1 leading-relaxed">
@@ -202,13 +255,53 @@ export default function IntegrationsPage() {
                     </div>
                   )}
 
-                  {isConnected && (
+                  {isConnected && it.errorMessage && (
+                    <div className="text-amber-800 flex items-start gap-1.5 pt-1 border-t border-[#E8E6DF]">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
+                      <span>{it.errorMessage}</span>
+                    </div>
+                  )}
+
+                  {isConnected && !it.errorMessage && (
                     <div className="text-emerald-800 flex items-center gap-1.5 pt-1 border-t border-[#E8E6DF]">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Credenciales activas y respondiendo</span>
                     </div>
                   )}
                 </div>
+
+                {isConnected && it.connectedAccounts?.length > 0 && (
+                  <ul className="mt-3 space-y-1 text-[11px]">
+                    {it.connectedAccounts.map((acc: any) => (
+                      <li key={acc.id} className="px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#F0EFEA] space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[#1F1E1D] truncate">
+                            <span className="text-[#82807C]">{ACCOUNT_TYPE_LABELS[acc.accountType] || "Cuenta"}:</span> {acc.accountName}
+                          </span>
+                          <span className={`flex-shrink-0 uppercase text-[10px] font-medium ${
+                            acc.status === ACCOUNT_STATUS.ACTIVE ? "text-emerald-700" : "text-red-700"
+                          }`}>
+                            {acc.status === ACCOUNT_STATUS.ACTIVE ? "activa" : acc.status === ACCOUNT_STATUS.EXPIRED ? "token expirado" : "error"}
+                          </span>
+                        </div>
+                        <label className="flex items-center gap-2 text-[#82807C]">
+                          <span className="flex-shrink-0">Cliente:</span>
+                          <select
+                            value={acc.clientId || ""}
+                            disabled={assigningId === acc.id}
+                            onChange={(e) => handleAssignClient(acc.id, e.target.value)}
+                            className="flex-1 min-w-0 bg-white border border-[#E8E6DF] rounded-lg px-2 py-1 text-[11px] text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                          >
+                            <option value="">Sin asignar (solo Bunker)</option>
+                            {clients.map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -230,6 +323,14 @@ export default function IntegrationsPage() {
                       Desconectar
                     </button>
                   </>
+                ) : OAUTH_PROVIDERS[it.provider] ? (
+                  <a
+                    href={OAUTH_PROVIDERS[it.provider].href}
+                    className="w-full py-2.5 rounded-2xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-[#E5C158]" />
+                    <span>{OAUTH_PROVIDERS[it.provider].label}</span>
+                  </a>
                 ) : (
                   <button
                     onClick={() => setSelectedIntegration(it)}
@@ -250,7 +351,7 @@ export default function IntegrationsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
           <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
-              <h2 className="text-sm font-serif font-normal text-[#1F1E1D]">
+              <h2 className="text-sm font-semibold text-[#1F1E1D]">
                 Conectar {selectedIntegration.name}
               </h2>
               <button

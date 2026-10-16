@@ -89,7 +89,7 @@ async function main() {
     ["GET", "/api/clients/00000000-0000-0000-0000-000000000000"], ["PUT", "/api/clients/00000000-0000-0000-0000-000000000000"], ["DELETE", "/api/clients/00000000-0000-0000-0000-000000000000"],
     ["GET", "/api/contacts"], ["POST", "/api/contacts"], ["PUT", "/api/contacts"], ["DELETE", "/api/contacts?id=x"],
     ["GET", "/api/pipeline"], ["POST", "/api/pipeline"], ["PUT", "/api/pipeline"], ["DELETE", "/api/pipeline?id=x"],
-    ["GET", "/api/dashboard"], ["GET", "/api/users"], ["GET", "/api/activities"], ["POST", "/api/activities"],
+    ["GET", "/api/dashboard"], ["GET", "/api/reports"], ["GET", "/api/search?q=an"], ["GET", "/api/settings"], ["GET", "/api/users"], ["GET", "/api/activities"], ["POST", "/api/activities"],
     ["GET", "/api/tasks"], ["POST", "/api/tasks"], ["PUT", "/api/tasks"], ["DELETE", "/api/tasks?id=x"],
     ["GET", "/api/posts"], ["POST", "/api/posts"], ["PUT", "/api/posts"], ["DELETE", "/api/posts?id=x"],
     ["GET", "/api/integrations"], ["POST", "/api/integrations/sync"],

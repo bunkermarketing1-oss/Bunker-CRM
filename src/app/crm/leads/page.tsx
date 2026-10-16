@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Users,
   Plus,
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
+import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 
 interface Lead {
   id: string;
@@ -60,14 +62,24 @@ interface TeamMember {
   role: string;
 }
 
+// Next 14 exige un Suspense alrededor de useSearchParams para prerenderizar la página (si no, falla el build).
 export default function LeadsPage() {
+  return (
+    <Suspense>
+      <LeadsPageContent />
+    </Suspense>
+  );
+}
+
+function LeadsPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const isAdmin = user?.role?.toUpperCase() === "ADMIN" && !user?.isClientUser;
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
@@ -133,6 +145,12 @@ export default function LeadsPage() {
   }, []);
 
   // Fetch Leads
+  // La búsqueda global (⌘K) navega aquí con ?search=; también si ya estás en esta página.
+  useEffect(() => {
+    const term = searchParams.get("search");
+    if (term !== null) setSearch(term);
+  }, [searchParams]);
+
   const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
@@ -437,7 +455,7 @@ export default function LeadsPage() {
             <span>/</span>
             <span className="text-[#141414] font-medium">Prospectos</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#141414] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#141414] tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
           <p className="text-xs text-[#6B6861] mt-0.5">
@@ -817,29 +835,7 @@ export default function LeadsPage() {
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
-                        <span
-                          className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase border inline-block ${
-                            lead.status === "qualified"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : lead.status === "contacted"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : lead.status === "converted"
-                              ? "bg-purple-50 text-purple-700 border-purple-200"
-                              : lead.status === "lost"
-                              ? "bg-red-50 text-red-700 border-red-200"
-                              : "bg-stone-100 text-stone-700 border-stone-200"
-                          }`}
-                        >
-                          {lead.status === "qualified"
-                            ? "Calificado"
-                            : lead.status === "contacted"
-                            ? "Contactado"
-                            : lead.status === "converted"
-                            ? "Convertido"
-                            : lead.status === "lost"
-                            ? "Perdido"
-                            : "Nuevo"}
-                        </span>
+                        <LeadStatusBadge status={lead.status} />
                       </td>
 
                       {/* Actions */}
@@ -898,7 +894,7 @@ export default function LeadsPage() {
           <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
               <div>
-                <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#D4AF37]" />
                   Registrar Nuevo Prospecto
                 </h2>
@@ -1157,7 +1153,7 @@ export default function LeadsPage() {
           <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
               <div>
-                <h2 className="text-base font-serif font-bold text-[#141414] flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
                   <Edit className="w-4 h-4 text-[#D4AF37]" />
                   Editar Prospecto
                 </h2>

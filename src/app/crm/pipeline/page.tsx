@@ -96,7 +96,7 @@ export default function PipelinePage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E8E6DF]">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-3xl font-semibold text-[#1F1E1D] tracking-tight">
             Pipeline Comercial de Negocios
           </h1>
           <p className="text-xs text-[#716F6A] mt-1 max-w-xl">
@@ -211,7 +211,7 @@ export default function PipelinePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
           <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <KanbanSquare className="w-4 h-4 text-[#D97757]" />
                 Registrar Oportunidad
               </h2>

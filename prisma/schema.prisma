@@ -258,11 +258,15 @@ model ConnectedAccount {
   id             String       @id @default(uuid())
   organizationId String
   integrationId  String
-  clientId       String?
   accountName    String
+  accountType    String?      // meta_ad_account, facebook_page, instagram_business, tiktok_advertiser
   externalId     String?
   status         String       @default("active") // active, expired, error
+  accessTokenEnc String?      // AES-256-GCM cifrado (src/lib/crypto.ts), nunca se expone al cliente
+  tokenExpiresAt DateTime?
+  scopes         String?
   metadataJson   String?
+  lastSyncAt     DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -271,6 +275,9 @@ model ConnectedAccount {
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   socialPosts    SocialPost[]
   campaigns      Campaign[]
+
+  @@unique([integrationId, accountType, externalId])
+  @@index([clientId])
 }
 
 model Message {
@@ -320,12 +327,16 @@ model Campaign {
   id                 String            @id @default(uuid())
   organizationId     String
   connectedAccountId String?
+  externalId         String?           // ID de la campaña en la plataforma
   name               String
   platform           String            // meta_ads, google_ads, tiktok
   objective          String?
+  currency           String?
   budget             Float             @default(0)
+  budgetType         String?           // daily, lifetime
   spent              Float             @default(0)
   impressions        Int               @default(0)
+  reach              Int               @default(0)
   clicks             Int               @default(0)
   conversions        Int               @default(0)
   status             String            @default("active") // active, paused, completed
@@ -337,6 +348,27 @@ model Campaign {
 
   organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   connectedAccount   ConnectedAccount? @relation(fields: [connectedAccountId], references: [id], onDelete: SetNull)
+  metrics            CampaignMetric[]
+
+  @@unique([connectedAccountId, externalId])
+}
+
+// Métricas diarias por campaña sincronizadas desde Meta Ads / TikTok Ads
+model CampaignMetric {
+  id          String   @id @default(uuid())
+  campaignId  String
+  date        DateTime @db.Date
+  spend       Float    @default(0)
+  impressions Int      @default(0)
+  reach       Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
 }
 
 model AutomationRule {

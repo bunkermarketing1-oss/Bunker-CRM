@@ -91,7 +91,7 @@ export default function PostsPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Publicaciones</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Publicaciones & Creativos en Redes
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -185,7 +185,7 @@ export default function PostsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
           <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
-              <h2 className="text-sm font-serif font-normal text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#D97757]" />
                 Redactar Publicación
               </h2>

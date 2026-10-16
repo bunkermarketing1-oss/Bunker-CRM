@@ -29,3 +29,13 @@ pnpm-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# TypeScript incremental build (Nixpacks monta una caché en esta ruta; no debe estar en git)
+*.tsbuildinfo
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/e2e/.auth/

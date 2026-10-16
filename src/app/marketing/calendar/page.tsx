@@ -27,7 +27,7 @@ export default function EditorialCalendarPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Calendario</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Calendario Editorial de Contenidos
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">

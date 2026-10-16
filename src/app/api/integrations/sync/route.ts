@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { syncMetaIntegration, type SyncSummary } from "@/lib/integrations/meta-sync";
+import { INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,18 +20,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Integración no encontrada en su organización." }, { status: 404 });
     }
 
-    if (integration.status !== "connected") {
+    if (integration.status !== INTEGRATION_STATUS.CONNECTED) {
       return NextResponse.json({
         success: false,
         error: `No se puede sincronizar: La integración ${integration.name} no está conectada o le faltan credenciales activas.`,
       }, { status: 400 });
     }
 
+    let summary: SyncSummary | null = null;
+    if (integration.provider === INTEGRATION_PROVIDER.META) {
+      summary = await syncMetaIntegration(integration.id);
+    }
+
+    const syncError = summary && summary.errors.length > 0 ? summary.errors.join(" | ") : null;
     const updated = await prisma.integration.update({
       where: { id },
       data: {
         lastSyncAt: new Date(),
-        errorMessage: null,
+        errorMessage: syncError,
       },
     });
 
@@ -40,13 +48,21 @@ export async function POST(req: NextRequest) {
         action: "integration_synced",
         entityType: "Integration",
         entityId: integration.id,
-        detailsJson: JSON.stringify({ provider: integration.provider, timestamp: new Date() }),
+        detailsJson: JSON.stringify({ provider: integration.provider, timestamp: new Date(), summary }),
       },
     });
 
+    if (summary && summary.accounts === 0 && summary.errors.length > 0) {
+      return NextResponse.json({ success: false, error: `Sincronización fallida: ${syncError}` }, { status: 502 });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Sincronización completada exitosamente con ${integration.name}.`,
+      summary,
+      message: summary
+        ? `Sincronizadas ${summary.campaigns} campaña(s) y ${summary.metricDays} día(s) de métricas de ${summary.accounts} cuenta(s).` +
+          (syncError ? ` Con errores: ${syncError}` : "")
+        : `Sincronización completada exitosamente con ${integration.name}.`,
       lastSyncAt: updated.lastSyncAt,
     });
   } catch (error: any) {

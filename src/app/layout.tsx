@@ -1,14 +1,14 @@
 "use client";
 
 import "./globals.css";
-import React, { useState } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
-import AiAssistantModal from "@/components/modals/AiAssistantModal";
+import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ROUTES } from "@/lib/constants/routes";
+import { inter } from "@/lib/fonts";
 
 export default function RootLayout({
   children,
@@ -16,11 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = pathname === ROUTES.LOGIN;
 
   return (
-    <html lang="es">
+    <html lang="es" className={inter.variable}>
       <head>
         <title>Bunker Agency — CRM Híbrido con Automatización e IA</title>
         <meta
@@ -36,25 +35,7 @@ export default function RootLayout({
               {isLoginPage ? (
                 children
               ) : (
-                <div className="flex">
-                  {/* Claude Style Sidebar */}
-                  <Sidebar onOpenAiModal={() => setIsAiModalOpen(true)} />
-
-                  {/* Main Area */}
-                  <div className="flex-1 ml-64 flex flex-col min-h-screen">
-                    <Topbar onOpenAiModal={() => setIsAiModalOpen(true)} />
-
-                    <main className="flex-1 mt-16 p-6 lg:p-8 max-w-[1500px] w-full mx-auto">
-                      {children}
-                    </main>
-                  </div>
-
-                  {/* Global AI Assistant Modal */}
-                  <AiAssistantModal
-                    isOpen={isAiModalOpen}
-                    onClose={() => setIsAiModalOpen(false)}
-                  />
-                </div>
+                <AppShell>{children}</AppShell>
               )}
             </AuthProvider>
           </LanguageProvider>

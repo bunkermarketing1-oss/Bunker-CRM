@@ -55,7 +55,7 @@ export default function AutomationsPage() {
             <span>/</span>
             <span className="text-[#1F1E1D] font-medium">Automatizaciones</span>
           </div>
-          <h1 className="text-2xl font-serif font-normal text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Automatizaciones & Flujos de Trabajo
           </h1>
           <p className="text-xs text-[#6B6966] mt-0.5">
@@ -80,7 +80,7 @@ export default function AutomationsPage() {
           >
             <div>
               <div className="flex items-start justify-between gap-3">
-                <h3 className="font-serif font-normal text-base text-[#1F1E1D] flex items-center gap-2">
+                <h3 className="font-semibold text-base text-[#1F1E1D] flex items-center gap-2">
                   <Zap className={`w-4 h-4 ${rule.active ? "text-[#D97757]" : "text-[#82807C]"}`} />
                   {rule.name}
                 </h3>

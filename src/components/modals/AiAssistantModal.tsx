@@ -88,7 +88,7 @@ export default function AiAssistantModal({ isOpen, onClose }: AiModalProps) {
               <Bot className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-serif font-bold text-[#1F1E1D] flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
                 Asistente Bunker AI
                 <span className="text-[10px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-2 py-0.5 rounded-full border border-[#F3D6CB]">
                   Claude Engine

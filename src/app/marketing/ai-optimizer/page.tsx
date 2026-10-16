@@ -71,7 +71,7 @@ export default function MetaAiOptimizerPage() {
             </span>
             <span className="text-[#9C9890] text-xs">· Adaptación Algorítmica Meta Ads</span>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-3xl font-semibold text-[#1F1E1D] tracking-tight">
             Optimizador Autónomo de Pautas
           </h1>
           <p className="text-xs text-[#716F6A] mt-1.5 max-w-2xl leading-relaxed">
@@ -150,7 +150,7 @@ export default function MetaAiOptimizerPage() {
                         <span className={`w-2.5 h-2.5 rounded-full ${
                           isSuccess ? "bg-emerald-500" : isWarning ? "bg-amber-500" : "bg-red-500"
                         }`}></span>
-                        <h3 className="font-serif font-bold text-[#1F1E1D] text-base">{camp.clientName}</h3>
+                        <h3 className="font-semibold text-[#1F1E1D] text-base">{camp.clientName}</h3>
                         <span className="text-[10px] bg-[#F3F1EB] text-[#716F6A] font-semibold px-2 py-0.5 rounded border border-[#E8E6DF]">
                           {camp.objective}
                         </span>
