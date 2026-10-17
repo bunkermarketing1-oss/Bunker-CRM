@@ -19,6 +19,7 @@ export const ENV_VARS: EnvVarSpec[] = [
   { name: "CRON_SECRET", description: "Protección de sincronizaciones automáticas en segundo plano", group: "core", required: true },
   { name: "META_APP_ID", description: "Identificador oficial de App en Meta for Business", group: "integrations", required: false },
   { name: "META_APP_SECRET", description: "Clave secreta de integración con Meta", group: "integrations", required: false },
+  { name: "META_WEBHOOK_VERIFY_TOKEN", description: "Token de seguridad para Webhooks de Meta Lead Ads", group: "integrations", required: false },
   { name: "META_GRAPH_VERSION", description: "Versión del protocolo de Meta Ads", group: "integrations", required: false },
   { name: "TIKTOK_APP_ID", description: "Identificador de App en TikTok for Business", group: "integrations", required: false },
   { name: "TIKTOK_APP_SECRET", description: "Clave secreta de integración con TikTok", group: "integrations", required: false },

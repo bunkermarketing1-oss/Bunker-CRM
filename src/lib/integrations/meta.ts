@@ -16,6 +16,8 @@ export const META_SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
   "pages_manage_posts",
+  "pages_manage_ads",
+  "leads_retrieval",
   "instagram_basic",
   "instagram_manage_insights",
   "instagram_content_publish",
@@ -199,4 +201,81 @@ export function countMetaConversions(actions?: { action_type: string; value: str
   return actions
     .filter((a) => CONVERSION_ACTIONS.has(a.action_type))
     .reduce((sum, a) => sum + (parseInt(a.value, 10) || 0), 0);
+}
+
+export interface MetaLeadData {
+  id: string;
+  createdTime: string;
+  adId?: string;
+  formId?: string;
+  pageId?: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  companyName: string | null;
+  customFields: Record<string, string>;
+}
+
+/**
+ * Consulta la API de Graph para obtener los datos de un lead captado por un formulario de Meta Lead Ads.
+ */
+export async function fetchMetaLead(leadgenId: string, accessToken: string): Promise<MetaLeadData> {
+  const data = await graphFetch<{
+    id: string;
+    created_time: string;
+    ad_id?: string;
+    form_id?: string;
+    page_id?: string;
+    field_data?: { name: string; values: string[] }[];
+  }>(graphUrl(leadgenId, { access_token: accessToken, fields: "id,created_time,ad_id,form_id,page_id,field_data" }));
+
+  let name = "";
+  let email: string | null = null;
+  let phone: string | null = null;
+  let companyName: string | null = null;
+  const customFields: Record<string, string> = {};
+
+  let firstName = "";
+  let lastName = "";
+
+  for (const field of data.field_data || []) {
+    const val = field.values?.[0] || "";
+    const key = field.name.toLowerCase();
+
+    if (key === "full_name" || key === "nombre_completo") {
+      name = val;
+    } else if (key === "first_name" || key === "nombre") {
+      firstName = val;
+    } else if (key === "last_name" || key === "apellido") {
+      lastName = val;
+    } else if (key === "email" || key === "correo_electronico" || key === "correo") {
+      email = val;
+    } else if (key === "phone_number" || key === "telefono" || key === "celular") {
+      phone = val;
+    } else if (key === "company_name" || key === "empresa" || key === "nombre_de_la_empresa") {
+      companyName = val;
+    } else {
+      customFields[field.name] = val;
+    }
+  }
+
+  if (!name && (firstName || lastName)) {
+    name = `${firstName} ${lastName}`.trim();
+  }
+  if (!name) {
+    name = "Lead de Meta Ads";
+  }
+
+  return {
+    id: data.id,
+    createdTime: data.created_time,
+    adId: data.ad_id,
+    formId: data.form_id,
+    pageId: data.page_id,
+    name,
+    email,
+    phone,
+    companyName,
+    customFields,
+  };
 }
