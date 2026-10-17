@@ -72,7 +72,8 @@ Envío masivo (solo admin)
 ## Fase 5: tests y verificación
 
 - [x] `pnpm test:twilio-webhook`: 8 tests, todos pasan.
-- [ ] `pnpm test:sms-inbound` (`tests/sms-inbound-suite.js`, 15 casos). Escrita; falta
+- [ ] `pnpm test:sms-inbound` (`tests/sms-inbound-suite.js`, 19 casos, incluidos los del
+      SMS manual por rol). Escrita; falta
       correrla: el `pnpm dev` que está corriendo tiene un cliente de Prisma anterior a las
       migraciones y hay que reiniciarlo. Los casos que llegarían a Twilio solo se ejecutan
       si su condición previa ya pasó, para no mandar SMS reales.
@@ -90,8 +91,10 @@ Envío masivo (solo admin)
   salientes, para que la conversación con un número comparta el mismo valor.
 - El masivo es síncrono y tiene un tope de 200 SMS. Para más volumen habría que pasarlo a
   una cola.
-- Fuera del encargo, y sin cambiar: `POST /api/messages/sms` deja a un CLIENT mandar un SMS
-  a cualquier número e indicar cualquier `clientId`.
+- `POST /api/messages/sms` (corregido a pedido): un CLIENT solo escribe a leads o
+  contactos de su empresa y al número guardado del lead, sin importar el que mande el
+  navegador. Para todos, `leadId`, `clientId` y `contactId` deben ser de la organización;
+  si no se indica `clientId`, se hereda del lead para que el SMS aparezca en el portal.
 
 ## Bitácora
 

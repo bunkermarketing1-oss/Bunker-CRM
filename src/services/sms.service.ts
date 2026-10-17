@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { mapTwilioStatus, sendTwilioSms } from "@/lib/integrations/twilio";
 import { isOptOutMessage } from "@/lib/integrations/twilio-webhook";
 import { firstNameOf, renderSmsTemplate } from "@/lib/automations/sms-template";
@@ -307,4 +308,66 @@ export async function sendBulkSms(
   });
 
   return { matched, sent, failed, skipped: { withoutPhone, optedOut, duplicates } };
+}
+
+// ---------------------------------------------------------------------------
+// SMS manual
+// ---------------------------------------------------------------------------
+
+/** El destinatario no es válido para quien envía (la ruta responde con `status`). */
+export class SmsTargetError extends Error {
+  constructor(message: string, public status: 400 | 403 | 404) {
+    super(message);
+  }
+}
+
+export interface ManualSmsTargetInput {
+  recipient?: string | null;
+  leadId?: string | null;
+  clientId?: string | null;
+  contactId?: string | null;
+}
+
+/**
+ * A quién y bajo qué cliente se registra un SMS manual. Todo ID del body debe ser de la
+ * organización. Un usuario CLIENT solo escribe a leads o contactos de su empresa, y al
+ * número que tienen guardado: el navegador no puede elegir un número arbitrario.
+ */
+export async function resolveManualSmsTarget(scope: TenantScope, input: ManualSmsTargetInput) {
+  const { organizationId } = scope;
+  const lead = input.leadId
+    ? await prisma.lead.findFirst({
+        where: { id: input.leadId, organizationId, isDeleted: false },
+        select: { id: true, clientId: true, phone: true, normalizedPhone: true },
+      })
+    : null;
+  if (input.leadId && !lead) throw new SmsTargetError("Lead no encontrado.", 404);
+
+  const contact = input.contactId
+    ? await prisma.contact.findFirst({
+        where: { id: input.contactId, organizationId, isDeleted: false },
+        select: { id: true, clientId: true, phone: true },
+      })
+    : null;
+  if (input.contactId && !contact) throw new SmsTargetError("Contacto no encontrado.", 404);
+
+  if (scope.clientId) {
+    if (!lead && !contact) throw new SmsTargetError("Selecciona un lead o contacto de tu empresa.", 400);
+    const owned = [lead, contact].filter(Boolean).every((r) => r!.clientId === scope.clientId);
+    if (!owned) throw new SmsTargetError("Solo puedes enviar SMS a leads y contactos de tu empresa.", 403);
+    const phone = lead?.normalizedPhone || lead?.phone || contact?.phone;
+    if (!phone) throw new SmsTargetError("El lead no tiene teléfono registrado.", 400);
+    return { recipient: phone, clientId: scope.clientId, leadId: lead?.id ?? null, contactId: contact?.id ?? null };
+  }
+
+  if (input.clientId && !(await clientBelongsToOrg(organizationId, input.clientId))) {
+    throw new SmsTargetError("Cliente no encontrado.", 404);
+  }
+  return {
+    recipient: input.recipient || lead?.normalizedPhone || lead?.phone || contact?.phone || null,
+    // Sin clientId explícito se hereda del lead: así el SMS aparece en el portal del cliente.
+    clientId: input.clientId || lead?.clientId || contact?.clientId || null,
+    leadId: lead?.id ?? null,
+    contactId: contact?.id ?? null,
+  };
 }

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { scopeFromUser } from "@/lib/tenant";
 import { validateAndNormalizePhone } from "@/lib/phone";
-import { isPhoneOptedOut, listSmsMessages } from "@/services/sms.service";
+import { SmsTargetError, isPhoneOptedOut, listSmsMessages, resolveManualSmsTarget } from "@/services/sms.service";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
 import { ACTIVITY_TYPE } from "@/lib/constants/crm";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
@@ -37,11 +37,33 @@ export async function POST(req: NextRequest) {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
-    const body = await req.json().catch(() => ({}));
-    const { recipient, message, clientId, leadId, contactId } = body;
+    const scope = scopeFromUser(user!);
+    if (!scope) {
+      return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
+    }
 
-    // 1. Validation
-    if (!recipient || typeof recipient !== "string" || recipient.trim() === "") {
+    const body = await req.json().catch(() => ({}));
+    const { message } = body;
+
+    // 1. Destinatario: los IDs deben ser de la organización y un CLIENT solo escribe a los suyos
+    let target;
+    try {
+      target = await resolveManualSmsTarget(scope, {
+        recipient: typeof body.recipient === "string" ? body.recipient : null,
+        leadId: body.leadId || null,
+        clientId: body.clientId || null,
+        contactId: body.contactId || null,
+      });
+    } catch (error) {
+      if (error instanceof SmsTargetError) {
+        return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      }
+      throw error;
+    }
+    const { recipient, clientId, leadId, contactId } = target;
+
+    // 1b. Validation
+    if (!recipient || recipient.trim() === "") {
       return NextResponse.json({ success: false, error: "El número telefónico destinatario es obligatorio." }, { status: 400 });
     }
 
@@ -93,9 +115,9 @@ export async function POST(req: NextRequest) {
     const savedMessage = await prisma.message.create({
       data: {
         organizationId: user!.organizationId,
-        clientId: clientId || null,
-        leadId: leadId || null,
-        contactId: contactId || null,
+        clientId,
+        leadId,
+        contactId,
         channel: MESSAGE_CHANNEL.SMS,
         direction: MESSAGE_DIRECTION.OUTBOUND,
         recipient: cleanPhone,
@@ -115,8 +137,9 @@ export async function POST(req: NextRequest) {
     if (clientId || leadId) {
       await prisma.activity.create({
         data: {
-          clientId: clientId || null,
-          leadId: leadId || null,
+          clientId,
+          leadId,
+          contactId,
           userId: user!.id,
           type: ACTIVITY_TYPE.SMS,
           title: `SMS enviado a ${cleanPhone}`,

@@ -111,7 +111,7 @@ async function run() {
     process.exit(1);
   }
 
-  const created = { clients: [], leads: [] };
+  const created = { clients: [], leads: [], orgs: [] };
   const outboundSid = `SMtest_out_${STAMP}`;
 
   try {
@@ -230,6 +230,44 @@ async function run() {
       record("SMS-11", false, "Omitido: la baja no quedó registrada (SMS-07) y el envío sería real");
     }
 
+    // 8b. Un CLIENT solo escribe a leads de su empresa y al número guardado del lead.
+    // Todos los números usados aquí están dados de baja: si el control fallara, la ruta
+    // respondería 409 por la baja en vez de mandar un SMS real.
+    if (optedLead.smsOptOutAt) {
+      const blocker = await prisma.lead.create({
+        data: { organizationId: org.id, clientId: beta.id, name: `Bloqueo ${STAMP}`, normalizedPhone: UNKNOWN_PHONE, smsOptOutAt: new Date(), source: "manual" },
+      });
+      created.leads.push(blocker.id);
+      const otherOrg = await prisma.organization.create({ data: { name: `Otra SMS ${STAMP}`, slug: `otra-sms-${STAMP}` } });
+      created.orgs.push(otherOrg.id);
+      const foreignLead = await prisma.lead.create({
+        data: { organizationId: otherOrg.id, name: `Ajeno ${STAMP}`, normalizedPhone: LEAD_PHONE, source: "manual" },
+      });
+
+      const sendAs = (cookie, payload) =>
+        req("/api/messages/sms", { method: "POST", headers: auth(cookie), body: JSON.stringify({ message: `Prueba ${STAMP}`, ...payload }) });
+
+      res = await sendAs(betaCookie, { leadId: lead.id, recipient: LEAD_PHONE });
+      record("SMS-16", res.status === 403, `CLIENT Beta escribe al lead de Alpha → HTTP ${res.status} (esperado 403)`);
+
+      res = await sendAs(betaCookie, { recipient: UNKNOWN_PHONE });
+      record("SMS-17", res.status === 400, `CLIENT sin lead, con número libre → HTTP ${res.status} (esperado 400)`);
+
+      res = await sendAs(adminCookie, { leadId: foreignLead.id, recipient: LEAD_PHONE });
+      record("SMS-18", res.status === 404, `Admin con lead de otra organización → HTTP ${res.status} (esperado 404)`);
+
+      // Número del body inválido: si la ruta lo usara respondería 400; con el del lead
+      // (dado de baja) responde 409.
+      res = await sendAs(alphaCookie, { leadId: lead.id, recipient: "123" });
+      record(
+        "SMS-19",
+        res.status === 409,
+        `CLIENT Alpha a su lead con otro número → HTTP ${res.status} (409 = se ignoró el número del navegador)`
+      );
+    } else {
+      record("SMS-16", false, "Omitido: la baja no quedó registrada (SMS-07) y los envíos serían reales");
+    }
+
     // 9. Envío masivo: solo admin; omite bajas y leads sin teléfono
     const bulkBody = { filter: { clientId: alpha.id }, template: "Hola {{nombre}}", dryRun: true };
     res = await req("/api/messages/sms/bulk", { method: "POST", headers: auth(alphaCookie), body: JSON.stringify(bulkBody) });
@@ -279,6 +317,8 @@ async function run() {
       if (u.email?.endsWith(`${STAMP}@test.bunker`)) await supabaseAdmin.auth.admin.deleteUser(u.id);
     }
     if (created.clients.length) await prisma.client.deleteMany({ where: { id: { in: created.clients } } });
+    // La organización de prueba se lleva por cascada su lead.
+    if (created.orgs.length) await prisma.organization.deleteMany({ where: { id: { in: created.orgs } } });
 
     const passed = results.filter((r) => r.pass).length;
     console.log(`\nRESUMEN: ${passed} / ${results.length} PASADAS\n`);
