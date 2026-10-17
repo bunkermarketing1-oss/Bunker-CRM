@@ -73,6 +73,29 @@ export async function GET(req: NextRequest) {
         opportunities: { where: { isDeleted: false }, include: { stage: true } },
         activities: { take: 5, orderBy: { performedAt: "desc" } },
         tasks: { where: { status: "pending" } },
+        connectedAccounts: {
+          select: {
+            id: true,
+            accountName: true,
+            accountType: true,
+            externalId: true,
+            status: true,
+            lastSyncAt: true,
+            integration: {
+              select: {
+                id: true,
+                provider: true,
+                name: true,
+                status: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            leads: true,
+          },
+        },
       },
     });
 
@@ -96,7 +119,21 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { name, companyName, email, phone, website, industry, revenue, notes, ownerId } = body;
+    const {
+      name,
+      companyName,
+      email,
+      phone,
+      website,
+      industry,
+      revenue,
+      notes,
+      ownerId,
+      primaryContact,
+      connectedAccountId,
+      adAccountExternalId,
+      initialDeal,
+    } = body;
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return NextResponse.json({ success: false, error: "El nombre del cliente es obligatorio." }, { status: 400 });
@@ -135,6 +172,64 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // 1. Crear contacto principal si fue provisto en el Wizard
+    if (primaryContact && typeof primaryContact.firstName === "string" && primaryContact.firstName.trim()) {
+      await prisma.contact.create({
+        data: {
+          organizationId: user!.organizationId,
+          clientId: client.id,
+          firstName: primaryContact.firstName.trim(),
+          lastName: primaryContact.lastName?.trim() || null,
+          email: primaryContact.email?.trim() || null,
+          phone: primaryContact.phone?.trim() || null,
+          jobTitle: primaryContact.jobTitle?.trim() || "Contacto Principal",
+          isPrimary: true,
+        },
+      });
+    }
+
+    // 2. Vincular cuenta publicitaria o red social seleccionada en el Wizard
+    if (connectedAccountId && typeof connectedAccountId === "string") {
+      await prisma.connectedAccount.updateMany({
+        where: {
+          id: connectedAccountId,
+          organizationId: user!.organizationId,
+        },
+        data: { clientId: client.id },
+      });
+    } else if (adAccountExternalId && typeof adAccountExternalId === "string" && adAccountExternalId.trim()) {
+      // Si especificó el ID externo directamente (ej. 5194920503935574)
+      await prisma.connectedAccount.updateMany({
+        where: {
+          externalId: adAccountExternalId.trim(),
+          organizationId: user!.organizationId,
+        },
+        data: { clientId: client.id },
+      });
+    }
+
+    // 3. Crear oportunidad inicial en el pipeline comercial si se indicó
+    if (initialDeal && initialDeal.enabled) {
+      const defaultStage = await prisma.pipelineStage.findFirst({
+        where: { organizationId: user!.organizationId },
+        orderBy: { order: "asc" },
+      });
+
+      if (defaultStage) {
+        await prisma.opportunity.create({
+          data: {
+            organizationId: user!.organizationId,
+            clientId: client.id,
+            stageId: defaultStage.id,
+            title: initialDeal.title || `Campaña Inicial - ${client.name}`,
+            value: typeof initialDeal.value === "number" ? initialDeal.value : revenueAmount || 2500,
+            probability: 50,
+            status: "open",
+          },
+        });
+      }
+    }
+
     // Create Audit Log
     await prisma.auditLog.create({
       data: {
@@ -143,7 +238,12 @@ export async function POST(req: NextRequest) {
         action: "client_created",
         entityType: "Client",
         entityId: client.id,
-        detailsJson: JSON.stringify({ name: client.name, email: client.email }),
+        detailsJson: JSON.stringify({
+          name: client.name,
+          email: client.email,
+          hasPrimaryContact: Boolean(primaryContact),
+          linkedAccount: connectedAccountId || adAccountExternalId || null,
+        }),
       },
     });
 

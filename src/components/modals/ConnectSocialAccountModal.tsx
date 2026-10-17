@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   AlertCircle,
@@ -41,6 +41,27 @@ export function ConnectSocialAccountModal({
   const [accessToken, setAccessToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialClientId) {
+        setSelectedClientId(initialClientId);
+        setTargetType("client");
+      }
+      if (initialProvider) {
+        if (initialProvider === "meta") {
+          setProvider("meta");
+          setAccountType(ACCOUNT_TYPE.META_AD_ACCOUNT);
+        } else if (initialProvider === "tiktok") {
+          setProvider("tiktok");
+          setAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
+        } else if (initialProvider === "instagram") {
+          setProvider("meta");
+          setAccountType(ACCOUNT_TYPE.INSTAGRAM_BUSINESS);
+        }
+      }
+    }
+  }, [isOpen, initialClientId, initialProvider]);
 
   if (!isOpen) return null;
 

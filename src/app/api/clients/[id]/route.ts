@@ -59,6 +59,44 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             user: { select: { id: true, name: true } },
           },
         },
+        connectedAccounts: {
+          select: {
+            id: true,
+            accountName: true,
+            accountType: true,
+            externalId: true,
+            status: true,
+            lastSyncAt: true,
+            createdAt: true,
+            integration: {
+              select: {
+                id: true,
+                provider: true,
+                name: true,
+                status: true,
+              },
+            },
+          },
+        },
+        leads: {
+          where: { isDeleted: false },
+          orderBy: { createdAt: "desc" },
+          take: 50,
+          select: {
+            id: true,
+            name: true,
+            companyName: true,
+            email: true,
+            phone: true,
+            normalizedPhone: true,
+            campaign: true,
+            status: true,
+            qualification: true,
+            estimatedValue: true,
+            source: true,
+            createdAt: true,
+          },
+        },
       },
     });
 

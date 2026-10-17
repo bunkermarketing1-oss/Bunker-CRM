@@ -25,7 +25,9 @@ import {
   Layers,
   ChevronRight,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
+import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 
 interface Contact {
   id: string;
@@ -311,8 +313,8 @@ export default function ClientsPage() {
             onClick={() => setIsCreateOpen(true)}
             className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
           >
-            <Plus className="w-4 h-4 text-[#E5C158]" />
-            <span>Nuevo Cliente</span>
+            <Sparkles className="w-4 h-4 text-[#E5C158]" />
+            <span>+ Nuevo Cliente (Asistente Guiado)</span>
           </button>
         </div>
       </div>
@@ -685,149 +687,17 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* Create Client Modal */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-emerald-600" />
-                Registrar Nuevo Cliente Comercial
-              </h2>
-              <button onClick={() => setIsCreateOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateClient} className="p-5 space-y-3.5">
-              <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Nombre Comercial *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ej. Inmobiliaria Cancún Horizon"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Razón Social / Empresa Legal</label>
-                <input
-                  type="text"
-                  placeholder="ej. Cancún Horizon Desarrollos S.A. de C.V."
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Sector / Industria</label>
-                  <input
-                    type="text"
-                    value={formData.industry}
-                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor Contratado Mensual ($ USD)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={formData.revenue}
-                    onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Correo Electrónico</label>
-                  <input
-                    type="email"
-                    placeholder="contacto@empresa.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Teléfono Principal</label>
-                  <input
-                    type="tel"
-                    placeholder="+52 55 1234 5678"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Sitio Web</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Asesor Responsable</label>
-                  <select
-                    value={formData.ownerId}
-                    onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  >
-                    <option value="">Asignar a mí mismo</option>
-                    {teamMembers.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name} ({m.role})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Notas Comerciales</label>
-                <textarea
-                  rows={2}
-                  placeholder="Detalles sobre el contrato, servicios acordados o condiciones comerciales..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2 border-t border-[#F0EEE6]">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] hover:text-[#1F1E1D] text-xs"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold"
-                >
-                  {submitting ? "Guardando..." : "Guardar Cliente"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Client Onboarding Wizard Modal */}
+      <ClientOnboardingWizardModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSuccess={() => {
+          fetchClients();
+          setFeedback("¡Cliente comercial instalado y configurado con éxito!");
+          setTimeout(() => setFeedback(null), 5000);
+        }}
+        teamMembers={teamMembers}
+      />
     </div>
   );
 }
