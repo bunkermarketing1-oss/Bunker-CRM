@@ -1,0 +1,76 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { SmsAutomationSummary } from "@/types/automations";
+
+/** Datos que envía el formulario de una regla (mismo formato que acepta la API). */
+export interface SmsAutomationDraft {
+  name: string;
+  clientId: string | null;
+  sources: string[];
+  template: string;
+  isActive: boolean;
+}
+
+/** `error` viene solo cuando `ok` es false. */
+export interface MutationResult {
+  ok: boolean;
+  error?: string;
+}
+
+async function send(url: string, method: string, body?: unknown): Promise<MutationResult> {
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const json = await res.json().catch(() => ({}));
+    return json.success ? { ok: true } : { ok: false, error: json.error || "No se pudo guardar." };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Error de red" };
+  }
+}
+
+export function useSmsAutomations() {
+  const [automations, setAutomations] = useState<SmsAutomationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/automations");
+      const json = await res.json();
+      if (json.success) setAutomations(json.automations);
+      else setError(json.error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error de red");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const withRefresh = useCallback(
+    async (action: Promise<MutationResult>) => {
+      const result = await action;
+      if (result.ok) await refresh();
+      return result;
+    },
+    [refresh]
+  );
+
+  const create = useCallback((draft: SmsAutomationDraft) => withRefresh(send("/api/automations", "POST", draft)), [withRefresh]);
+  const update = useCallback(
+    (id: string, changes: Partial<SmsAutomationDraft>) => withRefresh(send(`/api/automations/${id}`, "PATCH", changes)),
+    [withRefresh]
+  );
+  const remove = useCallback((id: string) => withRefresh(send(`/api/automations/${id}`, "DELETE")), [withRefresh]);
+
+  return { automations, loading, error, refresh, create, update, remove };
+}

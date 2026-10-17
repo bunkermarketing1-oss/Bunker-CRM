@@ -24,6 +24,7 @@ export type OpportunityStatus = ValueOf<typeof OPPORTUNITY_STATUS>;
 /** Fuentes de lead que el código asigna o compara (`Lead.source`). */
 export const LEAD_SOURCE = {
   META_ADS: "meta_ads",
+  REFERRAL: "referral",
 } as const;
 
 /** Etiquetas visibles de las fuentes de lead (`Lead.source`). */

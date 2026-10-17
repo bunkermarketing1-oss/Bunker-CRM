@@ -30,6 +30,8 @@
     "test:reports": "node tests/reports-search-suite.js",
     "test:meta-leads": "node tests/meta-leads-suite.js",
     "test:meta-lead-fields": "node --experimental-strip-types --no-warnings --test tests/meta-lead-fields.test.mjs",
+    "test:sms-template": "node --experimental-strip-types --no-warnings --test tests/sms-template.test.mjs",
+    "test:automations": "node tests/automations-suite.js",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

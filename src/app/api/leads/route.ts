@@ -4,6 +4,7 @@ import { requireAuth, requireAdmin } from "@/lib/auth";
 import { createLeadSchema, updateLeadSchema } from "@/lib/validations/lead";
 import { validateAndNormalizePhone } from "@/lib/phone";
 import { findDuplicateLeads } from "@/lib/validations/duplicate-detector";
+import { computeInitialQualification } from "@/lib/lead-scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -157,15 +158,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Calculate algorithmic AI qualification score (budget thresholds expressed in USD)
-    let qualification = data.qualification !== undefined ? data.qualification : 50;
-    if (data.qualification === undefined) {
-      if (data.email && data.phone) qualification += 20;
-      if (data.companyName) qualification += 10;
-      if (data.estimatedValue >= 3000) qualification += 15;
-      else if (data.estimatedValue >= 1500) qualification += 10;
-      if (data.source === "referral") qualification += 10;
-    }
-    qualification = Math.min(100, Math.max(0, qualification));
+    const qualification = data.qualification ?? computeInitialQualification(data);
 
     // Resolve target clientId
     let targetClientId = (rawBody as any)?.clientId || null;

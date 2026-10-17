@@ -19,6 +19,8 @@ import {
   META_LEAD_MAX_ATTEMPTS,
 } from "@/lib/constants/integrations";
 import { LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
+import { computeInitialQualification } from "@/lib/lead-scoring";
+import { runLeadCreatedAutomations } from "@/services/automations.service";
 import type { PageLeadgenStatus } from "@/types/meta-leads";
 
 const LEADGEN_FIELD = "leadgen";
@@ -156,6 +158,13 @@ async function upsertLeadFromMeta(organizationId: string, clientId: string | nul
       notes: mapped.notes,
       source: LEAD_SOURCE.META_ADS,
       status: LEAD_STATUS.NEW,
+      qualification: computeInitialQualification({
+        email: mapped.email,
+        phone: mapped.phone,
+        companyName: mapped.companyName,
+        estimatedValue: null,
+        source: LEAD_SOURCE.META_ADS,
+      }),
       campaign: metaLead.campaign_name ?? null,
       externalLeadId: metaLead.id,
       externalFormId: metaLead.form_id ?? null,
@@ -181,6 +190,8 @@ async function upsertLeadFromMeta(organizationId: string, clientId: string | nul
     },
   });
 
+  // Solo aquí, con el lead recién creado: un reintento del webhook no reenvía el SMS.
+  await runLeadCreatedAutomations(lead.id);
   return lead.id;
 }
 

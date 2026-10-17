@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { sendTwilioSms } from "@/lib/integrations/twilio";
+import { ACTIVITY_TYPE } from "@/lib/constants/crm";
+import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     const where: any = {
       organizationId: user!.organizationId,
-      channel: "sms",
+      channel: MESSAGE_CHANNEL.SMS,
     };
 
     if (clientId) where.clientId = clientId;
@@ -62,8 +65,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "El cuerpo del mensaje no puede estar vacío." }, { status: 400 });
     }
 
-    if (message.length > 480) {
-      return NextResponse.json({ success: false, error: "El mensaje supera el límite máximo de caracteres para SMS (480)." }, { status: 400 });
+    if (message.length > SMS_MAX_LENGTH) {
+      return NextResponse.json({ success: false, error: `El mensaje supera el límite máximo de caracteres para SMS (${SMS_MAX_LENGTH}).` }, { status: 400 });
     }
 
     // 2. Duplicate prevention (Look back 2 minutes for identical text to identical number within same org)
@@ -84,50 +87,8 @@ export async function POST(req: NextRequest) {
       }, { status: 429 });
     }
 
-    // 3. Provider execution check
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromPhone = process.env.TWILIO_PHONE_NUMBER;
-
-    let status = "pending";
-    let providerMsgId = null;
-    let errorMessage = null;
-
-    if (accountSid && authToken && fromPhone) {
-      try {
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-        const params = new URLSearchParams();
-        params.append("To", cleanPhone);
-        params.append("From", fromPhone);
-        params.append("Body", message.trim());
-
-        const authHeader = "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
-        const twilioResponse = await fetch(twilioUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": authHeader,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: params.toString(),
-        });
-
-        const twilioData = await twilioResponse.json();
-
-        if (twilioResponse.ok) {
-          status = "sent";
-          providerMsgId = twilioData.sid;
-        } else {
-          status = "failed";
-          errorMessage = twilioData.message || "Error devuelto por proveedor Twilio";
-        }
-      } catch (err: any) {
-        status = "failed";
-        errorMessage = err.message || "Fallo de conexión al enviar SMS";
-      }
-    } else {
-      status = "failed";
-      errorMessage = "Faltan credenciales del proveedor (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN en variables de entorno).";
-    }
+    // 3. Provider execution
+    const { status, providerMsgId, errorMessage, isDemo } = await sendTwilioSms(cleanPhone, message.trim());
 
     // 4. Save to Database with authenticated organization
     const savedMessage = await prisma.message.create({
@@ -136,14 +97,14 @@ export async function POST(req: NextRequest) {
         clientId: clientId || null,
         leadId: leadId || null,
         contactId: contactId || null,
-        channel: "sms",
-        direction: "outbound",
+        channel: MESSAGE_CHANNEL.SMS,
+        direction: MESSAGE_DIRECTION.OUTBOUND,
         recipient: cleanPhone,
         body: message.trim(),
         status,
         providerMsgId,
         errorMessage,
-        isDemo: !accountSid,
+        isDemo,
       },
       include: {
         client: true,
@@ -158,19 +119,19 @@ export async function POST(req: NextRequest) {
           clientId: clientId || null,
           leadId: leadId || null,
           userId: user!.id,
-          type: "sms",
+          type: ACTIVITY_TYPE.SMS,
           title: `SMS enviado a ${cleanPhone}`,
           description: message.trim(),
-          outcome: status === "sent" ? "completed" : "pending",
+          outcome: status === MESSAGE_STATUS.SENT ? "completed" : "pending",
         },
       });
     }
 
     return NextResponse.json({
-      success: status === "sent",
-      message: status === "sent" ? "SMS enviado correctamente al proveedor." : errorMessage,
+      success: status === MESSAGE_STATUS.SENT,
+      message: status === MESSAGE_STATUS.SENT ? "SMS enviado correctamente al proveedor." : errorMessage,
       data: savedMessage,
-    }, { status: status === "sent" ? 200 : 400 });
+    }, { status: status === MESSAGE_STATUS.SENT ? 200 : 400 });
   } catch (error: any) {
     console.error("POST /api/messages/sms error:", error);
     return NextResponse.json({ success: false, error: "Error al procesar envío de SMS." }, { status: 500 });
