@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { ACCOUNT_STATUS, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
 const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
@@ -284,6 +285,7 @@ export default function IntegrationsPage() {
                             {acc.status === ACCOUNT_STATUS.ACTIVE ? "activa" : acc.status === ACCOUNT_STATUS.EXPIRED ? "token expirado" : "error"}
                           </span>
                         </div>
+                        <PageLeadgenStatus status={acc.leadgen ?? null} />
                         <label className="flex items-center gap-2 text-[#82807C]">
                           <span className="flex-shrink-0">Cliente:</span>
                           <select

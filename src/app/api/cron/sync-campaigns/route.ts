@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { isValidCronAuthorization } from "@/lib/cron";
 import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
 import { INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
-
-function isAuthorized(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  const header = req.headers.get("authorization") || "";
-  if (!secret || !header.startsWith("Bearer ")) return false;
-  const given = Buffer.from(header.slice(7));
-  const expected = Buffer.from(secret);
-  return given.length === expected.length && timingSafeEqual(given, expected);
-}
 
 /**
  * Sincronización programada de campañas de todas las organizaciones.
@@ -22,7 +13,7 @@ function isAuthorized(req: NextRequest) {
  *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<dominio>/api/cron/sync-campaigns
  */
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isValidCronAuthorization(req.headers.get("authorization"))) {
     return NextResponse.json({ success: false, error: "No autorizado." }, { status: 401 });
   }
 

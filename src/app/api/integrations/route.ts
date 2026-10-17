@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { ACCOUNT_STATUS, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { getPagesLeadgenStatus } from "@/services/meta-leads.service";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +25,26 @@ export async function GET(req: NextRequest) {
             tokenExpiresAt: true,
             lastSyncAt: true,
             clientId: true,
+            metadataJson: true, // solo para calcular el estado de leads; no se devuelve
           },
           orderBy: [{ accountType: "asc" }, { accountName: "asc" }],
         },
       },
       orderBy: { createdAt: "asc" },
     });
+
+    const pages = integrations
+      .flatMap((it) => it.connectedAccounts)
+      .filter((acc) => acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE);
+    const leadgenByPage = await getPagesLeadgenStatus(user!.organizationId, pages);
+
+    const integrationsWithLeadgen = integrations.map((it) => ({
+      ...it,
+      connectedAccounts: it.connectedAccounts.map(({ metadataJson: _metadataJson, ...acc }) => ({
+        ...acc,
+        leadgen: acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE && acc.externalId ? leadgenByPage.get(acc.externalId) ?? null : null,
+      })),
+    }));
 
     const credentialStatus = {
       meta: Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET),
@@ -40,7 +55,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      integrations,
+      integrations: integrationsWithLeadgen,
       credentialStatus,
     });
   } catch (error: any) {

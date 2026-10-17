@@ -52,6 +52,7 @@ model Organization {
   campaigns         Campaign[]
   automationRules   AutomationRule[]
   auditLogs         AuditLog[]
+  metaLeadEvents    MetaLeadEvent[]
 }
 
 model OrganizationMember {
@@ -133,6 +134,9 @@ model Lead {
   source         String       @default("website") // website, referral, meta_ads, google_ads, manual, etc.
   campaign       String?
   externalLeadId String?
+  externalFormId     String? // Formulario de Meta Lead Ads que originó el lead
+  externalAdId       String?
+  externalCampaignId String?
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?
@@ -156,6 +160,10 @@ model Lead {
   activities     Activity[]
   tasks          Task[]
   messages       Message[]
+  metaLeadEvents MetaLeadEvent[]
+
+  // Evita duplicados cuando Meta reintenta el webhook o el cron recupera el mismo lead.
+  @@unique([organizationId, externalLeadId])
 }
 
 model PipelineStage {
@@ -387,6 +395,30 @@ model AutomationRule {
   updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// Evento `leadgen` recibido de Meta (webhook o recuperado por el cron). Se guarda antes de
+// procesarlo para poder reintentar los que fallen y auditar lo que mandó Meta.
+model MetaLeadEvent {
+  id             String        @id @default(uuid())
+  organizationId String?       // null si la página no está conectada a ninguna organización
+  leadgenId      String        @unique
+  pageId         String
+  formId         String?
+  adId           String?
+  payloadJson    String
+  status         String        @default("received") // received, processed, failed, ignored
+  attempts       Int           @default(0)
+  errorMessage   String?
+  leadId         String?
+  processedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead           Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([status])
 }
 
 model AuditLog {

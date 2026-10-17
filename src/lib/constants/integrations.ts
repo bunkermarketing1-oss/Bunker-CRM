@@ -54,3 +54,16 @@ export const CAMPAIGN_STATUS = {
   COMPLETED: "completed",
 } as const;
 export type CampaignStatus = ValueOf<typeof CAMPAIGN_STATUS>;
+
+export const META_LEAD_EVENT_STATUS = {
+  RECEIVED: "received",
+  PROCESSED: "processed",
+  /** Error recuperable (token, red, Meta caído): el cron lo reintenta. */
+  FAILED: "failed",
+  /** La página no está conectada a ninguna organización: no se reintenta. */
+  IGNORED: "ignored",
+} as const;
+export type MetaLeadEventStatus = ValueOf<typeof META_LEAD_EVENT_STATUS>;
+
+/** Intentos máximos antes de dejar un evento `failed` para revisión manual. */
+export const META_LEAD_MAX_ATTEMPTS = 5;

@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeMetaCode, listMetaAdAccounts, listMetaPages } from "@/lib/integrations/meta";
 import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
+import { subscribeMetaPagesToLeadgen } from "@/services/meta-leads.service";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS, type AccountType } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
@@ -122,9 +123,12 @@ export async function GET(req: NextRequest) {
     const summary = await syncMetaIntegration(integration.id);
     await prisma.integration.update({ where: { id: integration.id }, data: { lastSyncAt: new Date() } });
 
+    // Sin esta suscripción Meta no envía los leads de las páginas al webhook.
+    const leadgen = await subscribeMetaPagesToLeadgen(integration.id);
+
     return backToIntegrations(req, {
       connected: INTEGRATION_PROVIDER.META,
-      message: `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s).`,
+      message: `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s), ${leadgen.pages - leadgen.errors.length} página(s) recibiendo leads.`,
     });
   } catch (err: any) {
     console.error("Meta OAuth callback error:", err);
