@@ -59,3 +59,18 @@ export function twimlResponse(reply?: string) {
   const escaped = reply?.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<?xml version="1.0" encoding="UTF-8"?><Response>${escaped ? `<Message>${escaped}</Message>` : ""}</Response>`;
 }
+
+/**
+ * Lee el body form-urlencoded de un webhook de Twilio y lo devuelve solo si la firma es
+ * válida para `url` (pública, con la query incluida). null = rechazar con 403.
+ */
+export function parseSignedTwilioWebhook(
+  rawBody: string,
+  url: string | null,
+  signatureHeader: string | null,
+  authToken: string | undefined
+): Record<string, string> | null {
+  if (!url) return null;
+  const params = Object.fromEntries(new URLSearchParams(rawBody));
+  return verifyTwilioSignature(url, params, signatureHeader, authToken) ? params : null;
+}

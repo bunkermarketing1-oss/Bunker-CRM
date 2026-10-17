@@ -96,3 +96,79 @@ export async function sendTwilioSms(to: string, body: string): Promise<TwilioSen
     };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Voz (REST)
+// ---------------------------------------------------------------------------
+
+export class TwilioApiError extends Error {
+  constructor(message: string, public code?: number) {
+    super(message);
+  }
+}
+
+async function twilioPost<T>(path: string, params: Record<string, string | undefined>): Promise<T> {
+  const cfg = getTwilioConfig();
+  if (!cfg) throw new TwilioApiError("Twilio no está configurado (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER).");
+
+  const body = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value !== undefined) body.append(key, value);
+
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${cfg.accountSid}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${cfg.accountSid}:${cfg.authToken}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new TwilioApiError(data.message || `Twilio respondió ${res.status}`, data.code);
+  return data as T;
+}
+
+export function getTwilioVoiceConfig() {
+  const cfg = getTwilioConfig();
+  const apiKeySid = process.env.TWILIO_API_KEY_SID;
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
+  const twimlAppSid = process.env.TWILIO_TWIML_APP_SID;
+  if (!cfg || !apiKeySid || !apiKeySecret || !twimlAppSid) return null;
+  return { ...cfg, apiKeySid, apiKeySecret, twimlAppSid };
+}
+
+export interface AddParticipantInput {
+  conferenceName: string;
+  from: string;
+  to: string;
+  statusCallback: string | null;
+  timeoutSeconds: number;
+}
+
+/**
+ * Le marca al lead y lo mete a la conferencia (la crea si aún no existe). Si el lead
+ * cuelga, la conferencia termina para todos.
+ * Docs: https://www.twilio.com/docs/voice/api/conference-participant-resource
+ */
+export async function addConferenceParticipant(input: AddParticipantInput) {
+  const data = await twilioPost<{ call_sid: string }>(`/Conferences/${encodeURIComponent(input.conferenceName)}/Participants.json`, {
+    From: input.from,
+    To: input.to,
+    EarlyMedia: "true",
+    Beep: "false",
+    EndConferenceOnExit: "true",
+    Timeout: String(input.timeoutSeconds),
+    StatusCallback: input.statusCallback ?? undefined,
+    StatusCallbackEvent: input.statusCallback ? "initiated ringing answered completed" : undefined,
+  });
+  return data.call_sid;
+}
+
+/** Cuelga una pierna de la llamada. */
+export async function completeTwilioCall(callSid: string) {
+  await twilioPost(`/Calls/${callSid}.json`, { Status: "completed" });
+}
+
+/** Reproduce un TwiML (p. ej. el aviso de grabación) a toda la conferencia. */
+export async function announceToConference(conferenceSid: string, announceUrl: string) {
+  await twilioPost(`/Conferences/${conferenceSid}.json`, { AnnounceUrl: announceUrl, AnnounceMethod: "POST" });
+}

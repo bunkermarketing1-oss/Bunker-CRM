@@ -34,6 +34,8 @@
     "test:automations": "node tests/automations-suite.js",
     "test:twilio-webhook": "node --experimental-strip-types --no-warnings --test tests/twilio-webhook.test.mjs",
     "test:sms-inbound": "node tests/sms-inbound-suite.js",
+    "test:twilio-voice": "node --experimental-strip-types --no-warnings --test tests/twilio-voice.test.mjs",
+    "test:calls": "node tests/calls-suite.js",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -43,6 +45,7 @@
   "dependencies": {
     "@prisma/client": "^5.21.1",
     "@supabase/supabase-js": "^2.117.3",
+    "@twilio/voice-sdk": "2.18.5",
     "@types/pg": "^8.23.1",
     "clsx": "^2.1.1",
     "libphonenumber-js": "^1.13.15",

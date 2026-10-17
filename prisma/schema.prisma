@@ -29,6 +29,7 @@ model User {
   auditLogs    AuditLog[]
   leads        Lead[]               @relation("LeadOwner")
   clients      Client[]             @relation("ClientOwner")
+  calls        Call[]
 }
 
 model Organization {
@@ -53,6 +54,8 @@ model Organization {
   automationRules   AutomationRule[]
   auditLogs         AuditLog[]
   metaLeadEvents    MetaLeadEvent[]
+  phoneLines        PhoneLine[]
+  calls             Call[]
 }
 
 model OrganizationMember {
@@ -98,6 +101,8 @@ model Client {
   messages       Message[]
   connectedAccounts ConnectedAccount[]
   automationRules   AutomationRule[]
+  phoneLines        PhoneLine[]
+  calls             Call[]
 }
 
 model Contact {
@@ -163,6 +168,7 @@ model Lead {
   tasks          Task[]
   messages       Message[]
   metaLeadEvents MetaLeadEvent[]
+  calls          Call[]
 
   // Evita duplicados cuando Meta reintenta el webhook o el cron recupera el mismo lead.
   @@unique([organizationId, externalLeadId])
@@ -404,6 +410,62 @@ model AutomationRule {
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, triggerEvent, isActive])
+}
+
+// Número de Twilio registrado en el CRM ("línea"). Las llamadas a leads de un cliente salen
+// por su línea; las entrantes a ese número timbran a sus asesores.
+model PhoneLine {
+  id             String       @id @default(uuid())
+  organizationId String
+  clientId       String?
+  phoneNumber    String       @unique // E.164
+  label          String
+  recordCalls    Boolean      @default(false)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  calls          Call[]
+
+  @@index([organizationId])
+}
+
+// Llamada de voz. Las salientes son una conferencia de Twilio (`conferenceName`) con el
+// asesor y el lead, para que un supervisor pueda entrar a escuchar.
+model Call {
+  id              String       @id @default(uuid())
+  organizationId  String
+  clientId        String?
+  leadId          String?
+  userId          String?      // asesor que llamó o contestó
+  lineId          String?
+  direction       String       // outbound, inbound
+  fromNumber      String
+  toNumber        String
+  status          String       @default("initiated") // initiated, ringing, in_progress, completed, busy, no_answer, failed, canceled
+  conferenceName  String?      @unique
+  agentCallSid    String?      // pierna del asesor (navegador)
+  customerCallSid String?      // pierna del lead
+  durationSec     Int?
+  recordingSid    String?
+  recordingUrl    String?
+  answeredAt      DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  lead            Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  line            PhoneLine?   @relation(fields: [lineId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([customerCallSid])
+  @@index([agentCallSid])
 }
 
 // Evento `leadgen` recibido de Meta (webhook o recuperado por el cron). Se guarda antes de

@@ -14,6 +14,7 @@ export const ROUTES = {
   INTEGRATIONS: "/marketing/integrations",
   CONTENT_CALENDAR: "/marketing/calendar",
   SMS: "/messaging/sms",
+  CALLS: "/messaging/calls",
   AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
 } as const;

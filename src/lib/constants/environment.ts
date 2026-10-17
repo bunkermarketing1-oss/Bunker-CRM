@@ -27,11 +27,14 @@ export const ENV_VARS: EnvVarSpec[] = [
   { name: "GOOGLE_ADS_DEVELOPER_TOKEN", description: "Token de desarrollador de Google Ads", group: "integrations", required: false },
   { name: "TWILIO_ACCOUNT_SID", description: "Cuenta de Twilio para SMS", group: "messaging", required: false },
   { name: "TWILIO_AUTH_TOKEN", description: "Token de Twilio", group: "messaging", required: false },
-  { name: "TWILIO_PHONE_NUMBER", description: "Número remitente de SMS", group: "messaging", required: false },
+  { name: "TWILIO_PHONE_NUMBER", description: "Número remitente de SMS y línea por defecto de llamadas", group: "messaging", required: false },
+  { name: "TWILIO_API_KEY_SID", description: "API Key de Twilio para los tokens de llamadas del navegador", group: "messaging", required: false },
+  { name: "TWILIO_API_KEY_SECRET", description: "Secreto de la API Key de Twilio", group: "messaging", required: false },
+  { name: "TWILIO_TWIML_APP_SID", description: "TwiML App de voz (Voice URL → /api/integrations/twilio/voice)", group: "messaging", required: false },
 ];
 
 export const ENV_GROUP_LABEL: Record<EnvGroup, string> = {
   core: "Núcleo de la plataforma",
   integrations: "Integraciones de pauta",
-  messaging: "Mensajería SMS",
+  messaging: "Mensajería SMS y llamadas",
 };
