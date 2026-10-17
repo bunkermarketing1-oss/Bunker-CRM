@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       status = "failed";
-      errorMessage = "Faltan credenciales del proveedor (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN en variables de entorno).";
+      errorMessage = "El servicio de mensajería SMS aún no está conectado. Ve a Integraciones para activar tus claves de Twilio de forma sencilla.";
     }
 
     // 4. Save to Database with authenticated organization

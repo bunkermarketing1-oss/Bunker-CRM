@@ -276,12 +276,12 @@ export function ConnectSocialAccountModal({
           {/* 3. Datos de la Cuenta (Nombre e ID visibles en Meta) */}
           <div className="space-y-3.5">
             <label className="block text-xs font-semibold text-[#1F1E1D]">
-              3. Datos del Activo / Cuenta en Meta
+              3. Información de la Cuenta
             </label>
 
             <div>
               <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                Nombre de la Cuenta Publicitaria o Página:
+                Nombre para identificar la cuenta:
               </label>
               <input
                 type="text"
@@ -291,12 +291,15 @@ export function ConnectSocialAccountModal({
                 className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 required
               />
+              <p className="text-[10px] text-[#82807C] mt-1">
+                💡 El nombre que le das a esta cuenta para reconocerla fácilmente en el CRM.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                  Identificador (Ad Account ID / Page ID):
+                  Número Identificador (ID):
                 </label>
                 <input
                   type="text"
@@ -306,38 +309,41 @@ export function ConnectSocialAccountModal({
                   className="w-full font-mono bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                   required
                 />
+                <p className="text-[10px] text-[#82807C] mt-1">
+                  💡 Es el número que ves debajo del nombre en Meta Business Suite.
+                </p>
               </div>
 
               <div>
                 <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                  Tipo de Activo:
+                  ¿Qué tipo de activo es?:
                 </label>
                 <select
                   value={accountType}
                   onChange={(e) => setAccountType(e.target.value)}
                   className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 >
-                  <option value={ACCOUNT_TYPE.META_AD_ACCOUNT}>Cuenta publicitaria (Ads)</option>
+                  <option value={ACCOUNT_TYPE.META_AD_ACCOUNT}>Cuenta de anuncios (Meta Ads)</option>
                   <option value={ACCOUNT_TYPE.FACEBOOK_PAGE}>Página de Facebook</option>
-                  <option value={ACCOUNT_TYPE.INSTAGRAM_BUSINESS}>Instagram Business</option>
-                  <option value={ACCOUNT_TYPE.TIKTOK_ADVERTISER}>TikTok Advertiser</option>
+                  <option value={ACCOUNT_TYPE.INSTAGRAM_BUSINESS}>Perfil de Instagram Business</option>
+                  <option value={ACCOUNT_TYPE.TIKTOK_ADVERTISER}>Cuenta de TikTok Ads</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                Token de Acceso de Usuario del Sistema (Opcional):
+                Clave o Token de Acceso (Opcional):
               </label>
               <input
                 type="password"
-                placeholder="EAAB... (dejar vacío si se vinculará por sesión OAuth)"
+                placeholder="Si tienes un token de acceso permanente, pégalo aquí (opcional)"
                 value={accessToken}
                 onChange={(e) => setAccessToken(e.target.value)}
                 className="w-full font-mono bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
               />
               <p className="text-[10px] text-[#82807C] mt-1">
-                Se guardará cifrado en PostgreSQL con AES-256-GCM.
+                🔒 Tu información y claves se guardan con máxima seguridad y cifrado bancario.
               </p>
             </div>
           </div>
@@ -346,7 +352,7 @@ export function ConnectSocialAccountModal({
           <div className="pt-3 border-t border-[#E8E6DF] flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-[11px] text-[#82807C] flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Aislamiento multi-tenant verificado</span>
+              <span>Privacidad garantizada entre clientes</span>
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">

@@ -101,8 +101,14 @@ export function AutomationCard({ rule, onToggle, disabled }: AutomationCardProps
               <h3 className="font-semibold text-sm sm:text-base text-[#1F1E1D]">
                 {rule.name}
               </h3>
-              <p className="text-[11px] text-[#82807C] mt-0.5 font-mono">
-                Evento: {rule.triggerEvent}
+              <p className="text-[11px] text-[#82807C] mt-0.5">
+                {rule.triggerEvent === "lead_created"
+                  ? "⚡ Se activa al recibir un nuevo lead (Meta / Web)"
+                  : rule.triggerEvent === "deal_won"
+                  ? "🎉 Se activa al cerrar un negocio ganado"
+                  : rule.triggerEvent === "stage_changed"
+                  ? "📋 Se activa al avanzar una propuesta en pipeline"
+                  : "⏰ Se activa por inactividad comercial"}
               </p>
             </div>
           </div>

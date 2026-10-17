@@ -357,7 +357,7 @@ function LeadsPageContent() {
       return;
     }
 
-    if (!confirm("¿Está seguro de eliminar lógicamente este prospecto? La acción será registrada en auditoría."))
+    if (!confirm("¿Estás seguro de archivar este prospecto del CRM?"))
       return;
 
     try {
@@ -459,7 +459,7 @@ function LeadsPageContent() {
             Gestión de Leads & Prospectos
           </h1>
           <p className="text-xs text-[#6B6861] mt-0.5">
-            Captación multicanal desde Meta Ads, scoring con IA, validación telefónica E.164 y prevención de duplicados.
+            Captación multicanal desde Meta Ads, calificación con IA, teléfonos verificados y prevención de duplicados.
           </p>
         </div>
 
@@ -661,7 +661,7 @@ function LeadsPageContent() {
                 <th className="py-3.5 px-4 font-semibold">Contacto & WhatsApp</th>
                 <th className="py-3.5 px-4 font-semibold">Origen & Campaña</th>
                 <th className="py-3.5 px-4 font-semibold">Asesor Asignado</th>
-                <th className="py-3.5 px-4 font-semibold">Scoring IA</th>
+                <th className="py-3.5 px-4 font-semibold">Calificación IA</th>
                 <th className="py-3.5 px-4 font-semibold">Presupuesto</th>
                 <th className="py-3.5 px-4 font-semibold">Estado</th>
                 <th className="py-3.5 px-4 text-right font-semibold">Acciones</th>

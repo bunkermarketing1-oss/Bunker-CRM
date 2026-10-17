@@ -9,7 +9,7 @@ import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 type Metric = "spend" | "clicks" | "conversions" | "impressions";
 
 const METRICS: { key: Metric; label: string }[] = [
-  { key: "spend", label: "Gasto" },
+  { key: "spend", label: "Inversión" },
   { key: "clicks", label: "Clics" },
   { key: "conversions", label: "Conversiones" },
   { key: "impressions", label: "Impresiones" },
@@ -236,12 +236,12 @@ export default function CampaignsPage() {
                     {!isClient && <th className="text-left font-medium px-4 py-2.5">Cliente</th>}
                     <th className="text-left font-medium px-4 py-2.5">Estado</th>
                     <th className="text-right font-medium px-4 py-2.5">Presupuesto</th>
-                    <th className="text-right font-medium px-4 py-2.5">Gasto</th>
+                    <th className="text-right font-medium px-4 py-2.5">Inversión</th>
                     <th className="text-right font-medium px-4 py-2.5">Impresiones</th>
                     <th className="text-right font-medium px-4 py-2.5">Clics</th>
                     <th className="text-right font-medium px-4 py-2.5">CTR</th>
-                    <th className="text-right font-medium px-4 py-2.5">Conv.</th>
-                    <th className="text-right font-medium px-4 py-2.5">Costo/conv.</th>
+                    <th className="text-right font-medium px-4 py-2.5">Leads / Conv.</th>
+                    <th className="text-right font-medium px-4 py-2.5">Costo / Lead</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0EFEA]">

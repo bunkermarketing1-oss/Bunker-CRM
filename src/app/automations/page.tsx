@@ -145,8 +145,9 @@ export default function AutomationsPage() {
             Las reglas se ejecutan automáticamente en tiempo real al ingresar leads desde Meta Ads, al mover acuerdos en el pipeline o fuera de horario.
           </span>
         </div>
-        <span className="font-mono text-[11px] text-[#82807C] flex-shrink-0">
-          Base: Supabase Postgres
+        <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1.5 flex-shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Motor activo 24/7 en segundo plano
         </span>
       </div>
     </div>

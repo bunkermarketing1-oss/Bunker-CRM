@@ -81,7 +81,7 @@ export default function SmsMessagingPage() {
       if (json.success) {
         setFeedback({
           type: "success",
-          message: "SMS despachado al proveedor telefónico exitosamente.",
+          message: "Mensaje SMS enviado exitosamente.",
         });
         setMessageText("");
         fetchHistory();
@@ -158,14 +158,14 @@ export default function SmsMessagingPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#4D4C48] mb-1">
-                Número Telefónico Destinatario (Formato E.164) *
+                Número de Celular Destinatario (con código de país, ej: +57 o +52) *
               </label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-[#82807C] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   required
-                  placeholder="+52 55 1234 5678"
+                  placeholder="+57 300 123 4567 o +52 55 1234 5678"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
@@ -195,10 +195,10 @@ export default function SmsMessagingPage() {
             <div className="p-3 bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl text-[11px] text-[#6B6966] space-y-1">
               <div className="text-[#1F1E1D] font-medium flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-                <span>Normativa & Auditoría</span>
+                <span>Envío Seguro & Auditoría</span>
               </div>
               <p>
-                Cuenta con protección anti-duplicados (2 minutos) y registro de trazabilidad en base de datos.
+                Evita envíos duplicados accidentales (bloqueo preventivo de 2 min) y guarda el registro automático en el perfil del cliente.
               </p>
             </div>
 
@@ -267,7 +267,7 @@ export default function SmsMessagingPage() {
 
                   <div className="text-[10px] text-[#82807C] flex items-center justify-between">
                     <span>{new Date(msg.createdAt).toLocaleString()}</span>
-                    {msg.isDemo && <span className="text-amber-700 font-medium">[Modo Sandbox]</span>}
+                    {msg.isDemo && <span className="text-amber-700 font-medium">[Modo Prueba / Simulado]</span>}
                   </div>
                 </div>
               ))

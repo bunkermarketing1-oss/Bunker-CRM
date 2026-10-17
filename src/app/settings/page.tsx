@@ -19,8 +19,8 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader
         section="Administración"
-        title="Configuración & Entorno"
-        description="Datos de la agencia y estado real de la configuración del servidor. Las llaves nunca se muestran: solo si están definidas."
+        title="Configuración de la Agencia & Servidor"
+        description="Información de tu agencia y estado de conexión con los servicios del sistema. Por seguridad, las claves secretas nunca se muestran en pantalla."
       />
 
       {error && (
@@ -38,31 +38,31 @@ export default function SettingsPage() {
             <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>
-                Faltan variables obligatorias: <strong className="font-mono">{missingRequired.map((v) => v.name).join(", ")}</strong>.
-                Defínelas en Dokploy y vuelve a desplegar.
+                Faltan claves obligatorias en el servidor: <strong className="font-mono">{missingRequired.map((v) => v.name).join(", ")}</strong>.
+                Solicita al administrador técnico configurarlas en el panel del servidor para habilitar todas las funciones.
               </span>
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2.5">
               <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-              Toda la configuración obligatoria está definida.
+              Todos los servicios y claves obligatorias del servidor están configurados correctamente.
             </div>
           )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-            <Panel icon={Building2} title="Agencia">
+            <Panel icon={Building2} title="Datos de la Agencia">
               <dl className="space-y-3 text-xs">
-                <Row label="Nombre" value={settings.organization.name} />
-                <Row label="Identificador" value={settings.organization.slug} mono />
-                <Row label="Plan" value={settings.organization.plan} mono />
-                <Row label="Clientes" value={formatNumber(settings.organization.clients)} />
-                <Row label="Usuarios admin" value={formatNumber(settings.organization.adminUsers)} />
-                <Row label="Usuarios de portal cliente" value={formatNumber(settings.organization.clientPortalUsers)} />
-                {settings.appUrl && <Row label="URL pública" value={settings.appUrl} mono />}
+                <Row label="Nombre Comercial" value={settings.organization.name} />
+                <Row label="Código de Agencia" value={settings.organization.slug} mono />
+                <Row label="Plan de Suscripción" value={settings.organization.plan} mono />
+                <Row label="Clientes Registrados" value={formatNumber(settings.organization.clients)} />
+                <Row label="Usuarios Administradores" value={formatNumber(settings.organization.adminUsers)} />
+                <Row label="Usuarios de Clientes" value={formatNumber(settings.organization.clientPortalUsers)} />
+                {settings.appUrl && <Row label="Enlace del CRM" value={settings.appUrl} mono />}
               </dl>
             </Panel>
 
-            <Panel icon={Key} title="Variables de entorno" className="xl:col-span-2">
+            <Panel icon={Key} title="Servicios & Conexiones del Servidor" className="xl:col-span-2">
               <div className="space-y-6">
                 {GROUP_ORDER.map((group) => (
                   <EnvGroupList

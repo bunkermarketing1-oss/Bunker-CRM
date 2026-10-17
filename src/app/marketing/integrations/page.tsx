@@ -24,11 +24,29 @@ const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
 };
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  meta_ad_account: "Cuenta publicitaria",
+  meta_ad_account: "Cuenta de anuncios Meta",
   facebook_page: "Página de Facebook",
-  instagram_business: "Instagram",
-  tiktok_advertiser: "TikTok Ads",
+  instagram_business: "Perfil de Instagram",
+  tiktok_advertiser: "Cuenta de TikTok Ads",
 };
+
+/** Traduce mensajes técnicos o de variables de entorno a explicaciones claras para usuarios comerciales */
+function humanizeStatusMessage(msg: string | null | undefined, provider: string): string {
+  if (!msg) return "";
+  if (msg.includes("TWILIO_ACCOUNT_SID") || msg.includes("TWILIO_AUTH_TOKEN") || provider === "twilio") {
+    return "Servicio de SMS y llamadas pendiente de activar. Conecta tu cuenta de Twilio para comenzar a enviar mensajes.";
+  }
+  if (msg.includes("META_APP_ID") || msg.includes("META_APP_SECRET")) {
+    return "Conexión oficial de Meta pendiente. Haz clic arriba en Facebook / Instagram para vincular tus cuentas de pauta.";
+  }
+  if (msg.includes("GOOGLE_ADS")) {
+    return "Conexión de Google Ads pendiente de configurar.";
+  }
+  if (msg.includes("TIKTOK")) {
+    return "Conexión de TikTok Ads pendiente de configurar.";
+  }
+  return msg;
+}
 
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<any[]>([]);
@@ -346,21 +364,21 @@ export default function IntegrationsPage() {
                   {!isConnected && it.errorMessage && (
                     <div className="text-amber-800 flex items-start gap-1.5 pt-1 border-t border-[#E8E6DF]">
                       <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
-                      <span>{it.errorMessage}</span>
+                      <span>{humanizeStatusMessage(it.errorMessage, it.provider)}</span>
                     </div>
                   )}
 
                   {isConnected && it.errorMessage && (
                     <div className="text-amber-800 flex items-start gap-1.5 pt-1 border-t border-[#E8E6DF]">
                       <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
-                      <span>{it.errorMessage}</span>
+                      <span>{humanizeStatusMessage(it.errorMessage, it.provider)}</span>
                     </div>
                   )}
 
                   {isConnected && !it.errorMessage && (
                     <div className="text-emerald-800 flex items-center gap-1.5 pt-1 border-t border-[#E8E6DF]">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Credenciales activas y respondiendo</span>
+                      <span>Conexión activa y sincronizando datos</span>
                     </div>
                   )}
                 </div>
@@ -373,24 +391,30 @@ export default function IntegrationsPage() {
                           <span className="text-[#1F1E1D] truncate">
                             <span className="text-[#82807C]">{ACCOUNT_TYPE_LABELS[acc.accountType] || "Cuenta"}:</span> {acc.accountName}
                           </span>
-                          <span className={`flex-shrink-0 uppercase text-[10px] font-medium ${
-                            acc.status === ACCOUNT_STATUS.ACTIVE ? "text-emerald-700" : "text-red-700"
+                          <span className={`flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            acc.status === ACCOUNT_STATUS.ACTIVE
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : acc.status === ACCOUNT_STATUS.EXPIRED
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-red-50 text-red-700 border-red-200"
                           }`}>
-                            {acc.status === ACCOUNT_STATUS.ACTIVE ? "activa" : acc.status === ACCOUNT_STATUS.EXPIRED ? "token expirado" : "error"}
+                            {acc.status === ACCOUNT_STATUS.ACTIVE ? "● Activa" : acc.status === ACCOUNT_STATUS.EXPIRED ? "● Reconectar" : "● Error"}
                           </span>
                         </div>
                         <label className="flex items-center gap-2 text-[#82807C]">
-                          <span className="flex-shrink-0">Cliente:</span>
+                          <span className="flex-shrink-0 font-medium">Asignada a:</span>
                           <select
                             value={acc.clientId || ""}
                             disabled={assigningId === acc.id}
                             onChange={(e) => handleAssignClient(acc.id, e.target.value)}
                             className="flex-1 min-w-0 bg-white border border-[#E8E6DF] rounded-lg px-2 py-1 text-[11px] text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                           >
-                            <option value="">Sin asignar (solo Bunker)</option>
-                            {clients.map((c) => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
+                            <option value="">🏢 Portafolio Agencia (Bunker Agency)</option>
+                            <optgroup label="👤 Clientes Comerciales:">
+                              {clients.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </optgroup>
                           </select>
                         </label>
                       </li>
@@ -458,28 +482,82 @@ export default function IntegrationsPage() {
             </div>
 
             <form onSubmit={handleConnectSubmit} className="p-5 space-y-3.5">
-              <div>
-                <label className="block text-xs font-medium text-[#4D4C48] mb-1">API Key / Access Token</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Token de acceso oficial..."
-                  value={creds.apiKey}
-                  onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
-                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                />
-              </div>
+              {selectedIntegration.provider === "twilio" ? (
+                <>
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs">
+                    💡 <strong>¿Dónde encontrar estos datos?</strong> En tu panel de control de Twilio (Console), en la pantalla principal donde dice <strong>Account SID</strong> y <strong>Auth Token</strong>.
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                      SID de Cuenta (Account SID)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ej. ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      value={creds.apiKey}
+                      onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-medium text-[#4D4C48] mb-1">Account ID / ID de Cuenta Publicitaria</label>
-                <input
-                  type="text"
-                  placeholder="ej. act_1234567890"
-                  value={creds.accountId}
-                  onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
-                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                      Token Secreto de Autorización (Auth Token)
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Tu token secreto de Twilio..."
+                      value={creds.apiSecret}
+                      onChange={(e) => setCreds({ ...creds, apiSecret: e.target.value })}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                      Número Remitente de SMS (Phone Number)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. +1234567890"
+                      value={creds.accountId}
+                      onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                      Clave de API / Token de Acceso
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Token o clave oficial..."
+                      value={creds.apiKey}
+                      onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                      Identificador de Cuenta (Account ID / ID de Anunciante)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. act_1234567890"
+                      value={creds.accountId}
+                      onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="pt-2 flex justify-end gap-2">
                 <button

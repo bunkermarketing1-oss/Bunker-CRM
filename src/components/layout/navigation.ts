@@ -75,8 +75,8 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     title: { es: "Pautas & Marketing", en: "Ads & Marketing" },
     badge: "ADMIN",
     items: [
-      { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Métricas", en: "Campaigns & Metrics" } },
-      { href: ROUTES.AI_OPTIMIZER, icon: Sparkles, label: { es: "Pautas & Meta Ads (IA)", en: "Ads & Meta Ads (AI)" } },
+      { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
+      { href: ROUTES.AI_OPTIMIZER, icon: Sparkles, label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" } },
       { href: ROUTES.SOCIAL_POSTS, icon: Share2, label: { es: "Publicaciones Sociales", en: "Social Posts" } },
       { href: ROUTES.CONTENT_CALENDAR, icon: CalendarDays, label: { es: "Calendario Editorial", en: "Content Calendar" } },
       { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
@@ -98,7 +98,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   {
     title: { es: "Administración", en: "Agency Settings" },
     items: [
-      { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración & Entorno", en: "Settings & Env" } },
+      { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración & Servidor", en: "Settings & Server" } },
     ],
   },
 ];
