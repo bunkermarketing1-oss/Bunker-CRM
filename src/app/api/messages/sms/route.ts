@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { scopeFromUser } from "@/lib/tenant";
+import { validateAndNormalizePhone } from "@/lib/phone";
+import { isPhoneOptedOut, listSmsMessages } from "@/services/sms.service";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
 import { ACTIVITY_TYPE } from "@/lib/constants/crm";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
@@ -12,31 +15,18 @@ export async function GET(req: NextRequest) {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
+    // Un usuario CLIENT solo ve los SMS de su empresa, sin importar el clientId que mande.
+    const scope = scopeFromUser(user!);
+    if (!scope) return NextResponse.json({ success: true, messages: [] });
+
     const { searchParams } = new URL(req.url);
-    const clientId = searchParams.get("clientId");
-    const leadId = searchParams.get("leadId");
-
-    const where: any = {
-      organizationId: user!.organizationId,
-      channel: MESSAGE_CHANNEL.SMS,
-    };
-
-    if (clientId) where.clientId = clientId;
-    if (leadId) where.leadId = leadId;
-
-    const messages = await prisma.message.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        client: { select: { id: true, name: true, phone: true } },
-        lead: { select: { id: true, name: true, phone: true } },
-        contact: { select: { id: true, firstName: true, phone: true } },
-      },
-      take: 100,
+    const messages = await listSmsMessages(scope, {
+      clientId: searchParams.get("clientId"),
+      leadId: searchParams.get("leadId"),
     });
 
     return NextResponse.json({ success: true, messages });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/messages/sms error:", error);
     return NextResponse.json({ success: false, error: "Error al consultar mensajes SMS." }, { status: 500 });
   }
@@ -87,10 +77,19 @@ export async function POST(req: NextRequest) {
       }, { status: 429 });
     }
 
-    // 3. Provider execution
+    // 3. El número pidió no recibir SMS (respondió BAJA/STOP)
+    const normalizedRecipient = validateAndNormalizePhone(cleanPhone).normalized ?? cleanPhone;
+    if (await isPhoneOptedOut(user!.organizationId, normalizedRecipient)) {
+      return NextResponse.json(
+        { success: false, error: "Este número pidió no recibir más SMS (respondió BAJA o STOP)." },
+        { status: 409 }
+      );
+    }
+
+    // 4. Provider execution
     const { status, providerMsgId, errorMessage, isDemo } = await sendTwilioSms(cleanPhone, message.trim());
 
-    // 4. Save to Database with authenticated organization
+    // 5. Save to Database with authenticated organization
     const savedMessage = await prisma.message.create({
       data: {
         organizationId: user!.organizationId,
@@ -112,7 +111,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 5. Log as Activity
+    // 6. Log as Activity
     if (clientId || leadId) {
       await prisma.activity.create({
         data: {

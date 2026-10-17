@@ -3,7 +3,10 @@
  * Docs: https://www.twilio.com/docs/messaging/api/message-resource
  */
 
-import { MESSAGE_STATUS } from "@/lib/constants/messaging";
+import { MESSAGE_STATUS, type MessageStatus } from "@/lib/constants/messaging";
+
+export const TWILIO_SMS_WEBHOOK_PATH = "/api/integrations/twilio/sms";
+export const TWILIO_STATUS_WEBHOOK_PATH = "/api/integrations/twilio/status";
 
 export interface TwilioSendResult {
   status: typeof MESSAGE_STATUS.SENT | typeof MESSAGE_STATUS.FAILED;
@@ -21,6 +24,33 @@ export function getTwilioConfig() {
   return { accountSid, authToken, fromPhone };
 }
 
+/**
+ * URL pública de un webhook de Twilio. Es la misma con la que Twilio firma la petición,
+ * así que se arma desde NEXT_PUBLIC_APP_URL y no desde el request (detrás del proxy de
+ * Dokploy el host y el protocolo internos son otros).
+ */
+export function twilioWebhookUrl(path: string) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  return appUrl ? `${appUrl.replace(/\/$/, "")}${path}` : null;
+}
+
+/** Estado de Twilio (`MessageStatus`) → estado del CRM. null = estado intermedio, no se guarda. */
+export function mapTwilioStatus(twilioStatus: string): MessageStatus | null {
+  switch (twilioStatus) {
+    case "sent":
+      return MESSAGE_STATUS.SENT;
+    case "delivered":
+    case "read":
+      return MESSAGE_STATUS.DELIVERED;
+    case "undelivered":
+    case "failed":
+    case "canceled":
+      return MESSAGE_STATUS.FAILED;
+    default:
+      return null; // queued, accepted, scheduled, sending
+  }
+}
+
 /** Envía un SMS. Nunca lanza: los errores vuelven en `errorMessage` para guardarlos en `Message`. */
 export async function sendTwilioSms(to: string, body: string): Promise<TwilioSendResult> {
   const cfg = getTwilioConfig();
@@ -35,6 +65,9 @@ export async function sendTwilioSms(to: string, body: string): Promise<TwilioSen
 
   try {
     const params = new URLSearchParams({ To: to, From: cfg.fromPhone, Body: body });
+    // Twilio solo puede avisar la entrega a una URL pública; en local (http) se omite.
+    const statusCallback = twilioWebhookUrl(TWILIO_STATUS_WEBHOOK_PATH);
+    if (statusCallback?.startsWith("https://")) params.set("StatusCallback", statusCallback);
     const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${cfg.accountSid}/Messages.json`, {
       method: "POST",
       headers: {

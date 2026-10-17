@@ -12,9 +12,17 @@ import {
   Clock,
   Sparkles,
   ShieldAlert,
+  ArrowDownLeft,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useClientOptions } from "@/hooks/useClientOptions";
+import { BulkSmsPanel } from "@/components/messaging/BulkSmsPanel";
+import { MESSAGE_DIRECTION } from "@/lib/constants/messaging";
 
 export default function SmsMessagingPage() {
+  const { user } = useAuth();
+  const isAdmin = Boolean(user && !user.isClientUser);
+  const clients = useClientOptions();
   const [messages, setMessages] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -224,7 +232,7 @@ export default function SmsMessagingPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
               <History className="w-4 h-4 text-emerald-600" />
-              Historial de Envíos
+              Historial de mensajes
             </h2>
             <span className="text-[11px] text-[#82807C] font-mono">{messages.length} mensajes</span>
           </div>
@@ -239,8 +247,13 @@ export default function SmsMessagingPage() {
                 <div key={msg.id} className="py-3.5 space-y-2 hover:bg-[#FAF9F5] px-2 rounded-xl transition-colors">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-[#1F1E1D] font-mono flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-[#82807C]" />
+                      {msg.direction === MESSAGE_DIRECTION.INBOUND ? (
+                        <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" aria-label="Recibido" />
+                      ) : (
+                        <Phone className="w-3.5 h-3.5 text-[#82807C]" />
+                      )}
                       {msg.recipient}
+                      {msg.lead?.name && <span className="font-sans font-normal text-[#82807C]">· {msg.lead.name}</span>}
                     </span>
 
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase border ${
@@ -249,7 +262,8 @@ export default function SmsMessagingPage() {
                       msg.status === "failed" ? "bg-red-50 text-red-700 border-red-200" :
                       "bg-amber-50 text-amber-700 border-amber-200"
                     }`}>
-                      {msg.status === "sent" ? "ENVIADO" :
+                      {msg.direction === MESSAGE_DIRECTION.INBOUND ? "RECIBIDO" :
+                       msg.status === "sent" ? "ENVIADO" :
                        msg.status === "delivered" ? "ENTREGADO" :
                        msg.status === "failed" ? "FALLIDO" : msg.status}
                     </span>
@@ -275,6 +289,8 @@ export default function SmsMessagingPage() {
           </div>
         </div>
       </div>
+
+      {isAdmin && <BulkSmsPanel clients={clients} onSent={fetchHistory} />}
 
       {/* Confirmation Modal */}
       {showConfirm && (

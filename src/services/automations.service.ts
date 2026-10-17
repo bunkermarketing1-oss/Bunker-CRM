@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
+import { isPhoneOptedOut } from "@/services/sms.service";
 import { firstNameOf, renderSmsTemplate } from "@/lib/automations/sms-template";
 import { AUTOMATION_ACTION, AUTOMATION_TRIGGER } from "@/lib/constants/automations";
 import { ACTIVITY_TYPE } from "@/lib/constants/crm";
@@ -179,6 +180,7 @@ export async function runLeadCreatedAutomations(leadId: string) {
     });
     // Sin teléfono normalizado (E.164) Twilio rechazaría el envío.
     if (!lead?.normalizedPhone) return 0;
+    if (await isPhoneOptedOut(lead.organizationId, lead.normalizedPhone)) return 0;
 
     const rules = await prisma.automationRule.findMany({
       where: {

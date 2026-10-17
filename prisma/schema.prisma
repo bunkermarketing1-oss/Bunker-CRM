@@ -138,6 +138,7 @@ model Lead {
   externalFormId     String? // Formulario de Meta Lead Ads que originó el lead
   externalAdId       String?
   externalCampaignId String?
+  smsOptOutAt        DateTime? // El lead pidió no recibir SMS (respondió BAJA/STOP)
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?
@@ -311,6 +312,9 @@ model Message {
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([providerMsgId]) // callbacks de estado de Twilio
+  @@index([recipient, createdAt]) // asociar respuestas entrantes al último envío
 }
 
 model SocialPost {
