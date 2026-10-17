@@ -258,6 +258,7 @@ model ConnectedAccount {
   id             String       @id @default(uuid())
   organizationId String
   integrationId  String
+  clientId       String?      // Cliente al que el admin asignó esta cuenta (lo ve en su portal)
   accountName    String
   accountType    String?      // meta_ad_account, facebook_page, instagram_business, tiktok_advertiser
   externalId     String?

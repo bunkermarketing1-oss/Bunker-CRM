@@ -4,6 +4,7 @@ import { requireAuth, requireAdmin } from "@/lib/auth";
 import { createLeadSchema, updateLeadSchema } from "@/lib/validations/lead";
 import { validateAndNormalizePhone } from "@/lib/phone";
 import { findDuplicateLeads } from "@/lib/validations/duplicate-detector";
+import { processLeadCreatedAutomations } from "@/services/automations.service";
 
 export const dynamic = "force-dynamic";
 
@@ -222,6 +223,26 @@ export async function POST(req: NextRequest) {
         }),
       },
     });
+
+    // 8. Automatizaciones comerciales (SMS inmediato / IA de horas de ausencia)
+    try {
+      await processLeadCreatedAutomations({
+        lead: {
+          id: lead.id,
+          name: lead.name,
+          phone: lead.phone,
+          normalizedPhone: lead.normalizedPhone,
+          companyName: lead.companyName,
+          clientId: lead.clientId,
+          organizationId: user!.organizationId,
+          ownerId: lead.ownerId,
+        },
+        organizationId: user!.organizationId,
+      });
+    } catch (autoErr) {
+      console.error("Error al disparar automatizaciones de lead_created:", autoErr);
+      // No bloquea la respuesta exitosa del lead creado
+    }
 
     return NextResponse.json({ success: true, lead }, { status: 201 });
   } catch (error: any) {
