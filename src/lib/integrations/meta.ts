@@ -3,7 +3,10 @@
  * Docs: https://developers.facebook.com/docs/marketing-apis
  */
 
-import { createHmac, timingSafeEqual } from "crypto";
+import { META_GRAPH_TIMEOUT_MS } from "@/lib/constants/integrations";
+
+// Se reexporta para que la ruta del webhook siga importando todo lo de Meta desde aquí.
+export { verifyMetaSignature } from "./meta-webhook";
 
 export const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v23.0";
 const GRAPH_URL = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
@@ -49,7 +52,9 @@ export function getMetaConfig() {
 }
 
 async function graphFetch<T = any>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, cache: "no-store" });
+  // Sin timeout un Graph colgado retiene el webhook (Meta reintenta) o agota el maxDuration
+  // del cron; al abortar, el error deja el evento en `failed` y el cron lo reintenta.
+  const res = await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(META_GRAPH_TIMEOUT_MS) });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.error) {
     // Código 190 = token inválido o expirado
@@ -210,19 +215,6 @@ export function countMetaConversions(actions?: { action_type: string; value: str
 // Lead Ads (webhook `leadgen`)
 // Docs: https://developers.facebook.com/docs/marketing-api/guides/lead-ads/retrieving
 // ---------------------------------------------------------------------------
-
-/**
- * Valida la cabecera `X-Hub-Signature-256` ("sha256=<hex>") que Meta firma con el secreto
- * de la app sobre el body crudo. Sin secreto configurado se rechaza todo.
- */
-export function verifyMetaSignature(rawBody: string, signatureHeader: string | null) {
-  const appSecret = process.env.META_APP_SECRET;
-  if (!appSecret || !signatureHeader?.startsWith("sha256=")) return false;
-  const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
-  const given = signatureHeader.slice("sha256=".length);
-  if (given.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(given, "utf8"), Buffer.from(expected, "utf8"));
-}
 
 /** Valor de un cambio `leadgen` dentro del payload del webhook (objeto `page`). */
 export interface MetaLeadgenChange {

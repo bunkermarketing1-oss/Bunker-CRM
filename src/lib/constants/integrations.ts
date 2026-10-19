@@ -60,10 +60,35 @@ export const META_LEAD_EVENT_STATUS = {
   PROCESSED: "processed",
   /** Error recuperable (token, red, Meta caído): el cron lo reintenta. */
   FAILED: "failed",
-  /** La página no está conectada a ninguna organización: no se reintenta. */
+  /**
+   * La página no está conectada (activa) o está conectada en varias organizaciones/clientes
+   * y no se puede saber de quién es el lead. El cron no lo reintenta; se reprocesa si Meta
+   * lo reenvía o si el respaldo lo vuelve a ver cuando la conexión ya es única.
+   */
   IGNORED: "ignored",
 } as const;
 export type MetaLeadEventStatus = ValueOf<typeof META_LEAD_EVENT_STATUS>;
 
 /** Intentos máximos antes de dejar un evento `failed` para revisión manual. */
 export const META_LEAD_MAX_ATTEMPTS = 5;
+
+/**
+ * Minutos sin avance para dar por muerto un evento `received` (redeploy o caída a mitad del
+ * proceso). Holgado frente a lo que tarda un evento (Graph + SMS, segundos) para que el cron
+ * no lo procese a la vez que el webhook que lo recibió.
+ */
+export const META_LEAD_STALE_RECEIVED_MINUTES = 10;
+
+/**
+ * Antigüedad máxima (según `created_time` de Meta) para mandar el SMS automático. Cubre un
+ * reintento tras caída (10 min de `received` + 15 min del cron) pero deja fuera los leads
+ * viejos que trae el respaldo de 48 h al conectar una página: escribirle a alguien que llenó
+ * el formulario hace dos días confunde y gasta saldo.
+ */
+export const META_LEAD_AUTOMATION_MAX_AGE_MINUTES = 30;
+
+/** Título de la nota que explica por qué un lead recuperado no recibió SMS automático. */
+export const META_LEAD_NO_SMS_ACTIVITY_TITLE = "Lead recuperado de Meta sin SMS automático";
+
+/** Tope por petición a Graph API: más que esto es Meta caído, no una respuesta lenta. */
+export const META_GRAPH_TIMEOUT_MS = 20_000;

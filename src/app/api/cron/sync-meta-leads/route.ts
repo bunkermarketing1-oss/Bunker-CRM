@@ -9,7 +9,9 @@ export const maxDuration = 300;
 const BACKFILL_HOURS = 48;
 
 /**
- * Respaldo del webhook de leads de Meta: recupera los que no llegaron y reintenta fallidos.
+ * Respaldo del webhook de leads de Meta: recupera los que no llegaron y reintenta los
+ * fallidos y los que quedaron abandonados en `received` (redeploy a mitad del proceso).
+ * Los leads viejos que recupera se crean sin SMS automático (ver META_LEAD_AUTOMATION_MAX_AGE_MINUTES).
  * Uso (cron en Dokploy, cada 15 minutos):
  *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<dominio>/api/cron/sync-meta-leads
  */
