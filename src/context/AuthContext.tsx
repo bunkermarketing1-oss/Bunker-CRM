@@ -11,6 +11,8 @@ export interface UserProfile {
   clientId?: string | null;
   clientName?: string | null;
   isClientUser?: boolean;
+  /** Dueño del negocio del cliente: además de su portal, supervisa a sus asesores. */
+  isClientOwner?: boolean;
   organizationId: string;
   organizationName: string;
   organizationSlug: string;

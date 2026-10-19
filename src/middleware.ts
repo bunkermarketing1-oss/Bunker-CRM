@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isClientRole } from "@/lib/roles";
 
 const AUTH_COOKIE_NAME = "bunker_session";
 
@@ -104,6 +105,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/automations") ||
     pathname.startsWith("/reports") ||
     pathname.startsWith("/campaigns") ||
+    pathname.startsWith("/team") ||
     pathname.startsWith("/settings");
 
   if (isProtectedPath) {
@@ -116,9 +118,12 @@ export function middleware(request: NextRequest) {
     }
 
     // 5. Client role redirection from internal Bunker Agency admin pages
-    const userRole = tokenPayload?.user_metadata?.role?.toUpperCase();
+    // Sin rol en los metadatos no se asume cliente: normalizeRole trata el vacío como ADMIN y
+    // aquí solo se redirige; la autorización real la hace cada ruta con la sesión del servidor.
+    const userRole = tokenPayload?.user_metadata?.role;
     const hasClientId = Boolean(tokenPayload?.user_metadata?.clientId);
-    const isClientUser = userRole === "CLIENT" || hasClientId;
+    // Incluye CLIENT_OWNER: el dueño tampoco entra a las páginas internas de Bunker.
+    const isClientUser = (Boolean(userRole) && isClientRole(userRole)) || hasClientId;
 
     const isAdminOnlyPath =
       pathname.startsWith("/marketing") ||

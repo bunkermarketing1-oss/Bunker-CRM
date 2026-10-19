@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ROUTES, leadSearchRoute } from "@/lib/constants/routes";
+import { useAuth } from "@/context/AuthContext";
+import { useClientPortalUsers } from "@/hooks/useClientPortalUsers";
+import { ClientPortalUsersPanel } from "@/components/clients/ClientPortalUsersPanel";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -149,6 +152,11 @@ export default function ClientProfile360Page() {
   const params = useParams();
   const router = useRouter();
   const clientId = params?.id as string;
+
+  const { user } = useAuth();
+  // Solo Bunker asigna roles del portal (asesor ↔ dueño).
+  const isBunkerUser = Boolean(user && !user.isClientUser);
+  const portalUsers = useClientPortalUsers(clientId, isBunkerUser);
 
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -779,6 +787,15 @@ export default function ClientProfile360Page() {
       {activeTab === "summary" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
           <div className="lg:col-span-2 space-y-6">
+            {isBunkerUser && (
+              <ClientPortalUsersPanel
+                users={portalUsers.users}
+                error={portalUsers.error}
+                savingId={portalUsers.savingId}
+                onSetRole={portalUsers.setRole}
+              />
+            )}
+
             {/* Notes Section */}
             <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
               <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">

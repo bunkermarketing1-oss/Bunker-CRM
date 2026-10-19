@@ -2,33 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { ROLES, isClientOwnerRole, normalizeRole, type UserRole } from "@/lib/roles";
 
 export const AUTH_COOKIE_NAME = "bunker_session";
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
 
-export const ROLES = {
-  ADMIN: "ADMIN",
-  CLIENT: "CLIENT",
-} as const;
-
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
-
-export function normalizeRole(role?: string | null): UserRole {
-  if (!role) return ROLES.ADMIN;
-  const upper = role.toUpperCase();
-  if (upper === "CLIENT" || upper === "CLIENT_USER" || upper === "CLIENT_ADMIN") {
-    return ROLES.CLIENT;
-  }
-  return ROLES.ADMIN;
-}
-
-export function isClientRole(role?: string | null): boolean {
-  return normalizeRole(role) === ROLES.CLIENT;
-}
-
-export function isBunkerRole(role?: string | null): boolean {
-  return normalizeRole(role) === ROLES.ADMIN;
-}
+// Los roles viven en `lib/roles.ts` (puro, lo usa también el middleware); se re-exportan aquí
+// porque las rutas ya los importan de `@/lib/auth`.
+export { ROLES, normalizeRole, isClientRole, isBunkerRole, isClientOwnerRole, type UserRole } from "@/lib/roles";
 
 export interface AuthenticatedUser {
   id: string;
@@ -38,6 +19,11 @@ export interface AuthenticatedUser {
   clientId: string | null;
   clientName: string | null;
   isClientUser: boolean;
+  /**
+   * Dueño del negocio del cliente: sigue siendo usuario de portal (`isClientUser`, `clientId`
+   * forzado) y además puede supervisar a los asesores de su empresa.
+   */
+  isClientOwner: boolean;
   supabaseAuthId: string;
   organizationId: string;
   organizationName: string;
@@ -172,6 +158,8 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
     clientId: dbUser.clientId || null,
     clientName: dbUser.client?.name || null,
     isClientUser: isClient,
+    // Sin empresa no hay a quién supervisar: un CLIENT_OWNER sin clientId queda como asesor.
+    isClientOwner: isClient && isClientOwnerRole(dbUser.role) && Boolean(dbUser.clientId),
     supabaseAuthId: supabaseUser.id,
     organizationId: primaryMembership.organization.id,
     organizationName: primaryMembership.organization.name,
@@ -265,3 +253,29 @@ export async function requireAdmin(req: NextRequest): Promise<{
  * Alias for requireAdmin ensuring all Bunker internal modules require ADMIN role.
  */
 export const requireBunkerRole = requireAdmin;
+
+/**
+ * Supervisión de asesores (vista en vivo, escucha): admin de Bunker o dueño del cliente.
+ * Un asesor (CLIENT) recibe 403. El scope de cliente lo sigue forzando la ruta con `scopeFromUser`.
+ */
+export async function requireSupervisor(req: NextRequest): Promise<{
+  user: AuthenticatedUser | null;
+  errorResponse: NextResponse | null;
+}> {
+  const { user, errorResponse } = await requireAuth(req);
+  if (errorResponse || !user) {
+    return { user: null, errorResponse };
+  }
+
+  if (user.isClientUser && !user.isClientOwner) {
+    return {
+      user: null,
+      errorResponse: NextResponse.json(
+        { success: false, error: "Acceso denegado. Solo el dueño de la empresa o Bunker pueden supervisar al equipo." },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { user, errorResponse: null };
+}
