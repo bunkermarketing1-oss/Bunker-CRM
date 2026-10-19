@@ -1,35 +1,21 @@
-export interface AutomationRuleDto {
+import type { LeadSource } from "@/lib/validations/lead";
+
+/** Regla "lead nuevo → SMS" tal como la ve la pantalla de Automatizaciones. */
+export interface SmsAutomationSummary {
   id: string;
-  organizationId: string;
   name: string;
-  triggerEvent: string;
-  conditionJson: string | null;
-  actionType: string;
-  actionPayload: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  /** Vacío = cualquier fuente. */
+  sources: LeadSource[];
+  template: string;
   isActive: boolean;
   executionCount: number;
   lastRunAt: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
-export interface StaleLeadsCheckResult {
-  leadsAnalyzed: number;
-  staleLeadsFound: number;
-  tasksCreated: number;
-  details: Array<{
-    leadId: string;
-    leadName: string;
-    daysInactive: number;
-    taskId: string;
-  }>;
-}
-
-export interface AutomationExecutionResult {
-  ruleId: string;
-  ruleName: string;
-  executed: boolean;
-  reason?: string;
-  actionTaken?: string;
-  details?: Record<string, unknown>;
+export interface SmsAutomationsResponse {
+  success: true;
+  automations: SmsAutomationSummary[];
 }

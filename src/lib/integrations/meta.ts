@@ -3,11 +3,15 @@
  * Docs: https://developers.facebook.com/docs/marketing-apis
  */
 
+import { createHmac, timingSafeEqual } from "crypto";
+
 export const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v23.0";
 const GRAPH_URL = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
 
-// Se solicitan todos los permisos de las fases planeadas (métricas, gestión de
-// campañas, estadísticas orgánicas y publicación) para no forzar una reconexión.
+// El CRM es comercial: métricas, gestión de campañas y captura de leads. No se piden
+// permisos de publicación para que la revisión de la app en Meta sea más sencilla.
+// leads_retrieval + pages_manage_ads + pages_manage_metadata son los que exige Meta para
+// suscribir una página al webhook `leadgen` y leer los leads de sus formularios.
 export const META_SCOPES = [
   "ads_read",
   "ads_management",
@@ -15,12 +19,11 @@ export const META_SCOPES = [
   "read_insights",
   "pages_show_list",
   "pages_read_engagement",
-  "pages_manage_posts",
   "pages_manage_ads",
+  "pages_manage_metadata",
   "leads_retrieval",
   "instagram_basic",
   "instagram_manage_insights",
-  "instagram_content_publish",
 ];
 
 export class MetaApiError extends Error {
@@ -203,79 +206,95 @@ export function countMetaConversions(actions?: { action_type: string; value: str
     .reduce((sum, a) => sum + (parseInt(a.value, 10) || 0), 0);
 }
 
-export interface MetaLeadData {
-  id: string;
-  createdTime: string;
-  adId?: string;
-  formId?: string;
-  pageId?: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  companyName: string | null;
-  customFields: Record<string, string>;
-}
+// ---------------------------------------------------------------------------
+// Lead Ads (webhook `leadgen`)
+// Docs: https://developers.facebook.com/docs/marketing-api/guides/lead-ads/retrieving
+// ---------------------------------------------------------------------------
 
 /**
- * Consulta la API de Graph para obtener los datos de un lead captado por un formulario de Meta Lead Ads.
+ * Valida la cabecera `X-Hub-Signature-256` ("sha256=<hex>") que Meta firma con el secreto
+ * de la app sobre el body crudo. Sin secreto configurado se rechaza todo.
  */
-export async function fetchMetaLead(leadgenId: string, accessToken: string): Promise<MetaLeadData> {
-  const data = await graphFetch<{
+export function verifyMetaSignature(rawBody: string, signatureHeader: string | null) {
+  const appSecret = process.env.META_APP_SECRET;
+  if (!appSecret || !signatureHeader?.startsWith("sha256=")) return false;
+  const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+  const given = signatureHeader.slice("sha256=".length);
+  if (given.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(given, "utf8"), Buffer.from(expected, "utf8"));
+}
+
+/** Valor de un cambio `leadgen` dentro del payload del webhook (objeto `page`). */
+export interface MetaLeadgenChange {
+  leadgen_id: string;
+  page_id: string;
+  form_id?: string;
+  ad_id?: string;
+  adgroup_id?: string;
+  created_time?: number; // unix
+}
+
+export interface MetaWebhookPayload {
+  object?: string; // "page"
+  entry?: {
     id: string;
-    created_time: string;
-    ad_id?: string;
-    form_id?: string;
-    page_id?: string;
-    field_data?: { name: string; values: string[] }[];
-  }>(graphUrl(leadgenId, { access_token: accessToken, fields: "id,created_time,ad_id,form_id,page_id,field_data" }));
+    time: number;
+    changes?: { field: string; value: MetaLeadgenChange }[];
+  }[];
+}
 
-  let name = "";
-  let email: string | null = null;
-  let phone: string | null = null;
-  let companyName: string | null = null;
-  const customFields: Record<string, string> = {};
+/** Suscribe la app al campo `leadgen` de una página (requiere token de página). */
+export async function subscribePageToLeadgen(pageId: string, pageToken: string) {
+  return graphFetch<{ success: boolean }>(
+    graphUrl(`${pageId}/subscribed_apps`, { subscribed_fields: "leadgen", access_token: pageToken }),
+    { method: "POST" }
+  );
+}
 
-  let firstName = "";
-  let lastName = "";
+export interface MetaLeadField {
+  name: string;
+  values: string[];
+}
 
-  for (const field of data.field_data || []) {
-    const val = field.values?.[0] || "";
-    const key = field.name.toLowerCase();
+export interface MetaLead {
+  id: string;
+  created_time: string; // ISO 8601
+  field_data: MetaLeadField[];
+  form_id?: string;
+  ad_id?: string;
+  ad_name?: string;
+  adset_id?: string;
+  campaign_id?: string;
+  campaign_name?: string;
+  platform?: string; // "fb" | "ig"
+  is_organic?: boolean;
+}
 
-    if (key === "full_name" || key === "nombre_completo") {
-      name = val;
-    } else if (key === "first_name" || key === "nombre") {
-      firstName = val;
-    } else if (key === "last_name" || key === "apellido") {
-      lastName = val;
-    } else if (key === "email" || key === "correo_electronico" || key === "correo") {
-      email = val;
-    } else if (key === "phone_number" || key === "telefono" || key === "celular") {
-      phone = val;
-    } else if (key === "company_name" || key === "empresa" || key === "nombre_de_la_empresa") {
-      companyName = val;
-    } else {
-      customFields[field.name] = val;
-    }
-  }
+const META_LEAD_FIELDS =
+  "id,created_time,field_data,form_id,ad_id,ad_name,adset_id,campaign_id,campaign_name,platform,is_organic";
 
-  if (!name && (firstName || lastName)) {
-    name = `${firstName} ${lastName}`.trim();
-  }
-  if (!name) {
-    name = "Lead de Meta Ads";
-  }
+export async function getMetaLead(leadgenId: string, pageToken: string) {
+  return graphFetch<MetaLead>(graphUrl(leadgenId, { access_token: pageToken, fields: META_LEAD_FIELDS }));
+}
 
-  return {
-    id: data.id,
-    createdTime: data.created_time,
-    adId: data.ad_id,
-    formId: data.form_id,
-    pageId: data.page_id,
-    name,
-    email,
-    phone,
-    companyName,
-    customFields,
-  };
+export interface MetaLeadForm {
+  id: string;
+  name: string;
+  status: string; // ACTIVE, ARCHIVED, ...
+}
+
+export async function listPageLeadForms(pageId: string, pageToken: string) {
+  return graphFetchAll<MetaLeadForm>(`${pageId}/leadgen_forms`, {
+    access_token: pageToken,
+    fields: "id,name,status",
+  });
+}
+
+/** Leads de un formulario creados después de `sinceUnix` (segundos). */
+export async function listFormLeads(formId: string, pageToken: string, sinceUnix: number) {
+  return graphFetchAll<MetaLead>(`${formId}/leads`, {
+    access_token: pageToken,
+    fields: META_LEAD_FIELDS,
+    filtering: JSON.stringify([{ field: "time_created", operator: "GREATER_THAN", value: sinceUnix }]),
+  });
 }

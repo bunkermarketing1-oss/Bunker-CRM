@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ACCOUNT_STATUS, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
+import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
@@ -624,6 +625,9 @@ export default function IntegrationsPage() {
                                       {ACCOUNT_TYPE_LABELS[acc.accountType] || "Cuenta publicitaria"}
                                       {acc.externalId && ` • ID: ${acc.externalId}`}
                                     </span>
+                                    <div className="text-[10px] mt-0.5">
+                                      <PageLeadgenStatus status={acc.leadgen ?? null} />
+                                    </div>
                                   </div>
                                 </div>
 

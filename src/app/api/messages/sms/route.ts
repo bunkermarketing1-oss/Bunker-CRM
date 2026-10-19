@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { scopeFromUser } from "@/lib/tenant";
+import { validateAndNormalizePhone } from "@/lib/phone";
+import { SmsTargetError, isPhoneOptedOut, listSmsMessages, resolveManualSmsTarget } from "@/services/sms.service";
+import { sendTwilioSms } from "@/lib/integrations/twilio";
+import { ACTIVITY_TYPE } from "@/lib/constants/crm";
+import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
 
 export const dynamic = "force-dynamic";
 
@@ -9,31 +15,18 @@ export async function GET(req: NextRequest) {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
+    // Un usuario CLIENT solo ve los SMS de su empresa, sin importar el clientId que mande.
+    const scope = scopeFromUser(user!);
+    if (!scope) return NextResponse.json({ success: true, messages: [] });
+
     const { searchParams } = new URL(req.url);
-    const clientId = searchParams.get("clientId");
-    const leadId = searchParams.get("leadId");
-
-    const where: any = {
-      organizationId: user!.organizationId,
-      channel: "sms",
-    };
-
-    if (clientId) where.clientId = clientId;
-    if (leadId) where.leadId = leadId;
-
-    const messages = await prisma.message.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        client: { select: { id: true, name: true, phone: true } },
-        lead: { select: { id: true, name: true, phone: true } },
-        contact: { select: { id: true, firstName: true, phone: true } },
-      },
-      take: 100,
+    const messages = await listSmsMessages(scope, {
+      clientId: searchParams.get("clientId"),
+      leadId: searchParams.get("leadId"),
     });
 
     return NextResponse.json({ success: true, messages });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/messages/sms error:", error);
     return NextResponse.json({ success: false, error: "Error al consultar mensajes SMS." }, { status: 500 });
   }
@@ -44,11 +37,33 @@ export async function POST(req: NextRequest) {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
-    const body = await req.json().catch(() => ({}));
-    const { recipient, message, clientId, leadId, contactId } = body;
+    const scope = scopeFromUser(user!);
+    if (!scope) {
+      return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
+    }
 
-    // 1. Validation
-    if (!recipient || typeof recipient !== "string" || recipient.trim() === "") {
+    const body = await req.json().catch(() => ({}));
+    const { message } = body;
+
+    // 1. Destinatario: los IDs deben ser de la organización y un CLIENT solo escribe a los suyos
+    let target;
+    try {
+      target = await resolveManualSmsTarget(scope, {
+        recipient: typeof body.recipient === "string" ? body.recipient : null,
+        leadId: body.leadId || null,
+        clientId: body.clientId || null,
+        contactId: body.contactId || null,
+      });
+    } catch (error) {
+      if (error instanceof SmsTargetError) {
+        return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      }
+      throw error;
+    }
+    const { recipient, clientId, leadId, contactId } = target;
+
+    // 1b. Validation
+    if (!recipient || recipient.trim() === "") {
       return NextResponse.json({ success: false, error: "El número telefónico destinatario es obligatorio." }, { status: 400 });
     }
 
@@ -62,8 +77,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "El cuerpo del mensaje no puede estar vacío." }, { status: 400 });
     }
 
-    if (message.length > 480) {
-      return NextResponse.json({ success: false, error: "El mensaje supera el límite máximo de caracteres para SMS (480)." }, { status: 400 });
+    if (message.length > SMS_MAX_LENGTH) {
+      return NextResponse.json({ success: false, error: `El mensaje supera el límite máximo de caracteres para SMS (${SMS_MAX_LENGTH}).` }, { status: 400 });
     }
 
     // 2. Duplicate prevention (Look back 2 minutes for identical text to identical number within same org)
@@ -84,66 +99,33 @@ export async function POST(req: NextRequest) {
       }, { status: 429 });
     }
 
-    // 3. Provider execution check
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromPhone = process.env.TWILIO_PHONE_NUMBER;
-
-    let status = "pending";
-    let providerMsgId = null;
-    let errorMessage = null;
-
-    if (accountSid && authToken && fromPhone) {
-      try {
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-        const params = new URLSearchParams();
-        params.append("To", cleanPhone);
-        params.append("From", fromPhone);
-        params.append("Body", message.trim());
-
-        const authHeader = "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
-        const twilioResponse = await fetch(twilioUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": authHeader,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: params.toString(),
-        });
-
-        const twilioData = await twilioResponse.json();
-
-        if (twilioResponse.ok) {
-          status = "sent";
-          providerMsgId = twilioData.sid;
-        } else {
-          status = "failed";
-          errorMessage = twilioData.message || "Error devuelto por proveedor Twilio";
-        }
-      } catch (err: any) {
-        status = "failed";
-        errorMessage = err.message || "Fallo de conexión al enviar SMS";
-      }
-    } else {
-      status = "failed";
-      errorMessage = "El servicio de mensajería SMS aún no está conectado. Ve a Integraciones para activar tus claves de Twilio de forma sencilla.";
+    // 3. El número pidió no recibir SMS (respondió BAJA/STOP)
+    const normalizedRecipient = validateAndNormalizePhone(cleanPhone).normalized ?? cleanPhone;
+    if (await isPhoneOptedOut(user!.organizationId, normalizedRecipient)) {
+      return NextResponse.json(
+        { success: false, error: "Este número pidió no recibir más SMS (respondió BAJA o STOP)." },
+        { status: 409 }
+      );
     }
 
-    // 4. Save to Database with authenticated organization
+    // 4. Provider execution
+    const { status, providerMsgId, errorMessage, isDemo } = await sendTwilioSms(cleanPhone, message.trim());
+
+    // 5. Save to Database with authenticated organization
     const savedMessage = await prisma.message.create({
       data: {
         organizationId: user!.organizationId,
-        clientId: clientId || null,
-        leadId: leadId || null,
-        contactId: contactId || null,
-        channel: "sms",
-        direction: "outbound",
+        clientId,
+        leadId,
+        contactId,
+        channel: MESSAGE_CHANNEL.SMS,
+        direction: MESSAGE_DIRECTION.OUTBOUND,
         recipient: cleanPhone,
         body: message.trim(),
         status,
         providerMsgId,
         errorMessage,
-        isDemo: !accountSid,
+        isDemo,
       },
       include: {
         client: true,
@@ -151,26 +133,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 5. Log as Activity
+    // 6. Log as Activity
     if (clientId || leadId) {
       await prisma.activity.create({
         data: {
-          clientId: clientId || null,
-          leadId: leadId || null,
+          clientId,
+          leadId,
+          contactId,
           userId: user!.id,
-          type: "sms",
+          type: ACTIVITY_TYPE.SMS,
           title: `SMS enviado a ${cleanPhone}`,
           description: message.trim(),
-          outcome: status === "sent" ? "completed" : "pending",
+          outcome: status === MESSAGE_STATUS.SENT ? "completed" : "pending",
         },
       });
     }
 
     return NextResponse.json({
-      success: status === "sent",
-      message: status === "sent" ? "SMS enviado correctamente al proveedor." : errorMessage,
+      success: status === MESSAGE_STATUS.SENT,
+      message: status === MESSAGE_STATUS.SENT ? "SMS enviado correctamente al proveedor." : errorMessage,
       data: savedMessage,
-    }, { status: status === "sent" ? 200 : 400 });
+    }, { status: status === MESSAGE_STATUS.SENT ? 200 : 400 });
   } catch (error: any) {
     console.error("POST /api/messages/sms error:", error);
     return NextResponse.json({ success: false, error: "Error al procesar envío de SMS." }, { status: 500 });

@@ -9,7 +9,8 @@ import {
   clientBelongsToOrg,
   leadBelongsToOrg,
 } from "@/lib/validation-helpers";
-import { processOpportunityAutomations } from "@/services/automations.service";
+import { OPPORTUNITY_STATUS } from "@/lib/constants/crm";
+import { runOpportunityAutomations } from "@/services/opportunity-automations.service";
 
 export const dynamic = "force-dynamic";
 
@@ -219,44 +220,29 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    // Disparar automatizaciones comerciales según el cambio ocurrido
-    if (data.status === "won" && existing.status !== "won") {
+    // Si una automatización falla, la oportunidad ya quedó guardada: no se revierte el cambio
+    const event =
+      data.status === OPPORTUNITY_STATUS.WON && existing.status !== OPPORTUNITY_STATUS.WON
+        ? "deal_won"
+        : data.stageId && data.stageId !== existing.stageId
+          ? "stage_changed"
+          : null;
+    if (event) {
       try {
-        await processOpportunityAutomations({
+        await runOpportunityAutomations({
+          organizationId: user!.organizationId,
+          userId: user!.id,
+          event,
           opportunity: {
             id: opportunity.id,
             title: opportunity.title,
-            status: opportunity.status,
-            stageId: opportunity.stageId,
             stageName: opportunity.stage?.name,
             clientId: opportunity.clientId,
             leadId: opportunity.leadId,
           },
-          event: "deal_won",
-          organizationId: user!.organizationId,
-          userId: user!.id,
         });
       } catch (autoErr) {
-        console.error("Error al disparar automatización de deal_won:", autoErr);
-      }
-    } else if (data.stageId && data.stageId !== existing.stageId) {
-      try {
-        await processOpportunityAutomations({
-          opportunity: {
-            id: opportunity.id,
-            title: opportunity.title,
-            status: opportunity.status,
-            stageId: opportunity.stageId,
-            stageName: opportunity.stage?.name,
-            clientId: opportunity.clientId,
-            leadId: opportunity.leadId,
-          },
-          event: "stage_changed",
-          organizationId: user!.organizationId,
-          userId: user!.id,
-        });
-      } catch (autoErr) {
-        console.error("Error al disparar automatización de stage_changed:", autoErr);
+        console.error(`Error en automatizaciones de ${event}:`, autoErr);
       }
     }
 

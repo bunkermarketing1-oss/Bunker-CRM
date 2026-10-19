@@ -1,110 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { toggleRuleStatus, updateAutomationRule } from "@/services/automations.service";
-import { updateAutomationRuleSchema } from "@/lib/validations/automation";
-import { prisma } from "@/lib/prisma";
+import { updateSmsAutomationSchema } from "@/lib/validations/automation";
+import {
+  AutomationClientNotFoundError,
+  deleteSmsAutomation,
+  updateSmsAutomation,
+} from "@/services/automations.service";
 
 export const dynamic = "force-dynamic";
 
-/**
- * PATCH /api/automations/[id]
- * Modifica o activa/desactiva una regla existente de la organización.
- */
+const NOT_FOUND = "Automatización no encontrada.";
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const { user, errorResponse } = await requireAdmin(req);
+  if (errorResponse) return errorResponse;
+
+  const parsed = updateSmsAutomationSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || "Datos inválidos." }, { status: 400 });
+  }
+
   try {
-    const { user, errorResponse } = await requireAdmin(req);
-    if (errorResponse) return errorResponse;
-
-    const body = await req.json().catch(() => ({}));
-
-    // Si solo viene { isActive: boolean }, toggle directo
-    if (typeof body.isActive === "boolean" && Object.keys(body).length === 1) {
-      const updated = await toggleRuleStatus(
-        user!.organizationId,
-        params.id,
-        body.isActive,
-        user!.id
-      );
-
-      if (!updated) {
-        return NextResponse.json(
-          { success: false, error: "Regla de automatización no encontrada." },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({ success: true, rule: updated });
-    }
-
-    // Validación completa con Zod si se actualizan más campos
-    const parseResult = updateAutomationRuleSchema.safeParse(body);
-    if (!parseResult.success) {
-      const fieldErrors = parseResult.error.flatten().fieldErrors;
-      const firstError = Object.values(fieldErrors)[0]?.[0] || "Datos inválidos";
-      return NextResponse.json({ success: false, error: firstError, fieldErrors }, { status: 400 });
-    }
-
-    const updated = await updateAutomationRule(
-      user!.organizationId,
-      params.id,
-      parseResult.data,
-      user!.id
-    );
-
-    if (!updated) {
-      return NextResponse.json(
-        { success: false, error: "Regla de automatización no encontrada." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, rule: updated });
+    const automation = await updateSmsAutomation(user!.organizationId, user!.id, params.id, parsed.data);
+    if (!automation) return NextResponse.json({ success: false, error: NOT_FOUND }, { status: 404 });
+    return NextResponse.json({ success: true, automation });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al actualizar regla";
+    if (error instanceof AutomationClientNotFoundError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
     console.error("PATCH /api/automations/[id] error:", error);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al actualizar la automatización." }, { status: 500 });
   }
 }
 
-/**
- * DELETE /api/automations/[id]
- * Elimina una regla perteneciente a la organización del usuario.
- */
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const { user, errorResponse } = await requireAdmin(req);
+  if (errorResponse) return errorResponse;
+
   try {
-    const { user, errorResponse } = await requireAdmin(req);
-    if (errorResponse) return errorResponse;
-
-    const rule = await prisma.automationRule.findFirst({
-      where: { id: params.id, organizationId: user!.organizationId },
-    });
-
-    if (!rule) {
-      return NextResponse.json(
-        { success: false, error: "Regla no encontrada en su organización." },
-        { status: 404 }
-      );
-    }
-
-    await prisma.automationRule.delete({
-      where: { id: rule.id },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        organizationId: user!.organizationId,
-        userId: user!.id,
-        action: "automation_rule_deleted",
-        entityType: "AutomationRule",
-        entityId: rule.id,
-        detailsJson: JSON.stringify({ name: rule.name }),
-      },
-    });
-
-    return NextResponse.json({ success: true, message: "Regla eliminada exitosamente." });
+    const deleted = await deleteSmsAutomation(user!.organizationId, user!.id, params.id);
+    if (!deleted) return NextResponse.json({ success: false, error: NOT_FOUND }, { status: 404 });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al eliminar regla";
     console.error("DELETE /api/automations/[id] error:", error);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error al eliminar la automatización." }, { status: 500 });
   }
 }

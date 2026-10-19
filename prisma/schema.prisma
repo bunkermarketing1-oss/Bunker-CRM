@@ -29,6 +29,7 @@ model User {
   auditLogs    AuditLog[]
   leads        Lead[]               @relation("LeadOwner")
   clients      Client[]             @relation("ClientOwner")
+  calls        Call[]
 }
 
 model Organization {
@@ -52,6 +53,9 @@ model Organization {
   campaigns         Campaign[]
   automationRules   AutomationRule[]
   auditLogs         AuditLog[]
+  metaLeadEvents    MetaLeadEvent[]
+  phoneLines        PhoneLine[]
+  calls             Call[]
 }
 
 model OrganizationMember {
@@ -96,6 +100,9 @@ model Client {
   tasks          Task[]
   messages       Message[]
   connectedAccounts ConnectedAccount[]
+  automationRules   AutomationRule[]
+  phoneLines        PhoneLine[]
+  calls             Call[]
 }
 
 model Contact {
@@ -133,6 +140,10 @@ model Lead {
   source         String       @default("website") // website, referral, meta_ads, google_ads, manual, etc.
   campaign       String?
   externalLeadId String?
+  externalFormId     String? // Formulario de Meta Lead Ads que originó el lead
+  externalAdId       String?
+  externalCampaignId String?
+  smsOptOutAt        DateTime? // El lead pidió no recibir SMS (respondió BAJA/STOP)
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?
@@ -156,6 +167,11 @@ model Lead {
   activities     Activity[]
   tasks          Task[]
   messages       Message[]
+  metaLeadEvents MetaLeadEvent[]
+  calls          Call[]
+
+  // Evita duplicados cuando Meta reintenta el webhook o el cron recupera el mismo lead.
+  @@unique([organizationId, externalLeadId])
 }
 
 model PipelineStage {
@@ -302,6 +318,9 @@ model Message {
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([providerMsgId]) // callbacks de estado de Twilio
+  @@index([recipient, createdAt]) // asociar respuestas entrantes al último envío
 }
 
 model SocialPost {
@@ -375,6 +394,7 @@ model CampaignMetric {
 model AutomationRule {
   id             String       @id @default(uuid())
   organizationId String
+  clientId       String?      // null = aplica a los leads de todos los clientes
   name           String
   triggerEvent   String       // lead_created, status_changed, deal_won
   conditionJson  String?
@@ -387,6 +407,89 @@ model AutomationRule {
   updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, triggerEvent, isActive])
+}
+
+// Número de Twilio registrado en el CRM ("línea"). Las llamadas a leads de un cliente salen
+// por su línea; las entrantes a ese número timbran a sus asesores.
+model PhoneLine {
+  id             String       @id @default(uuid())
+  organizationId String
+  clientId       String?
+  phoneNumber    String       @unique // E.164
+  label          String
+  recordCalls    Boolean      @default(false)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  calls          Call[]
+
+  @@index([organizationId])
+}
+
+// Llamada de voz. Las salientes son una conferencia de Twilio (`conferenceName`) con el
+// asesor y el lead, para que un supervisor pueda entrar a escuchar.
+model Call {
+  id              String       @id @default(uuid())
+  organizationId  String
+  clientId        String?
+  leadId          String?
+  userId          String?      // asesor que llamó o contestó
+  lineId          String?
+  direction       String       // outbound, inbound
+  fromNumber      String
+  toNumber        String
+  status          String       @default("initiated") // initiated, ringing, in_progress, completed, busy, no_answer, failed, canceled
+  conferenceName  String?      @unique
+  agentCallSid    String?      // pierna del asesor (navegador)
+  customerCallSid String?      // pierna del lead
+  durationSec     Int?
+  recordingSid    String?
+  recordingUrl    String?
+  answeredAt      DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  lead            Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  line            PhoneLine?   @relation(fields: [lineId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([customerCallSid])
+  @@index([agentCallSid])
+}
+
+// Evento `leadgen` recibido de Meta (webhook o recuperado por el cron). Se guarda antes de
+// procesarlo para poder reintentar los que fallen y auditar lo que mandó Meta.
+model MetaLeadEvent {
+  id             String        @id @default(uuid())
+  organizationId String?       // null si la página no está conectada a ninguna organización
+  leadgenId      String        @unique
+  pageId         String
+  formId         String?
+  adId           String?
+  payloadJson    String
+  status         String        @default("received") // received, processed, failed, ignored
+  attempts       Int           @default(0)
+  errorMessage   String?
+  leadId         String?
+  processedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead           Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([status])
 }
 
 model AuditLog {
