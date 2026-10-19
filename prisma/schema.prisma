@@ -56,6 +56,7 @@ model Organization {
   metaLeadEvents    MetaLeadEvent[]
   phoneLines        PhoneLine[]
   calls             Call[]
+  smsOptOuts        SmsOptOut[]
 }
 
 model OrganizationMember {
@@ -143,7 +144,7 @@ model Lead {
   externalFormId     String? // Formulario de Meta Lead Ads que originó el lead
   externalAdId       String?
   externalCampaignId String?
-  smsOptOutAt        DateTime? // El lead pidió no recibir SMS (respondió BAJA/STOP)
+  smsOptOutAt        DateTime? // Solo para mostrar: la baja vigente vive en SmsOptOut (por número, global)
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?
@@ -308,10 +309,11 @@ model Message {
   recipient      String
   body           String
   status         String       @default("pending") // pending, sent, delivered, failed, unknown
-  providerMsgId  String?
+  providerMsgId  String?      @unique // SID de Twilio: un reintento del webhook no duplica el mensaje
   errorMessage   String?
   deliveredAt    DateTime?
   isDemo         Boolean      @default(false)
+  bulkBatchId    String? // Clave del envío masivo que lo generó (idempotencia por lote)
   createdAt      DateTime     @default(now())
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -319,8 +321,21 @@ model Message {
   lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
-  @@index([providerMsgId]) // callbacks de estado de Twilio
   @@index([recipient, createdAt]) // asociar respuestas entrantes al último envío
+  // Un número recibe a lo sumo un SMS por lote, aunque el lote se ejecute dos veces a la vez.
+  @@unique([organizationId, bulkBatchId, recipient])
+}
+
+// Baja de SMS de un número. Es global porque el número de Twilio lo comparten todas las
+// organizaciones: quien respondió BAJA no debe recibir SMS de ningún cliente.
+model SmsOptOut {
+  id             String        @id @default(uuid())
+  phone          String        @unique // E.164
+  optedOutAt     DateTime      @default(now())
+  keyword        String // palabra con la que se dio de baja (normalizada)
+  organizationId String? // organización de la conversación donde se pidió (trazabilidad)
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 }
 
 model SocialPost {
