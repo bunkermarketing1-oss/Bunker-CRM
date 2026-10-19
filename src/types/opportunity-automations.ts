@@ -16,6 +16,8 @@ export interface OpportunityAutomationResult {
 }
 
 export interface StaleLeadsCheckResult {
+  rulesEvaluated: number;
+  /** Leads estancados encontrados (cada uno recibe una tarea). */
   leadsAnalyzed: number;
   tasksCreated: number;
   details: Array<{
@@ -24,4 +26,11 @@ export interface StaleLeadsCheckResult {
     daysInactive: number;
     taskId: string;
   }>;
+}
+
+/** Resumen del barrido programado de estancados sobre todas las organizaciones. */
+export interface StaleLeadsCronSummary {
+  organizations: number;
+  tasksCreated: number;
+  errors: Array<{ organizationId: string; error: string }>;
 }

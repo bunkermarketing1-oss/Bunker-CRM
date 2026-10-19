@@ -38,6 +38,7 @@
     "test:sms-inbound": "node tests/sms-inbound-suite.js",
     "test:twilio-voice": "node --experimental-strip-types --no-warnings --test tests/twilio-voice.test.mjs",
     "test:voice-policy": "node --experimental-strip-types --no-warnings --test tests/voice-policy.test.mjs",
+    "test:task-rules": "node --experimental-strip-types --no-warnings --test tests/task-rules.test.mjs",
     "test:calls": "node tests/calls-suite.js",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
