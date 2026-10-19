@@ -1,6 +1,7 @@
 // tests/calls-suite.js
 // Llamadas: solo Twilio (firma válida) controla las llamadas, un asesor solo llama a leads de
 // su empresa, solo Bunker puede escuchar en vivo, y las líneas son solo de admin.
+// La escucha del dueño del cliente (CLIENT_OWNER) se prueba en tests/live-view-suite.js.
 // Uso: TEST_BASE_URL=http://127.0.0.1:3005 node tests/calls-suite.js
 // Requiere la migración 20261016200000_voice_calls aplicada y un servidor corriendo con el
 // mismo TWILIO_AUTH_TOKEN y NEXT_PUBLIC_APP_URL que este .env.
