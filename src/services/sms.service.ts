@@ -5,6 +5,7 @@ import { validateAndNormalizePhone } from "@/lib/phone";
 import { mapTwilioStatus, sendTwilioSms } from "@/lib/integrations/twilio";
 import { isOptInMessage, isOptOutMessage, normalizeSmsKeyword } from "@/lib/integrations/twilio-webhook";
 import { firstNameOf, renderSmsTemplate } from "@/lib/automations/sms-template";
+import { replyOutOfHoursWithAi, type AiReplyOutcome } from "@/services/ai-reply.service";
 import { planBulkRecipients, resolveReplyTarget, shouldApplyStatus, smsDedupKey, type ReplyTarget } from "@/lib/messaging/sms-rules";
 import { ACTIVITY_OUTCOME, ACTIVITY_TYPE } from "@/lib/constants/crm";
 import {
@@ -164,6 +165,8 @@ export interface InboundSmsOutcome {
   optedOut: boolean;
   /** Se quitó una baja vigente (START/ALTA). */
   optedIn: boolean;
+  /** null = no se evaluó (número desconocido) o el asistente falló. */
+  aiReply: AiReplyOutcome | null;
 }
 
 /**
@@ -266,9 +269,27 @@ export async function recordInboundSms(sms: InboundSms): Promise<InboundSmsOutco
   };
   const optedOut = isOptOutMessage(sms.body);
   if (optedOut) await recordOptOut(ctx);
-  const optedIn = !optedOut && isOptInMessage(sms.body) ? await recordOptIn(ctx) : false;
+  const isOptIn = !optedOut && isOptInMessage(sms.body);
+  const optedIn = isOptIn ? await recordOptIn(ctx) : false;
 
-  return { matched: Boolean(target), duplicate, optedOut, optedIn };
+  const aiReply = target ? await tryAiReply(sms, target, duplicate, optedOut || isOptIn) : null;
+  return { matched: Boolean(target), duplicate, optedOut, optedIn, aiReply };
+}
+
+/**
+ * Respuesta de IA fuera de horario. Nunca lanza: el SMS entrante ya quedó guardado y un
+ * 5xx haría que Twilio reintente (el reintento llega como duplicado y no se contesta).
+ */
+async function tryAiReply(sms: InboundSms, target: ReplyTarget, duplicate: boolean, isKeyword: boolean) {
+  try {
+    // La baja se consulta solo si hay algo que contestar: ahorra una consulta por SMS.
+    const mayReply = !duplicate && !isKeyword && !target.ambiguous && Boolean(target.leadId && target.clientId);
+    const optedOut = mayReply ? await isPhoneOptedOut(sms.from) : false;
+    return await replyOutOfHoursWithAi({ from: sms.from, body: sms.body, target, duplicate, isKeyword, optedOut });
+  } catch (error) {
+    console.error("Asistente IA: no se pudo procesar la respuesta automática.", error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 /**
