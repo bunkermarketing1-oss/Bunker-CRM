@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
   const { user } = useAuth();
   const { language } = useLanguage();
   const isClient = Boolean(user?.isClientUser);
-  const sections = navigationFor(isClient);
+  const sections = navigationFor(user);
 
   // En móvil el menú es un panel superpuesto: al navegar debe cerrarse solo.
   useEffect(() => {

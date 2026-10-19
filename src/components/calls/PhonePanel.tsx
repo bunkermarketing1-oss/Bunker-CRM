@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Mic, MicOff, Phone, PhoneIncoming, PhoneOff } from "lucide-react";
 import { MONITOR_MODE } from "@/lib/constants/voice";
 import type { ActiveCallInfo, IncomingCallInfo, VoicePhase } from "@/hooks/useVoiceDevice";
 import type { CallableLead } from "@/hooks/useCallableLeads";
+import { useElapsed } from "@/hooks/useElapsed";
 
 interface PhonePanelProps {
   phase: VoicePhase;
@@ -17,18 +18,6 @@ interface PhonePanelProps {
   onToggleMute: () => void;
   onAccept: () => void;
   onReject: () => void;
-}
-
-function useElapsed(startedAt: number | null) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!startedAt) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [startedAt]);
-  if (!startedAt) return null;
-  const seconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 const PHASE_LABEL: Record<VoicePhase, string> = {

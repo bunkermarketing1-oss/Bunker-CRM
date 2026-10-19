@@ -35,7 +35,16 @@ async function fetchToken(): Promise<{ token: string } | { error: string }> {
  * Teléfono del navegador (Twilio Voice SDK): registra el dispositivo, hace y recibe
  * llamadas, y renueva el token antes de que expire. El SDK se carga solo en el cliente.
  */
-export function useVoiceDevice({ onCallEnded }: { onCallEnded?: () => void } = {}) {
+export interface UseVoiceDeviceOptions {
+  onCallEnded?: () => void;
+  /**
+   * false = solo para salir (p. ej. escuchar desde la vista del equipo): no registra el
+   * dispositivo, así las entrantes no timbran en una pantalla que no tiene cómo contestarlas.
+   */
+  receiveIncoming?: boolean;
+}
+
+export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoiceDeviceOptions = {}) {
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
   const incomingRef = useRef<Call | null>(null);
@@ -119,6 +128,11 @@ export function useVoiceDevice({ onCallEnded }: { onCallEnded?: () => void } = {
         call.on("reject", clearIncoming);
       });
 
+      // Las salientes (`connect`) no necesitan registro; solo recibir llamadas lo necesita.
+      if (!receiveIncoming) {
+        setPhase("ready");
+        return;
+      }
       try {
         await device.register();
         if (!cancelled) setPhase("ready");
@@ -133,7 +147,7 @@ export function useVoiceDevice({ onCallEnded }: { onCallEnded?: () => void } = {
       deviceRef.current?.destroy();
       deviceRef.current = null;
     };
-  }, []);
+  }, [receiveIncoming]);
 
   const callLead = useCallback(
     async (leadId: string, label: string) => {

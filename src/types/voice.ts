@@ -21,7 +21,7 @@ export interface CallSummary {
 export interface CallsResponse {
   success: true;
   calls: CallSummary[];
-  /** Solo para admin: salientes en curso que se pueden escuchar. */
+  /** Solo para admin y dueño del cliente: salientes en curso que se pueden escuchar. */
   liveCalls: CallSummary[];
 }
 

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isBunkerRole, ROLES } from "@/lib/auth";
+import { canMonitorCall, ROLES } from "@/lib/roles";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import {
   addConferenceParticipant,
@@ -269,11 +269,14 @@ export async function listCalls(scope: TenantScope) {
   return calls.map(toCallSummary);
 }
 
-/** Llamadas salientes en curso de la organización: las que un supervisor puede escuchar. */
-export async function listLiveCalls(organizationId: string) {
+/**
+ * Llamadas salientes en curso que un supervisor puede escuchar: toda la organización para
+ * Bunker, solo su empresa para el dueño de un cliente (scope forzado por la ruta).
+ */
+export async function listLiveCalls(scope: TenantScope) {
   const calls = await prisma.call.findMany({
     where: {
-      organizationId,
+      ...scopeWhere(scope),
       direction: CALL_DIRECTION.OUTBOUND,
       status: { in: LIVE_CALL_STATUSES },
       agentCallSid: { not: null },
@@ -426,11 +429,15 @@ async function joinAsSupervisor(userId: string, callId: string, mode: MonitorMod
     prisma.call.findUnique({ where: { id: callId } }),
   ]);
 
-  const isBunkerAdmin =
-    supervisor?.isActive && isBunkerRole(supervisor.role) && !supervisor.clientId &&
-    supervisor.memberships.some((m) => m.organizationId === call?.organizationId);
+  // Admin de la organización o dueño del cliente de la llamada; un asesor nunca (lib/roles.ts).
+  const canMonitor =
+    supervisor && call &&
+    canMonitorCall(
+      { ...supervisor, organizationIds: supervisor.memberships.map((m) => m.organizationId) },
+      { organizationId: call.organizationId, clientId: call.clientId }
+    );
   const isLive = call && LIVE_CALL_STATUSES.includes(call.status as CallStatus) && call.conferenceName && call.agentCallSid;
-  if (!isBunkerAdmin || !isLive || !Object.values(MONITOR_MODE).includes(mode)) return sayTwiml(CALL_ERROR_TEXT);
+  if (!canMonitor || !isLive || !Object.values(MONITOR_MODE).includes(mode)) return sayTwiml(CALL_ERROR_TEXT);
 
   await prisma.auditLog.create({
     data: {
@@ -439,7 +446,8 @@ async function joinAsSupervisor(userId: string, callId: string, mode: MonitorMod
       action: "call_monitored",
       entityType: "Call",
       entityId: call.id,
-      detailsJson: JSON.stringify({ mode, supervisorCallSid }),
+      // El rol deja constancia de si escuchó Bunker o el dueño del cliente (revisión legal).
+      detailsJson: JSON.stringify({ mode, supervisorCallSid, supervisorRole: supervisor.role, clientId: call.clientId }),
     },
   });
 

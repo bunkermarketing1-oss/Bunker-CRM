@@ -15,6 +15,7 @@ export const ROUTES = {
   CONTENT_CALENDAR: "/marketing/calendar",
   SMS: "/messaging/sms",
   CALLS: "/messaging/calls",
+  TEAM_LIVE: "/team/live",
   AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
 } as const;

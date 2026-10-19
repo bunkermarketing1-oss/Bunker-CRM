@@ -45,7 +45,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <CommandPalette
         isOpen={isSearchOpen}
         onClose={closeSearch}
-        sections={navigationFor(isClient)}
+        sections={navigationFor(user)}
         language={language}
         onOpenAiModal={isClient ? undefined : openAiModal}
       />

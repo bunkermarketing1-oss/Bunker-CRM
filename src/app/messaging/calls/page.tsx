@@ -16,6 +16,8 @@ import { useVoiceDevice } from "@/hooks/useVoiceDevice";
 export default function CallsPage() {
   const { user } = useAuth();
   const isAdmin = Boolean(user && !user.isClientUser);
+  // El dueño del cliente también escucha las llamadas de su empresa; la API ya filtra el scope.
+  const canSupervise = isAdmin || Boolean(user?.isClientOwner);
   const { calls, liveCalls, loading, refresh } = useCalls();
   const leads = useCallableLeads();
   const clients = useClientOptions();
@@ -44,7 +46,7 @@ export default function CallsPage() {
             onAccept={voice.acceptIncoming}
             onReject={voice.rejectIncoming}
           />
-          {isAdmin && <LiveCallsPanel calls={liveCalls} canJoin={voice.phase === "ready"} onMonitor={voice.monitor} />}
+          {canSupervise && <LiveCallsPanel calls={liveCalls} canJoin={voice.phase === "ready"} onMonitor={voice.monitor} />}
           {isAdmin && (
             <PhoneLinesPanel lines={phoneLines.lines} clients={clients} onCreate={phoneLines.create} onUpdate={phoneLines.update} />
           )}
