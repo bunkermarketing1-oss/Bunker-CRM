@@ -3,7 +3,8 @@ import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
 import { isPhoneOptedOut } from "@/services/sms.service";
 import { firstNameOf, renderSmsTemplate } from "@/lib/automations/sms-template";
-import { AUTOMATION_ACTION, AUTOMATION_TRIGGER } from "@/lib/constants/automations";
+import { pickLeadCreatedSmsRule } from "@/lib/automations/sms-rule-selection";
+import { AUTOMATION_ACTION, AUTOMATION_TRIGGER, LEAD_SMS_DEDUPE_WINDOW_HOURS } from "@/lib/constants/automations";
 import { ACTIVITY_TYPE } from "@/lib/constants/crm";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
 import type { LeadSource } from "@/lib/validations/lead";
@@ -159,9 +160,34 @@ export async function deleteSmsAutomation(organizationId: string, userId: string
 }
 
 /**
- * Ejecuta las reglas "lead nuevo → SMS" que aplican al lead: las de su cliente y las
- * generales, filtradas por fuente. Se llama solo al crear el lead, así un reintento no
- * reenvía el SMS. Nunca lanza: un SMS fallido no debe impedir que el lead exista.
+ * ¿Ya se le mandó un SMS a este lead, o a su teléfono dentro de la ventana de
+ * `LEAD_SMS_DEDUPE_WINDOW_HOURS`? Lo primero hace idempotente el reintento de un evento de
+ * Meta (el lead ya existía pero el proceso murió antes o después del envío); lo segundo evita
+ * repetir el saludo a quien llena dos formularios. Los envíos `failed` no cuentan para la
+ * ventana: si Twilio rechazó el primero, el segundo formulario es otra oportunidad.
+ */
+async function hasRecentLeadSms(lead: { id: string; organizationId: string; normalizedPhone: string }) {
+  const since = new Date(Date.now() - LEAD_SMS_DEDUPE_WINDOW_HOURS * 60 * 60 * 1000);
+  const previous = await prisma.message.findFirst({
+    where: {
+      organizationId: lead.organizationId,
+      channel: MESSAGE_CHANNEL.SMS,
+      direction: MESSAGE_DIRECTION.OUTBOUND,
+      OR: [
+        { leadId: lead.id },
+        { recipient: lead.normalizedPhone, createdAt: { gte: since }, status: { not: MESSAGE_STATUS.FAILED } },
+      ],
+    },
+    select: { id: true },
+  });
+  return Boolean(previous);
+}
+
+/**
+ * Ejecuta la regla "lead nuevo → SMS" que aplica al lead: como máximo un SMS, con la regla
+ * de su cliente por encima de la general (ver `pickLeadCreatedSmsRule`). Es seguro llamarla
+ * más de una vez para el mismo lead (`hasRecentLeadSms`). Nunca lanza: un SMS fallido no debe
+ * impedir que el lead exista.
  */
 export async function runLeadCreatedAutomations(leadId: string) {
   try {
@@ -180,7 +206,9 @@ export async function runLeadCreatedAutomations(leadId: string) {
     });
     // Sin teléfono normalizado (E.164) Twilio rechazaría el envío.
     if (!lead?.normalizedPhone) return 0;
-    if (await isPhoneOptedOut(lead.organizationId, lead.normalizedPhone)) return 0;
+    const phone = lead.normalizedPhone;
+    if (await isPhoneOptedOut(lead.organizationId, phone)) return 0;
+    if (await hasRecentLeadSms({ id: lead.id, organizationId: lead.organizationId, normalizedPhone: phone })) return 0;
 
     const rules = await prisma.automationRule.findMany({
       where: {
@@ -188,57 +216,56 @@ export async function runLeadCreatedAutomations(leadId: string) {
         isActive: true,
         OR: [{ clientId: null }, ...(lead.clientId ? [{ clientId: lead.clientId }] : [])],
       },
-      select: { id: true, name: true, conditionJson: true, actionPayload: true },
+      select: { id: true, name: true, clientId: true, conditionJson: true, actionPayload: true, createdAt: true },
     });
+    const rule = pickLeadCreatedSmsRule(
+      rules.map((r) => ({
+        ...r,
+        sources: parseJson<SmsCondition>(r.conditionJson).sources ?? [],
+        template: parseJson<SmsPayload>(r.actionPayload).template,
+      })),
+      { clientId: lead.clientId, source: lead.source }
+    );
+    if (!rule?.template) return 0;
 
-    let sent = 0;
-    for (const rule of rules) {
-      const sources = parseJson<SmsCondition>(rule.conditionJson).sources ?? [];
-      if (sources.length && !sources.includes(lead.source as LeadSource)) continue;
+    const body = renderSmsTemplate(rule.template, {
+      nombre: firstNameOf(lead.name),
+      nombre_completo: lead.name,
+      cliente: lead.client?.name,
+      campana: lead.campaign,
+    });
+    const result = await sendTwilioSms(phone, body);
 
-      const template = parseJson<SmsPayload>(rule.actionPayload).template;
-      if (!template) continue;
-
-      const body = renderSmsTemplate(template, {
-        nombre: firstNameOf(lead.name),
-        nombre_completo: lead.name,
-        cliente: lead.client?.name,
-        campana: lead.campaign,
-      });
-      const result = await sendTwilioSms(lead.normalizedPhone, body);
-
-      await prisma.message.create({
-        data: {
-          organizationId: lead.organizationId,
-          clientId: lead.clientId,
-          leadId: lead.id,
-          channel: MESSAGE_CHANNEL.SMS,
-          direction: MESSAGE_DIRECTION.OUTBOUND,
-          recipient: lead.normalizedPhone,
-          body,
-          status: result.status,
-          providerMsgId: result.providerMsgId,
-          errorMessage: result.errorMessage,
-          isDemo: result.isDemo,
-        },
-      });
-      await prisma.activity.create({
-        data: {
-          clientId: lead.clientId,
-          leadId: lead.id,
-          type: ACTIVITY_TYPE.SMS,
-          title: `SMS automático: ${rule.name}`,
-          description: body,
-          outcome: result.status === MESSAGE_STATUS.SENT ? "completed" : "pending",
-        },
-      });
-      await prisma.automationRule.update({
-        where: { id: rule.id },
-        data: { executionCount: { increment: 1 }, lastRunAt: new Date() },
-      });
-      if (result.status === MESSAGE_STATUS.SENT) sent++;
-    }
-    return sent;
+    await prisma.message.create({
+      data: {
+        organizationId: lead.organizationId,
+        clientId: lead.clientId,
+        leadId: lead.id,
+        channel: MESSAGE_CHANNEL.SMS,
+        direction: MESSAGE_DIRECTION.OUTBOUND,
+        recipient: phone,
+        body,
+        status: result.status,
+        providerMsgId: result.providerMsgId,
+        errorMessage: result.errorMessage,
+        isDemo: result.isDemo,
+      },
+    });
+    await prisma.activity.create({
+      data: {
+        clientId: lead.clientId,
+        leadId: lead.id,
+        type: ACTIVITY_TYPE.SMS,
+        title: `SMS automático: ${rule.name}`,
+        description: body,
+        outcome: result.status === MESSAGE_STATUS.SENT ? "completed" : "pending",
+      },
+    });
+    await prisma.automationRule.update({
+      where: { id: rule.id },
+      data: { executionCount: { increment: 1 }, lastRunAt: new Date() },
+    });
+    return result.status === MESSAGE_STATUS.SENT ? 1 : 0;
   } catch (error) {
     console.error(`Automatizaciones del lead ${leadId} fallaron:`, error);
     return 0;

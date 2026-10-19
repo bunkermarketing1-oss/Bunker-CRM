@@ -37,6 +37,12 @@ export const STALE_LEADS_BATCH_SIZE = 100;
 /** Prefijo de las tareas de reactivación: identifica las pendientes y evita duplicarlas. */
 export const STALE_LEAD_TASK_PREFIX = "Reactivación de prospecto estancado";
 
+/**
+ * Ventana en la que no se repite el SMS automático a un mismo teléfono: quien llena dos
+ * formularios (o el mismo dos veces) en un día recibe un solo mensaje.
+ */
+export const LEAD_SMS_DEDUPE_WINDOW_HOURS = 24;
+
 /** Variables que acepta la plantilla de SMS: `{{nombre}}` → valor. */
 export const SMS_TEMPLATE_VARIABLES = {
   nombre: "Primer nombre del lead",
