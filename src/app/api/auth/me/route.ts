@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
         clientId: user.clientId,
         clientName: user.clientName,
         isClientUser: user.isClientUser,
+        isClientOwner: user.isClientOwner,
         organizationId: user.organizationId,
         organizationName: user.organizationName,
         organizationSlug: user.organizationSlug,

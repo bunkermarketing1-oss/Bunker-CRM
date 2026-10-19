@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
   try {
     const [calls, liveCalls] = await Promise.all([
       listCalls(scope),
-      // La escucha en vivo es solo de Bunker por ahora.
-      user!.isClientUser ? Promise.resolve([]) : listLiveCalls(scope.organizationId),
+      // Escuchar es de Bunker y del dueño del cliente (scope ya forzado a su empresa); un asesor no.
+      user!.isClientUser && !user!.isClientOwner ? Promise.resolve([]) : listLiveCalls(scope),
     ]);
     return NextResponse.json({ success: true, calls, liveCalls });
   } catch (error) {

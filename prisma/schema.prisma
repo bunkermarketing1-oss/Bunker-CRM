@@ -14,7 +14,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
-  role         String   @default("ADMIN") // Only two functional roles: ADMIN (Bunker Agency internal), CLIENT (Client commercial portal)
+  role         String   @default("ADMIN") // ADMIN (Bunker), CLIENT (asesor del portal) o CLIENT_OWNER (dueño del cliente: supervisa a sus asesores). Ver src/lib/roles.ts
   clientId     String?
   avatarUrl    String?
   isActive     Boolean  @default(true)

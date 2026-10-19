@@ -10,6 +10,7 @@ import {
   MessageSquare,
   PhoneCall,
   Plug,
+  Radio,
   Settings,
   Share2,
   Sparkles,
@@ -60,6 +61,12 @@ export const CLIENT_NAVIGATION: NavSection[] = [
   },
 ];
 
+/** Solo para el dueño del cliente: supervisión de sus asesores. Un asesor no la ve. */
+const OWNER_NAVIGATION_SECTION: NavSection = {
+  title: { es: "Mi Equipo", en: "My Team" },
+  items: [{ href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Equipo en vivo", en: "Live Team" } }],
+};
+
 export const ADMIN_NAVIGATION: NavSection[] = [
   {
     title: { es: "Operaciones & CRM", en: "Operations & CRM" },
@@ -90,6 +97,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
       { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamadas & Líneas", en: "Calls & Lines" } },
+      { href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Asesores en vivo", en: "Live Advisors" } },
       {
         href: ROUTES.AUTOMATIONS,
         icon: Workflow,
@@ -106,8 +114,15 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   },
 ];
 
-export function navigationFor(isClient: boolean): NavSection[] {
-  return isClient ? CLIENT_NAVIGATION : ADMIN_NAVIGATION;
+export interface NavigationRole {
+  isClientUser?: boolean;
+  isClientOwner?: boolean;
+}
+
+/** Menú de la sesión. Ocultar un enlace no es la seguridad: la API también responde 403. */
+export function navigationFor(user: NavigationRole | null | undefined): NavSection[] {
+  if (!user?.isClientUser) return ADMIN_NAVIGATION;
+  return user.isClientOwner ? [...CLIENT_NAVIGATION, OWNER_NAVIGATION_SECTION] : CLIENT_NAVIGATION;
 }
 
 /** El dashboard solo se marca activo en su ruta exacta; el resto también en sus subrutas. */

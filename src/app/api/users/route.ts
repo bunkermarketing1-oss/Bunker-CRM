@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireAdmin, normalizeRole, ROLES } from "@/lib/auth";
+import { requireAuth, requireAdmin } from "@/lib/auth";
+import { ROLES, isClientRole, isRoleAllowedForUser } from "@/lib/roles";
+import { createUserRoleSchema, updateUserSchema, USER_ACTION } from "@/lib/validations/users";
+import { updateUserAccess, UserAccessError } from "@/services/users.service";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
@@ -104,11 +107,15 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanRole = normalizeRole(role || (clientId ? "CLIENT" : "ADMIN"));
+    const parsedRole = createUserRoleSchema.safeParse(role || undefined);
+    if (!parsedRole.success) {
+      return NextResponse.json({ success: false, error: "Rol inválido." }, { status: 400 });
+    }
+    const cleanRole = parsedRole.data ?? (clientId ? ROLES.CLIENT : ROLES.ADMIN);
 
-    // If creating a Client Portal user, clientId is mandatory and must belong to this org
+    // If creating a Client Portal user (asesor o dueño), clientId is mandatory and must belong to this org
     let targetClientId: string | null = null;
-    if (cleanRole === "CLIENT") {
+    if (isClientRole(cleanRole)) {
       if (!clientId || typeof clientId !== "string") {
         return NextResponse.json(
           { success: false, error: "Debe especificar el cliente (empresa) al que pertenecerá el usuario con rol CLIENT." },
@@ -124,6 +131,12 @@ export async function POST(req: NextRequest) {
         );
       }
       targetClientId = clientId;
+    }
+    if (!isRoleAllowedForUser(cleanRole, targetClientId)) {
+      return NextResponse.json(
+        { success: false, error: "Un usuario de Bunker solo puede tener rol ADMIN." },
+        { status: 400 }
+      );
     }
 
     // Check if email already exists in local DB
@@ -230,15 +243,14 @@ export async function PUT(req: NextRequest) {
     const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
-    const body = await req.json().catch(() => ({}));
-    const { id, isActive, role, action } = body;
-
-    if (!id || typeof id !== "string") {
+    const parsed = updateUserSchema.safeParse(await req.json().catch(() => ({})));
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "ID de usuario es requerido." },
+        { success: false, error: parsed.error.issues[0]?.message || "Datos inválidos." },
         { status: 400 }
       );
     }
+    const { id, isActive, role, action } = parsed.data;
 
     const targetUser = await prisma.user.findFirst({
       where: {
@@ -257,7 +269,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Action: Generate password recovery link
-    if (action === "reset_password") {
+    if (action === USER_ACTION.RESET_PASSWORD) {
       const supabaseAdmin = getSupabaseAdmin();
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
@@ -289,38 +301,12 @@ export async function PUT(req: NextRequest) {
       });
     }
 
-    const updated = await prisma.user.update({
-      where: { id: targetUser.id },
-      data: {
-        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
-        role: role !== undefined ? normalizeRole(role) : undefined,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        clientId: true,
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        organizationId: user!.organizationId,
-        userId: user!.id,
-        action: "user_updated",
-        entityType: "User",
-        entityId: updated.id,
-        detailsJson: JSON.stringify({
-          isActive: updated.isActive,
-          role: updated.role,
-        }),
-      },
-    });
-
+    const updated = await updateUserAccess(user!.organizationId, user!.id, targetUser.id, { isActive, role });
     return NextResponse.json({ success: true, user: updated });
-  } catch (error: any) {
+  } catch (error) {
+    if (error instanceof UserAccessError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
     console.error("PUT /api/users error:", error);
     return NextResponse.json(
       { success: false, error: "Error al actualizar usuario." },
