@@ -18,7 +18,9 @@ import {
   HelpCircle,
   Sparkles,
 } from "lucide-react";
-import { ACCOUNT_STATUS, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { ACCOUNT_STATUS, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
+import type { TwilioEnvStatus } from "@/types/integrations";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
 import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
@@ -38,8 +40,8 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 /** Traduce mensajes técnicos o de variables de entorno a explicaciones claras para usuarios comerciales */
 function humanizeStatusMessage(msg: string | null | undefined, provider: string): string {
   if (!msg) return "";
-  if (msg.includes("TWILIO_ACCOUNT_SID") || msg.includes("TWILIO_AUTH_TOKEN") || provider === "twilio") {
-    return "Servicio de SMS y llamadas pendiente de activar. Conecta tu cuenta de Twilio para comenzar a enviar mensajes.";
+  if (msg.includes("TWILIO_ACCOUNT_SID") || msg.includes("TWILIO_AUTH_TOKEN") || provider === INTEGRATION_PROVIDER.TWILIO) {
+    return "Servicio de SMS y llamadas pendiente de activar. Las credenciales de Twilio se configuran en las variables de entorno del servidor.";
   }
   if (msg.includes("META_APP_ID") || msg.includes("META_APP_SECRET")) {
     return "Conexión oficial de Meta pendiente. Haz clic en Vincular Red Social para conectar tus cuentas publicitarias.";
@@ -68,6 +70,7 @@ interface ClientItem {
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [, setCredentialStatus] = useState<any>({});
+  const [twilioEnv, setTwilioEnv] = useState<TwilioEnvStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
@@ -78,7 +81,7 @@ export default function IntegrationsPage() {
   const [activeView, setActiveView] = useState<"clients" | "platforms">("clients");
   const [searchFilter, setSearchFilter] = useState("");
 
-  // Connect Modal (Claves manuales / Twilio)
+  // Connect Modal (claves manuales)
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
   const [creds, setCreds] = useState({ apiKey: "", apiSecret: "", accountId: "" });
   const [connecting, setConnecting] = useState(false);
@@ -100,6 +103,7 @@ export default function IntegrationsPage() {
       if (json.success) {
         setIntegrations(json.integrations);
         setCredentialStatus(json.credentialStatus);
+        setTwilioEnv(json.twilioEnv ?? null);
       }
     } catch (e) {
       console.error(e);
@@ -235,8 +239,8 @@ export default function IntegrationsPage() {
       } else {
         alert(json.error);
       }
-    } catch (e: any) {
-      alert("Error al conectar: " + e.message);
+    } catch (e) {
+      alert("Error al conectar: " + (e instanceof Error ? e.message : "Error de red"));
     } finally {
       setConnecting(false);
     }
@@ -778,13 +782,17 @@ export default function IntegrationsPage() {
             <div>
               <p className="font-semibold">Panel Técnico de Conexión de Plataformas</p>
               <p className="mt-0.5 text-blue-800">
-                Esta sección está pensada para administradores que necesitan vincular el Business Manager principal con OAuth, autorizar tokens de Meta Ads o configurar las credenciales de Twilio para llamadas y SMS.
+                Esta sección está pensada para administradores que necesitan vincular el Business Manager principal con OAuth, autorizar tokens de Meta Ads o revisar si las variables de Twilio para llamadas y SMS están configuradas en el servidor.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {integrations.map((it) => {
+              if (it.provider === INTEGRATION_PROVIDER.TWILIO) {
+                return <TwilioEnvStatusCard key={it.id} name={it.name} description={it.description} status={twilioEnv} />;
+              }
+
               const isConnected = it.status === INTEGRATION_STATUS.CONNECTED;
 
               return (
@@ -881,7 +889,7 @@ export default function IntegrationsPage() {
         </div>
       )}
 
-      {/* Modal Conexión de Credenciales (Twilio / Manual) */}
+      {/* Modal Conexión de Credenciales manuales (Twilio no pasa por aquí: usa variables de entorno) */}
       {selectedIntegration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
@@ -898,82 +906,32 @@ export default function IntegrationsPage() {
             </div>
 
             <form onSubmit={handleConnectSubmit} className="p-5 space-y-3.5">
-              {selectedIntegration.provider === "twilio" ? (
-                <>
-                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs">
-                    💡 <strong>¿Dónde encontrar estos datos?</strong> En tu consola de Twilio, en la pantalla principal donde dice <strong>Account SID</strong> y <strong>Auth Token</strong>.
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                      SID de Cuenta (Account SID)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej. ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      value={creds.apiKey}
-                      onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Clave de API / Token de Acceso
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Token o clave oficial..."
+                    value={creds.apiKey}
+                    onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
+                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                      Token Secreto de Autorización (Auth Token)
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Tu token secreto de Twilio..."
-                      value={creds.apiSecret}
-                      onChange={(e) => setCreds({ ...creds, apiSecret: e.target.value })}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                      Número Remitente de SMS (Phone Number)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="ej. +1234567890"
-                      value={creds.accountId}
-                      onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                      Clave de API / Token de Acceso
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Token o clave oficial..."
-                      value={creds.apiKey}
-                      onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                      Identificador de Cuenta (Account ID / ID de Anunciante)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="ej. act_1234567890"
-                      value={creds.accountId}
-                      onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                    />
-                  </div>
-                </>
-              )}
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Identificador de Cuenta (Account ID / ID de Anunciante)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ej. act_1234567890"
+                    value={creds.accountId}
+                    onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
+                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                  />
+                </div>
 
               <div className="pt-2 flex justify-end gap-2">
                 <button

@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         ? `${account.accountName} asignada a ${updated.client?.name}.`
         : `${account.accountName} ya no está asignada a ningún cliente.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("PATCH /api/integrations/accounts/[id] error:", error);
     return NextResponse.json({ success: false, error: "Error al asignar la cuenta." }, { status: 500 });
   }
