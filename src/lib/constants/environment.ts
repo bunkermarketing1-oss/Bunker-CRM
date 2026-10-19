@@ -1,3 +1,5 @@
+import { DEFAULT_AI_MODEL } from "@/lib/constants/ai-assistant";
+
 export type EnvGroup = "core" | "integrations" | "messaging";
 
 export interface EnvVarSpec {
@@ -37,6 +39,8 @@ export const ENV_VARS: EnvVarSpec[] = [
     group: "messaging",
     required: false,
   },
+  { name: "AI_API_KEY", description: "Clave de OpenAI del asistente de IA que responde SMS fuera de horario", group: "messaging", required: false },
+  { name: "AI_MODEL", description: `Modelo de OpenAI del asistente (opcional, por defecto ${DEFAULT_AI_MODEL})`, group: "messaging", required: false },
 ];
 
 /** Sin estas variables `sendTwilioSms` no puede enviar: Twilio se configura en el servidor, no desde la UI. */

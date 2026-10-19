@@ -17,7 +17,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { BulkSmsPanel } from "@/components/messaging/BulkSmsPanel";
-import { MESSAGE_DIRECTION } from "@/lib/constants/messaging";
+import { MESSAGE_DIRECTION, MESSAGE_GENERATED_BY } from "@/lib/constants/messaging";
 
 export default function SmsMessagingPage() {
   const { user } = useAuth();
@@ -254,6 +254,14 @@ export default function SmsMessagingPage() {
                       )}
                       {msg.recipient}
                       {msg.lead?.name && <span className="font-sans font-normal text-[#82807C]">· {msg.lead.name}</span>}
+                      {isAdmin && msg.generatedBy && (
+                        <span
+                          title={msg.generatedBy === MESSAGE_GENERATED_BY.AI ? "Respuesta de IA fuera de horario" : "Mensaje de traspaso automático fuera de horario"}
+                          className="font-sans text-[10px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200"
+                        >
+                          {msg.generatedBy === MESSAGE_GENERATED_BY.AI ? "IA" : "IA · traspaso"}
+                        </span>
+                      )}
                     </span>
 
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase border ${
