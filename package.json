@@ -44,6 +44,7 @@
     "test:live-view": "node tests/live-view-suite.js",
     "test:roles": "node --experimental-strip-types --no-warnings --test tests/roles.test.mjs",
     "test:team-live": "node --experimental-strip-types --no-warnings --test tests/team-live.test.mjs",
+    "test:ai-assistant": "node --experimental-strip-types --no-warnings --test tests/ai-assistant.test.mjs",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

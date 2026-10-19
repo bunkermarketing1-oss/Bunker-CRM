@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useClientPortalUsers } from "@/hooks/useClientPortalUsers";
 import { ClientPortalUsersPanel } from "@/components/clients/ClientPortalUsersPanel";
 import { useParams, useRouter } from "next/navigation";
+import { ClientAiAssistantPanel } from "@/components/clients/ClientAiAssistantPanel";
 import {
   ArrowLeft,
   Building,
@@ -152,10 +153,11 @@ export default function ClientProfile360Page() {
   const params = useParams();
   const router = useRouter();
   const clientId = params?.id as string;
-
   const { user } = useAuth();
-  // Solo Bunker asigna roles del portal (asesor ↔ dueño).
+  // Solo Bunker ve la pestaña del asistente de IA y asigna roles del portal (asesor ↔ dueño);
+  // las APIs también lo exigen.
   const isBunkerUser = Boolean(user && !user.isClientUser);
+  const isAdmin = isBunkerUser;
   const portalUsers = useClientPortalUsers(clientId, isBunkerUser);
 
   const [client, setClient] = useState<ClientDetail | null>(null);
@@ -163,8 +165,8 @@ export default function ClientProfile360Page() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  // Active Tab: summary, contacts, activities, opportunities, tasks, ads_leads
-  const [activeTab, setActiveTab] = useState<"summary" | "contacts" | "activities" | "opportunities" | "tasks" | "ads_leads">("summary");
+  // Active Tab: summary, contacts, activities, opportunities, tasks, ads_leads, ai_assistant
+  const [activeTab, setActiveTab] = useState<"summary" | "contacts" | "activities" | "opportunities" | "tasks" | "ads_leads" | "ai_assistant">("summary");
 
   // Auxiliary data
   const [teamMembers, setTeamMembers] = useState<UserMember[]>([]);
@@ -757,6 +759,7 @@ export default function ClientProfile360Page() {
           { key: "opportunities", label: "Oportunidades (Pipeline)", count: client.opportunities?.length || 0 },
           { key: "tasks", label: "Tareas y Próximas Acciones", count: clientMetrics.pendingTasksCount },
           { key: "ads_leads", label: "⚡ Pautas & Leads en Vivo", count: client.leads?.length ?? (client.connectedAccounts?.length ? 0 : null) },
+          ...(isAdmin ? [{ key: "ai_assistant", label: "Asistente IA", count: null }] : []),
         ].map((tab) => (
           <button
             key={tab.key}
@@ -1570,6 +1573,9 @@ export default function ClientProfile360Page() {
           </div>
         </div>
       )}
+
+      {/* Tab 7: Asistente de IA fuera de horario (solo admin) */}
+      {activeTab === "ai_assistant" && isAdmin && <ClientAiAssistantPanel clientId={clientId} />}
 
       {/* MODAL 1: Edit Client Profile */}
       {isEditClientOpen && (
