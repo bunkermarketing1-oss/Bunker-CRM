@@ -18,7 +18,8 @@ export interface MutationResult {
   error?: string;
 }
 
-async function send(url: string, method: string, body?: unknown): Promise<MutationResult> {
+/** POST/PATCH/DELETE con la forma de respuesta `{ success, error }`; lo reusa `useTaskAutomations`. */
+export async function sendJsonMutation(url: string, method: string, body?: unknown): Promise<MutationResult> {
   try {
     const res = await fetch(url, {
       method,
@@ -65,12 +66,12 @@ export function useSmsAutomations() {
     [refresh]
   );
 
-  const create = useCallback((draft: SmsAutomationDraft) => withRefresh(send("/api/automations", "POST", draft)), [withRefresh]);
+  const create = useCallback((draft: SmsAutomationDraft) => withRefresh(sendJsonMutation("/api/automations", "POST", draft)), [withRefresh]);
   const update = useCallback(
-    (id: string, changes: Partial<SmsAutomationDraft>) => withRefresh(send(`/api/automations/${id}`, "PATCH", changes)),
+    (id: string, changes: Partial<SmsAutomationDraft>) => withRefresh(sendJsonMutation(`/api/automations/${id}`, "PATCH", changes)),
     [withRefresh]
   );
-  const remove = useCallback((id: string) => withRefresh(send(`/api/automations/${id}`, "DELETE")), [withRefresh]);
+  const remove = useCallback((id: string) => withRefresh(sendJsonMutation(`/api/automations/${id}`, "DELETE")), [withRefresh]);
 
   return { automations, loading, error, refresh, create, update, remove };
 }

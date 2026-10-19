@@ -6,15 +6,34 @@ import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import { SmsAutomationCard } from "@/components/automations/SmsAutomationCard";
 import { SmsAutomationForm } from "@/components/automations/SmsAutomationForm";
+import { TaskAutomationsSection } from "@/components/automations/TaskAutomationsSection";
 import { useSmsAutomations, type MutationResult } from "@/hooks/useSmsAutomations";
+import { useTaskAutomations } from "@/hooks/useTaskAutomations";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { TASK_AUTOMATION_KIND } from "@/lib/constants/automations";
 import type { SmsAutomationSummary } from "@/types/automations";
+
+const TASK_SECTIONS = [
+  {
+    kind: TASK_AUTOMATION_KIND.ONBOARDING,
+    description: "Al cerrar una oportunidad como ganada se crea el checklist de arranque del cliente.",
+  },
+  {
+    kind: TASK_AUTOMATION_KIND.STAGE_FOLLOWUP,
+    description: "Cuando una oportunidad entra a una etapa, el asesor recibe una tarea de seguimiento.",
+  },
+  {
+    kind: TASK_AUTOMATION_KIND.STALE_REACTIVATION,
+    description: "Los leads abiertos que llevan días sin contacto generan una tarea para retomarlos.",
+  },
+] as const;
 
 // null = formulario cerrado, "new" = crear, objeto = editar esa regla.
 type FormState = null | "new" | SmsAutomationSummary;
 
 export default function AutomationsPage() {
   const { automations, loading, error, create, update, remove } = useSmsAutomations();
+  const tasks = useTaskAutomations();
   const clients = useClientOptions();
   const [form, setForm] = useState<FormState>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -49,7 +68,7 @@ export default function AutomationsPage() {
       <PageHeader
         section="Operaciones"
         title="Automatizaciones"
-        description="SMS automático en cuanto llega un lead, con el texto de cada cliente."
+        description="SMS automático al recibir un lead y tareas automáticas de onboarding, seguimiento y reactivación."
         actions={newButton}
       />
 
@@ -80,6 +99,32 @@ export default function AutomationsPage() {
           ))}
         </div>
       )}
+
+      <div className="pt-4 border-t border-[#E8E6DF] space-y-8">
+        <div>
+          <h2 className="text-base font-semibold text-[#1F1E1D]">Tareas automáticas</h2>
+          <p className="text-xs text-[#82807C]">Crean tareas para los asesores; nunca envían mensajes al lead por su cuenta.</p>
+        </div>
+        {tasks.error && <p role="alert" className="text-xs text-red-700">{tasks.error}</p>}
+        {tasks.loading ? (
+          <p className="text-xs text-[#82807C]">Cargando reglas de tareas…</p>
+        ) : (
+          TASK_SECTIONS.map((section) => (
+            <TaskAutomationsSection
+              key={section.kind}
+              kind={section.kind}
+              description={section.description}
+              automations={tasks.automations}
+              clients={clients}
+              stages={tasks.stages}
+              onCreate={tasks.create}
+              onUpdate={tasks.update}
+              onDelete={tasks.remove}
+              staleCheck={{ ...tasks.staleCheck, onRun: tasks.runStaleCheck }}
+            />
+          ))
+        )}
+      </div>
 
       {form && (
         <SmsAutomationForm
