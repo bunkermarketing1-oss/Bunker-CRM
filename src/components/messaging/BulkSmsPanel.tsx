@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Megaphone } from "lucide-react";
 import { SMS_TEMPLATE_VARIABLES } from "@/lib/constants/automations";
 import { LEAD_STATUS_LABEL, leadSourceLabel, type LeadStatusValue } from "@/lib/constants/crm";
-import { SMS_MAX_LENGTH } from "@/lib/constants/messaging";
+import { BULK_SMS_RESEND_WINDOW_HOURS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
 import { LEAD_SOURCES, LEAD_STATUSES } from "@/lib/validations/lead";
 import { useBulkSms, type BulkSmsDraftFilter } from "@/hooks/useBulkSms";
 import type { ClientOption } from "@/hooks/useClientOptions";
@@ -131,7 +131,8 @@ export function BulkSmsPanel({ clients, onSent }: BulkSmsPanelProps) {
           </p>
           <p className="text-[11px] text-[#82807C]">
             Se omiten: {preview.skipped.withoutPhone} sin teléfono, {preview.skipped.optedOut} dados de baja,{" "}
-            {preview.skipped.duplicates} con teléfono repetido.
+            {preview.skipped.duplicates} con teléfono repetido, {preview.skipped.recentlySent} que ya recibieron este texto en
+            las últimas {BULK_SMS_RESEND_WINDOW_HOURS} h.
           </p>
           {overLimit && (
             <p className="text-[11px] text-red-700">Supera el máximo de {preview.maxRecipients} por envío: ajusta los filtros.</p>
@@ -141,7 +142,8 @@ export function BulkSmsPanel({ clients, onSent }: BulkSmsPanelProps) {
 
       {result && (
         <p role="status" className="text-xs text-emerald-800">
-          Enviados {result.sent}, fallidos {result.failed}.
+          Enviados {result.sent}, fallidos {result.failed}
+          {result.alreadyClaimed > 0 && `, ${result.alreadyClaimed} ya enviados por otro intento de este lote`}.
         </p>
       )}
       {error && <p role="alert" className="text-xs text-red-700">{error}</p>}

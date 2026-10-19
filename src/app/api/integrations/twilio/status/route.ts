@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Callback de estado de un SMS enviado (`StatusCallback`, lo manda sendTwilioSms).
- * Público y protegido por `X-Twilio-Signature`.
+ * Público y protegido por `X-Twilio-Signature`. Se responde 200 aunque el SID no exista:
+ * Twilio no reintenta los status callbacks, así que un error no recuperaría el estado.
  */
 export async function POST(req: NextRequest) {
   const params = Object.fromEntries(new URLSearchParams(await req.text()));

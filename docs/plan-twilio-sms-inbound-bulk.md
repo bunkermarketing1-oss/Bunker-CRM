@@ -17,10 +17,11 @@ Twilio real.
 ```
 Lead responde el SMS
   → Twilio → POST /api/integrations/twilio/sms   (firma X-Twilio-Signature)
-  → busca a quién se le escribió por última vez desde ese número (Message outbound)
-     o, si no, el lead más reciente con ese teléfono
-  → Message inbound + Activity en el lead
-  → "BAJA", "STOP", "ALTO" o "CANCELAR" → Lead.smsOptOutAt (no se le vuelve a escribir)
+  → busca a quién se le escribió desde ese número en los últimos 7 días (Message outbound)
+     o, si no, los leads con ese teléfono; si son de varios clientes, no se asocia a ninguno
+  → Message inbound (providerMsgId único) + Activity en el lead
+  → "BAJA", "STOP", "ALTO" o "CANCELAR" → SmsOptOut (global por número) + Lead.smsOptOutAt
+  → "START", "UNSTOP", "ALTA" o "SUSCRIBIR" → quita la baja
 
 Twilio informa el estado de cada envío
   → POST /api/integrations/twilio/status → Message.status / deliveredAt / errorMessage
@@ -85,12 +86,47 @@ Envío masivo (solo admin)
 ### Decisiones tomadas
 
 - Una respuesta se asigna al último SMS que le mandamos a ese número; si nunca le
-  escribimos, al lead más reciente con ese teléfono. Un número desconocido no se guarda,
+  escribimos, al lead más reciente con ese teléfono (refinado el 2026-10-19 con ventana de
+  7 días y la regla de ambigüedad, ver abajo). Un número desconocido no se guarda,
   porque el número de Twilio es compartido y no hay organización a la cual asignarlo.
 - En los entrantes, `Message.recipient` guarda el número del lead, igual que en los
   salientes, para que la conversación con un número comparta el mismo valor.
 - El masivo es síncrono y tiene un tope de 200 SMS. Para más volumen habría que pasarlo a
   una cola.
+- **(2026-10-19, revisión)** La baja vive en `SmsOptOut`, una fila por número E.164, sin
+  organización: el número de Twilio es compartido, así que "no te enviaremos más mensajes"
+  tiene que valer para todos los clientes, contactos y números escritos a mano.
+  `isPhoneOptedOut(phone)` es la única consulta (SMS manual, masivo y automatizaciones) y
+  también mira `Lead.smsOptOutAt` como respaldo. `Lead.smsOptOutAt` se sigue escribiendo
+  (en todos los leads con ese número, de cualquier organización) solo para mostrarlo; un
+  lead creado después de la baja no lo tiene, pero igual queda bloqueado por `SmsOptOut`.
+  Un número desconocido que responde BAJA también queda de baja (sin AuditLog, que exige
+  organización).
+- Alta: START y UNSTOP (las confirma Twilio), ALTA y SUSCRIBIR (las confirmamos nosotros y
+  solo si había una baja que quitar). YES/SÍ no reactivan: son respuestas normales a una
+  pregunta del asesor. Si el número había respondido STOP, Twilio lo sigue bloqueando hasta
+  que mande START; la confirmación de ALTA lo dice.
+- Respuestas entrantes: se toman los SMS que le enviamos a ese número en los últimos 7 días
+  (`SMS_REPLY_WINDOW_DAYS`) o, si no hay, los leads con ese teléfono. Si todos son del mismo
+  cliente se asocia al más reciente. Si hay más de un cliente u organización, la respuesta
+  se guarda en la organización del más reciente **sin cliente, lead ni contacto** (solo la
+  ve un admin) y se deja un AuditLog `sms_inbound_ambiguous`: preferimos no asociarla a
+  mostrársela al cliente equivocado.
+- Masivo idempotente: el navegador genera una clave de lote (`batchId`) por vista previa.
+  Cada destinatario se registra en `Message` (estado `pending`, con `bulkBatchId`) **antes**
+  de llamar a Twilio, y un índice único `(organizationId, bulkBatchId, recipient)` impide
+  que dos ejecuciones del mismo lote le escriban dos veces al mismo número. Una clave ya
+  usada responde 409. Además se omite a quien recibió el mismo texto en las últimas 24 h
+  (`BULK_SMS_RESEND_WINDOW_HOURS`), por si el navegador recalcula y reenvía. Un error con un
+  destinatario no corta el lote, y el AuditLog del lote se escribe siempre (`finally`).
+- Estados: `delivered` y `failed` son finales y ninguno pisa al otro. Si el callback de
+  estado llega antes de que el SID quede guardado se pierde: Twilio no reintenta los status
+  callbacks. Para achicar esa ventana el SMS manual y el masivo crean el `Message` antes de
+  llamar a Twilio y solo actualizan el SID al volver. Las automatizaciones siguen guardando
+  después de enviar (fuera de esta revisión).
+- El SMS manual siempre envía y guarda el número en E.164 (`validateAndNormalizePhone`); si
+  no se puede normalizar responde 400. El body se valida con `manualSmsSchema` y la
+  respuesta devuelve solo los campos del mensaje y `{ id, name }` de cliente y lead.
 - `POST /api/messages/sms` (corregido a pedido): un CLIENT solo escribe a leads o
   contactos de su empresa y al número guardado del lead, sin importar el que mande el
   navegador. Para todos, `leadId`, `clientId` y `contactId` deben ser de la organización;
@@ -102,3 +138,4 @@ Envío masivo (solo admin)
 |---|---|---|
 | 2026-10-16 | Plan creado | |
 | 2026-10-16 | Fases 1 a 4 implementadas, migración aplicada | Falta correr la suite (reiniciar `pnpm dev`) y configurar Twilio |
+| 2026-10-19 | Correcciones de revisión: baja global (`SmsOptOut`), ALTA/START, masivo idempotente, respuestas ambiguas, estados finales, E.164 y Zod en el SMS manual, `providerMsgId` único | Migración `20261019120000_sms_opt_out.sql` **sin aplicar**. `pnpm test:sms-rules` y `pnpm test:twilio-webhook` pasan; la suite de API no se corrió (pega a producción) |

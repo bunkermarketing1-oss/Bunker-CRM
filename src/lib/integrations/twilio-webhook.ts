@@ -33,19 +33,34 @@ const TWILIO_OPT_OUT_WORDS = ["stop", "stopall", "unsubscribe", "cancel", "end",
 // Las que se usan en México y LatAm; para estas la confirmación la mandamos nosotros.
 const SPANISH_OPT_OUT_WORDS = ["baja", "alto", "cancelar", "parar"];
 const OPT_OUT_WORDS = new Set([...TWILIO_OPT_OUT_WORDS, ...SPANISH_OPT_OUT_WORDS]);
-const TWILIO_HANDLED = new Set(TWILIO_OPT_OUT_WORDS);
+
+// Reactivación. Twilio desbloquea el número y confirma solo con START / UNSTOP (también con
+// YES, que aquí no se usa: un "yes"/"sí" es una respuesta normal a una pregunta del asesor
+// y no debe reactivar a nadie por accidente; si Twilio lo procesa, el número queda
+// desbloqueado en Twilio pero sigue de baja en el CRM, que es el lado seguro).
+const TWILIO_OPT_IN_WORDS = ["start", "unstop"];
+const SPANISH_OPT_IN_WORDS = ["alta", "suscribir"];
+const OPT_IN_WORDS = new Set([...TWILIO_OPT_IN_WORDS, ...SPANISH_OPT_IN_WORDS]);
+
+const TWILIO_HANDLED = new Set([...TWILIO_OPT_OUT_WORDS, ...TWILIO_OPT_IN_WORDS]);
 
 /** El lead respondió solo una palabra de baja (con o sin signos, mayúsculas o acentos). */
 export function isOptOutMessage(body: string) {
-  return OPT_OUT_WORDS.has(normalizeWord(body));
+  return OPT_OUT_WORDS.has(normalizeSmsKeyword(body));
 }
 
-/** Baja que Twilio ya confirma al lead: responder también duplicaría el mensaje. */
-export function isOptOutHandledByTwilio(body: string) {
-  return TWILIO_HANDLED.has(normalizeWord(body));
+/** El lead respondió solo una palabra para volver a recibir SMS (START, ALTA…). */
+export function isOptInMessage(body: string) {
+  return OPT_IN_WORDS.has(normalizeSmsKeyword(body));
 }
 
-function normalizeWord(body: string) {
+/** Palabra que Twilio ya confirma al lead (baja o alta): responder también duplicaría el mensaje. */
+export function isKeywordHandledByTwilio(body: string) {
+  return TWILIO_HANDLED.has(normalizeSmsKeyword(body));
+}
+
+/** Palabra clave tal como se compara (y se guarda en `SmsOptOut.keyword`). */
+export function normalizeSmsKeyword(body: string) {
   return body
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
