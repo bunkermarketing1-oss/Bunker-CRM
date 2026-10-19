@@ -39,6 +39,12 @@ export const ENV_VARS: EnvVarSpec[] = [
   },
 ];
 
+/** Sin estas variables `sendTwilioSms` no puede enviar: Twilio se configura en el servidor, no desde la UI. */
+export const TWILIO_SMS_ENV_VARS = ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER"] as const;
+
+/** Necesarias además de las de SMS para generar tokens de llamadas desde el navegador. */
+export const TWILIO_VOICE_ENV_VARS = ["TWILIO_API_KEY_SID", "TWILIO_API_KEY_SECRET", "TWILIO_TWIML_APP_SID"] as const;
+
 export const ENV_GROUP_LABEL: Record<EnvGroup, string> = {
   core: "Núcleo de la plataforma",
   integrations: "Integraciones de pauta",

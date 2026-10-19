@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { getPagesLeadgenStatus } from "@/services/meta-leads.service";
+import { getTwilioEnvStatus } from "@/services/integrations.service";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
       success: true,
       integrations: integrationsWithLeadgen,
       credentialStatus,
+      twilioEnv: getTwilioEnvStatus(),
     });
   } catch (error: any) {
     console.error("GET /api/integrations error:", error);
@@ -118,6 +120,15 @@ export async function POST(req: NextRequest) {
           success: false,
           error: "Meta se conecta mediante inicio de sesión con Facebook (OAuth), no con claves manuales.",
           oauthUrl: "/api/integrations/meta/connect",
+        }, { status: 400 });
+      }
+
+      // Las credenciales de Twilio solo se leen de variables de entorno del servidor
+      // (src/lib/integrations/twilio.ts): marcarla "conectada" aquí no habilitaría ningún envío.
+      if (integration.provider === INTEGRATION_PROVIDER.TWILIO) {
+        return NextResponse.json({
+          success: false,
+          error: "Twilio se configura con variables de entorno del servidor (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER), no desde este panel.",
         }, { status: 400 });
       }
 

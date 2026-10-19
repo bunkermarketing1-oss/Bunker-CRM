@@ -92,3 +92,31 @@ export const META_LEAD_NO_SMS_ACTIVITY_TITLE = "Lead recuperado de Meta sin SMS 
 
 /** Tope por petición a Graph API: más que esto es Meta caído, no una respuesta lenta. */
 export const META_GRAPH_TIMEOUT_MS = 20_000;
+
+/** Proveedores de pauta cuyas cuentas se pueden registrar a mano (Twilio no tiene cuentas vinculables). */
+export const AD_PROVIDERS = [INTEGRATION_PROVIDER.META, INTEGRATION_PROVIDER.TIKTOK, INTEGRATION_PROVIDER.GOOGLE_ADS] as const;
+export type AdProvider = (typeof AD_PROVIDERS)[number];
+
+/**
+ * Tipos de cuenta válidos por proveedor: evita guardar, por ejemplo, una página de Facebook bajo
+ * la integración de TikTok. Google Ads aún no tiene tipo de cuenta, así que no admite registro manual.
+ */
+export const ACCOUNT_TYPES_BY_PROVIDER: Record<AdProvider, readonly AccountType[]> = {
+  [INTEGRATION_PROVIDER.META]: [ACCOUNT_TYPE.META_AD_ACCOUNT, ACCOUNT_TYPE.FACEBOOK_PAGE, ACCOUNT_TYPE.INSTAGRAM_BUSINESS],
+  [INTEGRATION_PROVIDER.TIKTOK]: [ACCOUNT_TYPE.TIKTOK_ADVERTISER],
+  [INTEGRATION_PROVIDER.GOOGLE_ADS]: [],
+};
+
+/** Nombre con el que se crea la integración la primera vez que se registra una cuenta de ese proveedor. */
+export const INTEGRATION_PROVIDER_NAME: Record<IntegrationProvider, string> = {
+  [INTEGRATION_PROVIDER.META]: "Meta for Business (Facebook & Instagram)",
+  [INTEGRATION_PROVIDER.TIKTOK]: "TikTok for Business",
+  [INTEGRATION_PROVIDER.GOOGLE_ADS]: "Google Ads",
+  [INTEGRATION_PROVIDER.TWILIO]: "Twilio",
+};
+
+/** Acciones de AuditLog sobre cuentas conectadas (se consultan en el historial de auditoría). */
+export const CONNECTED_ACCOUNT_AUDIT_ACTION = {
+  LINKED: "connected_account_linked",
+  ASSIGNED: "connected_account_assigned",
+} as const;

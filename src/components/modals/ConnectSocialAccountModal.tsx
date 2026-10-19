@@ -6,7 +6,28 @@ import {
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
-import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
+import {
+  ACCOUNT_TYPE,
+  ACCOUNT_TYPES_BY_PROVIDER,
+  INTEGRATION_PROVIDER,
+  type AccountType,
+  type AdProvider,
+} from "@/lib/constants/integrations";
+import { useConnectSocialAccount } from "@/hooks/useConnectSocialAccount";
+
+/** Botones del modal: Instagram es una cuenta de la integración de Meta, no un proveedor propio. */
+const SOCIAL_OPTIONS: Record<string, { provider: AdProvider; accountType: AccountType }> = {
+  meta: { provider: INTEGRATION_PROVIDER.META, accountType: ACCOUNT_TYPE.META_AD_ACCOUNT },
+  instagram: { provider: INTEGRATION_PROVIDER.META, accountType: ACCOUNT_TYPE.INSTAGRAM_BUSINESS },
+  tiktok: { provider: INTEGRATION_PROVIDER.TIKTOK, accountType: ACCOUNT_TYPE.TIKTOK_ADVERTISER },
+};
+
+const ACCOUNT_TYPE_OPTION_LABEL: Record<AccountType, string> = {
+  [ACCOUNT_TYPE.META_AD_ACCOUNT]: "Cuenta de anuncios (Meta Ads)",
+  [ACCOUNT_TYPE.FACEBOOK_PAGE]: "Página de Facebook",
+  [ACCOUNT_TYPE.INSTAGRAM_BUSINESS]: "Perfil de Instagram Business",
+  [ACCOUNT_TYPE.TIKTOK_ADVERTISER]: "Cuenta de TikTok Ads",
+};
 
 export interface ClientOption {
   id: string;
@@ -30,8 +51,8 @@ export function ConnectSocialAccountModal({
   initialProvider = "meta",
   initialClientId = "",
 }: ConnectSocialAccountModalProps) {
-  const [provider, setProvider] = useState<string>(initialProvider);
-  const [accountType, setAccountType] = useState<string>(ACCOUNT_TYPE.META_AD_ACCOUNT);
+  const [provider, setProvider] = useState<AdProvider>(INTEGRATION_PROVIDER.META);
+  const [accountType, setAccountType] = useState<AccountType>(ACCOUNT_TYPE.META_AD_ACCOUNT);
   const [targetType, setTargetType] = useState<"agency" | "client">(
     initialClientId ? "client" : "client"
   );
@@ -39,8 +60,7 @@ export function ConnectSocialAccountModal({
   const [accountName, setAccountName] = useState("");
   const [externalId, setExternalId] = useState("");
   const [accessToken, setAccessToken] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { connect, submitting, error: errorMessage, setError: setErrorMessage } = useConnectSocialAccount();
 
   useEffect(() => {
     if (isOpen) {
@@ -48,33 +68,21 @@ export function ConnectSocialAccountModal({
         setSelectedClientId(initialClientId);
         setTargetType("client");
       }
-      if (initialProvider) {
-        if (initialProvider === "meta") {
-          setProvider("meta");
-          setAccountType(ACCOUNT_TYPE.META_AD_ACCOUNT);
-        } else if (initialProvider === "tiktok") {
-          setProvider("tiktok");
-          setAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
-        } else if (initialProvider === "instagram") {
-          setProvider("meta");
-          setAccountType(ACCOUNT_TYPE.INSTAGRAM_BUSINESS);
-        }
+      const option = SOCIAL_OPTIONS[initialProvider];
+      if (option) {
+        setProvider(option.provider);
+        setAccountType(option.accountType);
       }
     }
   }, [isOpen, initialClientId, initialProvider]);
 
   if (!isOpen) return null;
 
-  const handleProviderSelect = (p: string) => {
-    setProvider(p);
-    if (p === "meta") {
-      setAccountType(ACCOUNT_TYPE.META_AD_ACCOUNT);
-    } else if (p === "tiktok") {
-      setAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
-    } else if (p === "instagram") {
-      setProvider("meta");
-      setAccountType(ACCOUNT_TYPE.INSTAGRAM_BUSINESS);
-    }
+  const handleProviderSelect = (key: string) => {
+    const option = SOCIAL_OPTIONS[key];
+    if (!option) return;
+    setProvider(option.provider);
+    setAccountType(option.accountType);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,33 +102,17 @@ export function ConnectSocialAccountModal({
       return;
     }
 
-    try {
-      setSubmitting(true);
-      const res = await fetch("/api/integrations/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider,
-          accountType,
-          accountName: accountName.trim(),
-          externalId: externalId.trim(),
-          clientId: targetType === "client" ? selectedClientId : null,
-          accessToken: accessToken.trim() || null,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        onSuccess();
-        onClose();
-      } else {
-        setErrorMessage(data.error || "No se pudo conectar la cuenta.");
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error de red al conectar";
-      setErrorMessage(msg);
-    } finally {
-      setSubmitting(false);
+    const connected = await connect({
+      provider,
+      accountType,
+      accountName: accountName.trim(),
+      externalId: externalId.trim(),
+      clientId: targetType === "client" ? selectedClientId : null,
+      accessToken: accessToken.trim() || null,
+    });
+    if (connected) {
+      onSuccess();
+      onClose();
     }
   };
 
@@ -164,7 +156,7 @@ export function ConnectSocialAccountModal({
                 type="button"
                 onClick={() => handleProviderSelect("meta")}
                 className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-2 text-center cursor-pointer ${
-                  provider === "meta" && accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS
+                  provider === INTEGRATION_PROVIDER.META && accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS
                     ? "border-[#1877F2] bg-blue-50/50 shadow-sm ring-2 ring-[#1877F2]/20"
                     : "border-[#E8E6DF] bg-white hover:border-[#D1CFCA]"
                 }`}
@@ -202,7 +194,7 @@ export function ConnectSocialAccountModal({
                 type="button"
                 onClick={() => handleProviderSelect("tiktok")}
                 className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-2 text-center cursor-pointer ${
-                  provider === "tiktok"
+                  provider === INTEGRATION_PROVIDER.TIKTOK
                     ? "border-black bg-gray-50 shadow-sm ring-2 ring-black/20"
                     : "border-[#E8E6DF] bg-white hover:border-[#D1CFCA]"
                 }`}
@@ -341,13 +333,15 @@ export function ConnectSocialAccountModal({
                 </label>
                 <select
                   value={accountType}
-                  onChange={(e) => setAccountType(e.target.value)}
+                  onChange={(e) => setAccountType(e.target.value as AccountType)}
                   className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 >
-                  <option value={ACCOUNT_TYPE.META_AD_ACCOUNT}>Cuenta de anuncios (Meta Ads)</option>
-                  <option value={ACCOUNT_TYPE.FACEBOOK_PAGE}>Página de Facebook</option>
-                  <option value={ACCOUNT_TYPE.INSTAGRAM_BUSINESS}>Perfil de Instagram Business</option>
-                  <option value={ACCOUNT_TYPE.TIKTOK_ADVERTISER}>Cuenta de TikTok Ads</option>
+                  {/* Solo los tipos del proveedor elegido: el servidor rechaza combinaciones como TikTok + página de Facebook. */}
+                  {ACCOUNT_TYPES_BY_PROVIDER[provider].map((type) => (
+                    <option key={type} value={type}>
+                      {ACCOUNT_TYPE_OPTION_LABEL[type]}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
