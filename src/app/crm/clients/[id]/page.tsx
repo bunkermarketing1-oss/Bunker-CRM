@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { ROUTES, leadSearchRoute } from "@/lib/constants/routes";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -1467,7 +1468,7 @@ export default function ClientProfile360Page() {
               </div>
 
               <Link
-                href="/crm/leads"
+                href={ROUTES.LEADS}
                 className="text-xs font-semibold text-[#D97757] hover:underline flex items-center gap-1"
               >
                 <span>Ver embudo completo de leads</span>
@@ -1496,7 +1497,7 @@ export default function ClientProfile360Page() {
                     {client.leads.map((lead) => (
                       <tr key={lead.id} className="hover:bg-[#FAF9F5] transition-colors">
                         <td className="py-3 px-3">
-                          <Link href={`/crm/leads/${lead.id}`} className="font-semibold text-[#1F1E1D] hover:text-[#D97757]">
+                          <Link href={leadSearchRoute(lead.name)} className="font-semibold text-[#1F1E1D] hover:text-[#D97757]">
                             {lead.name}
                           </Link>
                           {lead.email && <span className="block text-[11px] text-[#716F6A]">{lead.email}</span>}
