@@ -3,7 +3,7 @@
 // registrar respuestas, una respuesta queda en el historial del lead correcto, "BAJA" detiene
 // los envíos, y un cliente nunca ve los SMS de otro.
 // Uso: TEST_BASE_URL=http://127.0.0.1:3005 node tests/sms-inbound-suite.js
-// Requiere la migración 20261016180000_sms_inbound_optout aplicada y un servidor corriendo con
+// Requiere las migraciones 20261016180000_sms_inbound_optout y 20261019120000_sms_opt_out aplicadas y un servidor corriendo con
 // el mismo TWILIO_AUTH_TOKEN y NEXT_PUBLIC_APP_URL que este .env.
 // No envía SMS reales: los webhooks se llaman directo y el envío masivo real usa un filtro
 // que no tiene destinatarios elegibles.
@@ -284,7 +284,7 @@ async function run() {
     // Igual que SMS-11: el envío real solo se lanza si la vista previa confirmó 0 elegibles.
     if (preview?.eligible === 0) {
       const before = await prisma.message.count({ where: { leadId: { in: created.leads }, direction: "outbound" } });
-      res = await req("/api/messages/sms/bulk", { method: "POST", headers: auth(adminCookie), body: JSON.stringify({ ...bulkBody, dryRun: false }) });
+      res = await req("/api/messages/sms/bulk", { method: "POST", headers: auth(adminCookie), body: JSON.stringify({ ...bulkBody, dryRun: false, batchId: crypto.randomUUID() }) });
       const bulkResult = (await json(res)).result;
       const after = await prisma.message.count({ where: { leadId: { in: created.leads }, direction: "outbound" } });
       record(
@@ -307,6 +307,8 @@ async function run() {
     record("FATAL", false, err.message);
   } finally {
     await prisma.message.deleteMany({ where: { OR: [{ leadId: { in: created.leads } }, { recipient: { in: [LEAD_PHONE, UNKNOWN_PHONE] } }] } });
+    // La baja es global (SmsOptOut): sin esto los números de prueba quedarían de baja para siempre.
+    await prisma.smsOptOut.deleteMany({ where: { phone: { in: [LEAD_PHONE, UNKNOWN_PHONE] } } });
     if (created.leads.length) {
       await prisma.activity.deleteMany({ where: { leadId: { in: created.leads } } });
       await prisma.lead.deleteMany({ where: { id: { in: created.leads } } });

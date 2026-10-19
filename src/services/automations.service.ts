@@ -207,7 +207,7 @@ export async function runLeadCreatedAutomations(leadId: string) {
     // Sin teléfono normalizado (E.164) Twilio rechazaría el envío.
     if (!lead?.normalizedPhone) return 0;
     const phone = lead.normalizedPhone;
-    if (await isPhoneOptedOut(lead.organizationId, phone)) return 0;
+    if (await isPhoneOptedOut(phone)) return 0;
     if (await hasRecentLeadSms({ id: lead.id, organizationId: lead.organizationId, normalizedPhone: phone })) return 0;
 
     const rules = await prisma.automationRule.findMany({

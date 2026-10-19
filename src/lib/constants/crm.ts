@@ -91,3 +91,8 @@ export const ACTIVITY_TYPE = {
 } as const;
 export type ActivityType = ValueOf<typeof ACTIVITY_TYPE>;
 
+export const ACTIVITY_OUTCOME = {
+  COMPLETED: "completed",
+  PENDING: "pending",
+} as const;
+

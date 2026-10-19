@@ -36,6 +36,7 @@
     "test:automations": "node tests/automations-suite.js",
     "test:twilio-webhook": "node --experimental-strip-types --no-warnings --test tests/twilio-webhook.test.mjs",
     "test:sms-inbound": "node tests/sms-inbound-suite.js",
+    "test:sms-rules": "node --experimental-strip-types --no-warnings --test tests/sms-rules.test.mjs",
     "test:twilio-voice": "node --experimental-strip-types --no-warnings --test tests/twilio-voice.test.mjs",
     "test:voice-policy": "node --experimental-strip-types --no-warnings --test tests/voice-policy.test.mjs",
     "test:calls": "node tests/calls-suite.js",

@@ -9,37 +9,40 @@ export interface BulkSmsDraftFilter {
   sources: string[];
 }
 
+// Sin respuesta no sabemos si el servidor alcanzó a enviar: el lote puede seguir corriendo.
+const NO_RESPONSE_ERROR =
+  "No se recibió respuesta del servidor. El envío puede seguir en curso: revisa el historial antes de volver a enviar.";
+
 async function postBulk(body: object) {
   const res = await fetch("/api/messages/sms/bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json().catch(() => ({ success: false, error: "Respuesta inválida del servidor." }));
+  return res.json().catch(() => ({ success: false, error: NO_RESPONSE_ERROR }));
 }
 
 export function useBulkSms() {
   const [preview, setPreview] = useState<BulkSmsPreview | null>(null);
+  // Clave del lote: una por vista previa. Si el envío se reintenta con la misma clave, el
+  // servidor no lo repite.
+  const [batchId, setBatchId] = useState<string | null>(null);
   const [result, setResult] = useState<BulkSmsResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const run = useCallback(async (filter: BulkSmsDraftFilter, template: string, dryRun: boolean) => {
+  const previewRecipients = useCallback(async (filter: BulkSmsDraftFilter, template: string) => {
     setLoading(true);
     setError(null);
+    setResult(null);
     try {
-      const json = await postBulk({ filter, template, dryRun });
+      const json = await postBulk({ filter, template, dryRun: true });
       if (!json.success) {
         setError(json.error);
         return false;
       }
-      if (dryRun) {
-        setPreview(json.preview);
-        setResult(null);
-      } else {
-        setResult(json.result);
-        setPreview(null);
-      }
+      setPreview(json.preview);
+      setBatchId(crypto.randomUUID());
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red");
@@ -49,19 +52,39 @@ export function useBulkSms() {
     }
   }, []);
 
+  const send = useCallback(
+    async (filter: BulkSmsDraftFilter, template: string) => {
+      if (!batchId) return false;
+      setLoading(true);
+      setError(null);
+      try {
+        const json = await postBulk({ filter, template, dryRun: false, batchId });
+        if (!json.success) {
+          setError(json.error);
+          return false;
+        }
+        setResult(json.result);
+        return true;
+      } catch {
+        setError(NO_RESPONSE_ERROR);
+        return false;
+      } finally {
+        // Pase lo que pase, la vista previa se consume: para volver a enviar hay que
+        // recalcular (con otra clave), y así el botón no queda armado en silencio.
+        setPreview(null);
+        setBatchId(null);
+        setLoading(false);
+      }
+    },
+    [batchId]
+  );
+
   const reset = useCallback(() => {
     setPreview(null);
+    setBatchId(null);
     setResult(null);
     setError(null);
   }, []);
 
-  return {
-    preview,
-    result,
-    loading,
-    error,
-    reset,
-    previewRecipients: (filter: BulkSmsDraftFilter, template: string) => run(filter, template, true),
-    send: (filter: BulkSmsDraftFilter, template: string) => run(filter, template, false),
-  };
+  return { preview, result, loading, error, reset, previewRecipients, send };
 }

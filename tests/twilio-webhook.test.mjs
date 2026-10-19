@@ -4,7 +4,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isOptOutHandledByTwilio, isOptOutMessage, twimlResponse, verifyTwilioSignature } from "../src/lib/integrations/twilio-webhook.ts";
+import { isKeywordHandledByTwilio, isOptInMessage, isOptOutMessage, normalizeSmsKeyword, twimlResponse, verifyTwilioSignature } from "../src/lib/integrations/twilio-webhook.ts";
 
 // Ejemplo oficial de https://www.twilio.com/docs/usage/webhooks/webhooks-security
 const DOC_URL = "https://mycompany.com/myapp.php?foo=1&bar=2";
@@ -47,8 +47,31 @@ test("a normal reply that merely contains an opt-out word does not unsubscribe t
 });
 
 test("English opt-out words are left to Twilio so the lead does not get two confirmations", () => {
-  assert.equal(isOptOutHandledByTwilio("STOP"), true);
-  assert.equal(isOptOutHandledByTwilio("Baja"), false);
+  assert.equal(isKeywordHandledByTwilio("STOP"), true);
+  assert.equal(isKeywordHandledByTwilio("Baja"), false);
+});
+
+test("START, UNSTOP, ALTA and SUSCRIBIR re-subscribe a number that had opted out", () => {
+  for (const body of ["START", "unstop", " Alta ", "ALTA!", "Suscribir."]) {
+    assert.equal(isOptInMessage(body), true, body);
+    assert.equal(isOptOutMessage(body), false, body);
+  }
+});
+
+test("a casual yes or a sentence with alta does not re-subscribe anyone by accident", () => {
+  for (const body of ["YES", "Sí", "si", "dar de alta mi cuenta", "prioridad alta", ""]) {
+    assert.equal(isOptInMessage(body), false, body);
+  }
+});
+
+test("Twilio confirms its own START/UNSTOP, but the Spanish ALTA confirmation is ours", () => {
+  assert.equal(isKeywordHandledByTwilio("START"), true);
+  assert.equal(isKeywordHandledByTwilio("unstop"), true);
+  assert.equal(isKeywordHandledByTwilio("ALTA"), false);
+});
+
+test("the stored keyword is normalized so audits compare the same word", () => {
+  assert.equal(normalizeSmsKeyword(" Cancelár! "), "cancelar");
 });
 
 test("the TwiML reply escapes XML so a template can never break the response", () => {
