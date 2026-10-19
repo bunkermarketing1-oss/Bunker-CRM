@@ -57,6 +57,7 @@ model Organization {
   phoneLines        PhoneLine[]
   calls             Call[]
   smsOptOuts        SmsOptOut[]
+  aiAssistants      ClientAiAssistant[]
 }
 
 model OrganizationMember {
@@ -104,6 +105,7 @@ model Client {
   automationRules   AutomationRule[]
   phoneLines        PhoneLine[]
   calls             Call[]
+  aiAssistant       ClientAiAssistant?
 }
 
 model Contact {
@@ -314,6 +316,7 @@ model Message {
   deliveredAt    DateTime?
   isDemo         Boolean      @default(false)
   bulkBatchId    String? // Clave del envío masivo que lo generó (idempotencia por lote)
+  generatedBy    String? // null = asesor o automatización; "ai" / "ai_handoff" = asistente fuera de horario
   createdAt      DateTime     @default(now())
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -324,6 +327,29 @@ model Message {
   @@index([recipient, createdAt]) // asociar respuestas entrantes al último envío
   // Un número recibe a lo sumo un SMS por lote, aunque el lote se ejecute dos veces a la vez.
   @@unique([organizationId, bulkBatchId, recipient])
+}
+
+// Asistente de IA de un cliente: contesta los SMS de sus leads fuera del horario de
+// atención usando solo la base de conocimiento cargada aquí. Uno por cliente.
+model ClientAiAssistant {
+  id                String       @id @default(uuid())
+  organizationId    String
+  clientId          String       @unique
+  isEnabled         Boolean      @default(false)
+  timezone          String       @default("America/Bogota") // IANA
+  businessHoursJson String // { mon: { start: "08:00", end: "18:00" } | null, ... }
+  knowledgeBase     String       @default("")
+  instructions      String? // tono e indicaciones adicionales
+  handoffMessage    String // se envía si la IA falla o no está disponible
+  maxRepliesPerDay  Int          @default(3) // por conversación, en las últimas 24 h
+  updatedById       String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 // Baja de SMS de un número. Es global porque el número de Twilio lo comparten todas las

@@ -69,3 +69,15 @@ export const SMS_AUDIT_ACTION = {
   BULK_SENT: "bulk_sms_sent",
   INBOUND_AMBIGUOUS: "sms_inbound_ambiguous",
 } as const;
+
+/**
+ * Quién redactó un SMS saliente (`Message.generatedBy`). null = un asesor o una
+ * automatización con plantilla. El historial muestra la etiqueta "IA" con estos valores.
+ */
+export const MESSAGE_GENERATED_BY = {
+  /** Respuesta redactada por el asistente de IA fuera de horario. */
+  AI: "ai",
+  /** Mensaje de traspaso fijo del asistente: la IA falló, tardó o no está configurada. */
+  AI_HANDOFF: "ai_handoff",
+} as const;
+export type MessageGeneratedBy = ValueOf<typeof MESSAGE_GENERATED_BY>;

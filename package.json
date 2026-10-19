@@ -40,6 +40,7 @@
     "test:twilio-voice": "node --experimental-strip-types --no-warnings --test tests/twilio-voice.test.mjs",
     "test:voice-policy": "node --experimental-strip-types --no-warnings --test tests/voice-policy.test.mjs",
     "test:calls": "node tests/calls-suite.js",
+    "test:ai-assistant": "node --experimental-strip-types --no-warnings --test tests/ai-assistant.test.mjs",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
