@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireAdmin } from "@/lib/auth";
-import { CLIENT_STATUSES, isOrgMember, parseAmount } from "@/lib/validation-helpers";
+import { CLIENT_STATUSES, parseAmount } from "@/lib/validation-helpers";
+import { createClientSchema } from "@/lib/validations/client";
+import { ClientServiceError, createClient } from "@/services/clients.service";
 
 export const dynamic = "force-dynamic";
 
@@ -107,148 +109,28 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const { user, errorResponse } = await requireAuth(req);
+  if (errorResponse) return errorResponse;
+
+  if (user!.isClientUser) {
+    return NextResponse.json(
+      { success: false, error: "Acceso denegado. La creación de clientes está reservada para administradores de Bunker Agency." },
+      { status: 403 }
+    );
+  }
+
+  const parsed = createClientSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || "Datos inválidos." }, { status: 400 });
+  }
+
   try {
-    const { user, errorResponse } = await requireAuth(req);
-    if (errorResponse) return errorResponse;
-
-    if (user!.isClientUser) {
-      return NextResponse.json(
-        { success: false, error: "Acceso denegado. La creación de clientes está reservada para administradores de Bunker Agency." },
-        { status: 403 }
-      );
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const {
-      name,
-      companyName,
-      email,
-      phone,
-      website,
-      industry,
-      revenue,
-      notes,
-      ownerId,
-      primaryContact,
-      connectedAccountId,
-      adAccountExternalId,
-      initialDeal,
-    } = body;
-
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      return NextResponse.json({ success: false, error: "El nombre del cliente es obligatorio." }, { status: 400 });
-    }
-
-    const revenueAmount = parseAmount(revenue);
-    if (revenueAmount === null) {
-      return NextResponse.json(
-        { success: false, error: "El valor contratado debe ser un número mayor o igual a 0 (USD)." },
-        { status: 400 }
-      );
-    }
-
-    // The owner must be a member of the authenticated user's organization.
-    if (ownerId && (typeof ownerId !== "string" || !(await isOrgMember(user!.organizationId, ownerId)))) {
-      return NextResponse.json(
-        { success: false, error: "El responsable asignado no pertenece a su organización." },
-        { status: 400 }
-      );
-    }
-
-    const client = await prisma.client.create({
-      data: {
-        organizationId: user!.organizationId,
-        name: name.trim(),
-        companyName: companyName?.trim() || null,
-        email: email?.trim() || null,
-        phone: phone?.trim() || null,
-        website: website?.trim() || null,
-        industry: industry?.trim() || "General",
-        revenue: revenueAmount,
-        notes: notes?.trim() || null,
-        ownerId: ownerId || user!.id,
-        status: "active",
-        isDemo: false,
-      },
-    });
-
-    // 1. Crear contacto principal si fue provisto en el Wizard
-    if (primaryContact && typeof primaryContact.firstName === "string" && primaryContact.firstName.trim()) {
-      await prisma.contact.create({
-        data: {
-          organizationId: user!.organizationId,
-          clientId: client.id,
-          firstName: primaryContact.firstName.trim(),
-          lastName: primaryContact.lastName?.trim() || null,
-          email: primaryContact.email?.trim() || null,
-          phone: primaryContact.phone?.trim() || null,
-          jobTitle: primaryContact.jobTitle?.trim() || "Contacto Principal",
-          isPrimary: true,
-        },
-      });
-    }
-
-    // 2. Vincular cuenta publicitaria o red social seleccionada en el Wizard
-    if (connectedAccountId && typeof connectedAccountId === "string") {
-      await prisma.connectedAccount.updateMany({
-        where: {
-          id: connectedAccountId,
-          organizationId: user!.organizationId,
-        },
-        data: { clientId: client.id },
-      });
-    } else if (adAccountExternalId && typeof adAccountExternalId === "string" && adAccountExternalId.trim()) {
-      // Si especificó el ID externo directamente (ej. 5194920503935574)
-      await prisma.connectedAccount.updateMany({
-        where: {
-          externalId: adAccountExternalId.trim(),
-          organizationId: user!.organizationId,
-        },
-        data: { clientId: client.id },
-      });
-    }
-
-    // 3. Crear oportunidad inicial en el pipeline comercial si se indicó
-    if (initialDeal && initialDeal.enabled) {
-      const defaultStage = await prisma.pipelineStage.findFirst({
-        where: { organizationId: user!.organizationId },
-        orderBy: { order: "asc" },
-      });
-
-      if (defaultStage) {
-        await prisma.opportunity.create({
-          data: {
-            organizationId: user!.organizationId,
-            clientId: client.id,
-            stageId: defaultStage.id,
-            title: initialDeal.title || `Campaña Inicial - ${client.name}`,
-            value: typeof initialDeal.value === "number" ? initialDeal.value : revenueAmount || 2500,
-            probability: 50,
-            status: "open",
-          },
-        });
-      }
-    }
-
-    // Create Audit Log
-    await prisma.auditLog.create({
-      data: {
-        organizationId: user!.organizationId,
-        userId: user!.id,
-        action: "client_created",
-        entityType: "Client",
-        entityId: client.id,
-        detailsJson: JSON.stringify({
-          name: client.name,
-          email: client.email,
-          hasPrimaryContact: Boolean(primaryContact),
-          linkedAccount: connectedAccountId || adAccountExternalId || null,
-        }),
-      },
-    });
-
+    const client = await createClient({ organizationId: user!.organizationId, userId: user!.id }, parsed.data);
     return NextResponse.json({ success: true, client }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
+    if (error instanceof ClientServiceError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
     console.error("POST /api/clients error:", error);
     return NextResponse.json({ success: false, error: "Error al registrar cliente." }, { status: 500 });
   }

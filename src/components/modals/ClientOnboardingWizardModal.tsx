@@ -11,14 +11,13 @@ import {
   ChevronRight,
   ChevronLeft,
   AlertCircle,
-  Clock,
   Phone,
   Mail,
   DollarSign,
   Briefcase,
-  HelpCircle,
   KanbanSquare,
 } from "lucide-react";
+import { useClientOnboarding, type ClientOnboardingPayload } from "@/hooks/useClientOnboarding";
 
 interface TeamMember {
   id: string;
@@ -40,18 +39,19 @@ export function ClientOnboardingWizardModal({
   teamMembers,
 }: ClientOnboardingWizardModalProps) {
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Available agency accounts to link
-  const [agencyAccounts, setAgencyAccounts] = useState<any[]>([]);
-  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const {
+    unassignedAccounts: agencyAccounts,
+    submitting,
+    error: errorMessage,
+    setError: setErrorMessage,
+    createClient,
+  } = useClientOnboarding(isOpen);
 
   // Step 1: Empresa
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("Restaurantes & Gastronomía");
-  const [revenue, setRevenue] = useState("2500");
+  const [revenue, setRevenue] = useState("");
   const [website, setWebsite] = useState("");
   const [ownerId, setOwnerId] = useState("");
 
@@ -65,12 +65,8 @@ export function ClientOnboardingWizardModal({
   // Step 3: Redes & Pauta
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [manualAdAccountId, setManualAdAccountId] = useState<string>("");
-  const [platformOption, setPlatformOption] = useState<"meta" | "manual">("meta");
 
-  // Step 4: IA Comercial & Pipeline
-  const [enableOutOfHoursAi, setEnableOutOfHoursAi] = useState(true);
-  const [startHour, setStartHour] = useState("08:00");
-  const [endHour, setEndHour] = useState("19:00");
+  // Step 4: Activación comercial
   const [createInitialDeal, setCreateInitialDeal] = useState(true);
   const [notes, setNotes] = useState("");
 
@@ -78,34 +74,8 @@ export function ClientOnboardingWizardModal({
     if (isOpen) {
       setCurrentStep(1);
       setErrorMessage(null);
-      fetchAgencyAccounts();
     }
-  }, [isOpen]);
-
-  const fetchAgencyAccounts = async () => {
-    try {
-      setLoadingAccounts(true);
-      const res = await fetch("/api/integrations");
-      const json = await res.json();
-      if (json.success && Array.isArray(json.integrations)) {
-        const unassigned: any[] = [];
-        json.integrations.forEach((it: any) => {
-          if (Array.isArray(it.connectedAccounts)) {
-            it.connectedAccounts.forEach((acc: any) => {
-              if (!acc.clientId) {
-                unassigned.push({ ...acc, providerName: it.name });
-              }
-            });
-          }
-        });
-        setAgencyAccounts(unassigned);
-      }
-    } catch (e) {
-      console.error("Error fetching accounts:", e);
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
+  }, [isOpen, setErrorMessage]);
 
   if (!isOpen) return null;
 
@@ -140,53 +110,39 @@ export function ClientOnboardingWizardModal({
   };
 
   const handleFinish = async () => {
-    setSubmitting(true);
-    setErrorMessage(null);
+    // El valor de la oportunidad es el contratado; si no se indicó, el servidor la abre en 0.
+    const revenueNumber = Number(revenue.replace(/,/g, "").trim());
+    const dealValue = revenue.trim() && Number.isFinite(revenueNumber) ? revenueNumber : undefined;
 
-    try {
-      const payload = {
-        name: name.trim(),
-        companyName: companyName.trim() || name.trim(),
+    const payload: ClientOnboardingPayload = {
+      name: name.trim(),
+      companyName: companyName.trim() || name.trim(),
+      email: contactEmail.trim() || undefined,
+      phone: contactPhone.trim() || undefined,
+      website: website.trim() || undefined,
+      industry,
+      revenue,
+      ownerId: ownerId || undefined,
+      notes: notes.trim() || undefined,
+      primaryContact: {
+        firstName: contactFirstName.trim(),
+        lastName: contactLastName.trim() || undefined,
+        jobTitle: contactJobTitle.trim() || "Contacto Principal",
         email: contactEmail.trim() || undefined,
         phone: contactPhone.trim() || undefined,
-        website: website.trim() || undefined,
-        industry,
-        revenue: revenue || "0",
-        ownerId: ownerId || undefined,
-        notes: notes.trim() || undefined,
-        primaryContact: {
-          firstName: contactFirstName.trim(),
-          lastName: contactLastName.trim() || undefined,
-          jobTitle: contactJobTitle.trim() || "Contacto Principal",
-          email: contactEmail.trim() || undefined,
-          phone: contactPhone.trim() || undefined,
-        },
-        connectedAccountId: selectedAccountId || undefined,
-        adAccountExternalId: manualAdAccountId.trim() || undefined,
-        initialDeal: {
-          enabled: createInitialDeal,
-          title: `Campaña Comercial Inicial - ${name.trim()}`,
-          value: parseFloat(revenue) || 2500,
-        },
-      };
+      },
+      connectedAccountId: selectedAccountId || undefined,
+      adAccountExternalId: manualAdAccountId.trim() || undefined,
+      initialDeal: {
+        enabled: createInitialDeal,
+        title: `Campaña Comercial Inicial - ${name.trim()}`,
+        value: dealValue,
+      },
+    };
 
-      const res = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json();
-      if (json.success) {
-        onSuccess();
-        onClose();
-      } else {
-        setErrorMessage(json.error || "No se pudo registrar el cliente.");
-      }
-    } catch (e: any) {
-      setErrorMessage(e.message || "Error al conectar con el servidor.");
-    } finally {
-      setSubmitting(false);
+    if (await createClient(payload)) {
+      onSuccess();
+      onClose();
     }
   };
 
@@ -194,7 +150,7 @@ export function ClientOnboardingWizardModal({
     { num: 1, title: "Empresa", icon: Building2 },
     { num: 2, title: "Contacto", icon: UserCheck },
     { num: 3, title: "Redes & Pauta", icon: Share2 },
-    { num: 4, title: "IA & Activación", icon: Sparkles },
+    { num: 4, title: "Activación", icon: Sparkles },
   ];
 
   return (
@@ -342,7 +298,7 @@ export function ClientOnboardingWizardModal({
                     <DollarSign className="w-3.5 h-3.5 text-[#8C887E] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="number"
-                      placeholder="2500"
+                      placeholder="0"
                       value={revenue}
                       onChange={(e) => setRevenue(e.target.value)}
                       className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl pl-8 pr-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
@@ -559,65 +515,17 @@ export function ClientOnboardingWizardModal({
             </div>
           )}
 
-          {/* PASO 4: IA & ACTIVACIÓN */}
+          {/* PASO 4: ACTIVACIÓN COMERCIAL */}
           {currentStep === 4 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
                 <div>
-                  <strong>Paso 4: Configuración Comercial & IA</strong>
+                  <strong>Paso 4: Activación Comercial</strong>
                   <p className="mt-0.5 text-[11px] text-emerald-800">
-                    Define la atención automática para los prospectos de este cliente cuando entren en horario no hábil.
+                    Abre el seguimiento comercial del cliente y deja notas para el equipo.
                   </p>
                 </div>
-              </div>
-
-              {/* Toggle IA fuera de horario */}
-              <div className="p-3.5 rounded-2xl bg-[#F6F5F2] border border-[#ECEAE3] space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-semibold text-[#141414] flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#D97757]" />
-                      <span>Respuesta Automática con IA en Horas de Ausencia</span>
-                    </div>
-                    <div className="text-[11px] text-[#8C887E] mt-0.5">
-                      Si un lead llena un anuncio fuera de oficina, recibe un SMS inteligente en &lt; 60 seg.
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={enableOutOfHoursAi}
-                    onChange={(e) => setEnableOutOfHoursAi(e.target.checked)}
-                    className="w-4 h-4 text-[#D97757] rounded"
-                  />
-                </div>
-
-                {enableOutOfHoursAi && (
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E8E6DF] text-xs">
-                    <div>
-                      <label className="block text-[11px] font-medium text-[#6B6861] mb-1">
-                        Apertura Oficina
-                      </label>
-                      <input
-                        type="time"
-                        value={startHour}
-                        onChange={(e) => setStartHour(e.target.value)}
-                        className="w-full bg-white border border-[#ECEAE3] rounded-xl px-2.5 py-1.5 text-xs text-[#141414]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-[#6B6861] mb-1">
-                        Cierre Oficina
-                      </label>
-                      <input
-                        type="time"
-                        value={endHour}
-                        onChange={(e) => setEndHour(e.target.value)}
-                        className="w-full bg-white border border-[#ECEAE3] rounded-xl px-2.5 py-1.5 text-xs text-[#141414]"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Crear Oportunidad inicial en Pipeline */}
