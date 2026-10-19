@@ -39,3 +39,6 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 /e2e/.auth/
+
+# Worktrees temporales de agentes
+.claude/worktrees/

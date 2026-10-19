@@ -8,20 +8,29 @@ import {
   completeTwilioCall,
   getTwilioConfig,
   getTwilioVoiceConfig,
+  startCallRecording,
   twilioWebhookUrl,
 } from "@/lib/integrations/twilio";
 import { createVoiceAccessToken } from "@/lib/integrations/twilio-voice-token";
 import { conferenceTwiml, dialClientsTwiml, emptyTwiml, sayTwiml } from "@/lib/integrations/twilio-twiml";
+import { isAllowedCallDestination, parseAllowedCountries, statusesThatCanAdvanceTo } from "@/lib/voice-policy";
 import { ACTIVITY_TYPE } from "@/lib/constants/crm";
 import {
+  CALL_CALLBACK_LEG,
   CALL_DIRECTION,
   CALL_STATUS,
   CALL_STATUS_LABEL,
+  CALL_STATUS_RANK,
+  DEFAULT_VOICE_ALLOWED_COUNTRIES,
   FINAL_CALL_STATUSES,
   INBOUND_RING_SECONDS,
   LIVE_CALL_STATUSES,
   MONITOR_MODE,
+  TWILIO_CONFERENCE_EVENT,
+  VOICE_ALLOWED_NUMBER_TYPES,
   VOICE_IDENTITY_PREFIX,
+  VOICE_MAX_CALLS_PER_CLIENT_PER_DAY,
+  VOICE_MAX_CALLS_PER_USER_PER_HOUR,
   VOICE_TOKEN_TTL_SECONDS,
   VOICE_WEBHOOK_PATH,
   type CallStatus,
@@ -38,9 +47,12 @@ const RECORDING_NOTICE = "Esta llamada puede ser grabada con fines de calidad.";
 const VOICEMAIL_TEXT = "Gracias por llamar. En este momento no podemos atenderte; te devolveremos la llamada lo antes posible.";
 const CALL_ERROR_TEXT = "No se pudo completar la llamada. Intenta de nuevo.";
 
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
 /** Error de negocio con el status HTTP que debe responder la ruta. */
 export class CallError extends Error {
-  constructor(message: string, public status: 400 | 403 | 404 | 409 | 503) {
+  constructor(message: string, public status: 400 | 403 | 404 | 409 | 429 | 503) {
     super(message);
   }
 }
@@ -74,17 +86,25 @@ export function issueVoiceToken(userId: string) {
   return { token, identity, ttlSeconds: VOICE_TOKEN_TTL_SECONDS };
 }
 
-const webhookUrl = (callId: string, leg: string) => twilioWebhookUrl(`${VOICE_WEBHOOK_PATH.STATUS}?callId=${callId}&leg=${leg}`);
+type CallbackLeg = (typeof CALL_CALLBACK_LEG)[keyof typeof CALL_CALLBACK_LEG];
+
+const webhookUrl = (callId: string, leg: CallbackLeg) =>
+  twilioWebhookUrl(`${VOICE_WEBHOOK_PATH.STATUS}?callId=${callId}&leg=${leg}`);
 
 // ---------------------------------------------------------------------------
 // Líneas
 // ---------------------------------------------------------------------------
 
-/** Línea por la que sale una llamada: la del cliente, la general de la organización o la de .env. */
+/**
+ * Línea por la que sale una llamada: la del cliente, la general de la organización o la de .env.
+ * Con varias líneas activas gana la más antigua, para que el lead vea siempre el mismo número.
+ */
 async function resolveLine(organizationId: string, clientId: string | null) {
+  const oldestFirst = { createdAt: "asc" } as const;
   const line =
-    (clientId && (await prisma.phoneLine.findFirst({ where: { organizationId, clientId, isActive: true } }))) ||
-    (await prisma.phoneLine.findFirst({ where: { organizationId, clientId: null, isActive: true } }));
+    (clientId &&
+      (await prisma.phoneLine.findFirst({ where: { organizationId, clientId, isActive: true }, orderBy: oldestFirst }))) ||
+    (await prisma.phoneLine.findFirst({ where: { organizationId, clientId: null, isActive: true }, orderBy: oldestFirst }));
   if (line) return { lineId: line.id, fromNumber: line.phoneNumber, recordCalls: line.recordCalls };
 
   const fallback = getTwilioConfig()?.fromPhone;
@@ -268,6 +288,34 @@ export async function listLiveCalls(organizationId: string) {
 // Saliente
 // ---------------------------------------------------------------------------
 
+/** Política de destinos vigente; la lista de países se ajusta por entorno sin desplegar código. */
+function callDestinationPolicy() {
+  return {
+    allowedCountries: parseAllowedCountries(process.env.VOICE_ALLOWED_COUNTRIES, DEFAULT_VOICE_ALLOWED_COUNTRIES),
+    allowedTypes: VOICE_ALLOWED_NUMBER_TYPES,
+  };
+}
+
+/**
+ * Tope de salientes por usuario (1 h) y por cliente (24 h), contadas en `Call`. Si se roban
+ * una sesión o alguien automatiza el botón, el daño queda acotado. No es atómico con el
+ * `create` (dos peticiones simultáneas pueden pasar ambas): es un freno, no una cuota exacta.
+ */
+async function assertOutboundRateLimit(organizationId: string, userId: string, clientId: string | null) {
+  const now = Date.now();
+  const outbound = { organizationId, direction: CALL_DIRECTION.OUTBOUND };
+  const [byUser, byClient] = await Promise.all([
+    prisma.call.count({ where: { ...outbound, userId, createdAt: { gte: new Date(now - HOUR_MS) } } }),
+    prisma.call.count({ where: { ...outbound, clientId, createdAt: { gte: new Date(now - DAY_MS) } } }),
+  ]);
+  if (byUser >= VOICE_MAX_CALLS_PER_USER_PER_HOUR) {
+    throw new CallError(`Llegaste al límite de ${VOICE_MAX_CALLS_PER_USER_PER_HOUR} llamadas por hora. Intenta más tarde.`, 429);
+  }
+  if (byClient >= VOICE_MAX_CALLS_PER_CLIENT_PER_DAY) {
+    throw new CallError(`Esta empresa llegó al límite de ${VOICE_MAX_CALLS_PER_CLIENT_PER_DAY} llamadas en 24 horas.`, 429);
+  }
+}
+
 /**
  * Registra una llamada saliente a un lead dentro del scope del usuario. El número sale
  * del lead, nunca del navegador. El navegador conecta después con `callId`.
@@ -275,12 +323,19 @@ export async function listLiveCalls(organizationId: string) {
 export async function startOutboundCall(scope: TenantScope, userId: string, leadId: string) {
   const lead = await prisma.lead.findFirst({
     where: { id: leadId, isDeleted: false, ...scopeWhere(scope) },
-    select: { id: true, clientId: true, normalizedPhone: true, phone: true },
+    select: { id: true, clientId: true, normalizedPhone: true },
   });
   if (!lead) throw new CallError("Lead no encontrado.", 404);
-  const toNumber = lead.normalizedPhone || lead.phone;
-  if (!toNumber) throw new CallError("El lead no tiene teléfono registrado.", 400);
+  // Solo el E.164 validado: `phone` es texto libre y Twilio lo interpretaría a su manera.
+  const toNumber = lead.normalizedPhone;
+  if (!toNumber) {
+    throw new CallError("El lead no tiene un teléfono válido en formato internacional. Corrígelo antes de llamar.", 400);
+  }
+  if (!isAllowedCallDestination(toNumber, callDestinationPolicy())) {
+    throw new CallError("No se permiten llamadas a este número: el país o el tipo de línea no está habilitado.", 400);
+  }
   if (!getTwilioVoiceConfig()) throw new CallError("Las llamadas no están configuradas en este entorno.", 503);
+  await assertOutboundRateLimit(scope.organizationId, userId, lead.clientId);
 
   const line = await resolveLine(scope.organizationId, lead.clientId);
   const call = await prisma.call.create({
@@ -317,23 +372,33 @@ export async function handleVoiceAppRequest(params: Record<string, string>) {
 }
 
 async function connectAgent(userId: string, callId: string, agentCallSid: string) {
+  // Un callId solo sirve una vez y solo para quien lo creó. El `updateMany` condicionado es
+  // el candado: si Twilio reintenta o llegan dos connect a la vez, solo uno le marca al lead.
+  const { count } = await prisma.call.updateMany({
+    where: {
+      id: callId,
+      userId,
+      direction: CALL_DIRECTION.OUTBOUND,
+      status: CALL_STATUS.INITIATED,
+      agentCallSid: null,
+      conferenceName: { not: null },
+    },
+    data: { agentCallSid, status: CALL_STATUS.RINGING },
+  });
+  if (!count) return sayTwiml(CALL_ERROR_TEXT);
+
   const call = await prisma.call.findUnique({
     where: { id: callId },
-    include: { line: { select: { recordCalls: true } } },
+    select: { id: true, conferenceName: true, fromNumber: true, toNumber: true },
   });
-  // Un callId solo sirve una vez y solo para quien lo creó.
-  if (!call || call.userId !== userId || call.direction !== CALL_DIRECTION.OUTBOUND || call.agentCallSid || !call.conferenceName) {
-    return sayTwiml(CALL_ERROR_TEXT);
-  }
-
-  await prisma.call.update({ where: { id: call.id }, data: { agentCallSid, status: CALL_STATUS.RINGING } });
+  if (!call?.conferenceName) return sayTwiml(CALL_ERROR_TEXT);
 
   try {
     const customerCallSid = await addConferenceParticipant({
       conferenceName: call.conferenceName,
       from: call.fromNumber,
       to: call.toNumber,
-      statusCallback: webhookUrl(call.id, "customer"),
+      statusCallback: webhookUrl(call.id, CALL_CALLBACK_LEG.CUSTOMER),
       timeoutSeconds: OUTBOUND_RING_SECONDS,
     });
     await prisma.call.update({ where: { id: call.id }, data: { customerCallSid } });
@@ -343,14 +408,12 @@ async function connectAgent(userId: string, callId: string, agentCallSid: string
     return sayTwiml(CALL_ERROR_TEXT);
   }
 
-  const record = Boolean(call.line?.recordCalls);
+  // Sin `record` en la conferencia: si la línea graba, se empieza después del aviso (applyVoiceCallback).
   return conferenceTwiml({
     name: call.conferenceName,
     startConferenceOnEnter: true,
     endConferenceOnExit: true,
-    record,
-    statusCallback: webhookUrl(call.id, "conference"),
-    recordingStatusCallback: webhookUrl(call.id, "recording"),
+    statusCallback: webhookUrl(call.id, CALL_CALLBACK_LEG.CONFERENCE),
   });
 }
 
@@ -423,8 +486,16 @@ export async function handleInboundCall(params: Record<string, string>) {
   const line = await prisma.phoneLine.findFirst({ where: { phoneNumber: to, isActive: true } });
   if (!line) return sayTwiml(VOICEMAIL_TEXT);
 
+  // Una línea de un cliente solo reconoce leads de ese cliente: el mismo número puede ser lead
+  // de dos empresas y la llamada (y su Activity) no debe caer en la otra. La línea general de
+  // Bunker (sin cliente) sí busca en toda la organización.
   const lead = await prisma.lead.findFirst({
-    where: { organizationId: line.organizationId, normalizedPhone: from, isDeleted: false },
+    where: {
+      organizationId: line.organizationId,
+      normalizedPhone: from,
+      isDeleted: false,
+      ...(line.clientId ? { clientId: line.clientId } : {}),
+    },
     orderBy: { createdAt: "desc" },
     select: { id: true, clientId: true },
   });
@@ -453,18 +524,29 @@ export async function handleInboundCall(params: Record<string, string>) {
   return dialClientsTwiml({
     identities,
     timeoutSeconds: INBOUND_RING_SECONDS,
-    action: webhookUrl(call.id, "dial") as string,
+    action: webhookUrl(call.id, CALL_CALLBACK_LEG.DIAL) as string,
     parameters: { callId: call.id },
+    // El <Say> va antes del <Dial> y la grabación es "record-from-answer": el aviso siempre precede.
     announcement: line.recordCalls ? RECORDING_NOTICE : null,
     record: line.recordCalls,
-    recordingStatusCallback: webhookUrl(call.id, "recording"),
+    recordingStatusCallback: webhookUrl(call.id, CALL_CALLBACK_LEG.RECORDING),
   });
 }
 
-/** El asesor contestó una entrante en su navegador: queda como responsable de la llamada. */
+/**
+ * El asesor contestó una entrante en su navegador: queda como responsable de la llamada.
+ * Solo una entrante que sigue timbrando y que nadie contestó: una terminada no se reabre.
+ */
 export async function claimInboundCall(scope: TenantScope, userId: string, callId: string, agentCallSid: string | null) {
   const { count } = await prisma.call.updateMany({
-    where: { id: callId, direction: CALL_DIRECTION.INBOUND, userId: null, ...scopeWhere(scope) },
+    where: {
+      id: callId,
+      direction: CALL_DIRECTION.INBOUND,
+      status: CALL_STATUS.RINGING,
+      userId: null,
+      answeredAt: null,
+      ...scopeWhere(scope),
+    },
     data: { userId, agentCallSid, status: CALL_STATUS.IN_PROGRESS, answeredAt: new Date() },
   });
   if (!count) throw new CallError("La llamada ya no está disponible.", 409);
@@ -511,16 +593,26 @@ async function finishCall(callId: string, status: CallStatus, durationSec: numbe
 
   const call = await prisma.call.findUnique({
     where: { id: callId },
-    select: { direction: true, leadId: true, clientId: true, userId: true, toNumber: true, fromNumber: true },
+    select: {
+      direction: true,
+      leadId: true,
+      clientId: true,
+      userId: true,
+      toNumber: true,
+      fromNumber: true,
+      lead: { select: { clientId: true } },
+    },
   });
   if (!call || (!call.leadId && !call.clientId)) return;
+  // La Activity va con el cliente del lead, que es donde se ve su historial; sin lead, el de la llamada.
+  const activityClientId = call.lead ? call.lead.clientId : call.clientId;
 
   const kind = call.direction === CALL_DIRECTION.OUTBOUND ? "saliente" : "entrante";
   const answered = status === CALL_STATUS.COMPLETED && (durationSec ?? 0) > 0;
   await prisma.activity.create({
     data: {
       leadId: call.leadId,
-      clientId: call.clientId,
+      clientId: activityClientId,
       userId: call.userId,
       type: ACTIVITY_TYPE.CALL,
       title: `Llamada ${kind} · ${CALL_STATUS_LABEL[status]}${answered ? ` (${formatDuration(durationSec as number)})` : ""}`,
@@ -542,46 +634,39 @@ export async function applyVoiceCallback(callId: string, leg: string, params: Re
     where: { id: callId },
     include: { line: { select: { recordCalls: true } } },
   });
-  if (!call) return leg === "dial" ? sayTwiml(VOICEMAIL_TEXT) : null;
+  if (!call) return leg === CALL_CALLBACK_LEG.DIAL ? sayTwiml(VOICEMAIL_TEXT) : null;
   const isFinal = FINAL_CALL_STATUSES.includes(call.status as CallStatus);
 
-  if (leg === "customer") {
+  if (leg === CALL_CALLBACK_LEG.CUSTOMER) {
     const status = mapCallStatus(params.CallStatus);
     if (!status || isFinal) return null;
-    if (FINAL_CALL_STATUSES.includes(status)) {
-      await finishCall(call.id, status, params.CallDuration ? parseInt(params.CallDuration, 10) : null);
-    } else {
-      await prisma.call.update({
-        where: { id: call.id },
-        data: { status, ...(status === CALL_STATUS.IN_PROGRESS && !call.answeredAt ? { answeredAt: new Date() } : {}) },
-      });
+    if (!FINAL_CALL_STATUSES.includes(status)) {
+      await advanceCallStatus(call.id, status);
+      return null;
+    }
+    await finishCall(call.id, status, params.CallDuration ? parseInt(params.CallDuration, 10) : null);
+    // Si el lead nunca entró (ocupado, sin respuesta, falló), la conferencia no termina sola y el
+    // asesor queda en silencio. Colgar su pierna termina la conferencia y dispara `disconnect`
+    // en el navegador. Con `completed` no hace falta: el lead sale con EndConferenceOnExit.
+    if (status !== CALL_STATUS.COMPLETED && call.agentCallSid) {
+      await completeTwilioCall(call.agentCallSid).catch((e) => console.error(`Llamada ${call.id}: no se pudo colgar al asesor:`, e));
     }
     return null;
   }
 
-  if (leg === "conference") {
-    const event = params.StatusCallbackEvent;
-    // El aviso de grabación suena para todos en cuanto el lead entra a la conferencia.
-    if (event === "participant-join" && params.CallSid === call.customerCallSid && call.line?.recordCalls && params.ConferenceSid) {
-      const announceUrl = twilioWebhookUrl(VOICE_WEBHOOK_PATH.ANNOUNCE);
-      if (announceUrl) await announceToConference(params.ConferenceSid, announceUrl).catch((e) => console.error("Aviso de grabación:", e));
-    }
-    if (event === "conference-end" && !isFinal) {
-      // El asesor colgó antes de que el lead contestara: deja de timbrarle.
-      if (!call.answeredAt && call.customerCallSid) await completeTwilioCall(call.customerCallSid).catch(() => undefined);
-      await finishCall(call.id, call.answeredAt ? CALL_STATUS.COMPLETED : CALL_STATUS.CANCELED, durationSince(call.answeredAt));
-    }
+  if (leg === CALL_CALLBACK_LEG.CONFERENCE) {
+    await handleConferenceEvent(call, params, isFinal);
     return null;
   }
 
-  if (leg === "recording") {
+  if (leg === CALL_CALLBACK_LEG.RECORDING) {
     if (params.RecordingStatus === "completed" && params.RecordingSid) {
       await prisma.call.update({ where: { id: call.id }, data: { recordingSid: params.RecordingSid, recordingUrl: params.RecordingUrl ?? null } });
     }
     return null;
   }
 
-  if (leg === "dial") {
+  if (leg === CALL_CALLBACK_LEG.DIAL) {
     const status = mapCallStatus(params.DialCallStatus) ?? CALL_STATUS.NO_ANSWER;
     const answered = status === CALL_STATUS.COMPLETED || status === CALL_STATUS.IN_PROGRESS;
     await finishCall(call.id, answered ? CALL_STATUS.COMPLETED : status, params.DialCallDuration ? parseInt(params.DialCallDuration, 10) : null);
@@ -589,6 +674,59 @@ export async function applyVoiceCallback(callId: string, leg: string, params: Re
   }
 
   return null;
+}
+
+/** Guarda un estado intermedio solo si avanza; un callback atrasado no regresa la llamada. */
+async function advanceCallStatus(callId: string, status: CallStatus) {
+  await prisma.call.updateMany({
+    where: { id: callId, status: { in: statusesThatCanAdvanceTo(status, CALL_STATUS_RANK) } },
+    // Solo se llega a in_progress desde initiated/ringing, así que answeredAt aún no existe.
+    data: { status, ...(status === CALL_STATUS.IN_PROGRESS ? { answeredAt: new Date() } : {}) },
+  });
+}
+
+interface ConferenceCallRow {
+  id: string;
+  answeredAt: Date | null;
+  customerCallSid: string | null;
+  line: { recordCalls: boolean } | null;
+}
+
+/**
+ * Eventos de la conferencia de una saliente. Si la línea graba, el orden es: entra el lead →
+ * aviso a toda la conferencia → `announcement-end` → recién ahí se graba la pierna del lead.
+ * Si el aviso falla o no se pudo pedir, la llamada sigue sin grabarse: nunca se graba sin avisar.
+ */
+async function handleConferenceEvent(call: ConferenceCallRow, params: Record<string, string>, isFinal: boolean) {
+  const event = params.StatusCallbackEvent;
+  const recordCalls = Boolean(call.line?.recordCalls);
+
+  if (event === TWILIO_CONFERENCE_EVENT.PARTICIPANT_JOIN && recordCalls && params.CallSid === call.customerCallSid && params.ConferenceSid) {
+    const announceUrl = twilioWebhookUrl(VOICE_WEBHOOK_PATH.ANNOUNCE);
+    if (!announceUrl) return;
+    await announceToConference(params.ConferenceSid, announceUrl).catch((e) =>
+      console.error(`Llamada ${call.id}: no se pudo dar el aviso de grabación; no se grabará:`, e)
+    );
+    return;
+  }
+
+  if (event === TWILIO_CONFERENCE_EVENT.ANNOUNCEMENT_END && recordCalls && call.customerCallSid && !isFinal) {
+    await startCallRecording(call.customerCallSid, webhookUrl(call.id, CALL_CALLBACK_LEG.RECORDING)).catch((e) =>
+      console.error(`Llamada ${call.id}: no se pudo iniciar la grabación:`, e)
+    );
+    return;
+  }
+
+  if (event === TWILIO_CONFERENCE_EVENT.ANNOUNCEMENT_FAIL) {
+    console.error(`Llamada ${call.id}: Twilio no reprodujo el aviso de grabación; la llamada no se graba.`);
+    return;
+  }
+
+  if (event === TWILIO_CONFERENCE_EVENT.CONFERENCE_END && !isFinal) {
+    // El asesor colgó antes de que el lead contestara: deja de timbrarle.
+    if (!call.answeredAt && call.customerCallSid) await completeTwilioCall(call.customerCallSid).catch(() => undefined);
+    await finishCall(call.id, call.answeredAt ? CALL_STATUS.COMPLETED : CALL_STATUS.CANCELED, durationSince(call.answeredAt));
+  }
 }
 
 function durationSince(answeredAt: Date | null) {

@@ -31,6 +31,12 @@ export const ENV_VARS: EnvVarSpec[] = [
   { name: "TWILIO_API_KEY_SID", description: "API Key de Twilio para los tokens de llamadas del navegador", group: "messaging", required: false },
   { name: "TWILIO_API_KEY_SECRET", description: "Secreto de la API Key de Twilio", group: "messaging", required: false },
   { name: "TWILIO_TWIML_APP_SID", description: "TwiML App de voz (Voice URL → /api/integrations/twilio/voice)", group: "messaging", required: false },
+  {
+    name: "VOICE_ALLOWED_COUNTRIES",
+    description: "Países a los que se puede llamar, separados por coma (opcional, por defecto MX,CO,US). Antifraude: complementa los Geo Permissions de Twilio",
+    group: "messaging",
+    required: false,
+  },
 ];
 
 export const ENV_GROUP_LABEL: Record<EnvGroup, string> = {

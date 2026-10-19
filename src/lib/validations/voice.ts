@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validateAndNormalizePhone } from "@/lib/phone";
+import { TWILIO_CALL_SID_PATTERN } from "@/lib/constants/voice";
 
 const phoneNumberField = z
   .string()
@@ -37,7 +38,8 @@ export const startCallSchema = z.object({
 });
 
 export const claimCallSchema = z.object({
-  agentCallSid: z.string().max(64).nullable().default(null),
+  // El SID termina en la base y en la API REST de Twilio: solo se acepta un CallSid real.
+  agentCallSid: z.string().regex(TWILIO_CALL_SID_PATTERN, "Identificador de llamada inválido.").nullable().default(null),
 });
 
 export type CreatePhoneLineInput = z.infer<typeof createPhoneLineSchema>;

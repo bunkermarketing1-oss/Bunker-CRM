@@ -48,11 +48,32 @@ Entrante al número de una línea
   `TWILIO_PHONE_NUMBER`. Los números se compran en la consola de Twilio; el CRM solo los
   registra.
 - **Quién llama:** cualquier usuario, a leads dentro de su scope (un CLIENT solo a los de
-  su empresa). El número sale del lead, nunca del navegador.
-- **Escucha en vivo:** solo admin, en esta rama. El rol "dueño" del cliente llega con
-  `feat/advisor-roles-live-view`.
-- **Grabación:** apagada por defecto, se activa por línea. Si se activa, la llamada
-  empieza con un aviso de grabación (exigencia legal de privacidad en México).
+  su empresa). El número sale del lead (`normalizedPhone`, nunca el `phone` crudo ni el
+  navegador); si el lead no tiene E.164 validado, 400.
+- **Antifraude (toll fraud):** un CLIENT puede crear leads con cualquier número, así que
+  antes de registrar la saliente se exige (`lib/voice-policy.ts`): país en
+  `VOICE_ALLOWED_COUNTRIES` (por defecto `MX,CO,US`) y tipo de número móvil o fijo según
+  libphonenumber (se bloquean premium, costo compartido, UAN, VoIP, gratuitos, satelitales y
+  no geográficos). Tope de 30 salientes por usuario por hora y 300 por cliente en 24 h
+  (`VOICE_MAX_CALLS_*`, contadas en `Call`; es un freno, no una cuota atómica).
+  **En Twilio hay que limitar Voice > Settings > Geo Permissions a los mismos países y
+  apagar los destinos de alto riesgo**: es la barrera que no depende del código.
+- **Escucha en vivo:** solo admin, en esta rama, con AuditLog. El rol "dueño" del cliente
+  llega con `feat/advisor-roles-live-view`. **Pendiente de revisión legal** (LFPDPPP y
+  aviso de privacidad de cada cliente) antes de usarla en producción: el código no decide
+  si la escucha o el susurro requieren aviso o consentimiento adicional.
+- **Grabación:** apagada por defecto, se activa por línea. Si se activa, se avisa antes de
+  grabar. Saliente: la conferencia no graba sola; al entrar el lead se reproduce el aviso a
+  la conferencia y solo con `announcement-end` se graba la pierna del lead (dos canales). Si
+  el aviso falla o no se pudo pedir, la llamada sigue sin grabarse. Entrante: `<Say>` del
+  aviso antes del `<Dial record-from-answer>`. El texto del aviso también debe pasar por la
+  revisión legal.
+- **Robustez:** el `connect` del asesor y el `claim` de una entrante son `updateMany`
+  condicionados (un `callId` marca una sola vez; solo se toma una entrante que sigue
+  timbrando). Los estados intermedios solo avanzan (`CALL_STATUS_RANK`). Si el lead da
+  ocupado, no contesta o falla, se cuelga la pierna del asesor para que no quede solo en la
+  conferencia. Con varias líneas activas por cliente gana la más antigua. Una entrante a la
+  línea de un cliente solo se liga a leads de ese cliente.
 - **Entrantes:** timbran en los navegadores de los asesores del cliente de la línea. La
   escucha en vivo de entrantes queda para una segunda iteración: necesita poner al que
   llama en conferencia y repartir la llamada entre asesores.
@@ -101,9 +122,11 @@ Entrante al número de una línea
 ## Fase 5: tests y verificación
 
 - [x] `pnpm test:twilio-voice`: 9 tests, todos pasan.
+- [x] `pnpm test:voice-policy`: destinos permitidos/bloqueados y orden de estados.
 - [ ] `pnpm test:calls` (`tests/calls-suite.js`, 18 casos). Escrita; falta correrla:
       hay que reiniciar `pnpm dev`. Ningún caso le marca a un número real.
 - [x] `pnpm typecheck` y `pnpm lint` sin errores nuevos.
+- [ ] En Twilio: Geo Permissions de voz limitados a `VOICE_ALLOWED_COUNTRIES`.
 - [ ] En Twilio: API Key, TwiML App (Voice URL →
       `https://<dominio>/api/integrations/twilio/voice`) y en cada número "A call comes
       in" → `/api/integrations/twilio/voice/inbound`.
@@ -124,3 +147,4 @@ Entrante al número de una línea
 |---|---|---|
 | 2026-10-16 | Plan creado | |
 | 2026-10-16 | Fases 1 a 4 implementadas, migración aplicada | Falta correr la suite, configurar Twilio Voice y la prueba real |
+| 2026-10-19 | Correcciones de revisión (`fix/voice-calls`) | Antifraude (países, tipo de número, topes), solo `normalizedPhone`, cuelga al asesor si el lead no entra, entrantes aisladas por cliente, `claim`/`connect` atómicos, grabación tras el aviso, estados sin retroceso. `tests/voice-policy.test.mjs` pasa; casos CALL-19 a CALL-22 escritos en la suite, sin correr. Flujo con Twilio real sin probar |

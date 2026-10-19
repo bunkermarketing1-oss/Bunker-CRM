@@ -62,10 +62,10 @@ test("a whispering supervisor coaches only the advisor's leg", () => {
   assert.doesNotMatch(xml, /muted=/);
 });
 
-test("recording is only requested when the line has it enabled", () => {
-  const base = { name: "c", startConferenceOnEnter: true, endConferenceOnExit: true, recordingStatusCallback: "https://x/rec" };
-  assert.doesNotMatch(conferenceTwiml(base), /record=/);
-  assert.match(conferenceTwiml({ ...base, record: true }), /record="record-from-start" recordingStatusCallback="https:\/\/x\/rec"/);
+test("the conference never records by itself: recording starts only after the notice", () => {
+  const xml = conferenceTwiml({ name: "c", startConferenceOnEnter: true, endConferenceOnExit: true, statusCallback: "https://x/st" });
+  assert.doesNotMatch(xml, /record=/);
+  assert.match(xml, /statusCallbackEvent="start end join leave announcement"/);
 });
 
 test("an inbound call rings every advisor browser and passes the call id to them", () => {

@@ -128,7 +128,19 @@ async function run() {
     const alphaLeadNoPhone = await prisma.lead.create({
       data: { organizationId: org.id, clientId: alpha.id, name: `Lead sin tel ${STAMP}`, source: "meta_ads" },
     });
-    created.leads.push(alphaLead.id, alphaLeadNoPhone.id);
+    // Teléfono en texto libre pero sin E.164 validado: no se le debe marcar.
+    const alphaLeadRawPhone = await prisma.lead.create({
+      data: { organizationId: org.id, clientId: alpha.id, name: `Lead tel crudo ${STAMP}`, phone: "55 1234 abc", source: "meta_ads" },
+    });
+    // Número de tarifa premium (900 de México): blanco típico del fraude por llamadas.
+    const alphaLeadPremium = await prisma.lead.create({
+      data: { organizationId: org.id, clientId: alpha.id, name: `Lead premium ${STAMP}`, normalizedPhone: "+529001234567", source: "meta_ads" },
+    });
+    // El que llama a la línea de Alpha es lead de Beta: la entrante no debe ligarse a él.
+    const betaLeadCaller = await prisma.lead.create({
+      data: { organizationId: org.id, clientId: beta.id, name: `Lead Beta ${STAMP}`, normalizedPhone: CALLER_NUMBER, source: "meta_ads" },
+    });
+    created.leads.push(alphaLead.id, alphaLeadNoPhone.id, alphaLeadRawPhone.id, alphaLeadPremium.id, betaLeadCaller.id);
 
     const alphaUser = await provisionClientUser(org, alpha, `alpha.voz.${STAMP}@test.bunker`);
     const betaUser = await provisionClientUser(org, beta, `beta.voz.${STAMP}@test.bunker`);
@@ -153,6 +165,10 @@ async function run() {
     record("CALL-03", res.status === 404, `Beta llama al lead de Alpha → HTTP ${res.status} (esperado 404)`);
     res = await req("/api/voice/calls", { method: "POST", headers: auth(alphaCookie), body: JSON.stringify({ leadId: alphaLeadNoPhone.id }) });
     record("CALL-04", res.status === 400, `Lead sin teléfono → HTTP ${res.status} (esperado 400)`);
+    res = await req("/api/voice/calls", { method: "POST", headers: auth(alphaCookie), body: JSON.stringify({ leadId: alphaLeadRawPhone.id }) });
+    record("CALL-19", res.status === 400, `Lead con teléfono sin normalizar → HTTP ${res.status} (esperado 400)`);
+    res = await req("/api/voice/calls", { method: "POST", headers: auth(alphaCookie), body: JSON.stringify({ leadId: alphaLeadPremium.id }) });
+    record("CALL-20", res.status === 400, `Lead con número premium → HTTP ${res.status} (esperado 400)`);
 
     // 3. Webhooks sin firma
     const unsigned = await Promise.all([VOICE, INBOUND, `${STATUS}?callId=x&leg=customer`, ANNOUNCE].map((p) => twilio(p, { CallSid: "CA1" }, false)));
@@ -223,10 +239,17 @@ async function run() {
       r.text.includes(`<Identity>u_${alphaUser.id}</Identity>`) && !r.text.includes(`u_${betaUser.id}`) && inboundCall?.status === "ringing",
       "Entrante a la línea de Alpha → timbra solo en asesores de Alpha"
     );
+    record(
+      "CALL-21",
+      Boolean(inboundCall) && inboundCall.leadId === null && inboundCall.clientId === alpha.id,
+      `Entrante a la línea de Alpha desde un lead de Beta → sin lead ligado (leadId ${inboundCall?.leadId ?? "null"})`
+    );
 
     r = await twilio(`${STATUS}?callId=${inboundCall?.id}&leg=dial`, { CallSid: `CAin1${STAMP}`, DialCallStatus: "no-answer" });
     const missed = inboundCall ? await prisma.call.findUnique({ where: { id: inboundCall.id } }) : null;
     record("CALL-13", r.text.includes("<Say") && missed?.status === "no_answer", `Nadie contesta → buzón de cortesía y estado ${missed?.status}`);
+    res = await req(`/api/voice/calls/${inboundCall?.id}/claim`, { method: "POST", headers: auth(alphaCookie), body: JSON.stringify({ agentCallSid: null }) });
+    record("CALL-22", res.status === 409, `Tomar una entrante ya terminada → HTTP ${res.status} (esperado 409)`);
 
     // 8. Historial por cliente
     const callIds = async (cookie) => (((await json(await req("/api/voice/calls", { headers: auth(cookie) }))).calls) || []).map((c) => c.id);

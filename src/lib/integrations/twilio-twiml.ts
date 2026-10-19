@@ -31,9 +31,12 @@ export interface ConferenceOptions {
   muted?: boolean;
   /** CallSid del asesor: el supervisor le habla solo a él. */
   coach?: string | null;
-  record?: boolean;
+  /**
+   * Eventos de la conferencia. Incluye `announcement`: la grabación de la llamada solo
+   * arranca al recibir `announcement-end` del aviso, nunca con la conferencia
+   * (por eso aquí no hay `record`: grabaría antes de avisarle al lead).
+   */
   statusCallback?: string | null;
-  recordingStatusCallback?: string | null;
 }
 
 export function conferenceTwiml(opts: ConferenceOptions) {
@@ -45,10 +48,8 @@ export function conferenceTwiml(opts: ConferenceOptions) {
     beep: false,
     // Sin música de espera mientras el lead contesta: el asesor oye silencio, no un jingle.
     waitUrl: "",
-    record: opts.record ? "record-from-start" : undefined,
-    recordingStatusCallback: opts.record ? opts.recordingStatusCallback : undefined,
     statusCallback: opts.statusCallback,
-    statusCallbackEvent: opts.statusCallback ? "start end join leave" : undefined,
+    statusCallbackEvent: opts.statusCallback ? "start end join leave announcement" : undefined,
   })}>${escapeXml(opts.name)}</Conference>`;
   return response(`<Dial>${conference}</Dial>`);
 }

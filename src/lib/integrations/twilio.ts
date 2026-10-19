@@ -186,10 +186,26 @@ export async function addConferenceParticipant(input: AddParticipantInput) {
 
 /** Cuelga una pierna de la llamada. */
 export async function completeTwilioCall(callSid: string) {
-  await twilioPost(`/Calls/${callSid}.json`, { Status: "completed" });
+  await twilioPost(`/Calls/${encodeURIComponent(callSid)}.json`, { Status: "completed" });
 }
 
-/** Reproduce un TwiML (p. ej. el aviso de grabación) a toda la conferencia. */
+/**
+ * Reproduce un TwiML (p. ej. el aviso de grabación) a toda la conferencia. Al terminar,
+ * Twilio manda `announcement-end` (o `announcement-fail`) al statusCallback de la conferencia.
+ */
 export async function announceToConference(conferenceSid: string, announceUrl: string) {
-  await twilioPost(`/Conferences/${conferenceSid}.json`, { AnnounceUrl: announceUrl, AnnounceMethod: "POST" });
+  await twilioPost(`/Conferences/${encodeURIComponent(conferenceSid)}.json`, { AnnounceUrl: announceUrl, AnnounceMethod: "POST" });
+}
+
+/**
+ * Empieza a grabar una pierna en curso. Se usa con la del lead después del aviso de
+ * grabación: en dos canales queda lo que dice el lead y lo que oye (asesor incluido).
+ * Docs: https://www.twilio.com/docs/voice/api/recording#create-a-recording-resource
+ */
+export async function startCallRecording(callSid: string, recordingStatusCallback: string | null) {
+  await twilioPost(`/Calls/${encodeURIComponent(callSid)}/Recordings.json`, {
+    RecordingChannels: "dual",
+    RecordingStatusCallback: recordingStatusCallback ?? undefined,
+    RecordingStatusCallbackEvent: recordingStatusCallback ? "completed" : undefined,
+  });
 }
