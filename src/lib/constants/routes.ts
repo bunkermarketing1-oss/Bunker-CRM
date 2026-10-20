@@ -18,6 +18,8 @@ export const ROUTES = {
   TEAM_LIVE: "/team/live",
   AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
+  PRIVACY: "/privacy",
+  DATA_DELETION: "/data-deletion",
 } as const;
 
 export function clientDetailRoute(clientId: string): string {

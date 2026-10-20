@@ -16,7 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === ROUTES.LOGIN;
+  const isStandalonePage =
+    pathname === ROUTES.LOGIN ||
+    pathname === ROUTES.PRIVACY ||
+    pathname === ROUTES.DATA_DELETION ||
+    pathname === "/politica-de-privacidad" ||
+    pathname === "/eliminacion-de-datos";
 
   return (
     <html lang="es" className={inter.variable}>
@@ -32,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {isLoginPage ? (
+              {isStandalonePage ? (
                 children
               ) : (
                 <AppShell>{children}</AppShell>

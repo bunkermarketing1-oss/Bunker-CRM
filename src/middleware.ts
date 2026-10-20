@@ -4,13 +4,6 @@ import { isClientRole } from "@/lib/roles";
 
 const AUTH_COOKIE_NAME = "bunker_session";
 
-// Public paths that do not require authentication
-const PUBLIC_PATHS = [
-  "/login",
-  "/api/auth/login",
-  "/api/auth/logout",
-  "/api/auth/me",
-];
 
 // Helper to check if a JWT is structurally valid and not expired
 function isTokenValid(token: string): boolean {
@@ -61,16 +54,26 @@ function getJwtPayload(token: string): any {
   }
 }
 
+const STANDALONE_PUBLIC_PATHS = [
+  "/privacy",
+  "/data-deletion",
+  "/politica-de-privacidad",
+  "/eliminacion-de-datos",
+  "/api/integrations/meta/webhook",
+  "/api/integrations/meta/data-deletion",
+];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Ignore static assets, internal Next.js files, and public images
+  // 1. Ignore static assets, internal Next.js files, public images and public legal pages
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth") ||
     pathname === "/favicon.ico" ||
     pathname === "/bunker-logo.png" ||
-    pathname.includes(".")
+    pathname.includes(".") ||
+    STANDALONE_PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
   ) {
     return NextResponse.next();
   }
