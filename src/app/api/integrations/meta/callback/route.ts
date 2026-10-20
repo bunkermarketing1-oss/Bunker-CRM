@@ -10,12 +10,14 @@ import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS,
 export const dynamic = "force-dynamic";
 
 const META_STATE_COOKIE = "meta_oauth_state";
+const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
 
 function backToIntegrations(req: NextRequest, params: Record<string, string>) {
   const url = new URL("/marketing/integrations", req.url);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const response = NextResponse.redirect(url);
   response.cookies.delete({ name: META_STATE_COOKIE, path: "/api/integrations/meta" });
+  response.cookies.delete({ name: META_REDIRECT_COOKIE, path: "/api/integrations/meta" });
   return response;
 }
 
@@ -26,6 +28,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const expectedState = req.cookies.get(META_STATE_COOKIE)?.value;
+  const redirectUri = req.cookies.get(META_REDIRECT_COOKIE)?.value;
 
   if (searchParams.get("error")) {
     return backToIntegrations(req, { error: searchParams.get("error_description") || "Autorización cancelada en Meta." });
@@ -51,7 +54,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const { accessToken, expiresAt, grantedScopes } = await exchangeMetaCode(code);
+    const { accessToken, expiresAt, grantedScopes } = await exchangeMetaCode(code, redirectUri);
     const [adAccounts, pages] = await Promise.all([listMetaAdAccounts(accessToken), listMetaPages(accessToken)]);
 
     const userTokenEnc = encryptSecret(accessToken);

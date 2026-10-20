@@ -81,12 +81,13 @@ async function graphFetchAll<T = any>(path: string, params: Record<string, strin
   return items;
 }
 
-export function buildMetaAuthUrl(state: string) {
+export function buildMetaAuthUrl(state: string, redirectUriOverride?: string) {
   const cfg = getMetaConfig();
   if (!cfg) throw new Error("Meta no está configurado (META_APP_ID, META_APP_SECRET, NEXT_PUBLIC_APP_URL).");
+  const redirectUri = redirectUriOverride || cfg.redirectUri;
   const url = new URL(`https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`);
   url.searchParams.set("client_id", cfg.appId);
-  url.searchParams.set("redirect_uri", cfg.redirectUri);
+  url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", META_SCOPES.join(","));
@@ -94,15 +95,16 @@ export function buildMetaAuthUrl(state: string) {
 }
 
 /** Intercambia el código OAuth por un token de usuario de larga duración (~60 días). */
-export async function exchangeMetaCode(code: string) {
+export async function exchangeMetaCode(code: string, redirectUriOverride?: string) {
   const cfg = getMetaConfig();
   if (!cfg) throw new Error("Meta no está configurado.");
+  const redirectUri = redirectUriOverride || cfg.redirectUri;
 
   const short = await graphFetch<{ access_token: string }>(
     graphUrl("oauth/access_token", {
       client_id: cfg.appId,
       client_secret: cfg.appSecret,
-      redirect_uri: cfg.redirectUri,
+      redirect_uri: redirectUri,
       code,
     })
   );
