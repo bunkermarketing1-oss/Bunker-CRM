@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { AD_ACCOUNT_TYPES, CAMPAIGN_STATUS } from "@/lib/constants/integrations";
+import { isCommercialLicenseActive } from "@/lib/license";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,14 @@ export async function GET(req: NextRequest) {
   try {
     const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
+
+    if (!isCommercialLicenseActive()) {
+      return NextResponse.json({
+        success: false,
+        error: "Módulo de Campañas Publicitarias en pausa. Licencia empresarial pendiente de activación comercial.",
+        isLicenseRequired: true,
+      }, { status: 402 });
+    }
 
     const { searchParams } = new URL(req.url);
     const daysParam = parseInt(searchParams.get("days") || "30", 10);

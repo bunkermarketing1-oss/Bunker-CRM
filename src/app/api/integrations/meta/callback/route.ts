@@ -7,6 +7,8 @@ import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
 import { subscribeMetaPagesToLeadgen } from "@/services/meta-leads.service";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS, type AccountType } from "@/lib/constants/integrations";
 
+import { isCommercialLicenseActive } from "@/lib/license";
+
 export const dynamic = "force-dynamic";
 
 const META_STATE_COOKIE = "meta_oauth_state";
@@ -25,6 +27,10 @@ function backToIntegrations(req: NextRequest, params: Record<string, string>) {
 export async function GET(req: NextRequest) {
   const { user, errorResponse } = await requireAdmin(req);
   if (errorResponse) return errorResponse;
+
+  if (!isCommercialLicenseActive()) {
+    return backToIntegrations(req, { error: "Módulo bloqueado: Licencia empresarial pendiente de activación comercial." });
+  }
 
   const { searchParams } = req.nextUrl;
   const expectedState = req.cookies.get(META_STATE_COOKIE)?.value;

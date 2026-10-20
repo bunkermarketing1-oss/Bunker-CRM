@@ -3,11 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { syncMetaIntegration, type SyncSummary } from "@/lib/integrations/meta-sync";
 import { INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { isCommercialLicenseActive } from "@/lib/license";
 
 export async function POST(req: NextRequest) {
   try {
     const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
+
+    if (!isCommercialLicenseActive()) {
+      return NextResponse.json({
+        success: false,
+        error: "Módulo de sincronización publicitaria bloqueado. Requiere activación de licencia comercial.",
+      }, { status: 402 });
+    }
 
     const body = await req.json().catch(() => ({}));
     const { id } = body;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { requireAdmin } from "@/lib/auth";
 import { buildMetaAuthUrl, getMetaConfig } from "@/lib/integrations/meta";
+import { isCommercialLicenseActive } from "@/lib/license";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,12 @@ const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdmin(req);
   if (errorResponse) return errorResponse;
+
+  if (!isCommercialLicenseActive()) {
+    return NextResponse.redirect(
+      new URL("/marketing/integrations?error=" + encodeURIComponent("Módulo de integración Meta Ads bloqueado: Licencia empresarial pendiente de activación comercial."), req.url)
+    );
+  }
 
   if (!getMetaConfig()) {
     return NextResponse.redirect(

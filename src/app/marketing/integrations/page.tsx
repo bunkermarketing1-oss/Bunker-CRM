@@ -17,6 +17,7 @@ import {
   Search,
   HelpCircle,
   Sparkles,
+  Lock,
 } from "lucide-react";
 import { ACCOUNT_STATUS, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
@@ -76,6 +77,7 @@ export default function IntegrationsPage() {
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [isLicensed, setIsLicensed] = useState<boolean>(true);
 
   // Vista comercial vs técnica
   const [activeView, setActiveView] = useState<"clients" | "platforms">("clients");
@@ -98,6 +100,13 @@ export default function IntegrationsPage() {
   const fetchIntegrations = async () => {
     try {
       setLoading(true);
+      fetch("/api/license/status")
+        .then((r) => r.json())
+        .then((j) => {
+          if (j.success) setIsLicensed(Boolean(j.active));
+        })
+        .catch(() => setIsLicensed(false));
+
       const res = await fetch("/api/integrations");
       const json = await res.json();
       if (json.success) {
@@ -787,6 +796,18 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
+          {!isLicensed && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
+              <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Módulo de Sincronización Meta Ads & Webhooks en Pausa</p>
+                <p className="mt-0.5 text-amber-800">
+                  La conexión automatizada con Meta Business Suite, descarga de campañas y recepción de leads en tiempo real requieren la activación de la licencia empresarial completa de Bunker CRM.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {integrations.map((it) => {
               if (it.provider === INTEGRATION_PROVIDER.TWILIO) {
@@ -864,6 +885,17 @@ export default function IntegrationsPage() {
                           Desconectar
                         </button>
                       </>
+                    ) : !isLicensed && it.provider === "meta" ? (
+                      <div className="w-full flex flex-col items-center gap-1">
+                        <button
+                          disabled
+                          className="w-full py-2.5 rounded-2xl bg-[#E8E6DF] text-[#716F6A] font-semibold text-xs flex items-center justify-center gap-2 cursor-not-allowed"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-[#9C9890]" />
+                          <span>Módulo Bloqueado (Licencia Pendiente)</span>
+                        </button>
+                        <span className="text-[10px] text-amber-700 font-medium">Activación empresarial requerida</span>
+                      </div>
                     ) : OAUTH_PROVIDERS[it.provider] ? (
                       <a
                         href={OAUTH_PROVIDERS[it.provider].href}

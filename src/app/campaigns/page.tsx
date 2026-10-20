@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, RefreshCw, Plug, AlertTriangle } from "lucide-react";
+import { BarChart3, RefreshCw, Plug, AlertTriangle, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 
@@ -153,7 +153,10 @@ export default function CampaignsPage() {
       </div>
 
       {error && (
-        <div className="p-3.5 rounded-xl border bg-[#FDF2F2] border-[#F8D7DA] text-red-800 text-xs font-medium">{error}</div>
+        <div className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-2.5 shadow-sm">
+          <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
 
       {data && !hasAccounts && (
