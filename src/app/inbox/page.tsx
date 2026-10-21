@@ -310,20 +310,24 @@ export default function UnifiedInboxPage() {
       </div>
 
       {/* Barra de Filtros de Canales & Selector de Clientes */}
-      <div className="p-2 bg-[#FAF9F5] rounded-2xl border border-[#EAECF0] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Pills de Canales */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+      <div className="p-1.5 bg-white rounded-xl border border-[#EAECF0] flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 shadow-2xs">
+        {/* Tabs de Canales */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
           <button
             type="button"
             onClick={() => setActiveChannel("all")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "all"
-                ? "bg-white text-[#101828] shadow-sm border border-[#EAECF0]"
-                : "text-[#475467] hover:text-[#101828]"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
-            <span>Todos los Canales</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#F0EEE6] font-bold text-[#101828]">
+            <span>Todos los canales</span>
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "all" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
               {stats.total}
             </span>
           </button>
@@ -331,15 +335,19 @@ export default function UnifiedInboxPage() {
           <button
             type="button"
             onClick={() => setActiveChannel("whatsapp")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "whatsapp"
-                ? "bg-white text-emerald-800 shadow-sm border border-[#EAECF0]"
-                : "text-[#475467] hover:text-[#101828]"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>WhatsApp</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "whatsapp" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
               {stats.whatsapp}
             </span>
           </button>
@@ -347,15 +355,19 @@ export default function UnifiedInboxPage() {
           <button
             type="button"
             onClick={() => setActiveChannel("messenger")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "messenger"
-                ? "bg-white text-blue-800 shadow-sm border border-[#EAECF0]"
-                : "text-[#475467] hover:text-[#101828]"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
-            <div className="w-2 h-2 rounded-full bg-blue-600" />
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
             <span>Messenger</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-bold">
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "messenger" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
               {stats.messenger}
             </span>
           </button>
@@ -363,15 +375,19 @@ export default function UnifiedInboxPage() {
           <button
             type="button"
             onClick={() => setActiveChannel("instagram")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "instagram"
-                ? "bg-white text-pink-800 shadow-sm border border-[#EAECF0]"
-                : "text-[#475467] hover:text-[#101828]"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
-            <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-orange-400 to-pink-600" />
+            <div className="w-2 h-2 rounded-full bg-pink-500" />
             <span>Instagram Direct</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-pink-100 text-pink-800 font-bold">
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "instagram" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
               {stats.instagram}
             </span>
           </button>
@@ -379,15 +395,19 @@ export default function UnifiedInboxPage() {
           <button
             type="button"
             onClick={() => setActiveChannel("comments")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "comments"
-                ? "bg-white text-amber-900 shadow-sm border border-[#EAECF0]"
-                : "text-[#475467] hover:text-[#101828]"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
             <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Comentarios en Posts</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold">
+            <span>Comentarios</span>
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "comments" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
               {stats.comments}
             </span>
           </button>
@@ -395,17 +415,17 @@ export default function UnifiedInboxPage() {
 
         {/* Filtro por Cliente (Para Administradores) */}
         {!isClient && (
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-[#667085] font-medium hidden sm:inline">Filtrar por Empresa:</span>
+          <div className="flex items-center gap-2 shrink-0 px-1">
+            <span className="text-xs text-[#667085] font-medium hidden sm:inline">Empresa:</span>
             <select
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
-              className="bg-white border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-semibold"
+              className="bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-medium cursor-pointer"
             >
-              <option value="all">🏢 Todas las Empresas & Cuentas BM</option>
+              <option value="all">Todas las empresas</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
-                  👤 {c.name}
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -418,9 +438,9 @@ export default function UnifiedInboxPage() {
         {/* ========================================================= */}
         {/* COLUMNA IZQUIERDA: LISTA DE CONVERSACIONES (4 cols)      */}
         {/* ========================================================= */}
-        <div className="lg:col-span-4 bg-white rounded-2xl border border-[#EAECF0] shadow-sm flex flex-col overflow-hidden">
+        <div className="lg:col-span-4 bg-white rounded-xl border border-[#EAECF0] shadow-xs flex flex-col overflow-hidden">
           {/* Buscador de Chats */}
-          <div className="p-3 border-b border-[#EAECF0]">
+          <div className="p-2.5 border-b border-[#EAECF0]">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -428,13 +448,13 @@ export default function UnifiedInboxPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar remitente, mensaje o teléfono..."
-                className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl pl-9 pr-3 py-2 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
               />
             </div>
           </div>
 
           {/* Lista de Conversaciones con Scroll */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[#F0EEE6]">
+          <div className="flex-1 overflow-y-auto divide-y divide-[#EAECF0]">
             {loading ? (
               <div className="py-12 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-2">
                 <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
@@ -462,8 +482,8 @@ export default function UnifiedInboxPage() {
                     key={conv.id}
                     type="button"
                     onClick={() => setSelectedConvId(conv.id)}
-                    className={`w-full p-4 text-left transition-colors flex items-start gap-3 relative ${
-                      isSelected ? "bg-[#FAF9F5] border-l-4 border-l-amber-500" : "hover:bg-[#F8F9FA]"
+                    className={`w-full p-3.5 text-left transition-colors flex items-start gap-3 relative ${
+                      isSelected ? "bg-[#F8F9FA] border-l-2 border-l-amber-500" : "hover:bg-[#F8F9FA]/70"
                     }`}
                   >
                     {/* Icono de Red / Canal */}
@@ -471,36 +491,36 @@ export default function UnifiedInboxPage() {
 
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold text-xs text-[#101828] truncate">{conv.senderName}</span>
+                        <span className="font-semibold text-xs text-[#101828] truncate">{conv.senderName}</span>
                         <span className="text-[10px] text-[#9C9890] shrink-0 font-medium">
                           {formatTimeAgo(conv.lastMessageTime)}
                         </span>
                       </div>
 
-                      {/* Badge de Cliente y Asesor asignado */}
+                      {/* Badges de Canal, Cliente y Asesor */}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${channelConf.badgeCls}`}>
+                        <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded border ${channelConf.badgeCls}`}>
                           {channelConf.label}
                         </span>
                         {conv.clientName && (
-                          <span className="text-[9px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded truncate max-w-[120px]">
+                          <span className="text-[9px] font-medium text-[#344054] bg-[#F2F4F7] border border-[#EAECF0] px-1.5 py-0.5 rounded truncate max-w-[120px]">
                             {conv.clientName}
                           </span>
                         )}
                         {conv.assignedAdvisorName ? (
-                          <span className="text-[9px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded flex items-center gap-0.5 truncate max-w-[110px]">
+                          <span className="text-[9px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5 truncate max-w-[110px]">
                             <UserCheck className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
                             <span className="truncate">{conv.assignedAdvisorName}</span>
                           </span>
                         ) : (
-                          <span className="text-[9px] font-medium text-[#82807C] bg-[#FAF9F5] border border-[#E8E6DF] px-1.5 py-0.2 rounded">
+                          <span className="text-[9px] font-medium text-[#667085] bg-[#F8F9FA] border border-[#EAECF0] px-1.5 py-0.5 rounded">
                             Sin asignar
                           </span>
                         )}
                       </div>
 
                       {/* Snippet de último mensaje */}
-                      <p className="text-[11px] text-[#475467] line-clamp-2 leading-relaxed mt-0.5">
+                      <p className="text-[11px] text-[#475467] line-clamp-1 leading-normal mt-0.5">
                         {conv.lastMessageText}
                       </p>
                     </div>
@@ -518,24 +538,24 @@ export default function UnifiedInboxPage() {
         {/* ========================================================= */}
         {/* COLUMNA DERECHA: CONVERSACIÓN & COMPOSER (8 cols)        */}
         {/* ========================================================= */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-[#EAECF0] shadow-sm flex flex-col overflow-hidden">
+        <div className="lg:col-span-8 bg-white rounded-xl border border-[#EAECF0] shadow-xs flex flex-col overflow-hidden">
           {activeConversation ? (
             <>
               {/* Header de la Conversación Activa */}
-              <div className="p-4 border-b border-[#EAECF0] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-3.5 border-b border-[#EAECF0] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <SocialNetworkIcon
                     type={CHANNEL_CONFIG[activeConversation.channel]?.iconType || "meta"}
-                    size="md"
+                    size="sm"
                     className="shrink-0"
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-bold text-sm text-[#101828] truncate">
+                      <h2 className="font-semibold text-sm text-[#101828] truncate">
                         {activeConversation.senderName}
                       </h2>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                        className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                           CHANNEL_CONFIG[activeConversation.channel]?.badgeCls
                         }`}
                       >
@@ -544,11 +564,11 @@ export default function UnifiedInboxPage() {
                     </div>
 
                     <p className="text-[11px] text-[#667085] flex items-center gap-1.5 mt-0.5 truncate">
-                      <span>Cuenta BM: <strong>{activeConversation.accountName || "Cuenta Oficial"}</strong></span>
+                      <span>Cuenta: <strong>{activeConversation.accountName || "Cuenta Oficial"}</strong></span>
                       {activeConversation.clientName && (
                         <>
                           <span>•</span>
-                          <span>Empresa Cliente: <strong className="text-amber-700">{activeConversation.clientName}</strong></span>
+                          <span>Empresa: <strong className="text-slate-800">{activeConversation.clientName}</strong></span>
                         </>
                       )}
                     </p>
@@ -562,7 +582,7 @@ export default function UnifiedInboxPage() {
                       href={`https://wa.me/${activeConversation.leadPhone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center gap-1 transition-colors"
                       title="Abrir chat directo en WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -573,10 +593,10 @@ export default function UnifiedInboxPage() {
                   {activeConversation.clientId && (
                     <Link
                       href={`/crm/clients/${activeConversation.clientId}`}
-                      className="px-2.5 py-1.5 rounded-xl bg-[#F8F9FA] hover:bg-[#EAECF0] text-[#101828] border border-[#EAECF0] text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1.5 rounded-lg bg-[#F8F9FA] hover:bg-[#EAECF0] text-[#101828] border border-[#EAECF0] text-xs font-medium flex items-center gap-1 transition-colors"
                       title="Ver ficha comercial 360°"
                     >
-                      <Building className="w-3.5 h-3.5 text-amber-500" />
+                      <Building className="w-3.5 h-3.5 text-[#667085]" />
                       <span>Ficha 360°</span>
                     </Link>
                   )}
@@ -584,23 +604,23 @@ export default function UnifiedInboxPage() {
               </div>
 
               {/* Barra de Asignación Comercial & Asesor Responsable */}
-              <div className="px-4 py-2.5 bg-[#FAF9F5] border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="px-4 py-2 bg-[#F8F9FA] border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-[#101828] font-semibold text-xs">
-                    <Users className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Vendedor Asignado:</span>
+                  <div className="flex items-center gap-1.5 text-[#475467] font-medium text-xs">
+                    <Users className="w-3.5 h-3.5 text-[#667085] shrink-0" />
+                    <span>Asesor comercial:</span>
                   </div>
 
                   <select
                     value={activeConversation.assignedAdvisorId ?? ""}
                     disabled={assigning}
                     onChange={(e) => handleAssignAdvisor(e.target.value ? e.target.value : null)}
-                    className="bg-white border border-[#EAECF0] rounded-xl px-2.5 py-1 text-xs text-[#101828] font-medium focus:outline-none focus:border-amber-500 shadow-2xs"
+                    className="bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1 text-xs text-[#101828] font-medium focus:outline-none focus:border-amber-500 shadow-2xs"
                   >
-                    <option value="">⚠️ Sin Asignar (Bandeja Abierta)</option>
+                    <option value="">Sin asignar (Bandeja abierta)</option>
                     {advisors.map((adv) => (
                       <option key={adv.id} value={adv.id}>
-                        👤 {adv.name} {user?.id === adv.id ? "(Tú)" : ""}
+                        {adv.name} {user?.id === adv.id ? "(Tú)" : ""}
                       </option>
                     ))}
                   </select>
@@ -612,16 +632,16 @@ export default function UnifiedInboxPage() {
                       type="button"
                       disabled={assigning}
                       onClick={() => handleAssignAdvisor(user.id)}
-                      className="px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-xs flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-50"
-                      title="Asignarme esta conversación y su lead a mi cartera comercial"
+                      className="px-3 py-1 rounded-lg bg-white hover:bg-[#F8F9FA] text-[#101828] border border-[#EAECF0] font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs disabled:opacity-50"
+                      title="Asignarme esta conversación y su lead"
                     >
                       <UserPlus className={`w-3.5 h-3.5 text-amber-600 ${assigning ? "animate-spin" : ""}`} />
-                      <span>Tomar Conversación (Asignarme a mí)</span>
+                      <span>Tomar chat</span>
                     </button>
                   )}
 
                   {user && activeConversation.assignedAdvisorId === user.id && (
-                    <span className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-xs flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium text-xs flex items-center gap-1.5">
                       <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Atendido por ti</span>
                     </span>
@@ -631,10 +651,10 @@ export default function UnifiedInboxPage() {
 
               {/* Contexto de Publicación si es un Comentario Público */}
               {activeConversation.postContext && (
-                <div className="px-4 py-2.5 bg-amber-50/80 border-b border-amber-200/60 flex items-center justify-between text-xs text-amber-950">
+                <div className="px-4 py-2 bg-amber-50/60 border-b border-amber-200/50 flex items-center justify-between text-xs text-amber-950">
                   <div className="flex items-center gap-2 truncate">
                     <FileText className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span className="font-semibold shrink-0">Comentario público en publicación:</span>
+                    <span className="font-medium shrink-0">Comentario en publicación:</span>
                     <span className="truncate italic">&ldquo;{activeConversation.postContext.postTitle}&rdquo;</span>
                   </div>
                   <span className="text-[10px] bg-white px-2 py-0.5 rounded border border-amber-300 font-mono shrink-0 ml-2">
@@ -644,7 +664,7 @@ export default function UnifiedInboxPage() {
               )}
 
               {/* Historial de Mensajes / Chat Bubbles con Scroll */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#FAF9F5]/40">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#F8F9FA]/40">
                 {activeConversation.messages.map((m) => {
                   const isOutbound = m.direction === "outbound";
 
@@ -653,13 +673,13 @@ export default function UnifiedInboxPage() {
                       key={m.id}
                       className={`flex flex-col ${isOutbound ? "items-end" : "items-start"}`}
                     >
-                      <div className="text-[10px] text-[#9C9890] mb-1 px-1">
+                      <div className="text-[10px] text-[#9C9890] mb-1 px-1 font-medium">
                         {m.senderName} • {formatTimeAgo(m.createdAt)}
                       </div>
                       <div
-                        className={`max-w-md sm:max-w-lg p-3.5 rounded-2xl text-xs leading-relaxed shadow-2xs whitespace-pre-wrap ${
+                        className={`max-w-md sm:max-w-lg p-3 rounded-xl text-xs leading-relaxed shadow-2xs whitespace-pre-wrap ${
                           isOutbound
-                            ? "bg-[#101828] text-white rounded-br-xs"
+                            ? "bg-[#0F172A] text-white rounded-br-xs"
                             : "bg-white text-[#101828] border border-[#EAECF0] rounded-bl-xs"
                         }`}
                       >
@@ -673,7 +693,7 @@ export default function UnifiedInboxPage() {
 
               {/* Toast de Envío Exitoso */}
               {feedback && (
-                <div className="px-4 py-2 bg-emerald-50 border-t border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+                <div className="px-4 py-2 bg-emerald-50 border-t border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   <span>{feedback}</span>
                 </div>
@@ -681,12 +701,12 @@ export default function UnifiedInboxPage() {
 
               {/* Composer: Cuadro de Respuesta */}
               <form onSubmit={handleSendReply} className="p-3 border-t border-[#EAECF0] bg-white">
-                <div className="text-[10px] text-[#667085] mb-1 flex items-center justify-between">
+                <div className="text-[11px] text-[#667085] mb-1.5 flex items-center justify-between">
                   <span>
                     Respondiendo como <strong>{activeConversation.accountName || "Bunker Agency"}</strong> vía{" "}
                     <strong>{CHANNEL_CONFIG[activeConversation.channel]?.label}</strong>
                   </span>
-                  <span className="text-[9px] text-[#9C9890]">Enter para enviar</span>
+                  <span className="text-[10px] text-[#9C9890]">Enter para enviar</span>
                 </div>
 
                 <div className="flex items-end gap-2">
@@ -701,13 +721,13 @@ export default function UnifiedInboxPage() {
                       }
                     }}
                     placeholder={`Escribe un mensaje para ${activeConversation.senderName}...`}
-                    className="flex-1 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl p-2.5 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 resize-none"
+                    className="flex-1 bg-[#F8F9FA] border border-[#EAECF0] rounded-lg p-2.5 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 focus:bg-white resize-none transition-colors"
                   />
 
                   <button
                     type="submit"
                     disabled={sending || !replyText.trim()}
-                    className="btn-black-gold rounded-xl px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 shadow-sm disabled:opacity-50 transition-all h-[42px]"
+                    className="btn-black-gold rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 transition-all h-[40px] shrink-0"
                   >
                     <Send className={`w-3.5 h-3.5 text-amber-400 ${sending ? "animate-pulse" : ""}`} />
                     <span>{sending ? "Enviando..." : "Enviar"}</span>

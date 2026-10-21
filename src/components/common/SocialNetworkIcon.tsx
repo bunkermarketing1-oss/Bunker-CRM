@@ -16,11 +16,15 @@ export type SocialAccountType =
 interface SocialNetworkIconProps {
   type?: SocialAccountType;
   provider?: SocialAccountType;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
 const SIZE_MAP = {
+  xs: {
+    container: "w-5 h-5 rounded-md",
+    icon: "w-3 h-3",
+  },
   sm: {
     container: "w-7 h-7 rounded-lg",
     icon: "w-4 h-4",
@@ -75,7 +79,7 @@ export function SocialNetworkIcon({
   }
 
   // 3. Meta Ads / Meta Ad Account
-  if (norm === "meta_ad_account" || norm === "meta" || norm.includes("ad_account")) {
+  if (norm === "meta_ad_account" || norm === "meta" || norm.includes("meta") || norm.includes("ad_account")) {
     return (
       <div
         className={`${currentSize.container} bg-gradient-to-br from-[#0081FB] to-[#0668E1] text-white flex items-center justify-center shadow-xs flex-shrink-0 ${className}`}

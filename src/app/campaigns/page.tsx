@@ -2,11 +2,107 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, RefreshCw, Plug, AlertTriangle, Lock, Eye } from "lucide-react";
+import {
+  BarChart3,
+  RefreshCw,
+  Plug,
+  AlertTriangle,
+  Lock,
+  Eye,
+  Play,
+  Image as ImageIcon,
+  MessageSquare,
+  FileSpreadsheet,
+  Globe,
+  Building,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import SocialNetworkIcon from "@/components/common/SocialNetworkIcon";
 import CampaignAdsModal from "@/components/campaigns/CampaignAdsModal";
+
+interface CampaignVisualInfo {
+  type: "video" | "image" | "whatsapp" | "lead" | "web";
+  label: string;
+  badgeCls: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+function getCampaignVisualInfo(name: string, objective: string | null): CampaignVisualInfo {
+  const n = (name || "").toLowerCase();
+  const obj = (objective || "").toLowerCase();
+
+  // 1. WhatsApp / Chat / Mensajes
+  if (
+    n.includes("what") ||
+    n.includes("inbox") ||
+    n.includes("inter") ||
+    n.includes("mensaje") ||
+    n.includes("direct") ||
+    obj.includes("messages")
+  ) {
+    return {
+      type: "whatsapp",
+      label: "WhatsApp / Chat",
+      badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      icon: MessageSquare,
+    };
+  }
+
+  // 2. Leads / Formularios
+  if (
+    n.includes("formu") ||
+    n.includes("lead") ||
+    n.includes("registro") ||
+    obj.includes("lead")
+  ) {
+    return {
+      type: "lead",
+      label: "Formulario Leads",
+      badgeCls: "bg-purple-50 text-purple-700 border-purple-200",
+      icon: FileSpreadsheet,
+    };
+  }
+
+  // 3. Conversiones Web / Tráfico
+  if (
+    n.includes("conver") ||
+    n.includes("web") ||
+    n.includes("trafico") ||
+    n.includes("landing") ||
+    obj.includes("conversion")
+  ) {
+    return {
+      type: "web",
+      label: "Conversión Web",
+      badgeCls: "bg-blue-50 text-blue-700 border-blue-200",
+      icon: Globe,
+    };
+  }
+
+  // 4. Video / Reels
+  if (
+    n.includes("video") ||
+    n.includes("reel") ||
+    n.includes("reprod") ||
+    obj.includes("video")
+  ) {
+    return {
+      type: "video",
+      label: "Campaña Video",
+      badgeCls: "bg-amber-50 text-amber-700 border-amber-200",
+      icon: Play,
+    };
+  }
+
+  // Default: Imagen / Creativo
+  return {
+    type: "image",
+    label: "Creativo / Anuncio",
+    badgeCls: "bg-[#F2F4F7] text-[#344054] border-[#EAECF0]",
+    icon: ImageIcon,
+  };
+}
 
 type Metric = "spend" | "clicks" | "conversions" | "impressions";
 
@@ -264,20 +360,20 @@ export default function CampaignsPage() {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2 text-[11px]">
+            <div className="flex flex-wrap gap-1.5 text-xs">
               <button
                 type="button"
                 onClick={() => setSelectedAccountId("all")}
-                className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 font-medium ${
+                className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 font-medium ${
                   selectedAccountId === "all"
-                    ? "bg-[#101828] text-amber-400 border-amber-500/50 shadow-sm ring-2 ring-amber-400/40"
-                    : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-amber-400/40"
+                    ? "bg-[#0F172A] text-white border-slate-800 shadow-xs"
+                    : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:text-[#101828]"
                 }`}
               >
                 <span>Todas las cuentas</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    selectedAccountId === "all" ? "bg-amber-400/20 text-amber-300 font-bold" : "bg-[#F8F9FA] text-[#667085]"
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                    selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#F2F4F7] text-[#475467]"
                   }`}
                 >
                   {data.accounts.length}
@@ -291,23 +387,23 @@ export default function CampaignsPage() {
                     key={a.id}
                     type="button"
                     onClick={() => setSelectedAccountId(isSelected ? "all" : a.id)}
-                    className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 text-left ${
+                    className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 text-left text-xs font-medium ${
                       isSelected
-                        ? "bg-[#101828] text-amber-400 border-amber-500/50 shadow-sm ring-2 ring-amber-400/50"
-                        : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-amber-400/40"
+                        ? "bg-[#0F172A] text-white border-slate-800 shadow-xs"
+                        : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:text-[#101828]"
                     }`}
                   >
                     {a.status !== ACCOUNT_STATUS.ACTIVE && (
-                      <AlertTriangle className={`w-3 h-3 ${isSelected ? "text-amber-300" : "text-amber-600"}`} />
+                      <AlertTriangle className={`w-3 h-3 ${isSelected ? "text-amber-400" : "text-amber-600"}`} />
                     )}
-                    <span className="font-medium">{a.accountName}</span>
+                    <span>{a.accountName}</span>
                     {!isClient && a.client && (
-                      <span className={isSelected ? "text-amber-200/80" : "text-[#667085]"}>
+                      <span className={isSelected ? "text-slate-300 text-[11px]" : "text-[#667085] text-[11px]"}>
                         · {a.client.name}
                       </span>
                     )}
-                    <span className={isSelected ? "text-amber-300/60 text-[10px]" : "text-[#667085] text-[10px]"}>
-                      · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sincronizar"}
+                    <span className={isSelected ? "text-slate-400 text-[10px] font-mono" : "text-[#667085] text-[10px] font-mono"}>
+                      · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sinc."}
                     </span>
                   </button>
                 );
@@ -315,7 +411,7 @@ export default function CampaignsPage() {
             </div>
 
             {selectedAccount && (
-              <div className="flex items-center gap-2 p-2.5 px-3 rounded-xl bg-amber-50/70 border border-amber-200/60 text-xs text-amber-900">
+              <div className="flex items-center gap-2 p-2 px-3 rounded-lg bg-amber-50/60 border border-amber-200/60 text-xs text-amber-900">
                 <span className="font-medium">Filtro activo:</span>
                 <span>
                   Viendo datos de <strong>{selectedAccount.accountName}</strong>
@@ -327,7 +423,7 @@ export default function CampaignsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId("all")}
-                  className="ml-auto text-[11px] underline font-semibold text-amber-950 hover:text-black"
+                  className="ml-auto text-[11px] underline font-medium text-amber-950 hover:text-black"
                 >
                   ✕ Quitar filtro
                 </button>
@@ -338,29 +434,29 @@ export default function CampaignsPage() {
           {/* KPI tiles */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpis.map((k) => (
-              <div key={k.label} className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
-                <div className="text-[11px] text-[#475467]">{k.label}</div>
-                <div className="text-xl text-[#101828] mt-1 tabular-nums">{k.value}</div>
-                {k.sub && <div className="text-[11px] text-[#667085] mt-0.5">{k.sub}</div>}
+              <div key={k.label} className="p-3.5 rounded-xl bg-white border border-[#EAECF0] shadow-xs">
+                <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">{k.label}</div>
+                <div className="text-xl font-semibold text-slate-900 mt-1 tabular-nums">{k.value}</div>
+                {k.sub && <div className="text-[11px] text-slate-500 mt-0.5">{k.sub}</div>}
               </div>
             ))}
           </div>
 
           {/* Daily chart */}
-          <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-sm space-y-4">
+          <div className="p-4 rounded-xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm text-[#101828] font-bold flex items-center gap-2">
+              <h2 className="text-xs font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-amber-500" />
                 <span>{METRICS.find((m) => m.key === metric)?.label} por día</span>
               </h2>
-              <div className="flex rounded-xl border border-[#EAECF0] bg-[#F8F9FA] p-0.5">
+              <div className="flex rounded-lg border border-[#EAECF0] bg-[#F8F9FA] p-0.5">
                 {METRICS.map((m) => (
                   <button
                     key={m.key}
                     onClick={() => setMetric(m.key)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
                       metric === m.key
-                        ? "bg-[#101828] text-amber-400 shadow-sm border border-amber-500/40"
+                        ? "bg-[#0F172A] text-white shadow-xs"
                         : "text-[#475467] hover:text-[#101828]"
                     }`}
                   >
@@ -373,73 +469,122 @@ export default function CampaignsPage() {
           </div>
 
           {/* Campaigns table */}
-          <div className="rounded-2xl bg-white border border-[#EAECF0] shadow-sm overflow-hidden">
+          <div className="rounded-xl bg-white border border-[#EAECF0] shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-[#F8F9FA] text-[#475467] border-b border-[#EAECF0]">
+                <thead className="bg-[#F8F9FA] text-slate-500 border-b border-[#EAECF0]">
                   <tr>
-                    <th className="text-left font-medium px-4 py-2.5">Campaña</th>
-                    {!isClient && <th className="text-left font-medium px-4 py-2.5">Cliente</th>}
-                    <th className="text-left font-medium px-4 py-2.5">Estado</th>
-                    <th className="text-right font-medium px-4 py-2.5">Presupuesto</th>
-                    <th className="text-right font-medium px-4 py-2.5">Inversión</th>
-                    <th className="text-right font-medium px-4 py-2.5">Impresiones</th>
-                    <th className="text-right font-medium px-4 py-2.5">Clics</th>
-                    <th className="text-right font-medium px-4 py-2.5">CTR</th>
-                    <th className="text-right font-medium px-4 py-2.5">Leads / Conv.</th>
-                    <th className="text-right font-medium px-4 py-2.5">Costo / Lead</th>
-                    <th className="text-center font-medium px-4 py-2.5">Creativos</th>
+                    <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Campaña</th>
+                    {!isClient && <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Cliente</th>}
+                    <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Estado</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Presupuesto</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Inversión</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Impresiones</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Clics</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">CTR</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Leads / Conv.</th>
+                    <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Costo / Lead</th>
+                    <th className="text-center font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Creativos</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {data.campaigns.length === 0 && (
                     <tr>
-                      <td colSpan={isClient ? 10 : 11} className="px-4 py-6 text-center text-[#667085]">
+                      <td colSpan={isClient ? 10 : 11} className="px-4 py-8 text-center text-[#667085]">
                         No hay campañas sincronizadas todavía.
                       </td>
                     </tr>
                   )}
                   {data.campaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
+                    const visual = getCampaignVisualInfo(c.name, c.objective);
+                    const VisualIcon = visual.icon;
+
                     return (
-                      <tr key={c.id} className="hover:bg-[#F8F9FA] transition-colors">
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-start gap-2.5">
-                            <div className="mt-0.5 shrink-0">
-                              <SocialNetworkIcon provider={c.platform} size="sm" />
-                            </div>
-                            <div>
-                              <div className="text-[#101828] font-medium leading-tight">{c.name}</div>
-                              <div className="text-[11px] text-[#667085] mt-0.5">
-                                {PLATFORM_LABELS[c.platform] || c.platform} · {c.accountName}
+                      <tr key={c.id} className="hover:bg-[#F8F9FA]/80 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            {/* Previsualización Creativa / Thumbnail interactivo */}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCampaignForAds(c)}
+                              className="group/thumb relative w-11 h-11 rounded-xl bg-gradient-to-br from-[#101828] via-[#1E293B] to-[#0F172A] border border-[#334155]/40 flex items-center justify-center shrink-0 shadow-xs hover:border-amber-400/80 hover:shadow-md hover:shadow-amber-500/10 transition-all cursor-pointer"
+                              title={`Ver anuncios y creativos de "${c.name}"`}
+                            >
+                              <VisualIcon className="w-5 h-5 text-amber-400 group-hover/thumb:scale-110 transition-transform" />
+                              <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] opacity-0 group-hover/thumb:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                <Eye className="w-3.5 h-3.5 text-amber-300" />
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white shadow-xs ring-1 ring-black/10">
+                                <SocialNetworkIcon provider={c.platform} size="xs" />
+                              </div>
+                            </button>
+
+                            <div className="min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCampaignForAds(c)}
+                                className="text-left text-[#101828] font-medium hover:text-amber-600 transition-colors truncate block leading-tight max-w-[280px] lg:max-w-[360px]"
+                                title={c.name}
+                              >
+                                {c.name}
+                              </button>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-[#667085]">
+                                <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${visual.badgeCls}`}>
+                                  {visual.label}
+                                </span>
+                                <span>· {PLATFORM_LABELS[c.platform] || c.platform}</span>
+                                {c.accountName && <span className="truncate max-w-[160px]">· {c.accountName}</span>}
                               </div>
                             </div>
                           </div>
                         </td>
-                        {!isClient && <td className="px-4 py-2.5 text-[#475467]">{c.client?.name || "—"}</td>}
-                        <td className="px-4 py-2.5">
+
+                        {!isClient && (
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {c.client ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F2F4F7] text-[#344054] text-[11px] font-medium border border-[#EAECF0]">
+                                <Building className="w-3 h-3 text-[#667085]" />
+                                {c.client.name}
+                              </span>
+                            ) : (
+                              <Link
+                                href="/marketing/integrations"
+                                className="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-2 py-0.5 rounded-md font-medium transition-colors"
+                                title="Cuenta sin asignar a un cliente. Haz clic para asignarla en Integraciones."
+                              >
+                                <span>+ Asignar</span>
+                              </Link>
+                            )}
+                          </td>
+                        )}
+
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
+                        <td className="px-4 py-3 text-right tabular-nums text-[#475467] whitespace-nowrap">
                           {c.budget ? `${fmtMoney(c.budget, c.currency)}${c.budgetType === "daily" ? "/día" : ""}` : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#101828] font-semibold">{fmtMoney(c.spend, c.currency)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.impressions)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.clicks)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{c.ctr.toFixed(2)}%</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-amber-700 font-bold">{fmtNumber(c.conversions)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
+                        <td className="px-4 py-3 text-right tabular-nums text-[#101828] font-semibold whitespace-nowrap">
+                          {fmtMoney(c.spend, c.currency)}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-[#475467] whitespace-nowrap">{fmtNumber(c.impressions)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-[#475467] whitespace-nowrap">{fmtNumber(c.clicks)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-[#475467] whitespace-nowrap">{c.ctr.toFixed(2)}%</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-amber-700 font-bold whitespace-nowrap">{fmtNumber(c.conversions)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-[#475467] whitespace-nowrap">
                           {c.conversions ? fmtMoney(c.costPerConversion, c.currency) : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-center">
+
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setSelectedCampaignForAds(c)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-sm group"
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-xs group whitespace-nowrap shrink-0"
                             title="Ver imágenes, videos, textos y creativos"
                           >
-                            <Eye className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-400 transition-colors" />
-                            <span>Ver Anuncios</span>
+                            <Eye className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-400 transition-colors shrink-0" />
+                            <span className="whitespace-nowrap">Ver Anuncios</span>
                           </button>
                         </td>
                       </tr>

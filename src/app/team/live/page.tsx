@@ -58,10 +58,10 @@ export default function TeamLivePage() {
               onChange={(e) => setSelectedClientId(e.target.value ? e.target.value : null)}
               className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-semibold shadow-2xs"
             >
-              <option value="">🏢 Todas las Empresas</option>
+              <option value="">Todas las empresas</option>
               {clientOptions.map((c) => (
                 <option key={c.id} value={c.id}>
-                  👤 {c.name}
+                  {c.name}
                 </option>
               ))}
             </select>

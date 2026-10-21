@@ -1196,10 +1196,10 @@ export default function ClientsPage() {
                             onChange={(e) => handleAssignAccount(acc.id, e.target.value)}
                             className="w-full bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#1877F2]"
                           >
-                            <option value="">🏢 Cuenta Propia de Bunker Agency (Anuncios Propios)</option>
+                            <option value="">Cuenta de Bunker Agency (Sin asignar)</option>
                             {clients.map((c) => (
                               <option key={c.id} value={c.id}>
-                                👤 Cliente: {c.name}
+                                {c.name}
                               </option>
                             ))}
                           </select>

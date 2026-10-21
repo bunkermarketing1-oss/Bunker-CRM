@@ -736,10 +736,10 @@ export default function IntegrationsPage() {
                               : "bg-white border-[#E8E6DF] text-[#716F6A] focus:border-[#D97757]"
                           }`}
                         >
-                          <option value="">🏢 Portafolio BM Agencia (Sin Cliente)</option>
+                          <option value="">Portafolio BM Agencia (Sin cliente)</option>
                           {clients.map((c) => (
                             <option key={c.id} value={c.id}>
-                              👤 {c.name} {c.companyName ? `(${c.companyName})` : ""}
+                              {c.name} {c.companyName ? `(${c.companyName})` : ""}
                             </option>
                           ))}
                         </select>
@@ -987,7 +987,7 @@ export default function IntegrationsPage() {
                                     onChange={(e) => handleAssignClient(acc.id, e.target.value)}
                                     className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-md px-1.5 py-0.5 text-[10px] text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                                   >
-                                    <option value="">🏢 Portafolio Agencia</option>
+                                    <option value="">Portafolio Agencia</option>
                                     <optgroup label="Clientes Comerciales:">
                                       {clients.map((c) => (
                                         <option key={c.id} value={c.id}>
@@ -1214,10 +1214,10 @@ export default function IntegrationsPage() {
                               }}
                               className="bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] shadow-sm font-medium focus:outline-none focus:border-[#D4AF37] cursor-pointer transition-all"
                             >
-                              <option value="">➕ Asignar a un cliente...</option>
+                              <option value="">Asignar a un cliente...</option>
                               {clients.map((c) => (
                                 <option key={c.id} value={c.id}>
-                                  👤 {c.name} {c.companyName ? `(${c.companyName})` : ""}
+                                  {c.name} {c.companyName ? `(${c.companyName})` : ""}
                                 </option>
                               ))}
                             </select>
