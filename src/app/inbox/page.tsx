@@ -288,31 +288,20 @@ export default function UnifiedInboxPage() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      {/* Header Ejecutivo */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#EAECF0]">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F8F9FA] border border-[#EAECF0] text-[#475467]">
-              Omnicanal • Mensajería Centralizada
-            </span>
-            <span className="text-xs text-[#9C9890]">
-              {isClient ? "• Canales de mi Empresa" : "• Meta BM & WhatsApp"}
-            </span>
-          </div>
-          <h1 className="text-3xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
-            <Inbox className="w-8 h-8 text-amber-500 shrink-0" />
-            <span>Bandeja de Entrada Unificada</span>
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
+            <Inbox className="w-6 h-6 text-amber-500 shrink-0" />
+            <span>Bandeja de Entrada</span>
           </h1>
-          <p className="text-xs text-[#475467] mt-1 max-w-2xl leading-relaxed">
-            Centraliza conversaciones de Facebook Messenger, Instagram Direct, WhatsApp y comentarios públicos de tus publicaciones en un solo lugar con separación automática por cliente y cuenta publicitaria.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={fetchInbox}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
+            className="p-2 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
             title="Refrescar bandeja"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />

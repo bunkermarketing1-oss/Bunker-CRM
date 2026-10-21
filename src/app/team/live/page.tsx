@@ -41,22 +41,13 @@ export default function TeamLivePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header Ejecutivo */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#EAECF0]">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F8F9FA] border border-[#EAECF0] text-[#475467]">
-              Supervisión Comercial
-            </span>
-            <span className="text-xs text-[#9C9890]">• Telepresencia & Escucha en Vivo</span>
-          </div>
-          <h1 className="text-3xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
-            <Headphones className="w-8 h-8 text-amber-500 shrink-0" />
-            <span>Asesores en Vivo & Supervisión Telefónica</span>
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
+            <Headphones className="w-6 h-6 text-amber-500 shrink-0" />
+            <span>Asesores en Vivo & Supervisión</span>
           </h1>
-          <p className="text-xs text-[#475467] mt-1 max-w-2xl leading-relaxed">
-            Supervisa en tiempo real la disponibilidad de tus vendedores, escucha llamadas de ventas activas en silencio e interviene con modo Susurro para apoyar al asesor a cerrar negocios.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">
