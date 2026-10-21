@@ -147,7 +147,7 @@ function LeadsPageContent() {
       const res = await fetch("/api/leads/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hours: 720 }),
+        body: JSON.stringify({ hours: 8760 }),
       });
       const json = await res.json();
       if (json.success) {

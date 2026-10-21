@@ -5,7 +5,7 @@ import { syncMetaLeads } from "@/services/meta-leads.service";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const DEFAULT_SYNC_HOURS = 720; // 30 días
+const DEFAULT_SYNC_HOURS = 8760; // 1 año (365 días) de histórico de formularios Meta
 
 export async function POST(req: NextRequest) {
   try {
