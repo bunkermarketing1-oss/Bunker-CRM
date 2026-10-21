@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { StoredUserRole } from "@/lib/roles";
+import { USER_ACTION } from "@/lib/validations/users";
 
 export interface PortalUser {
   id: string;
@@ -9,6 +10,26 @@ export interface PortalUser {
   email: string;
   role: string;
   isActive: boolean;
+}
+
+export interface CreatePortalUserInput {
+  name: string;
+  email: string;
+  password?: string;
+  role: StoredUserRole;
+}
+
+export interface CreatePortalUserResult {
+  success: boolean;
+  user?: PortalUser;
+  tempPassword?: string;
+  error?: string;
+}
+
+export interface ResetLinkResult {
+  success: boolean;
+  recoveryUrl?: string | null;
+  error?: string;
 }
 
 /**
@@ -57,5 +78,56 @@ export function useClientPortalUsers(clientId: string, enabled: boolean) {
     [refresh]
   );
 
-  return { users, error, savingId, setRole };
+  const createUser = useCallback(
+    async (payload: CreatePortalUserInput): Promise<CreatePortalUserResult> => {
+      setError(null);
+      try {
+        const res = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...payload,
+            clientId,
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          return { success: false, error: json.error || "No se pudo crear el usuario." };
+        }
+        await refresh();
+        return {
+          success: true,
+          user: json.user as PortalUser,
+          tempPassword: (json.tempPassword as string) || payload.password || "",
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error de red";
+        setError(msg);
+        return { success: false, error: msg };
+      }
+    },
+    [clientId, refresh]
+  );
+
+  const generateResetLink = useCallback(async (userId: string): Promise<ResetLinkResult> => {
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: userId,
+          action: USER_ACTION.RESET_PASSWORD,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        return { success: false, error: json.error || "No se pudo generar el enlace." };
+      }
+      return { success: true, recoveryUrl: (json.recoveryUrl as string | null) ?? null };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "Error de red" };
+    }
+  }, []);
+
+  return { users, error, savingId, setRole, createUser, generateResetLink, refresh };
 }

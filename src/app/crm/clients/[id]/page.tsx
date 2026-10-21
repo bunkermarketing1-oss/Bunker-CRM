@@ -792,10 +792,14 @@ export default function ClientProfile360Page() {
           <div className="lg:col-span-2 space-y-6">
             {isBunkerUser && (
               <ClientPortalUsersPanel
+                clientId={client?.id || clientId}
+                clientName={client?.name || client?.companyName || ""}
                 users={portalUsers.users}
                 error={portalUsers.error}
                 savingId={portalUsers.savingId}
                 onSetRole={portalUsers.setRole}
+                onCreateUser={portalUsers.createUser}
+                onGenerateResetLink={portalUsers.generateResetLink}
               />
             )}
 

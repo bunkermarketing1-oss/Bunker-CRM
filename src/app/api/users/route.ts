@@ -226,13 +226,15 @@ export async function POST(req: NextRequest) {
           clientId: newUser.clientId,
           isActive: newUser.isActive,
         },
+        tempPassword: securePassword,
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("POST /api/users error:", error);
+    const message = error instanceof Error ? error.message : "Error al registrar usuario.";
     return NextResponse.json(
-      { success: false, error: "Error al registrar usuario." },
+      { success: false, error: message },
       { status: 500 }
     );
   }
