@@ -181,17 +181,32 @@ export async function refreshMetaCatalog(actor: Actor): Promise<RefreshMetaCatal
     );
   }
 
-  // Buscar el token de usuario guardado (en cuentas de tipo meta_ad_account o con token válido)
-  const accountWithUserToken = await prisma.connectedAccount.findFirst({
+  // Buscar el token de usuario guardado (específicamente en META_AD_ACCOUNT, donde vive el token de usuario y no el token de página)
+  let accountWithUserToken = await prisma.connectedAccount.findFirst({
     where: {
       integrationId: integration.id,
       organizationId: actor.organizationId,
+      accountType: ACCOUNT_TYPE.META_AD_ACCOUNT,
       accessTokenEnc: { not: null },
       status: { not: ACCOUNT_STATUS.DISABLED },
     },
     orderBy: { createdAt: "desc" },
     select: { accessTokenEnc: true },
   });
+
+  // Fallback si no hay ad accounts registradas
+  if (!accountWithUserToken) {
+    accountWithUserToken = await prisma.connectedAccount.findFirst({
+      where: {
+        integrationId: integration.id,
+        organizationId: actor.organizationId,
+        accessTokenEnc: { not: null },
+        status: { not: ACCOUNT_STATUS.DISABLED },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { accessTokenEnc: true },
+    });
+  }
 
   if (!accountWithUserToken?.accessTokenEnc) {
     throw new ConnectedAccountError(
@@ -210,17 +225,27 @@ export async function refreshMetaCatalog(actor: Actor): Promise<RefreshMetaCatal
     );
   }
 
-  let adAccounts: Awaited<ReturnType<typeof listMetaAdAccounts>>;
-  let pages: Awaited<ReturnType<typeof listMetaPages>>;
+  let adAccounts: Awaited<ReturnType<typeof listMetaAdAccounts>> = [];
+  let pages: Awaited<ReturnType<typeof listMetaPages>> = [];
+  let adAccountsError: string | null = null;
+  let pagesError: string | null = null;
 
   try {
-    [adAccounts, pages] = await Promise.all([
-      listMetaAdAccounts(userToken),
-      listMetaPages(userToken),
-    ]);
+    adAccounts = await listMetaAdAccounts(userToken);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Error desconocido al comunicarse con Meta Graph API";
-    throw new ConnectedAccountError(`Error de Meta API: ${msg}`, 400);
+    adAccountsError = err instanceof Error ? err.message : String(err);
+    console.warn("Advertencia al obtener cuentas publicitarias de Meta:", adAccountsError);
+  }
+
+  try {
+    pages = await listMetaPages(userToken);
+  } catch (err: unknown) {
+    pagesError = err instanceof Error ? err.message : String(err);
+    console.warn("Advertencia al obtener páginas de Meta:", pagesError);
+  }
+
+  if (adAccounts.length === 0 && pages.length === 0 && (adAccountsError || pagesError)) {
+    throw new ConnectedAccountError(`Error de Meta API: ${adAccountsError || pagesError}`, 400);
   }
 
   let newAccountsCount = 0;
