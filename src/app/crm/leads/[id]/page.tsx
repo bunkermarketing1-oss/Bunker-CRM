@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import SocialNetworkIcon from "@/components/common/SocialNetworkIcon";
 import {
   ArrowLeft,
@@ -121,6 +122,8 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function LeadDetailPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN" && !user?.isClientUser;
   const params = useParams();
   const leadId = typeof params?.id === "string" ? params.id : "";
 
@@ -455,9 +458,9 @@ export default function LeadDetailPage() {
               <p className="text-xs text-[#475467] font-medium">
                 {lead.companyName || "Prospecto Comercial"}
               </p>
-              {lead.client && (
+              {isAdmin && lead.client && (
                 <span className="inline-block text-[10px] bg-[#F8F9FA] text-[#101828] font-semibold px-2.5 py-0.5 rounded-full border border-[#EAECF0] mt-1">
-                  Cliente: {lead.client.name}
+                  {lead.client.name}
                 </span>
               )}
             </div>
