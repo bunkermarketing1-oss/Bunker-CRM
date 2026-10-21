@@ -74,41 +74,23 @@ export async function getVerifiedSupabaseUser(tokenOrReq?: string | NextRequest)
  * Resolves the authenticated user along with their active organization and verified role.
  */
 export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUser | null> {
-  const supabaseUser = await getVerifiedSupabaseUser(req);
-  if (!supabaseUser || !supabaseUser.email) {
-    return null;
-  }
+  try {
+    const supabaseUser = await getVerifiedSupabaseUser(req);
+    if (!supabaseUser || !supabaseUser.email) {
+      return null;
+    }
 
-  const email = supabaseUser.email.toLowerCase();
+    const email = supabaseUser.email.toLowerCase();
 
-  // Find user in Prisma by supabaseAuthId or email
-  let dbUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { supabaseAuthId: supabaseUser.id },
-        { email: email },
-      ],
-      isActive: true,
-    },
-    include: {
-      client: { select: { id: true, name: true } },
-      memberships: {
-        include: {
-          organization: true,
-        },
+    // Find user in Prisma by supabaseAuthId or email
+    let dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { supabaseAuthId: supabaseUser.id },
+          { email: email },
+        ],
+        isActive: true,
       },
-    },
-  });
-
-  if (!dbUser) {
-    return null;
-  }
-
-  // Auto-link supabaseAuthId if not yet linked
-  if (!dbUser.supabaseAuthId) {
-    dbUser = await prisma.user.update({
-      where: { id: dbUser.id },
-      data: { supabaseAuthId: supabaseUser.id },
       include: {
         client: { select: { id: true, name: true } },
         memberships: {
@@ -118,53 +100,76 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
         },
       },
     });
-  }
 
-  // Resolve primary organization membership
-  let primaryMembership = dbUser.memberships[0];
+    if (!dbUser) {
+      return null;
+    }
 
-  // If user has no membership yet, attach them to default org
-  if (!primaryMembership) {
-    const defaultOrg = await prisma.organization.findFirst({
-      where: { slug: "bunker-agency" },
-    });
-    if (defaultOrg) {
-      const newMember = await prisma.organizationMember.create({
-        data: {
-          organizationId: defaultOrg.id,
-          userId: dbUser.id,
-          role: dbUser.role,
-        },
+    // Auto-link supabaseAuthId if not yet linked
+    if (!dbUser.supabaseAuthId) {
+      dbUser = await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { supabaseAuthId: supabaseUser.id },
         include: {
-          organization: true,
+          client: { select: { id: true, name: true } },
+          memberships: {
+            include: {
+              organization: true,
+            },
+          },
         },
       });
-      primaryMembership = newMember;
     }
-  }
 
-  if (!primaryMembership || !primaryMembership.organization) {
+    // Resolve primary organization membership
+    let primaryMembership = dbUser.memberships[0];
+
+    // If user has no membership yet, attach them to default org
+    if (!primaryMembership) {
+      const defaultOrg = await prisma.organization.findFirst({
+        where: { slug: "bunker-agency" },
+      });
+      if (defaultOrg) {
+        const newMember = await prisma.organizationMember.create({
+          data: {
+            organizationId: defaultOrg.id,
+            userId: dbUser.id,
+            role: dbUser.role,
+          },
+          include: {
+            organization: true,
+          },
+        });
+        primaryMembership = newMember;
+      }
+    }
+
+    if (!primaryMembership || !primaryMembership.organization) {
+      return null;
+    }
+
+    const role = normalizeRole(dbUser.role);
+    const isClient = role === ROLES.CLIENT || Boolean(dbUser.clientId);
+
+    return {
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: isClient ? ROLES.CLIENT : ROLES.ADMIN, // Server-verified canonical role
+      clientId: dbUser.clientId || null,
+      clientName: dbUser.client?.name || null,
+      isClientUser: isClient,
+      // Sin empresa no hay a quién supervisar: un CLIENT_OWNER sin clientId queda como asesor.
+      isClientOwner: isClient && isClientOwnerRole(dbUser.role) && Boolean(dbUser.clientId),
+      supabaseAuthId: supabaseUser.id,
+      organizationId: primaryMembership.organization.id,
+      organizationName: primaryMembership.organization.name,
+      organizationSlug: primaryMembership.organization.slug,
+    };
+  } catch (err) {
+    console.error("Error al obtener usuario actual en la base de datos:", err);
     return null;
   }
-
-  const role = normalizeRole(dbUser.role);
-  const isClient = role === ROLES.CLIENT || Boolean(dbUser.clientId);
-
-  return {
-    id: dbUser.id,
-    email: dbUser.email,
-    name: dbUser.name,
-    role: isClient ? ROLES.CLIENT : ROLES.ADMIN, // Server-verified canonical role
-    clientId: dbUser.clientId || null,
-    clientName: dbUser.client?.name || null,
-    isClientUser: isClient,
-    // Sin empresa no hay a quién supervisar: un CLIENT_OWNER sin clientId queda como asesor.
-    isClientOwner: isClient && isClientOwnerRole(dbUser.role) && Boolean(dbUser.clientId),
-    supabaseAuthId: supabaseUser.id,
-    organizationId: primaryMembership.organization.id,
-    organizationName: primaryMembership.organization.name,
-    organizationSlug: primaryMembership.organization.slug,
-  };
 }
 
 /**

@@ -12,47 +12,69 @@ const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
 
 /** Inicia el flujo OAuth de Meta: redirige al diálogo de autorización de Facebook. */
 export async function GET(req: NextRequest) {
-  const { errorResponse } = await requireAdmin(req);
-  if (errorResponse) return errorResponse;
-
   const baseUrl = resolveAppBaseUrl(req);
 
-  if (!isCommercialLicenseActive()) {
+  try {
+    const { user, errorResponse } = await requireAdmin(req);
+    if (errorResponse || !user) {
+      // Si la sesión expiró o no existe, redirigir al login en vez de retornar JSON 401
+      const loginUrl = new URL("/login", baseUrl);
+      loginUrl.searchParams.set("callbackUrl", "/marketing/integrations");
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (!isCommercialLicenseActive()) {
+      return NextResponse.redirect(
+        new URL(
+          "/marketing/integrations?error=" +
+            encodeURIComponent("Módulo de integración Meta Ads bloqueado: Licencia empresarial pendiente de activación comercial."),
+          baseUrl
+        )
+      );
+    }
+
+    if (!getMetaConfig(req)) {
+      return NextResponse.redirect(
+        new URL(
+          "/marketing/integrations?error=" +
+            encodeURIComponent("Meta no está configurado en el servidor (META_APP_ID / META_APP_SECRET)."),
+          baseUrl
+        )
+      );
+    }
+
+    const redirectUri = `${baseUrl}/api/integrations/meta/callback`;
+    const state = randomBytes(24).toString("hex");
+    const authUrl = buildMetaAuthUrl(state, redirectUri);
+    const response = NextResponse.redirect(authUrl);
+    const isSecure = isSecureConnection(baseUrl);
+
+    response.cookies.set({
+      name: META_STATE_COOKIE,
+      value: state,
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    response.cookies.set({
+      name: META_REDIRECT_COOKIE,
+      value: redirectUri,
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    return response;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error interno al iniciar OAuth de Meta";
+    console.error("Meta connect route error:", error);
     return NextResponse.redirect(
-      new URL("/marketing/integrations?error=" + encodeURIComponent("Módulo de integración Meta Ads bloqueado: Licencia empresarial pendiente de activación comercial."), baseUrl)
+      new URL("/marketing/integrations?error=" + encodeURIComponent(`No se pudo conectar con Meta: ${message}`), baseUrl)
     );
   }
-
-  if (!getMetaConfig(req)) {
-    return NextResponse.redirect(
-      new URL("/marketing/integrations?error=" + encodeURIComponent("Meta no está configurado en el servidor (META_APP_ID / META_APP_SECRET)."), baseUrl)
-    );
-  }
-
-  const redirectUri = `${baseUrl}/api/integrations/meta/callback`;
-  const state = randomBytes(24).toString("hex");
-  const response = NextResponse.redirect(buildMetaAuthUrl(state, redirectUri));
-  const isSecure = isSecureConnection(baseUrl);
-
-  response.cookies.set({
-    name: META_STATE_COOKIE,
-    value: state,
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: "lax",
-    maxAge: 600,
-    path: "/",
-  });
-
-  response.cookies.set({
-    name: META_REDIRECT_COOKIE,
-    value: redirectUri,
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: "lax",
-    maxAge: 600,
-    path: "/",
-  });
-
-  return response;
 }
