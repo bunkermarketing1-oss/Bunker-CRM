@@ -169,12 +169,25 @@ export const ADMIN_NAVIGATION: NavSection[] = [
 export interface NavigationRole {
   isClientUser?: boolean;
   isClientOwner?: boolean;
+  clientId?: string | null;
 }
 
 /** Menú de la sesión. Ocultar un enlace no es la seguridad: la API también responde 403. */
 export function navigationFor(user: NavigationRole | null | undefined): NavSection[] {
   if (!user?.isClientUser) return ADMIN_NAVIGATION;
-  return user.isClientOwner ? [...CLIENT_NAVIGATION, OWNER_NAVIGATION_SECTION] : CLIENT_NAVIGATION;
+
+  const baseSections = user.isClientOwner ? [...CLIENT_NAVIGATION, OWNER_NAVIGATION_SECTION] : CLIENT_NAVIGATION;
+
+  if (!user.clientId) return baseSections;
+
+  // Para usuarios del portal, "Mi Empresa & Contactos" navega directo a la Ficha 360° de su empresa
+  const companyHref = `${ROUTES.CLIENTS}/${user.clientId}`;
+  return baseSections.map((section) => ({
+    ...section,
+    items: section.items.map((item) =>
+      item.href === ROUTES.CLIENTS ? { ...item, href: companyHref } : item
+    ),
+  }));
 }
 
 /** El dashboard solo se marca activo en su ruta exacta; el resto también en sus subrutas. */

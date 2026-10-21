@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   UserCheck,
   Plus,
@@ -75,10 +77,21 @@ interface UserMember {
 }
 
 export default function ClientsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const isClient = Boolean(user?.isClientUser);
+
   const [clients, setClients] = useState<Client[]>([]);
   const [teamMembers, setTeamMembers] = useState<UserMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Un usuario del portal solo administra su propia empresa: redirige directo a su Ficha 360°
+  useEffect(() => {
+    if (user?.isClientUser && user.clientId) {
+      router.replace(`/crm/clients/${user.clientId}`);
+    }
+  }, [user, router]);
 
   // Filters & Search
   const [search, setSearch] = useState("");
@@ -288,15 +301,19 @@ export default function ClientsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A]">
-              Módulo Comercial
+              {isClient ? "Portal Cliente" : "Módulo Comercial"}
             </span>
-            <span className="text-xs text-[#9C9890]">• Fase 3 CRM</span>
+            <span className="text-xs text-[#9C9890]">
+              {isClient ? "• Mi Cuenta" : "• Fase 3 CRM"}
+            </span>
           </div>
           <h1 className="text-3xl font-semibold text-[#1F1E1D] tracking-tight">
-            Centro de Gestión de Clientes
+            {isClient ? "Mi Empresa & Contactos" : "Centro de Gestión de Clientes"}
           </h1>
           <p className="text-xs text-[#716F6A] mt-1 max-w-2xl leading-relaxed">
-            Administración centralizada de cuentas, contratos de facturación recurrente (MRR), contactos clave y cronología comercial 360°.
+            {isClient
+              ? "Información comercial, contactos clave y ficha 360° de tu empresa."
+              : "Administración centralizada de cuentas, contratos de facturación recurrente (MRR), contactos clave y cronología comercial 360°."}
           </p>
         </div>
 
@@ -309,78 +326,82 @@ export default function ClientsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#D97757]" : ""}`} />
           </button>
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
-          >
-            <Sparkles className="w-4 h-4 text-[#E5C158]" />
-            <span>+ Nuevo Cliente (Asistente Guiado)</span>
-          </button>
+          {!isClient && (
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-[#E5C158]" />
+              <span>+ Nuevo Cliente (Asistente Guiado)</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Real Commercial Metrics Cards (Fase H) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>Activos</span>
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+      {/* Real Commercial Metrics Cards (Fase H) - Solo para administradores de agencia */}
+      {!isClient && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>Activos</span>
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.activeCount}</div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">de {metrics.totalCount} clientes</div>
           </div>
-          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.activeCount}</div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">de {metrics.totalCount} clientes</div>
-        </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>En Pausa</span>
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>En Pausa</span>
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+            </div>
+            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.onHoldCount}</div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">contratos suspendidos</div>
           </div>
-          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.onHoldCount}</div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">contratos suspendidos</div>
-        </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>Cancelados</span>
-            <div className="w-2 h-2 rounded-full bg-rose-500" />
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>Cancelados</span>
+              <div className="w-2 h-2 rounded-full bg-rose-500" />
+            </div>
+            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.churnedCount}</div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">cuentas churned</div>
           </div>
-          <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.churnedCount}</div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">cuentas churned</div>
-        </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>MRR Activo</span>
-            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>MRR Activo</span>
+              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <div className="text-lg font-semibold text-emerald-700 mt-1">
+              ${metrics.mrrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+            </div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">Facturación recurrente mensual</div>
           </div>
-          <div className="text-lg font-semibold text-emerald-700 mt-1">
-            ${metrics.mrrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
-          </div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">Facturación recurrente mensual</div>
-        </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>ARR Proyectado</span>
-            <TrendingUp className="w-3.5 h-3.5 text-[#D97757]" />
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>ARR Proyectado</span>
+              <TrendingUp className="w-3.5 h-3.5 text-[#D97757]" />
+            </div>
+            <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
+              ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+            </div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">Anualizado (MRR x 12)</div>
           </div>
-          <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
-            ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
-          </div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">Anualizado (MRR x 12)</div>
-        </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-          <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
-            <span>Pipeline Cuentas</span>
-            <Briefcase className="w-3.5 h-3.5 text-[#586ff6]" />
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+              <span>Pipeline Cuentas</span>
+              <Briefcase className="w-3.5 h-3.5 text-[#586ff6]" />
+            </div>
+            <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
+              ${metrics.totalClientPipelineUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+            </div>
+            <div className="text-[10px] text-[#9C9890] mt-0.5">Deals abiertos vinculados</div>
           </div>
-          <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
-            ${metrics.totalClientPipelineUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
-          </div>
-          <div className="text-[10px] text-[#9C9890] mt-0.5">Deals abiertos vinculados</div>
         </div>
-      </div>
+      )}
 
       {feedback && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center justify-between">
@@ -664,13 +685,15 @@ export default function ClientsPage() {
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleDelete(client.id, client.name)}
-                      className="p-2 rounded-xl text-[#9C9890] hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Eliminar cliente"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!isClient && (
+                      <button
+                        onClick={() => handleDelete(client.id, client.name)}
+                        className="p-2 rounded-xl text-[#9C9890] hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Eliminar cliente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
 
                     <Link
                       href={`/crm/clients/${client.id}`}
@@ -687,17 +710,19 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* Client Onboarding Wizard Modal */}
-      <ClientOnboardingWizardModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        onSuccess={() => {
-          fetchClients();
-          setFeedback("¡Cliente comercial instalado y configurado con éxito!");
-          setTimeout(() => setFeedback(null), 5000);
-        }}
-        teamMembers={teamMembers}
-      />
+      {/* Client Onboarding Wizard Modal - Solo para administradores de agencia */}
+      {!isClient && (
+        <ClientOnboardingWizardModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSuccess={() => {
+            fetchClients();
+            setFeedback("¡Cliente comercial instalado y configurado con éxito!");
+            setTimeout(() => setFeedback(null), 5000);
+          }}
+          teamMembers={teamMembers}
+        />
+      )}
     </div>
   );
 }
