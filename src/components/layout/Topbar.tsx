@@ -88,7 +88,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           type="button"
           onClick={onOpenSearch}
           aria-label="Buscar"
-          className="md:hidden w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center text-[#141414]"
+          className="md:hidden w-9 h-9 rounded-2xl bg-white border border-[#EAECF0] flex items-center justify-center text-[#101828]"
         >
           <Search className="w-4 h-4" />
         </button>
@@ -98,9 +98,9 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           onClick={toggleTheme}
           title={theme === "dark" ? t("topbar.light_mode", "Modo Claro") : t("topbar.dark_mode", "Modo Oscuro")}
           aria-label="Cambiar tema"
-          className="w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center hover:bg-[#FAF9F5] transition-colors"
+          className="w-9 h-9 rounded-2xl bg-white border border-[#EAECF0] flex items-center justify-center hover:bg-[#F8F9FA] transition-colors"
         >
-          {theme === "dark" ? <Sun className="w-4 h-4 text-[#E5C158]" /> : <Moon className="w-4 h-4 text-[#8C887E]" />}
+          {theme === "dark" ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-[#667085]" />}
         </button>
 
         <button
@@ -108,9 +108,9 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           onClick={toggleLanguage}
           title={language === "es" ? "Switch to English" : "Cambiar a Español"}
           aria-label="Cambiar idioma"
-          className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-2xl bg-white border border-[#ECEAE3] text-xs font-semibold text-[#141414] hover:bg-[#FAF9F5] transition-colors"
+          className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] hover:bg-[#F8F9FA] transition-colors"
         >
-          <Globe className="w-3.5 h-3.5 text-[#8C887E]" />
+          <Globe className="w-3.5 h-3.5 text-[#667085]" />
           <span className="uppercase">{language}</span>
         </button>
 
@@ -119,7 +119,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           className="btn-black-gold rounded-2xl h-9 px-3 sm:px-4 text-xs font-semibold flex items-center gap-1.5"
           aria-label={t("topbar.register_lead", "+ Registrar Lead")}
         >
-          <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
+          <Plus className="w-3.5 h-3.5 text-white" />
           <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
         </Link>
 
@@ -129,26 +129,26 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
             onClick={() => setShowUserMenu((open) => !open)}
             aria-expanded={showUserMenu}
             aria-label="Menú de usuario"
-            className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-2xl bg-white border border-[#ECEAE3] text-xs font-medium text-[#141414] hover:bg-[#FAF9F5]"
+            className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-2xl bg-white border border-[#EAECF0] text-xs font-medium text-[#101828] hover:bg-[#F8F9FA]"
           >
-            <span className="w-7 h-7 rounded-full bg-[#141414] text-[#FAF8F3] text-[10px] font-bold flex items-center justify-center border border-[#D4AF37]/40">
+            <span className="w-7 h-7 rounded-full bg-[#0F172A] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
               {initialsOf(user?.name, isClient ? "CL" : "BA")}
             </span>
             <span className="hidden xl:flex flex-col text-left leading-tight">
-              <span className="font-semibold text-xs text-[#141414]">{user?.name || "Cargando..."}</span>
-              <span className="text-[10px] text-[#8C887E]">{roleBadge.label}</span>
+              <span className="font-semibold text-xs text-[#101828]">{user?.name || "Cargando..."}</span>
+              <span className="text-[10px] text-[#667085]">{roleBadge.label}</span>
             </span>
-            <ChevronDown className="hidden sm:block w-3 h-3 text-[#8C887E]" />
+            <ChevronDown className="hidden sm:block w-3 h-3 text-[#667085]" />
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 top-11 w-64 bg-white border border-[#ECEAE3] rounded-3xl p-3 shadow-2xl z-50">
-              <div className="p-2.5 bg-[#FAF9F5] rounded-2xl border border-[#ECEAE3] mb-2">
-                <p className="text-xs font-bold text-[#141414] truncate">{user?.name}</p>
-                <p className="text-[11px] text-[#8C887E] truncate">{user?.email}</p>
-                <div className="mt-2 pt-2 border-t border-[#ECEAE3] flex items-center justify-between gap-2 text-[10px]">
-                  <span className="flex items-center gap-1 text-[#6B6861] min-w-0">
-                    <Building2 className="w-3 h-3 text-[#8C887E] flex-shrink-0" />
+            <div className="absolute right-0 top-11 w-64 bg-white border border-[#EAECF0] rounded-3xl p-3 shadow-2xl z-50">
+              <div className="p-2.5 bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] mb-2">
+                <p className="text-xs font-bold text-[#101828] truncate">{user?.name}</p>
+                <p className="text-[11px] text-[#667085] truncate">{user?.email}</p>
+                <div className="mt-2 pt-2 border-t border-[#EAECF0] flex items-center justify-between gap-2 text-[10px]">
+                  <span className="flex items-center gap-1 text-[#475467] min-w-0">
+                    <Building2 className="w-3 h-3 text-[#667085] flex-shrink-0" />
                     <span className="truncate">{accountName}</span>
                   </span>
                   <span className={`px-2 py-0.5 rounded-full font-semibold border whitespace-nowrap ${roleBadge.color}`}>{roleBadge.label}</span>
@@ -158,18 +158,18 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
               <button
                 type="button"
                 onClick={toggleLanguage}
-                className="sm:hidden w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-[#141414] hover:bg-[#FAF9F5] flex items-center gap-2"
+                className="sm:hidden w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-[#101828] hover:bg-[#F8F9FA] flex items-center gap-2"
               >
-                <Globe className="w-3.5 h-3.5 text-[#8C887E]" />
+                <Globe className="w-3.5 h-3.5 text-[#667085]" />
                 {language === "es" ? "Switch to English" : "Cambiar a Español"}
               </button>
 
-              <div className="px-3 py-1.5 text-[10px] text-[#8C887E] flex items-center gap-1.5">
+              <div className="px-3 py-1.5 text-[10px] text-[#667085] flex items-center gap-1.5">
                 <Shield className="w-3 h-3 text-emerald-600" />
                 <span>{t("topbar.verified_perms", "Permisos verificados por servidor")}</span>
               </div>
 
-              <div className="mt-1 pt-2 border-t border-[#ECEAE3]">
+              <div className="mt-1 pt-2 border-t border-[#EAECF0]">
                 <button
                   type="button"
                   onClick={() => {

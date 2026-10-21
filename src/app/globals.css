@@ -181,20 +181,23 @@ body {
 .dark .bg-\[\#FAF8F2\],
 .dark .bg-\[\#FAF8F3\],
 .dark .bg-\[\#F4F3EE\],
-.dark .bg-\[\#F8F7F3\] {
+.dark .bg-\[\#F8F7F3\],
+.dark .bg-\[\#F8F9FA\] {
   background-color: #0F172A !important;
 }
 
 .dark .text-\[\#1F1E1D\],
 .dark .text-\[\#141414\],
-.dark .text-\[\#1A1918\] {
+.dark .text-\[\#1A1918\],
+.dark .text-\[\#101828\] {
   color: #F8FAFC !important;
 }
 
 .dark .text-\[\#716F6A\],
 .dark .text-\[\#6B6861\],
 .dark .text-\[\#8C887E\],
-.dark .text-\[\#4D4C48\] {
+.dark .text-\[\#4D4C48\],
+.dark .text-\[\#475467\] {
   color: #94A3B8 !important;
 }
 
@@ -202,7 +205,9 @@ body {
 .dark .text-\[\#9C988F\],
 .dark .text-\[\#A09B90\],
 .dark .text-\[\#B3AFA5\],
-.dark .text-\[\#C7C5BE\] {
+.dark .text-\[\#C7C5BE\],
+.dark .text-\[\#98A2B3\],
+.dark .text-\[\#667085\] {
   color: #64748B !important;
 }
 
@@ -212,7 +217,8 @@ body {
 .dark .border-\[\#F0EEE6\],
 .dark .border-\[\#DDD9CF\],
 .dark .border-\[\#F0EFEA\],
-.dark .border-\[\#F4F3EE\] {
+.dark .border-\[\#F4F3EE\],
+.dark .border-\[\#EAECF0\] {
   border-color: #243046 !important;
 }
 

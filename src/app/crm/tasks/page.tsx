@@ -85,17 +85,17 @@ export default function TasksPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+          <div className="flex items-center gap-2 text-xs text-[#667085] mb-1">
             <span>CRM</span>
             <span>/</span>
-            <span className="text-[#1F1E1D] font-medium">Tareas</span>
+            <span className="text-[#101828] font-medium">Tareas</span>
           </div>
-          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             Tareas & Recordatorios Comerciales
           </h1>
-          <p className="text-xs text-[#6B6966] mt-0.5">
+          <p className="text-xs text-[#475467] mt-0.5">
             Seguimiento de entregables, llamadas programadas y revisiones estratégicas de cuenta.
           </p>
         </div>
@@ -104,30 +104,30 @@ export default function TasksPage() {
           onClick={() => setIsModalOpen(true)}
           className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
         >
-          <Plus className="w-4 h-4 text-[#E5C158]" />
+          <Plus className="w-4 h-4 text-[#6366F1]" />
           <span>Nueva Tarea</span>
         </button>
       </div>
 
       {/* Tasks List */}
-      <div className="bg-white rounded-2xl border border-[#E8E6DF] shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
-          <span className="text-xs font-semibold text-[#1F1E1D]">Lista de Pendientes</span>
-          <span className="text-[11px] text-[#82807C] font-mono">
+      <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#FDFDFC]">
+          <span className="text-xs font-semibold text-[#101828]">Lista de Pendientes</span>
+          <span className="text-[11px] text-[#667085] font-mono">
             {tasks.filter((t) => t.status === "completed").length} de {tasks.length} completadas
           </span>
         </div>
 
         <div className="divide-y divide-[#F0EFEA] p-2">
           {loading ? (
-            <div className="py-12 text-center text-[#82807C] text-xs">Cargando tareas...</div>
+            <div className="py-12 text-center text-[#667085] text-xs">Cargando tareas...</div>
           ) : tasks.length === 0 ? (
-            <div className="py-12 text-center text-[#82807C] text-xs">No hay tareas pendientes.</div>
+            <div className="py-12 text-center text-[#667085] text-xs">No hay tareas pendientes.</div>
           ) : (
             tasks.map((task) => (
               <div
                 key={task.id}
-                className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#FAF9F5] transition-colors rounded-xl"
+                className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#F8F9FA] transition-colors rounded-xl"
               >
                 <div className="flex items-center gap-3">
                   <button
@@ -135,18 +135,18 @@ export default function TasksPage() {
                     className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors border ${
                       task.status === "completed"
                         ? "bg-emerald-600 border-emerald-600 text-white"
-                        : "border-[#D1CFCA] bg-white hover:border-[#D97757]"
+                        : "border-[#D1CFCA] bg-white hover:border-[#6366F1]"
                     }`}
                   >
                     {task.status === "completed" && <CheckCircle2 className="w-3.5 h-3.5" />}
                   </button>
 
                   <div>
-                    <div className={`text-xs font-medium ${task.status === "completed" ? "line-through text-[#9E9D99]" : "text-[#1F1E1D]"}`}>
+                    <div className={`text-xs font-medium ${task.status === "completed" ? "line-through text-[#9E9D99]" : "text-[#101828]"}`}>
                       {task.title}
                     </div>
                     {task.dueDate && (
-                      <div className="text-[10px] text-[#82807C] flex items-center gap-1 mt-0.5">
+                      <div className="text-[10px] text-[#667085] flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3 h-3 text-[#9E9D99]" />
                         <span>Vence: {new Date(task.dueDate).toLocaleDateString()}</span>
                       </div>
@@ -172,12 +172,12 @@ export default function TasksPage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FDFDFC]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D]">Crear Tarea Comercial</h2>
+          <div className="bg-white border border-[#EAECF0] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#FDFDFC]">
+              <h2 className="text-sm font-semibold text-[#101828]">Crear Tarea Comercial</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-[#82807C] hover:text-[#1F1E1D] p-1 rounded-lg hover:bg-[#F4F3EE]"
+                className="text-[#667085] hover:text-[#101828] p-1 rounded-lg hover:bg-[#EAECF0]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -185,23 +185,23 @@ export default function TasksPage() {
 
             <form onSubmit={handleCreate} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#4D4C48] mb-1">Título de la Tarea *</label>
+                <label className="block text-xs font-medium text-[#475467] mb-1">Título de la Tarea *</label>
                 <input
                   type="text"
                   required
                   placeholder="ej. Enviar propuesta revisada de Meta Ads"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#4D4C48] mb-1">Prioridad</label>
+                <label className="block text-xs font-medium text-[#475467] mb-1">Prioridad</label>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 >
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
@@ -211,12 +211,12 @@ export default function TasksPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#4D4C48] mb-1">Fecha Límite</label>
+                <label className="block text-xs font-medium text-[#475467] mb-1">Fecha Límite</label>
                 <input
                   type="date"
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
@@ -224,7 +224,7 @@ export default function TasksPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-[#F4F3EE] border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium"
+                  className="px-3.5 py-2 rounded-xl bg-[#EAECF0] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs font-medium"
                 >
                   Cancelar
                 </button>

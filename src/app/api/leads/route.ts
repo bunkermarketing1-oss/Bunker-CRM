@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const source = searchParams.get("source");
     const ownerId = searchParams.get("ownerId");
+    const clientId = searchParams.get("clientId");
 
     const where: any = {
       organizationId: user!.organizationId,
@@ -30,6 +31,12 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: true, leads: [] });
       }
       where.clientId = user!.clientId;
+    } else if (clientId && clientId !== "all") {
+      if (clientId === "unassigned") {
+        where.clientId = null;
+      } else {
+        where.clientId = clientId;
+      }
     }
 
     if (status && status !== "all") {
@@ -41,7 +48,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (ownerId && ownerId !== "all") {
-      where.ownerId = ownerId;
+      if (ownerId === "unassigned") {
+        where.ownerId = null;
+      } else {
+        where.ownerId = ownerId;
+      }
     }
 
     if (search.trim()) {
@@ -66,11 +77,12 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       include: {
         owner: { select: { id: true, name: true, email: true, role: true } },
+        client: { select: { id: true, name: true } },
       },
     });
 
     return NextResponse.json({ success: true, leads });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/leads error:", error);
     return NextResponse.json(
       { success: false, error: "Error interno al consultar prospectos." },

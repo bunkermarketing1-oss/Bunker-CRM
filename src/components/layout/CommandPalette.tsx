@@ -134,35 +134,35 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
       <button type="button" aria-label="Cerrar búsqueda" onClick={onClose} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-xl bg-white border border-[#ECEAE3] rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-xl bg-white border border-[#EAECF0] rounded-3xl shadow-2xl overflow-hidden"
         onKeyDown={handleKeyDown}
       >
-        <div className="flex items-center gap-3 px-5 border-b border-[#ECEAE3]">
+        <div className="flex items-center gap-3 px-5 border-b border-[#EAECF0]">
           {loading ? (
-            <Loader2 className="w-4 h-4 text-[#9A7320] animate-spin flex-shrink-0" />
+            <Loader2 className="w-4 h-4 text-[#6366F1] animate-spin flex-shrink-0" />
           ) : (
-            <Search className="w-4 h-4 text-[#8C887E] flex-shrink-0" />
+            <Search className="w-4 h-4 text-[#667085] flex-shrink-0" />
           )}
           <input
             ref={inputRef}
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder={language === "es" ? "Buscar leads, clientes, contactos o páginas…" : "Search leads, clients, contacts or pages…"}
-            className="flex-1 bg-transparent py-4 text-sm text-[#141414] placeholder-[#9C988F] focus:outline-none"
+            className="flex-1 bg-transparent py-4 text-sm text-[#101828] placeholder-[#98A2B3] focus:outline-none"
           />
-          <kbd className="text-[10px] font-mono text-[#8C887E] bg-[#F4F3EE] px-1.5 py-0.5 rounded border border-[#ECEAE3]">ESC</kbd>
+          <kbd className="text-[10px] font-mono text-[#667085] bg-[#F8F9FA] px-1.5 py-0.5 rounded border border-[#EAECF0]">ESC</kbd>
         </div>
 
         <div ref={listRef} className="max-h-[50vh] overflow-y-auto p-2">
           {error && <p className="px-3 py-2 text-xs text-red-600">{error}</p>}
           {showHint && (
-            <p className="px-3 py-2 text-[11px] text-[#8C887E]">
+            <p className="px-3 py-2 text-[11px] text-[#667085]">
               {language === "es" ? `Escribe al menos ${SEARCH_MIN_LENGTH} letras para buscar registros.` : `Type at least ${SEARCH_MIN_LENGTH} letters to search records.`}
             </p>
           )}
           {items.length === 0 && !loading && (
-            <p className="px-3 py-8 text-center text-xs text-[#8C887E]">
-              {language === "es" ? "Sin resultados para" : "No results for"} <strong className="text-[#141414]">“{term}”</strong>
+            <p className="px-3 py-8 text-center text-xs text-[#667085]">
+              {language === "es" ? "Sin resultados para" : "No results for"} <strong className="text-[#101828]">“{term}”</strong>
             </p>
           )}
           {items.map((item, index) => {
@@ -172,7 +172,7 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
             return (
               <React.Fragment key={item.key}>
                 {startsGroup && (
-                  <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#8C887E]">{item.group}</div>
+                  <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#667085]">{item.group}</div>
                 )}
                 <button
                   type="button"
@@ -180,28 +180,28 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
                   onClick={item.run}
                   onMouseMove={() => setActiveIndex(index)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition-colors ${
-                    isActive ? "bg-[#FBF7ED] dark:bg-[#2A2415]" : ""
+                    isActive ? "bg-[#F4F3FF] dark:bg-indigo-950/40" : ""
                   }`}
                 >
                   <span
                     className={`w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0 ${
-                      isActive ? "border-[#D4AF37]/50 bg-white" : "border-[#ECEAE3] bg-[#FAF9F5]"
+                      isActive ? "border-[#6366F1]/40 bg-white" : "border-[#EAECF0] bg-[#F8F9FA]"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? "text-[#9A7320]" : "text-[#8C887E]"}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? "text-[#5925DC]" : "text-[#667085]"}`} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-semibold text-[#141414] truncate">{item.title}</span>
-                    {item.subtitle && <span className="block text-[11px] text-[#8C887E] truncate">{item.subtitle}</span>}
+                    <span className="block text-xs font-semibold text-[#101828] truncate">{item.title}</span>
+                    {item.subtitle && <span className="block text-[11px] text-[#667085] truncate">{item.subtitle}</span>}
                   </span>
-                  {isActive && <CornerDownLeft className="w-3.5 h-3.5 text-[#9A7320] flex-shrink-0" />}
+                  {isActive && <CornerDownLeft className="w-3.5 h-3.5 text-[#5925DC] flex-shrink-0" />}
                 </button>
               </React.Fragment>
             );
           })}
         </div>
 
-        <div className="hidden sm:flex items-center gap-4 px-5 py-2.5 border-t border-[#ECEAE3] bg-[#FAF9F5] text-[10px] text-[#8C887E]">
+        <div className="hidden sm:flex items-center gap-4 px-5 py-2.5 border-t border-[#EAECF0] bg-[#F8F9FA] text-[10px] text-[#667085]">
           <span><kbd className="font-mono">↑↓</kbd> {language === "es" ? "navegar" : "navigate"}</span>
           <span><kbd className="font-mono">↵</kbd> {language === "es" ? "abrir" : "open"}</span>
           <span><kbd className="font-mono">esc</kbd> {language === "es" ? "cerrar" : "close"}</span>

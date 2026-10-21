@@ -48,13 +48,13 @@ export default function DashboardPage() {
           <>
             <Link
               href={ROUTES.REPORTS}
-              className="h-9 px-3.5 rounded-2xl bg-white border border-[#ECEAE3] text-xs font-semibold text-[#141414] flex items-center gap-1.5 hover:bg-[#FAF9F5]"
+              className="h-9 px-3.5 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] flex items-center gap-1.5 hover:bg-[#F8F9FA]"
             >
-              <LineChart className="w-3.5 h-3.5 text-[#8C887E]" />
+              <LineChart className="w-3.5 h-3.5 text-[#667085]" />
               Ver reportes
             </Link>
             <Link href={ROUTES.LEADS} className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
+              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
               Registrar lead
             </Link>
           </>
@@ -158,12 +158,12 @@ function DashboardSkeleton() {
     <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Cargando panel">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-36 rounded-3xl bg-white border border-[#ECEAE3]" />
+          <div key={i} className="h-36 rounded-3xl bg-white border border-[#EAECF0]" />
         ))}
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 h-96 rounded-3xl bg-white border border-[#ECEAE3]" />
-        <div className="h-96 rounded-3xl bg-white border border-[#ECEAE3]" />
+        <div className="xl:col-span-2 h-96 rounded-3xl bg-white border border-[#EAECF0]" />
+        <div className="h-96 rounded-3xl bg-white border border-[#EAECF0]" />
       </div>
     </div>
   );

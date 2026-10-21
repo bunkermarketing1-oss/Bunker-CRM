@@ -97,31 +97,31 @@ export default function CampaignAdsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-5xl max-h-[92vh] bg-white rounded-3xl border border-[#E8E6DF] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-5xl max-h-[92vh] bg-white rounded-3xl border border-[#EAECF0] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-label="Detalle de Anuncios y Creativos"
       >
         {/* Header Modal */}
-        <div className="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-[#E8E6DF] bg-gradient-to-r from-[#FAF9F5] to-white">
+        <div className="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-[#EAECF0] bg-gradient-to-r from-[#F8F9FA] to-white">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <SocialNetworkIcon provider={platform} size="sm" className="shrink-0" />
-              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#82807C]">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#667085]">
                 {accountName ? `${accountName} · ` : ""}Creativos de Campaña
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#1F1E1D] tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#101828] tracking-tight">
               {campaignName}
             </h2>
-            <p className="text-xs text-[#6B6966]">
+            <p className="text-xs text-[#475467]">
               Visualiza en tiempo real los anuncios, imágenes, videos y textos persuasivos configurados en Meta.
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[#82807C] hover:text-[#1F1E1D] hover:bg-[#F4F3EE] transition-colors"
+            className="p-2 rounded-xl text-[#667085] hover:text-[#101828] hover:bg-[#EAECF0] transition-colors"
             aria-label="Cerrar modal"
           >
             <X className="w-5 h-5" />
@@ -129,14 +129,14 @@ export default function CampaignAdsModal({
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-[#FAF9F5]/40">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-[#F8F9FA]/40">
           {loading && (
-            <div className="py-16 flex flex-col items-center justify-center space-y-3 text-[#82807C]">
-              <RefreshCw className="w-8 h-8 animate-spin text-[#D97757]" />
-              <p className="text-sm font-medium text-[#1F1E1D]">
+            <div className="py-16 flex flex-col items-center justify-center space-y-3 text-[#667085]">
+              <RefreshCw className="w-8 h-8 animate-spin text-[#6366F1]" />
+              <p className="text-sm font-medium text-[#101828]">
                 Consultando creativos y anuncios en Meta Marketing API...
               </p>
-              <p className="text-xs text-[#82807C]">
+              <p className="text-xs text-[#667085]">
                 Descargando recursos multimedia, textos y métricas individuales.
               </p>
             </div>
@@ -153,12 +153,12 @@ export default function CampaignAdsModal({
           )}
 
           {!loading && !error && ads.length === 0 && (
-            <div className="py-16 text-center space-y-3 bg-white rounded-2xl border border-[#E8E6DF] p-8">
-              <Sparkles className="w-8 h-8 text-[#D97757] mx-auto opacity-70" />
-              <h3 className="text-base font-semibold text-[#1F1E1D]">
+            <div className="py-16 text-center space-y-3 bg-white rounded-2xl border border-[#EAECF0] p-8">
+              <Sparkles className="w-8 h-8 text-[#6366F1] mx-auto opacity-70" />
+              <h3 className="text-base font-semibold text-[#101828]">
                 No hay anuncios registrados para esta campaña
               </h3>
-              <p className="text-xs text-[#6B6966] max-w-md mx-auto">
+              <p className="text-xs text-[#475467] max-w-md mx-auto">
                 Es posible que la campaña aún no contenga conjuntos de anuncios con creativos activos o que estén en proceso de aprobación por Meta.
               </p>
             </div>
@@ -166,7 +166,7 @@ export default function CampaignAdsModal({
 
           {!loading && !error && ads.length > 0 && (
             <>
-              <div className="flex items-center justify-between text-xs text-[#82807C]">
+              <div className="flex items-center justify-between text-xs text-[#667085]">
                 <span>
                   Mostrando <strong>{ads.length}</strong> anuncio(s) detectado(s) en esta campaña
                 </span>
@@ -189,15 +189,15 @@ export default function CampaignAdsModal({
                   return (
                     <div
                       key={ad.id}
-                      className="bg-white rounded-2xl border border-[#E8E6DF] shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
+                      className="bg-white rounded-2xl border border-[#EAECF0] shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
                     >
                       {/* Top bar of ad */}
                       <div className="p-4 border-b border-[#F0EFEA] flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <h4 className="text-xs font-semibold text-[#1F1E1D] truncate" title={ad.name}>
+                          <h4 className="text-xs font-semibold text-[#101828] truncate" title={ad.name}>
                             {ad.name}
                           </h4>
-                          <span className="text-[10px] text-[#82807C] font-mono">
+                          <span className="text-[10px] text-[#667085] font-mono">
                             ID: {ad.id}
                           </span>
                         </div>
@@ -211,10 +211,10 @@ export default function CampaignAdsModal({
                           >
                             {isActive ? "Activo" : ad.status.toUpperCase()}
                           </span>
-                          <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FAF9F5] text-[#4D4C48] border border-[#E8E6DF]">
+                          <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F8F9FA] text-[#475467] border border-[#EAECF0]">
                             {ad.isVideo ? (
                               <>
-                                <Play className="w-2.5 h-2.5 text-[#D97757] fill-[#D97757]" />
+                                <Play className="w-2.5 h-2.5 text-[#6366F1] fill-[#6366F1]" />
                                 Video
                               </>
                             ) : (
@@ -228,7 +228,7 @@ export default function CampaignAdsModal({
                       </div>
 
                       {/* Visual Media Showcase */}
-                      <div className="relative aspect-video bg-[#1F1E1D] flex items-center justify-center overflow-hidden group">
+                      <div className="relative aspect-video bg-[#101828] flex items-center justify-center overflow-hidden group">
                         {ad.thumbnailUrl || ad.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -246,8 +246,8 @@ export default function CampaignAdsModal({
 
                         {ad.isVideo && (
                           <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
-                            <div className="w-12 h-12 rounded-full bg-white/90 text-[#1F1E1D] shadow-lg flex items-center justify-center transition-transform group-hover:scale-110">
-                              <Play className="w-5 h-5 ml-0.5 fill-[#1F1E1D]" />
+                            <div className="w-12 h-12 rounded-full bg-white/90 text-[#101828] shadow-lg flex items-center justify-center transition-transform group-hover:scale-110">
+                              <Play className="w-5 h-5 ml-0.5 fill-[#101828]" />
                             </div>
                           </div>
                         )}
@@ -257,19 +257,19 @@ export default function CampaignAdsModal({
                       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                         <div className="space-y-2">
                           {ad.headline && (
-                            <h3 className="text-sm font-bold text-[#1F1E1D] leading-snug">
+                            <h3 className="text-sm font-bold text-[#101828] leading-snug">
                               {ad.headline}
                             </h3>
                           )}
 
                           {ad.body && (
-                            <div className="text-xs text-[#4D4C48] whitespace-pre-line leading-relaxed">
+                            <div className="text-xs text-[#475467] whitespace-pre-line leading-relaxed">
                               {displayBody}
                               {hasLongBody && (
                                 <button
                                   type="button"
                                   onClick={() => toggleExpand(ad.id)}
-                                  className="ml-1 text-[#D97757] font-semibold hover:underline"
+                                  className="ml-1 text-[#6366F1] font-semibold hover:underline"
                                 >
                                   {isExpanded ? "Ver menos" : "Ver más"}
                                 </button>
@@ -281,11 +281,11 @@ export default function CampaignAdsModal({
                         {/* Call To Action Button (Simulating Meta ad CTA) */}
                         <div className="pt-2 flex items-center justify-between gap-3 border-t border-[#F0EFEA]">
                           {ad.callToAction ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#E8E6DF] text-xs font-semibold text-[#1F1E1D]">
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#F8F9FA] border border-[#EAECF0] text-xs font-semibold text-[#101828]">
                               {ad.callToAction.replace(/_/g, " ")}
                             </span>
                           ) : (
-                            <span className="text-[11px] text-[#82807C] italic">Sin botón CTA</span>
+                            <span className="text-[11px] text-[#667085] italic">Sin botón CTA</span>
                           )}
 
                           {ad.linkUrl && (
@@ -293,7 +293,7 @@ export default function CampaignAdsModal({
                               href={ad.linkUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#D97757] hover:underline"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#6366F1] hover:underline"
                             >
                               <span>Visitar enlace</span>
                               <ExternalLink className="w-3 h-3" />
@@ -303,36 +303,36 @@ export default function CampaignAdsModal({
                       </div>
 
                       {/* Performance Mini KPIs */}
-                      <div className="bg-[#FAF9F5] border-t border-[#E8E6DF] p-3 px-4 grid grid-cols-4 gap-2 text-center text-[10px]">
+                      <div className="bg-[#F8F9FA] border-t border-[#EAECF0] p-3 px-4 grid grid-cols-4 gap-2 text-center text-[10px]">
                         <div>
-                          <div className="text-[#82807C] flex items-center justify-center gap-0.5">
-                            <DollarSign className="w-3 h-3 text-[#D97757]" /> Gasto
+                          <div className="text-[#667085] flex items-center justify-center gap-0.5">
+                            <DollarSign className="w-3 h-3 text-[#6366F1]" /> Gasto
                           </div>
-                          <div className="font-semibold text-[#1F1E1D] mt-0.5">
+                          <div className="font-semibold text-[#101828] mt-0.5">
                             {fmtMoney(ad.spend)}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[#82807C] flex items-center justify-center gap-0.5">
+                          <div className="text-[#667085] flex items-center justify-center gap-0.5">
                             <Eye className="w-3 h-3 text-blue-500" /> Impr.
                           </div>
-                          <div className="font-semibold text-[#1F1E1D] mt-0.5">
+                          <div className="font-semibold text-[#101828] mt-0.5">
                             {fmtNumber(ad.impressions)}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[#82807C] flex items-center justify-center gap-0.5">
+                          <div className="text-[#667085] flex items-center justify-center gap-0.5">
                             <MousePointer className="w-3 h-3 text-emerald-500" /> Clics
                           </div>
-                          <div className="font-semibold text-[#1F1E1D] mt-0.5">
+                          <div className="font-semibold text-[#101828] mt-0.5">
                             {fmtNumber(ad.clicks)}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[#82807C] flex items-center justify-center gap-0.5">
+                          <div className="text-[#667085] flex items-center justify-center gap-0.5">
                             <Users className="w-3 h-3 text-purple-500" /> Leads
                           </div>
-                          <div className="font-semibold text-[#1F1E1D] mt-0.5">
+                          <div className="font-semibold text-[#101828] mt-0.5">
                             {fmtNumber(ad.leads)}
                           </div>
                         </div>
@@ -346,13 +346,13 @@ export default function CampaignAdsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 px-6 border-t border-[#E8E6DF] bg-white flex items-center justify-between">
-          <span className="text-xs text-[#82807C]">
+        <div className="p-4 px-6 border-t border-[#EAECF0] bg-white flex items-center justify-between">
+          <span className="text-xs text-[#667085]">
             Datos sincronizados directamente desde Meta Marketing API.
           </span>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-[#1F1E1D] text-white text-xs font-semibold hover:bg-black transition-colors"
+            className="px-5 py-2 rounded-xl bg-[#101828] text-white text-xs font-semibold hover:bg-black transition-colors"
           >
             Cerrar
           </button>

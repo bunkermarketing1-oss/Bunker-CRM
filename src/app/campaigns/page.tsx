@@ -26,7 +26,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
   active: { label: "Activa", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   paused: { label: "Pausada", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  completed: { label: "Finalizada", cls: "bg-[#F4F3EE] text-[#6B6966] border-[#E8E6DF]" },
+  completed: { label: "Finalizada", cls: "bg-[#EAECF0] text-[#475467] border-[#EAECF0]" },
 };
 
 function fmtNumber(n: number) {
@@ -171,17 +171,17 @@ export default function CampaignsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
+          <div className="flex items-center gap-2 text-xs text-[#667085] mb-1">
             <span>Marketing</span>
             <span>/</span>
-            <span className="text-[#1F1E1D] font-medium">Campañas</span>
+            <span className="text-[#101828] font-medium">Campañas</span>
           </div>
-          <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Cliente"}
           </h1>
-          <p className="text-xs text-[#6B6966] mt-0.5">
+          <p className="text-xs text-[#475467] mt-0.5">
             Inversión, alcance y resultados de las campañas pagadas en Meta (Facebook e Instagram) y TikTok.
           </p>
         </div>
@@ -195,7 +195,7 @@ export default function CampaignsPage() {
                 setClientId(e.target.value);
                 setSelectedAccountId("all");
               }}
-              className="bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
             >
               <option value="all">Todos los clientes</option>
               {clients.map((c) => (
@@ -203,13 +203,13 @@ export default function CampaignsPage() {
               ))}
             </select>
           )}
-          <div className="flex rounded-xl border border-[#E8E6DF] bg-white p-0.5">
+          <div className="flex rounded-xl border border-[#EAECF0] bg-white p-0.5">
             {[7, 30, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  days === d ? "bg-[#1F1E1D] text-white" : "text-[#6B6966] hover:text-[#1F1E1D]"
+                  days === d ? "bg-[#101828] text-white" : "text-[#475467] hover:text-[#101828]"
                 }`}
               >
                 {d} días
@@ -219,7 +219,7 @@ export default function CampaignsPage() {
           <button
             onClick={fetchData}
             aria-label="Actualizar"
-            className="p-2 rounded-xl bg-white border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D]"
+            className="p-2 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -234,12 +234,12 @@ export default function CampaignsPage() {
       )}
 
       {data && !hasAccounts && (
-        <div className="p-8 rounded-2xl bg-white border border-[#E8E6DF] text-center space-y-3">
-          <Plug className="w-6 h-6 text-[#D97757] mx-auto" />
-          <p className="text-sm text-[#1F1E1D] font-medium">
+        <div className="p-8 rounded-2xl bg-white border border-[#EAECF0] text-center space-y-3">
+          <Plug className="w-6 h-6 text-[#6366F1] mx-auto" />
+          <p className="text-sm text-[#101828] font-medium">
             {isClient ? "Aún no hay redes sociales vinculadas a tu cuenta" : "No hay cuentas publicitarias para este filtro"}
           </p>
-          <p className="text-xs text-[#6B6966]">
+          <p className="text-xs text-[#475467]">
             {isClient
               ? "El equipo de Bunker Agency vinculará tus cuentas de Meta y TikTok. Cuando lo haga, verás aquí tus campañas."
               : "Conecta Meta o TikTok y asigna cada cuenta publicitaria al cliente correspondiente."}
@@ -256,13 +256,13 @@ export default function CampaignsPage() {
         <>
           {/* Linked accounts filter chips */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#82807C]">
-              <span className="font-medium text-[#4D4C48]">Filtrar por cuenta publicitaria:</span>
+            <div className="flex items-center justify-between text-xs text-[#667085]">
+              <span className="font-medium text-[#475467]">Filtrar por cuenta publicitaria:</span>
               {selectedAccountId !== "all" && (
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId("all")}
-                  className="text-xs text-[#D97757] hover:underline font-medium"
+                  className="text-xs text-[#6366F1] hover:underline font-medium"
                 >
                   Restablecer filtro (ver todas)
                 </button>
@@ -275,14 +275,14 @@ export default function CampaignsPage() {
                 onClick={() => setSelectedAccountId("all")}
                 className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 font-medium ${
                   selectedAccountId === "all"
-                    ? "bg-[#1F1E1D] text-white border-[#1F1E1D] shadow-sm ring-2 ring-[#D4AF37]/50"
-                    : "bg-white text-[#4D4C48] border-[#E8E6DF] hover:bg-[#FAF9F5] hover:border-[#D4AF37]/50"
+                    ? "bg-[#101828] text-white border-[#101828] shadow-sm ring-2 ring-[#6366F1]/50"
+                    : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-[#6366F1]/50"
                 }`}
               >
                 <span>Todas las cuentas</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#FAF9F5] text-[#82807C]"
+                    selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#F8F9FA] text-[#667085]"
                   }`}
                 >
                   {data.accounts.length}
@@ -298,8 +298,8 @@ export default function CampaignsPage() {
                     onClick={() => setSelectedAccountId(isSelected ? "all" : a.id)}
                     className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 text-left ${
                       isSelected
-                        ? "bg-[#1F1E1D] text-white border-[#1F1E1D] shadow-sm ring-2 ring-[#D4AF37]"
-                        : "bg-white text-[#4D4C48] border-[#E8E6DF] hover:bg-[#FAF9F5] hover:border-[#D4AF37]/50"
+                        ? "bg-[#101828] text-white border-[#101828] shadow-sm ring-2 ring-[#6366F1]"
+                        : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-[#6366F1]/50"
                     }`}
                   >
                     {a.status !== ACCOUNT_STATUS.ACTIVE && (
@@ -307,11 +307,11 @@ export default function CampaignsPage() {
                     )}
                     <span className="font-medium">{a.accountName}</span>
                     {!isClient && a.client && (
-                      <span className={isSelected ? "text-white/70" : "text-[#82807C]"}>
+                      <span className={isSelected ? "text-white/70" : "text-[#667085]"}>
                         · {a.client.name}
                       </span>
                     )}
-                    <span className={isSelected ? "text-white/60 text-[10px]" : "text-[#82807C] text-[10px]"}>
+                    <span className={isSelected ? "text-white/60 text-[10px]" : "text-[#667085] text-[10px]"}>
                       · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sincronizar"}
                     </span>
                   </button>
@@ -343,28 +343,28 @@ export default function CampaignsPage() {
           {/* KPI tiles */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpis.map((k) => (
-              <div key={k.label} className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-                <div className="text-[11px] text-[#6B6966]">{k.label}</div>
-                <div className="text-xl text-[#1F1E1D] mt-1 tabular-nums">{k.value}</div>
-                {k.sub && <div className="text-[11px] text-[#82807C] mt-0.5">{k.sub}</div>}
+              <div key={k.label} className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
+                <div className="text-[11px] text-[#475467]">{k.label}</div>
+                <div className="text-xl text-[#101828] mt-1 tabular-nums">{k.value}</div>
+                {k.sub && <div className="text-[11px] text-[#667085] mt-0.5">{k.sub}</div>}
               </div>
             ))}
           </div>
 
           {/* Daily chart */}
-          <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
+          <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm text-[#1F1E1D] flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#D97757]" />
+              <h2 className="text-sm text-[#101828] flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[#6366F1]" />
                 {METRICS.find((m) => m.key === metric)?.label} por día
               </h2>
-              <div className="flex rounded-xl border border-[#E8E6DF] bg-[#FAF9F5] p-0.5">
+              <div className="flex rounded-xl border border-[#EAECF0] bg-[#F8F9FA] p-0.5">
                 {METRICS.map((m) => (
                   <button
                     key={m.key}
                     onClick={() => setMetric(m.key)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
-                      metric === m.key ? "bg-white text-[#1F1E1D] shadow-sm" : "text-[#6B6966] hover:text-[#1F1E1D]"
+                      metric === m.key ? "bg-white text-[#101828] shadow-sm" : "text-[#475467] hover:text-[#101828]"
                     }`}
                   >
                     {m.label}
@@ -376,10 +376,10 @@ export default function CampaignsPage() {
           </div>
 
           {/* Campaigns table */}
-          <div className="rounded-2xl bg-white border border-[#E8E6DF] shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-white border border-[#EAECF0] shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-[#FAF9F5] text-[#6B6966] border-b border-[#E8E6DF]">
+                <thead className="bg-[#F8F9FA] text-[#475467] border-b border-[#EAECF0]">
                   <tr>
                     <th className="text-left font-medium px-4 py-2.5">Campaña</th>
                     {!isClient && <th className="text-left font-medium px-4 py-2.5">Cliente</th>}
@@ -397,7 +397,7 @@ export default function CampaignsPage() {
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {data.campaigns.length === 0 && (
                     <tr>
-                      <td colSpan={isClient ? 10 : 11} className="px-4 py-6 text-center text-[#82807C]">
+                      <td colSpan={isClient ? 10 : 11} className="px-4 py-6 text-center text-[#667085]">
                         No hay campañas sincronizadas todavía.
                       </td>
                     </tr>
@@ -405,43 +405,43 @@ export default function CampaignsPage() {
                   {data.campaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
                     return (
-                      <tr key={c.id} className="hover:bg-[#FAF9F5] transition-colors">
+                      <tr key={c.id} className="hover:bg-[#F8F9FA] transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-start gap-2.5">
                             <div className="mt-0.5 shrink-0">
                               <SocialNetworkIcon provider={c.platform} size="sm" />
                             </div>
                             <div>
-                              <div className="text-[#1F1E1D] font-medium leading-tight">{c.name}</div>
-                              <div className="text-[11px] text-[#82807C] mt-0.5">
+                              <div className="text-[#101828] font-medium leading-tight">{c.name}</div>
+                              <div className="text-[11px] text-[#667085] mt-0.5">
                                 {PLATFORM_LABELS[c.platform] || c.platform} · {c.accountName}
                               </div>
                             </div>
                           </div>
                         </td>
-                        {!isClient && <td className="px-4 py-2.5 text-[#4D4C48]">{c.client?.name || "—"}</td>}
+                        {!isClient && <td className="px-4 py-2.5 text-[#475467]">{c.client?.name || "—"}</td>}
                         <td className="px-4 py-2.5">
                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
                           {c.budget ? `${fmtMoney(c.budget, c.currency)}${c.budgetType === "daily" ? "/día" : ""}` : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#1F1E1D]">{fmtMoney(c.spend, c.currency)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">{fmtNumber(c.impressions)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">{fmtNumber(c.clicks)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">{c.ctr.toFixed(2)}%</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">{fmtNumber(c.conversions)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#101828]">{fmtMoney(c.spend, c.currency)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.impressions)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.clicks)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{c.ctr.toFixed(2)}%</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.conversions)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
                           {c.conversions ? fmtMoney(c.costPerConversion, c.currency) : "—"}
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <button
                             type="button"
                             onClick={() => setSelectedCampaignForAds(c)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E8E6DF] text-[#1F1E1D] hover:bg-[#1F1E1D] hover:text-white hover:border-[#1F1E1D] text-[11px] font-semibold transition-all shadow-sm group"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-white hover:border-[#101828] text-[11px] font-semibold transition-all shadow-sm group"
                             title="Ver imágenes, videos, textos y creativos"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#D97757] group-hover:text-[#D4AF37] transition-colors" />
+                            <Eye className="w-3.5 h-3.5 text-[#6366F1] group-hover:text-[#6366F1] transition-colors" />
                             <span>Ver Anuncios</span>
                           </button>
                         </td>
@@ -482,7 +482,7 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
   const h = hover !== null ? daily[hover] : null;
 
   if (max === 0) {
-    return <div className="h-[220px] flex items-center justify-center text-xs text-[#82807C]">Sin datos en este rango.</div>;
+    return <div className="h-[220px] flex items-center justify-center text-xs text-[#667085]">Sin datos en este rango.</div>;
   }
 
   return (
@@ -507,7 +507,7 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
               {bh > 0 && (
                 <path
                   d={`M${x},${PAD.top + plotH} V${y + r} Q${x},${y} ${x + r},${y} H${x + barW - r} Q${x + barW},${y} ${x + barW},${y + r} V${PAD.top + plotH} Z`}
-                  fill="#D97757"
+                  fill="#6366F1"
                   opacity={hover === null || hover === i ? 1 : 0.45}
                 />
               )}
@@ -516,7 +516,7 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
         })}
       </svg>
       {/* Etiquetas de fecha en HTML para que no se deformen con el escalado del SVG */}
-      <div className="relative h-4 text-[10px] text-[#82807C]">
+      <div className="relative h-4 text-[10px] text-[#667085]">
         {daily.map((d, i) =>
           i % labelEvery === 0 ? (
             <span key={d.date} className="absolute -translate-x-1/2 whitespace-nowrap"
@@ -528,7 +528,7 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
       </div>
       {h && hover !== null && (
         <div
-          className="pointer-events-none absolute top-0 -translate-x-1/2 px-2.5 py-1.5 rounded-lg bg-[#1F1E1D] text-white text-[11px] shadow-lg whitespace-nowrap"
+          className="pointer-events-none absolute top-0 -translate-x-1/2 px-2.5 py-1.5 rounded-lg bg-[#101828] text-white text-[11px] shadow-lg whitespace-nowrap"
           style={{ left: `${((PAD.left + hover * slot + slot / 2) / W) * 100}%` }}
         >
           <div className="text-white/70">

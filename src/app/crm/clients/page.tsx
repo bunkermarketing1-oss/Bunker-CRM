@@ -297,20 +297,20 @@ export default function ClientsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E8E6DF]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#EAECF0]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A]">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F8F9FA] border border-[#EAECF0] text-[#475467]">
               {isClient ? "Portal Cliente" : "Módulo Comercial"}
             </span>
             <span className="text-xs text-[#9C9890]">
               {isClient ? "• Mi Cuenta" : "• Fase 3 CRM"}
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-[#1F1E1D] tracking-tight">
+          <h1 className="text-3xl font-semibold text-[#101828] tracking-tight">
             {isClient ? "Mi Empresa & Contactos" : "Centro de Gestión de Clientes"}
           </h1>
-          <p className="text-xs text-[#716F6A] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-[#475467] mt-1 max-w-2xl leading-relaxed">
             {isClient
               ? "Información comercial, contactos clave y ficha 360° de tu empresa."
               : "Administración centralizada de cuentas, contratos de facturación recurrente (MRR), contactos clave y cronología comercial 360°."}
@@ -321,17 +321,17 @@ export default function ClientsPage() {
           <button
             onClick={() => fetchClients()}
             disabled={loading}
-            className="p-2 rounded-xl bg-[#FFFFFF] border border-[#E8E6DF] text-[#716F6A] hover:text-[#1F1E1D] text-xs transition-colors"
+            className="p-2 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors"
             title="Refrescar lista"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#D97757]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#6366F1]" : ""}`} />
           </button>
           {!isClient && (
             <button
               onClick={() => setIsCreateOpen(true)}
               className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
             >
-              <Sparkles className="w-4 h-4 text-[#E5C158]" />
+              <Sparkles className="w-4 h-4 text-[#6366F1]" />
               <span>+ Nuevo Cliente (Asistente Guiado)</span>
             </button>
           )}
@@ -341,62 +341,62 @@ export default function ClientsPage() {
       {/* Real Commercial Metrics Cards (Fase H) - Solo para administradores de agencia */}
       {!isClient && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>Activos</span>
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
             </div>
-            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.activeCount}</div>
+            <div className="text-xl font-semibold text-[#101828] mt-1">{metrics.activeCount}</div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">de {metrics.totalCount} clientes</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>En Pausa</span>
               <div className="w-2 h-2 rounded-full bg-amber-500" />
             </div>
-            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.onHoldCount}</div>
+            <div className="text-xl font-semibold text-[#101828] mt-1">{metrics.onHoldCount}</div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">contratos suspendidos</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>Cancelados</span>
               <div className="w-2 h-2 rounded-full bg-rose-500" />
             </div>
-            <div className="text-xl font-semibold text-[#1F1E1D] mt-1">{metrics.churnedCount}</div>
+            <div className="text-xl font-semibold text-[#101828] mt-1">{metrics.churnedCount}</div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">cuentas churned</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>MRR Activo</span>
               <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <div className="text-lg font-semibold text-emerald-700 mt-1">
-              ${metrics.mrrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+              ${metrics.mrrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#475467]">USD</span>
             </div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">Facturación recurrente mensual</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>ARR Proyectado</span>
-              <TrendingUp className="w-3.5 h-3.5 text-[#D97757]" />
+              <TrendingUp className="w-3.5 h-3.5 text-[#6366F1]" />
             </div>
-            <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
-              ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+            <div className="text-lg font-semibold text-[#101828] mt-1">
+              ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#475467]">USD</span>
             </div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">Anualizado (MRR x 12)</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm">
-            <div className="flex items-center justify-between text-[#716F6A] text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
+            <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>Pipeline Cuentas</span>
               <Briefcase className="w-3.5 h-3.5 text-[#586ff6]" />
             </div>
-            <div className="text-lg font-semibold text-[#1F1E1D] mt-1">
-              ${metrics.totalClientPipelineUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#716F6A]">USD</span>
+            <div className="text-lg font-semibold text-[#101828] mt-1">
+              ${metrics.totalClientPipelineUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#475467]">USD</span>
             </div>
             <div className="text-[10px] text-[#9C9890] mt-0.5">Deals abiertos vinculados</div>
           </div>
@@ -428,7 +428,7 @@ export default function ClientsPage() {
       )}
 
       {/* Advanced Filters Bar (Fase B) */}
-      <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
+      <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search box (Col 1-4) */}
           <div className="md:col-span-4 relative">
@@ -438,7 +438,7 @@ export default function ClientsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por cliente, empresa, email, teléfono o sector..."
-              className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1F1E1D] placeholder-[#9C9890] focus:outline-none focus:border-[#D97757]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl pl-9 pr-3 py-2 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-[#6366F1]"
             />
           </div>
 
@@ -447,7 +447,7 @@ export default function ClientsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
             >
               <option value="all">Estado: Todos</option>
               <option value="active">Activo</option>
@@ -461,7 +461,7 @@ export default function ClientsPage() {
             <select
               value={industryFilter}
               onChange={(e) => setIndustryFilter(e.target.value)}
-              className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
             >
               <option value="all">Sector: Todos</option>
               {availableIndustries.map((ind) => (
@@ -477,7 +477,7 @@ export default function ClientsPage() {
             <select
               value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
-              className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
             >
               <option value="all">Asesor: Todos</option>
               {teamMembers.map((member) => (
@@ -493,7 +493,7 @@ export default function ClientsPage() {
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
-              className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
             >
               <option value="newest">Más recientes</option>
               <option value="revenue_desc">Mayor Facturación ($)</option>
@@ -507,21 +507,21 @@ export default function ClientsPage() {
 
         {/* Filter Badges & Reset */}
         {(search || statusFilter !== "all" || industryFilter !== "all" || ownerFilter !== "all" || sortOption !== "newest") && (
-          <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] text-[11px] text-[#716F6A]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] text-[11px] text-[#475467]">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-[#1F1E1D]">Filtros activos:</span>
-              {search && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Texto: &ldquo;{search}&rdquo;</span>}
-              {statusFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Estado: {statusFilter}</span>}
-              {industryFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">Sector: {industryFilter}</span>}
+              <span className="font-semibold text-[#101828]">Filtros activos:</span>
+              {search && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Texto: &ldquo;{search}&rdquo;</span>}
+              {statusFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Estado: {statusFilter}</span>}
+              {industryFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Sector: {industryFilter}</span>}
               {ownerFilter !== "all" && (
-                <span className="px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DF]">
+                <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">
                   Asesor: {teamMembers.find((m) => m.id === ownerFilter)?.name || ownerFilter}
                 </span>
               )}
             </div>
             <button
               onClick={resetFilters}
-              className="text-[#D97757] hover:underline font-semibold"
+              className="text-[#6366F1] hover:underline font-semibold"
             >
               Limpiar filtros
             </button>
@@ -533,14 +533,14 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading ? (
           <div className="col-span-full py-16 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-2">
-            <RefreshCw className="w-5 h-5 animate-spin text-[#D97757]" />
+            <RefreshCw className="w-5 h-5 animate-spin text-[#6366F1]" />
             <span>Cargando directorio comercial de clientes...</span>
           </div>
         ) : clients.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-[#9C9890] text-xs p-8 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] space-y-3">
+          <div className="col-span-full py-16 text-center text-[#9C9890] text-xs p-8 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] space-y-3">
             <Building className="w-10 h-10 text-[#DDD9CF] mx-auto" />
-            <div className="font-semibold text-sm text-[#1F1E1D]">No se encontraron clientes</div>
-            <p className="max-w-md mx-auto text-[#716F6A]">
+            <div className="font-semibold text-sm text-[#101828]">No se encontraron clientes</div>
+            <p className="max-w-md mx-auto text-[#475467]">
               No hay cuentas comerciales que coincidan con los criterios de búsqueda o filtros seleccionados.
             </p>
             {(search || statusFilter !== "all" || industryFilter !== "all" || ownerFilter !== "all") && (
@@ -577,7 +577,7 @@ export default function ClientsPage() {
             return (
               <div
                 key={client.id}
-                className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm hover:border-[#DDD9CF] hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm hover:border-[#DDD9CF] hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
               >
                 <div>
                   {/* Top Bar: Title, Industry, Badges */}
@@ -585,15 +585,15 @@ export default function ClientsPage() {
                     <div className="space-y-0.5">
                       <Link
                         href={`/crm/clients/${client.id}`}
-                        className="font-semibold text-[#1F1E1D] text-base group-hover:text-[#D97757] transition-colors flex items-center gap-1.5"
+                        className="font-semibold text-[#101828] text-base group-hover:text-[#6366F1] transition-colors flex items-center gap-1.5"
                       >
                         <span>{client.name}</span>
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>
                       {client.companyName && client.companyName !== client.name && (
-                        <div className="text-[11px] text-[#716F6A] font-medium">{client.companyName}</div>
+                        <div className="text-[11px] text-[#475467] font-medium">{client.companyName}</div>
                       )}
-                      <div className="text-[11px] text-[#716F6A] flex items-center gap-1">
+                      <div className="text-[11px] text-[#475467] flex items-center gap-1">
                         <Building className="w-3 h-3 text-[#9C9890]" />
                         <span>{client.industry || "General"}</span>
                       </div>
@@ -613,17 +613,17 @@ export default function ClientsPage() {
 
                   {/* Commercial Notes snippet */}
                   {client.notes && (
-                    <p className="text-[11px] text-[#716F6A] mt-3 p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] leading-relaxed line-clamp-2">
+                    <p className="text-[11px] text-[#475467] mt-3 p-2.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] leading-relaxed line-clamp-2">
                       {client.notes}
                     </p>
                   )}
 
                   {/* Contact Info & Primary Contact */}
-                  <div className="mt-3.5 space-y-1.5 text-[11px] text-[#716F6A] pt-3 border-t border-[#F0EEE6]">
+                  <div className="mt-3.5 space-y-1.5 text-[11px] text-[#475467] pt-3 border-t border-[#F0EEE6]">
                     {primaryContact ? (
                       <div className="flex items-center justify-between text-[11px] pb-1">
                         <span className="text-[#9C9890]">Contacto principal:</span>
-                        <span className="font-semibold text-[#1F1E1D]">
+                        <span className="font-semibold text-[#101828]">
                           {primaryContact.firstName} {primaryContact.lastName || ""}
                         </span>
                       </div>
@@ -648,7 +648,7 @@ export default function ClientsPage() {
                           href={client.website}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#D97757] hover:underline truncate"
+                          className="text-[#6366F1] hover:underline truncate"
                         >
                           {client.website.replace(/^https?:\/\//, "")}
                         </a>
@@ -668,9 +668,9 @@ export default function ClientsPage() {
 
                   {/* Responsible Advisor */}
                   {client.owner && (
-                    <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-[#716F6A]">
+                    <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-[#475467]">
                       <User className="w-3 h-3 text-[#9C9890]" />
-                      <span>Asesor: <strong className="text-[#1F1E1D]">{client.owner.name}</strong></span>
+                      <span>Asesor: <strong className="text-[#101828]">{client.owner.name}</strong></span>
                     </div>
                   )}
                 </div>
@@ -679,8 +679,8 @@ export default function ClientsPage() {
                 <div className="pt-3 border-t border-[#F0EEE6] flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-[#9C9890] block uppercase font-medium">Facturación MRR</span>
-                    <span className="text-sm font-semibold text-[#1F1E1D]">
-                      ${(client.revenue || 0).toLocaleString("en-US")} <span className="text-[10px] font-normal text-[#716F6A]">USD/mes</span>
+                    <span className="text-sm font-semibold text-[#101828]">
+                      ${(client.revenue || 0).toLocaleString("en-US")} <span className="text-[10px] font-normal text-[#475467]">USD/mes</span>
                     </span>
                   </div>
 

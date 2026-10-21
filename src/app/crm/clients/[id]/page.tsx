@@ -595,7 +595,7 @@ export default function ClientProfile360Page() {
   if (loading) {
     return (
       <div className="py-24 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-[#D97757]" />
+        <RefreshCw className="w-6 h-6 animate-spin text-[#6366F1]" />
         <span>Cargando Ficha Comercial 360° del Cliente...</span>
       </div>
     );
@@ -664,13 +664,13 @@ export default function ClientProfile360Page() {
         <div className="xl:col-span-3 space-y-4">
           <Link
             href="/crm/clients"
-            className="inline-flex items-center gap-1.5 text-xs text-[#716F6A] hover:text-[#1F1E1D] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#475467] hover:text-[#101828] font-medium transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Volver a clientes</span>
           </Link>
 
-          <div className="bg-white rounded-2xl border border-[#E8E6DF] p-5 shadow-xs text-center space-y-4">
+          <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs text-center space-y-4">
             {/* Avatar Central Grande con Badge de Estado */}
             <div className="relative inline-block mx-auto">
               <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-200 via-amber-100 to-amber-50 border-2 border-white shadow-md flex items-center justify-center text-2xl font-bold text-amber-900">
@@ -690,10 +690,10 @@ export default function ClientProfile360Page() {
 
             {/* Nombre y Cargo/Empresa */}
             <div className="space-y-0.5">
-              <h1 className="text-base font-bold text-[#1F1E1D] tracking-tight">
+              <h1 className="text-base font-bold text-[#101828] tracking-tight">
                 {client.name}
               </h1>
-              <p className="text-xs text-[#716F6A] font-medium truncate">
+              <p className="text-xs text-[#475467] font-medium truncate">
                 {client.companyName || client.industry || "Cliente Comercial"}
               </p>
               {client.isDemo && (
@@ -709,12 +709,12 @@ export default function ClientProfile360Page() {
                 <a
                   href={`mailto:${client.email}`}
                   title={`Enviar correo a ${client.email}`}
-                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+                  className="w-9 h-9 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
                 >
-                  <Mail className="w-4 h-4 text-[#716F6A]" />
+                  <Mail className="w-4 h-4 text-[#475467]" />
                 </a>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                <div className="w-9 h-9 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
                   <Mail className="w-4 h-4" />
                 </div>
               )}
@@ -723,12 +723,12 @@ export default function ClientProfile360Page() {
                 <a
                   href={`tel:${client.phone}`}
                   title={`Llamar a ${client.phone}`}
-                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+                  className="w-9 h-9 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
                 >
-                  <Phone className="w-4 h-4 text-[#716F6A]" />
+                  <Phone className="w-4 h-4 text-[#475467]" />
                 </a>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                <div className="w-9 h-9 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
                   <Phone className="w-4 h-4" />
                 </div>
               )}
@@ -739,12 +739,12 @@ export default function ClientProfile360Page() {
                   target="_blank"
                   rel="noreferrer"
                   title={`Visitar ${client.website}`}
-                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+                  className="w-9 h-9 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
                 >
-                  <Globe className="w-4 h-4 text-[#716F6A]" />
+                  <Globe className="w-4 h-4 text-[#475467]" />
                 </a>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                <div className="w-9 h-9 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
                   <Globe className="w-4 h-4" />
                 </div>
               )}
@@ -753,9 +753,9 @@ export default function ClientProfile360Page() {
                 type="button"
                 onClick={() => setIsEditClientOpen(true)}
                 title="Editar datos del cliente"
-                className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+                className="w-9 h-9 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
               >
-                <Edit className="w-4 h-4 text-[#716F6A]" />
+                <Edit className="w-4 h-4 text-[#475467]" />
               </button>
             </div>
 
@@ -763,9 +763,9 @@ export default function ClientProfile360Page() {
             <button
               type="button"
               onClick={() => setIsOppModalOpen(true)}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#141414] hover:bg-[#222222] text-[#FAF8F3] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#101828] hover:bg-[#222222] text-[#F8F9FA] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
             >
-              <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
+              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
               <span>Nueva Oportunidad</span>
             </button>
 
@@ -777,8 +777,8 @@ export default function ClientProfile360Page() {
                   onClick={() => setLeftTab("contact")}
                   className={`pb-1 font-semibold transition-colors border-b-2 ${
                     leftTab === "contact"
-                      ? "border-[#1F1E1D] text-[#1F1E1D]"
-                      : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                      ? "border-[#101828] text-[#101828]"
+                      : "border-transparent text-[#667085] hover:text-[#101828]"
                   }`}
                 >
                   Contacto
@@ -788,8 +788,8 @@ export default function ClientProfile360Page() {
                   onClick={() => setLeftTab("company")}
                   className={`pb-1 font-semibold transition-colors border-b-2 ${
                     leftTab === "company"
-                      ? "border-[#1F1E1D] text-[#1F1E1D]"
-                      : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                      ? "border-[#101828] text-[#101828]"
+                      : "border-transparent text-[#667085] hover:text-[#101828]"
                   }`}
                 >
                   Empresa
@@ -800,8 +800,8 @@ export default function ClientProfile360Page() {
                     onClick={() => setLeftTab("portal")}
                     className={`pb-1 font-semibold transition-colors border-b-2 ${
                       leftTab === "portal"
-                        ? "border-[#1F1E1D] text-[#1F1E1D]"
-                        : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                        ? "border-[#101828] text-[#101828]"
+                        : "border-transparent text-[#667085] hover:text-[#101828]"
                     }`}
                   >
                     Portal ({portalUsers.users.length})
@@ -814,34 +814,34 @@ export default function ClientProfile360Page() {
                 {leftTab === "contact" && (
                   <div className="space-y-3 text-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Correo
                       </span>
-                      <span className="text-[#1F1E1D] font-medium break-all">
+                      <span className="text-[#101828] font-medium break-all">
                         {client.email || "Sin registrar"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Teléfono
                       </span>
-                      <span className="text-[#1F1E1D] font-medium">
+                      <span className="text-[#101828] font-medium">
                         {client.phone || "Sin registrar"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Asesor Asignado
                       </span>
-                      <span className="text-[#1F1E1D] font-medium">
+                      <span className="text-[#101828] font-medium">
                         {client.owner?.name || "Sin asignar"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Cliente Desde
                       </span>
-                      <span className="text-[#1F1E1D] font-medium">
+                      <span className="text-[#101828] font-medium">
                         {new Date(client.createdAt).toLocaleDateString("es-MX", { dateStyle: "medium" })}
                       </span>
                     </div>
@@ -851,31 +851,31 @@ export default function ClientProfile360Page() {
                 {leftTab === "company" && (
                   <div className="space-y-3 text-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Razón Social
                       </span>
-                      <span className="text-[#1F1E1D] font-medium">
+                      <span className="text-[#101828] font-medium">
                         {client.companyName || client.name}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Industria / Sector
                       </span>
-                      <span className="text-[#1F1E1D] font-medium">
+                      <span className="text-[#101828] font-medium">
                         {client.industry || "General"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Facturación Mensual
                       </span>
-                      <span className="text-[#1F1E1D] font-bold text-sm">
+                      <span className="text-[#101828] font-bold text-sm">
                         ${(client.revenue || 0).toLocaleString("en-US")} USD
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         Pipeline Activo
                       </span>
                       <span className="text-blue-900 font-bold">
@@ -883,7 +883,7 @@ export default function ClientProfile360Page() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                         ARR Anualizado
                       </span>
                       <span className="text-emerald-700 font-bold">
@@ -892,10 +892,10 @@ export default function ClientProfile360Page() {
                     </div>
                     {client.notes && (
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
                           Notas
                         </span>
-                        <p className="text-[#716F6A] text-[11px] whitespace-pre-wrap mt-0.5 leading-relaxed bg-[#FAF9F5] p-2 rounded-lg border border-[#E8E6DF]">
+                        <p className="text-[#475467] text-[11px] whitespace-pre-wrap mt-0.5 leading-relaxed bg-[#F8F9FA] p-2 rounded-lg border border-[#EAECF0]">
                           {client.notes}
                         </p>
                       </div>
@@ -927,7 +927,7 @@ export default function ClientProfile360Page() {
         {/* ========================================================= */}
         <div className="xl:col-span-6 space-y-4 min-w-0">
           {/* Pestañas Horizontales Superiores */}
-          <div className="flex items-center gap-6 border-b border-[#E8E6DF] pb-2 text-xs font-semibold overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-6 border-b border-[#EAECF0] pb-2 text-xs font-semibold overflow-x-auto no-scrollbar">
             {[
               { key: "activity", label: "Actividad", count: client.activities?.length || 0 },
               { key: "calls", label: "Llamadas", count: client.activities?.filter((a) => a.type === "call").length || 0 },
@@ -942,13 +942,13 @@ export default function ClientProfile360Page() {
                 onClick={() => setCenterTab(t.key as any)}
                 className={`pb-2 transition-colors relative whitespace-nowrap ${
                   centerTab === t.key
-                    ? "text-[#1F1E1D] font-bold border-b-2 border-[#1F1E1D]"
-                    : "text-[#8C887E] hover:text-[#1F1E1D] border-b-2 border-transparent"
+                    ? "text-[#101828] font-bold border-b-2 border-[#101828]"
+                    : "text-[#667085] hover:text-[#101828] border-b-2 border-transparent"
                 }`}
               >
                 <span>{t.label}</span>
                 {t.count !== null && t.count > 0 && (
-                  <span className="ml-1.5 text-[10px] font-normal text-[#8C887E]">
+                  <span className="ml-1.5 text-[10px] font-normal text-[#667085]">
                     ({t.count})
                   </span>
                 )}
@@ -960,22 +960,22 @@ export default function ClientProfile360Page() {
           {centerTab === "ads_leads" ? (
             /* Vista de Pautas y Leads en Vivo */
             <div className="space-y-4">
-              <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+              <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
                 <div className="flex items-center justify-between pb-3 border-b border-[#F0EEE6]">
-                  <h3 className="font-bold text-xs text-[#1F1E1D] flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#D97757]" />
+                  <h3 className="font-bold text-xs text-[#101828] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#6366F1]" />
                     Cuentas Publicitarias Conectadas ({client.connectedAccounts?.length || 0})
                   </h3>
                   <Link
                     href="/marketing/integrations"
-                    className="text-xs font-semibold text-[#D97757] hover:underline"
+                    className="text-xs font-semibold text-[#6366F1] hover:underline"
                   >
                     + Vincular
                   </Link>
                 </div>
 
                 {(!client.connectedAccounts || client.connectedAccounts.length === 0) ? (
-                  <p className="text-xs text-[#8C887E] text-center py-4">
+                  <p className="text-xs text-[#667085] text-center py-4">
                     No hay cuentas publicitarias de Meta o TikTok asignadas a este cliente.
                   </p>
                 ) : (
@@ -983,13 +983,13 @@ export default function ClientProfile360Page() {
                     {client.connectedAccounts.map((acc) => (
                       <div
                         key={acc.id}
-                        className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2.5"
+                        className="p-3 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-between gap-2.5"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <SocialNetworkIcon type={acc.accountType || "meta_ad_account"} size="sm" />
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-[#1F1E1D] truncate">{acc.accountName}</p>
-                            <span className="text-[10px] text-[#8C887E]">ID: {acc.externalId || "—"}</span>
+                            <p className="text-xs font-bold text-[#101828] truncate">{acc.accountName}</p>
+                            <span className="text-[10px] text-[#667085]">ID: {acc.externalId || "—"}</span>
                           </div>
                         </div>
                         <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex-shrink-0">
@@ -1002,15 +1002,15 @@ export default function ClientProfile360Page() {
               </div>
 
               {/* Leads Recibidos */}
-              <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+              <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
                 <div className="flex items-center justify-between pb-3 border-b border-[#F0EEE6]">
-                  <h3 className="font-bold text-xs text-[#1F1E1D] flex items-center gap-2">
+                  <h3 className="font-bold text-xs text-[#101828] flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-600" />
                     Leads Entrantes ({client.leads?.length || 0})
                   </h3>
                   <Link
                     href={ROUTES.LEADS}
-                    className="text-xs font-semibold text-[#D97757] hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-[#6366F1] hover:underline flex items-center gap-1"
                   >
                     <span>Ver todos</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1018,7 +1018,7 @@ export default function ClientProfile360Page() {
                 </div>
 
                 {(!client.leads || client.leads.length === 0) ? (
-                  <p className="text-xs text-[#8C887E] text-center py-4">
+                  <p className="text-xs text-[#667085] text-center py-4">
                     Aún no se han captado leads de formularios para esta cuenta.
                   </p>
                 ) : (
@@ -1026,10 +1026,10 @@ export default function ClientProfile360Page() {
                     {client.leads.slice(0, 10).map((lead) => (
                       <div key={lead.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                         <div className="min-w-0">
-                          <Link href={leadSearchRoute(lead.name)} className="font-bold text-[#1F1E1D] hover:text-[#D97757] block truncate">
+                          <Link href={leadSearchRoute(lead.name)} className="font-bold text-[#101828] hover:text-[#6366F1] block truncate">
                             {lead.name}
                           </Link>
-                          <span className="text-[10px] text-[#8C887E]">
+                          <span className="text-[10px] text-[#667085]">
                             {lead.campaign || lead.source} • {new Date(lead.createdAt).toLocaleDateString("es-MX", { dateStyle: "short" })}
                           </span>
                         </div>
@@ -1061,17 +1061,17 @@ export default function ClientProfile360Page() {
             /* Vista Principal de Actividad, Llamadas, Reuniones, Notas */
             <div className="space-y-5">
               {/* Registro Rápido de Interacción */}
-              <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+              <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-[#F0EEE8]">
-                  <Send className="w-3.5 h-3.5 text-[#D97757]" />
-                  <span className="text-xs font-bold text-[#1F1E1D]">Registrar Nueva Interacción</span>
+                  <Send className="w-3.5 h-3.5 text-[#6366F1]" />
+                  <span className="text-xs font-bold text-[#101828]">Registrar Nueva Interacción</span>
                 </div>
                 <form onSubmit={handleCreateActivity} className="space-y-2.5">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <select
                       value={newActivity.type}
                       onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })}
-                      className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-2.5 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                      className="bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-2.5 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                     >
                       <option value="call">📞 Llamada</option>
                       <option value="meeting">🤝 Reunión</option>
@@ -1085,7 +1085,7 @@ export default function ClientProfile360Page() {
                       placeholder="Título o asunto..."
                       value={newActivity.title}
                       onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
-                      className="sm:col-span-2 bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                      className="sm:col-span-2 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                     />
                   </div>
                   <textarea
@@ -1093,7 +1093,7 @@ export default function ClientProfile360Page() {
                     placeholder="Acuerdos, notas o próximos pasos..."
                     value={newActivity.description}
                     onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                   <div className="flex justify-end">
                     <button
@@ -1101,7 +1101,7 @@ export default function ClientProfile360Page() {
                       disabled={submittingActivity}
                       className="btn-black-gold rounded-xl px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
                     >
-                      <Send className="w-3 h-3 text-[#E5C158]" />
+                      <Send className="w-3 h-3 text-[#6366F1]" />
                       <span>{submittingActivity ? "Guardando..." : "Guardar Actividad"}</span>
                     </button>
                   </div>
@@ -1111,14 +1111,14 @@ export default function ClientProfile360Page() {
               {/* Próximas Actividades (Upcoming Activity - InsightCRM Style) */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-[#1F1E1D]">Próximas Actividades</h3>
-                  <span className="text-[11px] text-[#8C887E]">
+                  <h3 className="font-bold text-sm text-[#101828]">Próximas Actividades</h3>
+                  <span className="text-[11px] text-[#667085]">
                     {pendingTasks.length} {pendingTasks.length === 1 ? "tarea pendiente" : "tareas pendientes"}
                   </span>
                 </div>
 
                 {pendingTasks.length === 0 ? (
-                  <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] text-xs text-[#8C887E] text-center">
+                  <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] text-xs text-[#667085] text-center">
                     No hay compromisos pendientes programados.
                   </div>
                 ) : (
@@ -1126,28 +1126,28 @@ export default function ClientProfile360Page() {
                     {pendingTasks.map((t) => (
                       <div
                         key={t.id}
-                        className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-2.5"
+                        className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-2.5"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#1F1E1D] shrink-0 font-bold text-xs">
-                              <Clock className="w-4 h-4 text-[#D97757]" />
+                            <div className="w-8 h-8 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] shrink-0 font-bold text-xs">
+                              <Clock className="w-4 h-4 text-[#6366F1]" />
                             </div>
                             <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-[#1F1E1D] truncate">{t.title}</h4>
-                              <p className="text-[10px] text-[#8C887E]">
+                              <h4 className="text-xs font-bold text-[#101828] truncate">{t.title}</h4>
+                              <p className="text-[10px] text-[#667085]">
                                 Asignado a: {t.user?.name || "Asesor"}
                               </p>
                             </div>
                           </div>
                           {t.dueDate && (
-                            <span className="text-[10px] font-semibold text-[#716F6A] bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E8E6DF] shrink-0">
+                            <span className="text-[10px] font-semibold text-[#475467] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0] shrink-0">
                               Vence: {new Date(t.dueDate).toLocaleDateString("es-MX", { dateStyle: "short" })}
                             </span>
                           )}
                         </div>
                         {t.description && (
-                          <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#F0EEE8] text-xs text-[#6B6861] leading-relaxed">
+                          <div className="p-2.5 rounded-xl bg-[#F8F9FA] border border-[#F0EEE8] text-xs text-[#475467] leading-relaxed">
                             {t.description}
                           </div>
                         )}
@@ -1159,35 +1159,35 @@ export default function ClientProfile360Page() {
 
               {/* Historial de Actividades (Activity History - InsightCRM Timeline) */}
               <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-sm text-[#1F1E1D]">Historial de Actividades</h3>
+                <h3 className="font-bold text-sm text-[#101828]">Historial de Actividades</h3>
 
                 {activitiesToDisplay.length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-white border border-[#E8E6DF] text-xs text-[#8C887E] text-center">
+                  <div className="p-6 rounded-2xl bg-white border border-[#EAECF0] text-xs text-[#667085] text-center">
                     No hay actividades registradas en esta categoría.
                   </div>
                 ) : (
-                  <div className="space-y-3 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-[#E8E6DF]">
+                  <div className="space-y-3 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-[#EAECF0]">
                     {activitiesToDisplay.map((act) => (
                       <div key={act.id} className="relative pl-10">
-                        <div className="absolute left-1.5 top-2.5 -translate-x-1/2 w-6 h-6 rounded-full bg-white border-2 border-[#1F1E1D] flex items-center justify-center shadow-xs">
-                          {act.type === "call" && <Phone className="w-3 h-3 text-[#1F1E1D]" />}
-                          {act.type === "meeting" && <Video className="w-3 h-3 text-[#1F1E1D]" />}
-                          {act.type === "email" && <Mail className="w-3 h-3 text-[#1F1E1D]" />}
-                          {act.type === "note" && <FileText className="w-3 h-3 text-[#1F1E1D]" />}
-                          {act.type === "follow_up" && <TrendingUp className="w-3 h-3 text-[#1F1E1D]" />}
+                        <div className="absolute left-1.5 top-2.5 -translate-x-1/2 w-6 h-6 rounded-full bg-white border-2 border-[#101828] flex items-center justify-center shadow-xs">
+                          {act.type === "call" && <Phone className="w-3 h-3 text-[#101828]" />}
+                          {act.type === "meeting" && <Video className="w-3 h-3 text-[#101828]" />}
+                          {act.type === "email" && <Mail className="w-3 h-3 text-[#101828]" />}
+                          {act.type === "note" && <FileText className="w-3 h-3 text-[#101828]" />}
+                          {act.type === "follow_up" && <TrendingUp className="w-3 h-3 text-[#101828]" />}
                         </div>
-                        <div className="p-3.5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-1">
+                        <div className="p-3.5 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-1">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold text-[#1F1E1D]">{act.title}</span>
-                            <span className="text-[10px] text-[#8C887E] shrink-0">
+                            <span className="text-xs font-bold text-[#101828]">{act.title}</span>
+                            <span className="text-[10px] text-[#667085] shrink-0">
                               {new Date(act.performedAt).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#8C887E]">
+                          <p className="text-[10px] text-[#667085]">
                             Registrado por: {act.user?.name || "Asesor"}
                           </p>
                           {act.description && (
-                            <p className="text-xs text-[#6B6861] pt-1 leading-relaxed bg-[#FAF9F5] p-2.5 rounded-xl border border-[#F0EEE8]">
+                            <p className="text-xs text-[#475467] pt-1 leading-relaxed bg-[#F8F9FA] p-2.5 rounded-xl border border-[#F0EEE8]">
                               {act.description}
                             </p>
                           )}
@@ -1206,13 +1206,13 @@ export default function ClientProfile360Page() {
         {/* ========================================================= */}
         <div className="xl:col-span-3 space-y-4">
           {/* Bloque 1: Deals (Oportunidades) */}
-          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+          <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Deals</h3>
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#101828]">Deals</h3>
               <button
                 type="button"
                 onClick={() => setIsOppModalOpen(true)}
-                className="text-[11px] font-semibold text-[#D97757] hover:underline"
+                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
               >
                 + Nuevo
               </button>
@@ -1221,14 +1221,14 @@ export default function ClientProfile360Page() {
             <button
               type="button"
               onClick={() => setIsOppModalOpen(true)}
-              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#1F1E1D] text-xs font-semibold text-[#1F1E1D] flex items-center justify-center gap-1.5 transition-colors bg-[#FAF9F5]"
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#101828] text-xs font-semibold text-[#101828] flex items-center justify-center gap-1.5 transition-colors bg-[#F8F9FA]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#D97757]" />
+              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
               <span>Crear nuevo deal</span>
             </button>
 
             {(!client.opportunities || client.opportunities.length === 0) ? (
-              <p className="text-xs text-[#8C887E] text-center py-2">
+              <p className="text-xs text-[#667085] text-center py-2">
                 Sin deals registrados.
               </p>
             ) : (
@@ -1236,19 +1236,19 @@ export default function ClientProfile360Page() {
                 {client.opportunities.map((opp) => (
                   <div
                     key={opp.id}
-                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-1.5"
+                    className="p-3 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] space-y-1.5"
                   >
-                    <div className="flex items-center justify-between text-[10px] text-[#8C887E]">
+                    <div className="flex items-center justify-between text-[10px] text-[#667085]">
                       <span>{new Date(opp.createdAt).toLocaleDateString("es-MX", { dateStyle: "short" })}</span>
-                      <span className="font-bold text-[#1F1E1D] text-xs">
+                      <span className="font-bold text-[#101828] text-xs">
                         ${opp.value.toLocaleString("en-US")}$
                       </span>
                     </div>
-                    <h4 className="text-xs font-bold text-[#1F1E1D] leading-snug">
+                    <h4 className="text-xs font-bold text-[#101828] leading-snug">
                       {opp.title}
                     </h4>
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-[#716F6A]">
+                      <span className="text-[10px] text-[#475467]">
                         {opp.stage?.name || "Pipeline"}
                       </span>
                       <div className="flex items-center gap-1">
@@ -1282,13 +1282,13 @@ export default function ClientProfile360Page() {
           </div>
 
           {/* Bloque 2: Tareas */}
-          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+          <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Tareas</h3>
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#101828]">Tareas</h3>
               <button
                 type="button"
                 onClick={() => setIsTaskModalOpen(true)}
-                className="text-[11px] font-semibold text-[#D97757] hover:underline"
+                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
               >
                 + Nueva
               </button>
@@ -1297,14 +1297,14 @@ export default function ClientProfile360Page() {
             <button
               type="button"
               onClick={() => setIsTaskModalOpen(true)}
-              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#1F1E1D] text-xs font-semibold text-[#1F1E1D] flex items-center justify-center gap-1.5 transition-colors bg-[#FAF9F5]"
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#101828] text-xs font-semibold text-[#101828] flex items-center justify-center gap-1.5 transition-colors bg-[#F8F9FA]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#D97757]" />
+              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
               <span>Crear nueva tarea</span>
             </button>
 
             {(!client.tasks || client.tasks.length === 0) ? (
-              <p className="text-xs text-[#8C887E] text-center py-2">
+              <p className="text-xs text-[#667085] text-center py-2">
                 Sin tareas pendientes.
               </p>
             ) : (
@@ -1312,7 +1312,7 @@ export default function ClientProfile360Page() {
                 {client.tasks.slice(0, 5).map((t) => (
                   <div
                     key={t.id}
-                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-1.5"
+                    className="p-3 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
                       <span
@@ -1328,7 +1328,7 @@ export default function ClientProfile360Page() {
                         type="button"
                         onClick={() => handleToggleTask(t)}
                         className={`text-[10px] font-semibold ${
-                          t.status === "completed" ? "text-emerald-600" : "text-[#716F6A] hover:text-[#1F1E1D]"
+                          t.status === "completed" ? "text-emerald-600" : "text-[#475467] hover:text-[#101828]"
                         }`}
                       >
                         {t.status === "completed" ? "✓ Hecha" : "Completar"}
@@ -1336,13 +1336,13 @@ export default function ClientProfile360Page() {
                     </div>
                     <h4
                       className={`text-xs font-semibold leading-snug ${
-                        t.status === "completed" ? "line-through text-[#9C9890]" : "text-[#1F1E1D]"
+                        t.status === "completed" ? "line-through text-[#9C9890]" : "text-[#101828]"
                       }`}
                     >
                       {t.title}
                     </h4>
                     {t.dueDate && (
-                      <p className="text-[10px] text-[#8C887E]">
+                      <p className="text-[10px] text-[#667085]">
                         Vence: {new Date(t.dueDate).toLocaleDateString("es-MX", { dateStyle: "short" })}
                       </p>
                     )}
@@ -1353,9 +1353,9 @@ export default function ClientProfile360Page() {
           </div>
 
           {/* Bloque 3: Contactos Vinculados */}
-          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+          <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Contactos</h3>
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#101828]">Contactos</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -1363,14 +1363,14 @@ export default function ClientProfile360Page() {
                   setContactFormData({ firstName: "", lastName: "", email: "", phone: "", jobTitle: "", isPrimary: false });
                   setIsContactModalOpen(true);
                 }}
-                className="text-[11px] font-semibold text-[#D97757] hover:underline"
+                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
               >
                 + Agregar
               </button>
             </div>
 
             {(!client.contacts || client.contacts.length === 0) ? (
-              <p className="text-xs text-[#8C887E] text-center py-2">
+              <p className="text-xs text-[#667085] text-center py-2">
                 Sin contactos registrados.
               </p>
             ) : (
@@ -1378,17 +1378,17 @@ export default function ClientProfile360Page() {
                 {client.contacts.map((c) => (
                   <div
                     key={c.id}
-                    className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2"
+                    className="p-2.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-between gap-2"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-white border border-[#E8E6DF] flex items-center justify-center font-bold text-xs text-[#1F1E1D] shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-white border border-[#EAECF0] flex items-center justify-center font-bold text-xs text-[#101828] shrink-0">
                         {c.firstName.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#1F1E1D] truncate">
+                        <p className="text-xs font-bold text-[#101828] truncate">
                           {c.firstName} {c.lastName || ""}
                         </p>
-                        <p className="text-[10px] text-[#8C887E] truncate">
+                        <p className="text-[10px] text-[#667085] truncate">
                           {c.jobTitle || c.email || c.phone || "Contacto"}
                         </p>
                       </div>
@@ -1397,7 +1397,7 @@ export default function ClientProfile360Page() {
                       <a
                         href={`tel:${c.phone}`}
                         title="Llamar"
-                        className="p-1 rounded-lg border border-[#E8E6DF] hover:bg-white text-[#716F6A]"
+                        className="p-1 rounded-lg border border-[#EAECF0] hover:bg-white text-[#475467]"
                       >
                         <Phone className="w-3 h-3" />
                       </a>
@@ -1414,55 +1414,55 @@ export default function ClientProfile360Page() {
       {/* MODAL 1: Edit Client Profile */}
       {isEditClientOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
-                <Edit className="w-4 h-4 text-[#D97757]" />
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+              <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
+                <Edit className="w-4 h-4 text-[#6366F1]" />
                 Modificar Ficha Comercial
               </h2>
-              <button onClick={() => setIsEditClientOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
+              <button onClick={() => setIsEditClientOpen(false)} className="text-[#475467] hover:text-[#101828]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveClientDetails} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Nombre Comercial *</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Nombre Comercial *</label>
                 <input
                   type="text"
                   required
                   value={editClientData.name}
                   onChange={(e) => setEditClientData({ ...editClientData, name: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Razón Social</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Razón Social</label>
                 <input
                   type="text"
                   value={editClientData.companyName}
                   onChange={(e) => setEditClientData({ ...editClientData, companyName: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Sector / Industria</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Sector / Industria</label>
                   <input
                     type="text"
                     value={editClientData.industry}
                     onChange={(e) => setEditClientData({ ...editClientData, industry: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Estado de la Relación</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Estado de la Relación</label>
                   <select
                     value={editClientData.status}
                     onChange={(e) => setEditClientData({ ...editClientData, status: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   >
                     <option value="active">Activo</option>
                     <option value="on_hold">En Pausa</option>
@@ -1473,22 +1473,22 @@ export default function ClientProfile360Page() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Facturación MRR ($ USD)</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Facturación MRR ($ USD)</label>
                   <input
                     type="number"
                     min="0"
                     step="any"
                     value={editClientData.revenue}
                     onChange={(e) => setEditClientData({ ...editClientData, revenue: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Asesor Responsable</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Asesor Responsable</label>
                   <select
                     value={editClientData.ownerId}
                     onChange={(e) => setEditClientData({ ...editClientData, ownerId: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   >
                     <option value="">Sin Asignar</option>
                     {teamMembers.map((m) => (
@@ -1502,42 +1502,42 @@ export default function ClientProfile360Page() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Correo Electrónico</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Correo Electrónico</label>
                   <input
                     type="email"
                     value={editClientData.email}
                     onChange={(e) => setEditClientData({ ...editClientData, email: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Teléfono</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Teléfono</label>
                   <input
                     type="tel"
                     value={editClientData.phone}
                     onChange={(e) => setEditClientData({ ...editClientData, phone: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Sitio Web</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Sitio Web</label>
                 <input
                   type="url"
                   value={editClientData.website}
                   onChange={(e) => setEditClientData({ ...editClientData, website: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Notas Comerciales</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Notas Comerciales</label>
                 <textarea
                   rows={2}
                   value={editClientData.notes}
                   onChange={(e) => setEditClientData({ ...editClientData, notes: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
@@ -1545,7 +1545,7 @@ export default function ClientProfile360Page() {
                 <button
                   type="button"
                   onClick={() => setIsEditClientOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] text-xs"
                 >
                   Cancelar
                 </button>
@@ -1565,12 +1565,12 @@ export default function ClientProfile360Page() {
       {/* MODAL 2: Create / Edit Contact */}
       {isContactModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D]">
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+              <h2 className="text-sm font-semibold text-[#101828]">
                 {editingContact ? "Editar Contacto" : "Añadir Nuevo Contacto"}
               </h2>
-              <button onClick={() => setIsContactModalOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
+              <button onClick={() => setIsContactModalOpen(false)} className="text-[#475467] hover:text-[#101828]">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1578,58 +1578,58 @@ export default function ClientProfile360Page() {
             <form onSubmit={handleSaveContact} className="p-5 space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Nombre *</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Nombre *</label>
                   <input
                     type="text"
                     required
                     placeholder="ej. Mariana"
                     value={contactFormData.firstName}
                     onChange={(e) => setContactFormData({ ...contactFormData, firstName: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Apellido</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Apellido</label>
                   <input
                     type="text"
                     placeholder="ej. Gómez"
                     value={contactFormData.lastName}
                     onChange={(e) => setContactFormData({ ...contactFormData, lastName: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Cargo / Puesto</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Cargo / Puesto</label>
                 <input
                   type="text"
                   placeholder="ej. Directora Comercial"
                   value={contactFormData.jobTitle}
                   onChange={(e) => setContactFormData({ ...contactFormData, jobTitle: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Correo Electrónico</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Correo Electrónico</label>
                 <input
                   type="email"
                   placeholder="mariana@empresa.com"
                   value={contactFormData.email}
                   onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Teléfono (con prefijo intl.)</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Teléfono (con prefijo intl.)</label>
                 <input
                   type="tel"
                   placeholder="+52 55 1234 5678"
                   value={contactFormData.phone}
                   onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
@@ -1639,9 +1639,9 @@ export default function ClientProfile360Page() {
                   id="isPrimaryCheckbox"
                   checked={contactFormData.isPrimary}
                   onChange={(e) => setContactFormData({ ...contactFormData, isPrimary: e.target.checked })}
-                  className="rounded text-[#D97757] focus:ring-[#D97757]"
+                  className="rounded text-[#6366F1] focus:ring-[#6366F1]"
                 />
-                <label htmlFor="isPrimaryCheckbox" className="text-xs text-[#1F1E1D] cursor-pointer">
+                <label htmlFor="isPrimaryCheckbox" className="text-xs text-[#101828] cursor-pointer">
                   Designar como Contacto Principal de esta cuenta
                 </label>
               </div>
@@ -1650,7 +1650,7 @@ export default function ClientProfile360Page() {
                 <button
                   type="button"
                   onClick={() => setIsContactModalOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] text-xs"
                 >
                   Cancelar
                 </button>
@@ -1670,37 +1670,37 @@ export default function ClientProfile360Page() {
       {/* MODAL 3: Create Opportunity in Pipeline */}
       {isOppModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+              <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-blue-600" />
                 Nueva Oportunidad Comercial
               </h2>
-              <button onClick={() => setIsOppModalOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
+              <button onClick={() => setIsOppModalOpen(false)} className="text-[#475467] hover:text-[#101828]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateOpportunity} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Título de la Oportunidad *</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Título de la Oportunidad *</label>
                 <input
                   type="text"
                   required
                   placeholder="ej. Retainer Redes Sociales + Pauta Meta"
                   value={oppFormData.title}
                   onChange={(e) => setOppFormData({ ...oppFormData, title: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Etapa del Pipeline *</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Etapa del Pipeline *</label>
                 <select
                   required
                   value={oppFormData.stageId}
                   onChange={(e) => setOppFormData({ ...oppFormData, stageId: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 >
                   {pipelineStages.map((st) => (
                     <option key={st.id} value={st.id}>
@@ -1712,7 +1712,7 @@ export default function ClientProfile360Page() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Valor ($ USD) *</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Valor ($ USD) *</label>
                   <input
                     type="number"
                     min="0"
@@ -1720,29 +1720,29 @@ export default function ClientProfile360Page() {
                     required
                     value={oppFormData.value}
                     onChange={(e) => setOppFormData({ ...oppFormData, value: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Probabilidad (%)</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Probabilidad (%)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={oppFormData.probability}
                     onChange={(e) => setOppFormData({ ...oppFormData, probability: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Fecha Estimada de Cierre</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Fecha Estimada de Cierre</label>
                 <input
                   type="date"
                   value={oppFormData.expectedClose}
                   onChange={(e) => setOppFormData({ ...oppFormData, expectedClose: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
@@ -1750,7 +1750,7 @@ export default function ClientProfile360Page() {
                 <button
                   type="button"
                   onClick={() => setIsOppModalOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] text-xs"
                 >
                   Cancelar
                 </button>
@@ -1770,57 +1770,57 @@ export default function ClientProfile360Page() {
       {/* MODAL 4: Create Task */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#E8E6DF] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#E8E6DF] flex items-center justify-between bg-[#FAF9F5]">
-              <h2 className="text-sm font-semibold text-[#1F1E1D] flex items-center gap-2">
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+              <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
                 <CheckSquare className="w-4 h-4 text-emerald-600" />
                 Agendar Tarea Comercial
               </h2>
-              <button onClick={() => setIsTaskModalOpen(false)} className="text-[#716F6A] hover:text-[#1F1E1D]">
+              <button onClick={() => setIsTaskModalOpen(false)} className="text-[#475467] hover:text-[#101828]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Título de la Tarea *</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Título de la Tarea *</label>
                 <input
                   type="text"
                   required
                   placeholder="ej. Enviar reporte mensual de métricas de pauta"
                   value={taskFormData.title}
                   onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Descripción</label>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Descripción</label>
                 <textarea
                   rows={2}
                   placeholder="Instrucciones o contexto adicional..."
                   value={taskFormData.description}
                   onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Fecha de Vencimiento</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Fecha de Vencimiento</label>
                   <input
                     type="date"
                     value={taskFormData.dueDate}
                     onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#1F1E1D] mb-1">Prioridad</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Prioridad</label>
                   <select
                     value={taskFormData.priority}
                     onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
                   >
                     <option value="low">Baja</option>
                     <option value="medium">Media</option>
@@ -1834,7 +1834,7 @@ export default function ClientProfile360Page() {
                 <button
                   type="button"
                   onClick={() => setIsTaskModalOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] text-xs"
                 >
                   Cancelar
                 </button>

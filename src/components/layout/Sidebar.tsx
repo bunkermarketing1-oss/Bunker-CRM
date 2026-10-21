@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
       )}
 
       <aside
-        className={`w-64 bg-[#F0EFEA] border-r border-[#ECEAE3] flex flex-col h-screen fixed left-0 top-0 z-40 select-none p-4 transition-transform duration-200 lg:translate-x-0 ${
+        className={`w-64 bg-white border-r border-[#EAECF0] flex flex-col h-screen fixed left-0 top-0 z-40 select-none p-4 transition-transform duration-200 lg:translate-x-0 ${
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
@@ -54,7 +54,7 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
               alt="Bunker"
               className="h-6 w-auto object-contain transition-transform group-hover:scale-105"
             />
-            <span className="text-[10px] font-mono font-bold tracking-wider text-[#9A7320] bg-[#FAF0D7] dark:bg-[#2e2615] dark:text-[#E5C158] border border-[#F2E5C4] dark:border-[#473a1e] px-1.5 py-0.5 rounded-md uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-[#5925DC] bg-[#F4F3FF] dark:bg-indigo-950/60 dark:text-indigo-300 border border-[#D9D6FE] px-1.5 py-0.5 rounded-md uppercase">
               {isClient ? "PORTAL" : "CRM"}
             </span>
           </Link>
@@ -62,31 +62,31 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="lg:hidden p-1.5 rounded-xl text-[#8C887E] hover:text-[#141414] hover:bg-white/70"
+            className="lg:hidden p-1.5 rounded-xl text-[#98A2B3] hover:text-[#101828] hover:bg-[#F8F9FA]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#ECEAE3] p-2.5 flex items-center gap-2.5 mb-4">
-          <div className="w-8 h-8 rounded-full bg-[#141414] text-[#FAF8F3] border border-[#D4AF37]/50 flex items-center justify-center font-bold text-xs flex-shrink-0">
+        <div className="bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4">
+          <div className="w-8 h-8 rounded-full bg-[#0F172A] text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
             {initialsOf(accountName, isClient ? "CL" : "BA")}
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] text-[#8C887E] font-medium leading-none mb-0.5">
+            <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5">
               {isClient ? (language === "es" ? "Portal Cliente" : "Client Portal") : "Admin Bunker"}
             </div>
-            <div className="text-xs font-bold text-[#141414] truncate leading-tight">{accountName}</div>
+            <div className="text-xs font-bold text-[#101828] truncate leading-tight">{accountName}</div>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto space-y-5 pr-1 -mr-1" aria-label="Navegación principal">
           {sections.map((section) => (
             <div key={section.title.es} className="space-y-0.5">
-              <div className="px-3 text-[10px] font-bold tracking-wider text-[#8C887E] uppercase mb-1.5 flex items-center justify-between">
+              <div className="px-3 text-[10px] font-bold tracking-wider text-[#98A2B3] uppercase mb-1.5 flex items-center justify-between">
                 <span>{section.title[language]}</span>
                 {section.badge && (
-                  <span className="text-[9px] bg-[#FAF0D7] dark:bg-[#2e2615] text-[#9A7320] dark:text-[#E5C158] px-1.5 rounded font-mono">
+                  <span className="text-[9px] bg-[#F4F3FF] text-[#5925DC] border border-[#D9D6FE] px-1.5 rounded font-mono font-semibold">
                     {section.badge}
                   </span>
                 )}
@@ -107,16 +107,16 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
           <button
             type="button"
             onClick={onOpenAiModal}
-            className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl bg-[#141414] text-left border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 transition-colors group"
+            className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl bg-[#0F172A] text-left border border-[#1E293B] hover:border-[#6366F1] transition-colors group shadow-sm"
           >
-            <span className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-[#E5C158] group-hover:rotate-12 transition-transform" />
+            <span className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-[#A5B4FC] group-hover:rotate-12 transition-transform" />
             </span>
             <span className="min-w-0">
-              <span className="block text-xs font-bold text-[#FAF8F3]">
+              <span className="block text-xs font-bold text-white">
                 {language === "es" ? "Copiloto IA Bunker" : "Bunker AI Copilot"}
               </span>
-              <span className="block text-[10px] text-[#A09B90] truncate">
+              <span className="block text-[10px] text-[#94A3B8] truncate">
                 {language === "es" ? "Califica leads, copys y SMS" : "Score leads, copy & SMS"}
               </span>
             </span>
@@ -133,14 +133,14 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
   if (item.disabled) {
     return (
       <div
-        className="relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs text-[#8C887E] opacity-60 cursor-not-allowed select-none border border-transparent"
+        className="relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs text-[#98A2B3] opacity-60 cursor-not-allowed select-none border border-transparent"
         title="Módulo en construcción"
         aria-disabled="true"
       >
-        <Icon className="w-4 h-4 flex-shrink-0 text-[#A09B90]" />
+        <Icon className="w-4 h-4 flex-shrink-0 text-[#98A2B3]" />
         <span className="truncate">{label}</span>
         {item.badge && (
-          <span className="ml-auto text-[8.5px] font-mono font-bold tracking-tight bg-[#FAF0D7] dark:bg-[#2e2615] text-[#9A7320] dark:text-[#E5C158] border border-[#F2E5C4] dark:border-[#473a1e] px-1.5 py-0.5 rounded whitespace-nowrap">
+          <span className="ml-auto text-[8.5px] font-mono font-semibold tracking-tight bg-[#F2F4F7] text-[#475467] border border-[#EAECF0] px-1.5 py-0.5 rounded whitespace-nowrap">
             {item.badge}
           </span>
         )}
@@ -154,15 +154,14 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
       aria-current={isActive ? "page" : undefined}
       className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs transition-all ${
         isActive
-          ? "bg-white text-[#141414] font-bold border border-[#ECEAE3] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-          : "text-[#6B6861] hover:text-[#141414] hover:bg-white/60 dark:hover:bg-white/5 font-medium border border-transparent"
+          ? "bg-[#0F172A] text-white font-bold shadow-sm"
+          : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA] font-medium border border-transparent"
       }`}
     >
-      {isActive && <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full bg-[#D4AF37]" />}
-      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#9A7320] dark:text-[#E5C158]" : "text-[#8C887E]"}`} />
+      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-[#667085]"}`} />
       <span className="truncate">{label}</span>
       {item.badge && (
-        <span className="ml-auto text-[9px] font-mono font-bold bg-[#FAF0D7] text-[#9A7320] px-1.5 rounded">
+        <span className="ml-auto text-[9px] font-mono font-bold bg-[#F4F3FF] text-[#5925DC] px-1.5 rounded">
           {item.badge}
         </span>
       )}

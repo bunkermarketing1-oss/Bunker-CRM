@@ -49,6 +49,11 @@ interface Lead {
   isDemo: boolean;
   createdAt: string;
   ownerId: string | null;
+  clientId?: string | null;
+  client?: {
+    id: string;
+    name: string;
+  } | null;
   owner?: {
     id: string;
     name: string;
@@ -80,11 +85,13 @@ function LeadsPageContent() {
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState("all");
 
   // Notifications & Feedback
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -159,10 +166,10 @@ function LeadsPageContent() {
     }
   };
 
-  // Fetch Team Members
+  // Fetch Team Members (solo asesores internos de Bunker)
   const fetchTeam = useCallback(async () => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users?scope=bunker");
       const json = await res.json();
       if (json.success && json.users) {
         setTeamMembers(json.users);
@@ -172,8 +179,21 @@ function LeadsPageContent() {
     }
   }, []);
 
+  // Fetch Clientes (solo para administradores)
+  const fetchClients = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch("/api/clients");
+      const json = await res.json();
+      if (json.success && json.clients) {
+        setClients(json.clients);
+      }
+    } catch (e) {
+      console.error("Error fetching clients:", e);
+    }
+  }, [isAdmin]);
+
   // Fetch Leads
-  // La búsqueda global (⌘K) navega aquí con ?search=; también si ya estás en esta página.
   useEffect(() => {
     const term = searchParams.get("search");
     if (term !== null) setSearch(term);
@@ -187,6 +207,7 @@ function LeadsPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (sourceFilter !== "all") params.append("source", sourceFilter);
       if (ownerFilter !== "all") params.append("ownerId", ownerFilter);
+      if (clientFilter !== "all") params.append("clientId", clientFilter);
 
       const res = await fetch(`/api/leads?${params.toString()}`);
       const json = await res.json();
@@ -200,11 +221,12 @@ function LeadsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, sourceFilter, ownerFilter]);
+  }, [search, statusFilter, sourceFilter, ownerFilter, clientFilter]);
 
   useEffect(() => {
     fetchTeam();
-  }, [fetchTeam]);
+    fetchClients();
+  }, [fetchTeam, fetchClients]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -476,17 +498,17 @@ function LeadsPageContent() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#ECEAE3]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#8C887E] mb-1">
+          <div className="flex items-center gap-2 text-xs text-[#667085] mb-1">
             <span>CRM Comercial</span>
             <span>/</span>
-            <span className="text-[#141414] font-medium">Prospectos</span>
+            <span className="text-[#101828] font-medium">Prospectos</span>
           </div>
-          <h1 className="text-2xl font-semibold text-[#141414] tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
-          <p className="text-xs text-[#6B6861] mt-0.5">
+          <p className="text-xs text-[#475467] mt-0.5">
             Captación multicanal desde Meta Ads, calificación con IA, teléfonos verificados y prevención de duplicados.
           </p>
         </div>
@@ -495,18 +517,18 @@ function LeadsPageContent() {
           <button
             onClick={handleSyncMetaLeads}
             disabled={syncingMeta}
-            className="px-3.5 py-2 rounded-2xl bg-white border border-[#ECEAE3] text-[#141414] hover:bg-[#FAF9F5] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-60"
+            className="px-3.5 py-2 rounded-2xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#F8F9FA] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-60"
             title="Sincronizar prospectos desde campañas de Meta Ads"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#8C887E] ${syncingMeta ? "animate-spin text-[#0081FB]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#667085] ${syncingMeta ? "animate-spin text-[#6366F1]" : ""}`} />
             <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-2xl bg-white border border-[#ECEAE3] text-[#141414] hover:bg-[#FAF9F5] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3.5 py-2 rounded-2xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#F8F9FA] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
           >
-            <Download className="w-3.5 h-3.5 text-[#8C887E]" />
+            <Download className="w-3.5 h-3.5 text-[#667085]" />
             <span>Exportar CSV</span>
           </button>
 
@@ -518,7 +540,7 @@ function LeadsPageContent() {
             }}
             className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-xs"
           >
-            <Plus className="w-4 h-4 text-[#E5C158]" />
+            <Plus className="w-4 h-4 text-white" />
             <span>+ Registrar Prospecto</span>
           </button>
         </div>
@@ -529,7 +551,7 @@ function LeadsPageContent() {
         <div
           className={`p-3.5 rounded-2xl border text-xs font-medium flex items-center gap-2 shadow-xs animate-in slide-in-from-top-1 ${
             feedback.type === "success"
-              ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
               : "bg-red-50 border-red-200 text-red-800"
           }`}
         >
@@ -545,14 +567,14 @@ function LeadsPageContent() {
       {/* KPI Metric Strip Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Leads */}
-        <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#8C887E]">
+        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-medium">Total Prospectos</span>
-            <div className="w-7 h-7 rounded-full bg-[#FAF0D7] border border-[#F2E5C4] flex items-center justify-center">
-              <Users className="w-3.5 h-3.5 text-[#9A7320]" />
+            <div className="w-7 h-7 rounded-full bg-[#F4F3FF] border border-[#D9D6FE] flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-[#5925DC]" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#141414] tracking-tight">{totalLeadsCount}</div>
+          <div className="text-2xl font-bold text-[#101828] tracking-tight">{totalLeadsCount}</div>
           <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
             <span>Captación activa multicanal</span>
@@ -560,67 +582,67 @@ function LeadsPageContent() {
         </div>
 
         {/* Calificados con IA */}
-        <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#8C887E]">
+        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-medium">Calificados por IA (≥70)</span>
-            <div className="w-7 h-7 rounded-full bg-[#EBF5EE] border border-[#C2E2CC] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#141414] tracking-tight">{qualifiedCount}</div>
-          <div className="text-[11px] text-[#6B6861]">Alta probabilidad de cierre comercial</div>
+          <div className="text-2xl font-bold text-[#101828] tracking-tight">{qualifiedCount}</div>
+          <div className="text-[11px] text-[#475467]">Alta probabilidad de cierre comercial</div>
         </div>
 
         {/* Pipeline Estimado */}
-        <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#8C887E]">
+        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-medium">Pipeline Proyectado</span>
-            <div className="w-7 h-7 rounded-full bg-[#FAF9F5] border border-[#ECEAE3] flex items-center justify-center">
-              <DollarSign className="w-3.5 h-3.5 text-[#141414]" />
+            <div className="w-7 h-7 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center">
+              <DollarSign className="w-3.5 h-3.5 text-[#101828]" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#141414] tracking-tight">
+          <div className="text-2xl font-bold text-[#101828] tracking-tight">
             ${totalPipelineVal.toLocaleString()}{" "}
-            <span className="text-xs font-normal text-[#8C887E]">USD</span>
+            <span className="text-xs font-normal text-[#667085]">USD</span>
           </div>
-          <div className="text-[11px] text-[#9A7320] font-medium">
+          <div className="text-[11px] text-[#5925DC] font-medium">
             Presupuesto estimado de pautas
           </div>
         </div>
 
         {/* Tasa de Conversión */}
-        <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#8C887E]">
+        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-medium">Tasa de Conversión</span>
-            <div className="w-7 h-7 rounded-full bg-[#FAF9F5] border border-[#ECEAE3] flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5 text-[#D97757]" />
+            <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 text-amber-600" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#141414] tracking-tight">{conversionRate}%</div>
-          <div className="text-[11px] text-[#6B6861]">Leads convertidos a clientes activos</div>
+          <div className="text-2xl font-bold text-[#101828] tracking-tight">{conversionRate}%</div>
+          <div className="text-[11px] text-[#475467]">Leads convertidos a clientes activos</div>
         </div>
       </div>
 
       {/* Unified Filter & Search Bar */}
-      <div className="p-4 rounded-3xl bg-white border border-[#ECEAE3] shadow-xs space-y-3">
+      <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
         <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
           {/* Search */}
           <div className="relative w-full lg:w-96">
-            <Search className="w-3.5 h-3.5 text-[#8C887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#667085] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, correo, empresa, teléfono o notas..."
-              className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#141414] placeholder-[#8C887E] focus:outline-none focus:border-[#D4AF37]/70 transition-all"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1] transition-all"
             />
           </div>
 
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             {/* Status Selector */}
-            <div className="flex items-center gap-1 bg-[#F6F5F2] p-1 rounded-2xl border border-[#ECEAE3] text-xs">
-              <span className="text-[11px] text-[#8C887E] px-2 font-medium">Estado:</span>
+            <div className="flex items-center gap-1 bg-[#F8F9FA] p-1 rounded-2xl border border-[#EAECF0] text-xs">
+              <span className="text-[11px] text-[#667085] px-2 font-medium">Estado:</span>
               {[
                 { id: "all", label: "Todos" },
                 { id: "new", label: "Nuevo" },
@@ -633,8 +655,8 @@ function LeadsPageContent() {
                   onClick={() => setStatusFilter(st.id)}
                   className={`px-2.5 py-1 rounded-xl text-xs transition-all ${
                     statusFilter === st.id
-                      ? "bg-white text-[#141414] font-bold shadow-xs"
-                      : "text-[#6B6861] hover:text-[#141414]"
+                      ? "bg-white text-[#101828] font-bold shadow-xs"
+                      : "text-[#475467] hover:text-[#101828]"
                   }`}
                 >
                   {st.label}
@@ -646,7 +668,7 @@ function LeadsPageContent() {
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="bg-[#F6F5F2] border border-[#ECEAE3] rounded-2xl px-3 py-1.5 text-xs text-[#141414] focus:outline-none font-medium"
+              className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
             >
               <option value="all">Todos los Canales</option>
               <option value="meta_ads">Meta Ads (Instagram / FB)</option>
@@ -668,12 +690,30 @@ function LeadsPageContent() {
               <select
                 value={ownerFilter}
                 onChange={(e) => setOwnerFilter(e.target.value)}
-                className="bg-[#F6F5F2] border border-[#ECEAE3] rounded-2xl px-3 py-1.5 text-xs text-[#141414] focus:outline-none font-medium"
+                className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
               >
                 <option value="all">Todos los Asesores</option>
+                <option value="unassigned">Sin Asignar</option>
                 {teamMembers.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Client Dropdown (Admins only) */}
+            {isAdmin && clients.length > 0 && (
+              <select
+                value={clientFilter}
+                onChange={(e) => setClientFilter(e.target.value)}
+                className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
+              >
+                <option value="all">Todos los Clientes</option>
+                <option value="unassigned">Sin Cliente Asignado</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    Cliente: {c.name}
                   </option>
                 ))}
               </select>
@@ -683,18 +723,18 @@ function LeadsPageContent() {
       </div>
 
       {/* Main Leads Table */}
-      <div className="bg-white rounded-3xl border border-[#ECEAE3] shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-[#F4F3EE] flex items-center justify-between bg-[#FDFDFC]">
-          <div className="text-xs font-bold text-[#141414]">
+      <div className="bg-white rounded-3xl border border-[#EAECF0] shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+          <div className="text-xs font-bold text-[#101828]">
             Directorio de Prospectos{" "}
-            <span className="text-[#8C887E] font-normal">({leads.length})</span>
+            <span className="text-[#667085] font-normal">({leads.length})</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[#F4F3EE] text-[11px] font-semibold text-[#8C887E]">
+              <tr className="border-b border-[#EAECF0] text-[11px] font-semibold text-[#667085] bg-[#F8F9FA]/60">
                 <th className="py-3.5 px-4 font-semibold">Prospecto / Empresa</th>
                 <th className="py-3.5 px-4 font-semibold">Contacto & WhatsApp</th>
                 <th className="py-3.5 px-4 font-semibold">Origen & Campaña</th>
@@ -705,17 +745,17 @@ function LeadsPageContent() {
                 <th className="py-3.5 px-4 text-right font-semibold">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F3EE]">
+            <tbody className="divide-y divide-[#EAECF0]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#8C887E] text-xs">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-[#D4AF37] mb-2" />
+                  <td colSpan={8} className="py-12 text-center text-[#667085] text-xs">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-[#6366F1] mb-2" />
                     <span>Cargando prospectos en tiempo real...</span>
                   </td>
                 </tr>
               ) : leads.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#8C887E] text-xs">
+                  <td colSpan={8} className="py-12 text-center text-[#667085] text-xs">
                     No se encontraron prospectos con los filtros actuales.
                   </td>
                 </tr>
@@ -736,14 +776,14 @@ function LeadsPageContent() {
                   return (
                     <tr
                       key={lead.id}
-                      className="hover:bg-[#FAF9F5] transition-colors group"
+                      className="hover:bg-[#F8F9FA] transition-colors group"
                     >
                       {/* Profile / Company */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] hover:scale-105 border border-[#D4AF37]/40 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs transition-transform"
+                            className="w-9 h-9 rounded-full bg-[#0F172A] text-white hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs transition-transform"
                             title="Ver expediente en InsightCRM"
                           >
                             {initials}
@@ -751,19 +791,24 @@ function LeadsPageContent() {
                           <div>
                             <Link
                               href={`/crm/leads/${lead.id}`}
-                              className="font-bold text-[#141414] hover:text-[#6366F1] hover:underline flex items-center gap-1.5 leading-tight transition-colors"
+                              className="font-bold text-[#101828] hover:text-[#6366F1] hover:underline flex items-center gap-1.5 leading-tight transition-colors"
                             >
                               <span>{lead.name}</span>
                               {lead.isDemo && (
-                                <span className="text-[9px] bg-[#FAF0D7] text-[#9A7320] font-bold px-1.5 py-0.2 rounded-md border border-[#F2E5C4]">
+                                <span className="text-[9px] bg-[#F4F3FF] text-[#5925DC] font-bold px-1.5 py-0.2 rounded-md border border-[#D9D6FE]">
                                   DEMO
                                 </span>
                               )}
                             </Link>
-                            <div className="text-[11px] text-[#6B6861] flex items-center gap-1.5 mt-0.5">
-                              <Building className="w-3 h-3 text-[#8C887E]" />
+                            <div className="text-[11px] text-[#475467] flex items-center gap-1.5 mt-0.5">
+                              <Building className="w-3 h-3 text-[#667085]" />
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
                             </div>
+                            {lead.client && isAdmin && (
+                              <span className="inline-block mt-0.5 text-[9px] font-mono font-medium text-[#5925DC] bg-[#F4F3FF] border border-[#D9D6FE] px-1.5 py-0.2 rounded">
+                                Cliente: {lead.client.name}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -772,8 +817,8 @@ function LeadsPageContent() {
                       <td className="py-3.5 px-4 text-[11px]">
                         <div className="space-y-1">
                           {lead.email ? (
-                            <div className="flex items-center gap-1.5 text-[#141414] font-medium">
-                              <Mail className="w-3 h-3 text-[#8C887E] flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 text-[#101828] font-medium">
+                              <Mail className="w-3 h-3 text-[#667085] flex-shrink-0" />
                               <a
                                 href={`mailto:${lead.email}`}
                                 className="hover:underline truncate max-w-[170px]"
@@ -782,11 +827,11 @@ function LeadsPageContent() {
                               </a>
                             </div>
                           ) : (
-                            <span className="text-[#A39F93] italic">Sin correo</span>
+                            <span className="text-[#98A2B3] italic">Sin correo</span>
                           )}
 
                           <div className="flex items-center gap-2">
-                            <span className="text-[#6B6861] font-mono">
+                            <span className="text-[#475467] font-mono">
                               {lead.phone || lead.normalizedPhone || "Sin teléfono"}
                             </span>
                             {waNumber && (
@@ -796,7 +841,7 @@ function LeadsPageContent() {
                                 )}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EBF5EE] text-emerald-800 border border-[#C2E2CC] hover:bg-emerald-100 transition-colors text-[10px] font-semibold"
+                                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors text-[10px] font-semibold"
                                 title="Abrir chat en WhatsApp"
                               >
                                 <MessageCircle className="w-2.5 h-2.5 text-emerald-600" />
@@ -822,14 +867,14 @@ function LeadsPageContent() {
                                 ? "bg-pink-50 text-pink-700 border-pink-200"
                                 : lead.source === "referral"
                                 ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-stone-50 text-stone-700 border-stone-200"
+                                : "bg-slate-50 text-slate-700 border-slate-200"
                             }`}
                           >
                             {lead.source.replace(/_/g, " ")}
                           </span>
                           {lead.campaign && (
-                            <p className="text-[10px] text-[#8C887E] truncate max-w-[130px] font-medium flex items-center gap-1">
-                              <Tag className="w-2.5 h-2.5 text-[#8C887E]" />
+                            <p className="text-[10px] text-[#667085] truncate max-w-[130px] font-medium flex items-center gap-1">
+                              <Tag className="w-2.5 h-2.5 text-[#667085]" />
                               <span>{lead.campaign}</span>
                             </p>
                           )}
@@ -839,12 +884,12 @@ function LeadsPageContent() {
                       {/* Assigned Advisor */}
                       <td className="py-3.5 px-4 text-[11px]">
                         {lead.owner ? (
-                          <div className="flex items-center gap-1.5 text-[#141414] font-medium">
-                            <UserCheck className="w-3 h-3 text-[#D4AF37]" />
+                          <div className="flex items-center gap-1.5 text-[#101828] font-medium">
+                            <UserCheck className="w-3 h-3 text-[#5925DC]" />
                             <span className="truncate max-w-[120px]">{lead.owner.name}</span>
                           </div>
                         ) : (
-                          <span className="text-[#A39F93] italic">Sin asignar</span>
+                          <span className="text-[#98A2B3] italic">Sin asignar</span>
                         )}
                       </td>
 
@@ -854,16 +899,16 @@ function LeadsPageContent() {
                           <span
                             className={`text-xs font-bold px-2 py-0.5 rounded-md border inline-block ${
                               score >= 80
-                                ? "bg-[#EBF5EE] text-emerald-800 border-[#C2E2CC]"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                 : score >= 60
-                                ? "bg-[#FAF0D7] text-[#9A7320] border-[#F2E5C4]"
-                                : "bg-[#FEE2E2] text-red-800 border-[#FECACA]"
+                                ? "bg-[#F4F3FF] text-[#5925DC] border-[#D9D6FE]"
+                                : "bg-red-50 text-red-800 border-red-200"
                             }`}
                           >
                             {score}/100
                           </span>
                           {lead.aiSummary && (
-                            <p className="text-[10px] text-[#6B6861] line-clamp-1 max-w-[140px]">
+                            <p className="text-[10px] text-[#475467] line-clamp-1 max-w-[140px]">
                               {lead.aiSummary}
                             </p>
                           )}
@@ -872,10 +917,10 @@ function LeadsPageContent() {
 
                       {/* Budget */}
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-[#141414]">
+                        <div className="font-bold text-[#101828]">
                           ${lead.estimatedValue?.toLocaleString() || 0}
                         </div>
-                        <div className="text-[10px] text-[#8C887E]">USD / mes</div>
+                        <div className="text-[10px] text-[#667085]">USD / mes</div>
                       </td>
 
                       {/* Status */}
@@ -892,14 +937,14 @@ function LeadsPageContent() {
                               className="btn-black-gold rounded-xl px-2 py-1 text-[11px] font-semibold flex items-center gap-1 shadow-xs"
                               title="Convertir a Cliente y crear Negocio"
                             >
-                              <ArrowRightCircle className="w-3 h-3 text-[#E5C158]" />
+                              <ArrowRightCircle className="w-3 h-3 text-white" />
                               <span>Convertir</span>
                             </button>
                           )}
 
                           <button
                             onClick={() => handleOpenEdit(lead)}
-                            className="p-1.5 rounded-xl bg-[#F6F5F2] hover:bg-white text-[#6B6861] hover:text-[#141414] border border-[#ECEAE3] transition-colors"
+                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-[#101828] border border-[#EAECF0] transition-colors"
                             title="Editar prospecto"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -907,7 +952,7 @@ function LeadsPageContent() {
 
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="p-1.5 rounded-xl bg-[#F6F5F2] hover:bg-[#FAF9F5] text-[#6B6861] hover:text-[#141414] border border-[#ECEAE3] transition-colors"
+                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-[#101828] border border-[#EAECF0] transition-colors"
                             title="Ver Expediente Completo (InsightCRM)"
                           >
                             <ExternalLink className="w-3.5 h-3.5 text-[#6366F1]" />
@@ -916,7 +961,7 @@ function LeadsPageContent() {
                           {isAdmin && (
                             <button
                               onClick={() => handleDelete(lead.id)}
-                              className="p-1.5 rounded-xl text-[#8C887E] hover:text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-xl text-[#667085] hover:text-red-600 hover:bg-red-50 transition-colors"
                               title="Eliminar prospecto (Solo Admin)"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
