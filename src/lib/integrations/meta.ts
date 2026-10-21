@@ -4,6 +4,7 @@
  */
 
 import { META_GRAPH_TIMEOUT_MS } from "@/lib/constants/integrations";
+import { resolveAppBaseUrl, sanitizeHost } from "@/lib/url";
 
 // Se reexporta para que la ruta del webhook siga importando todo lo de Meta desde aquí.
 export { verifyMetaSignature } from "./meta-webhook";
@@ -37,17 +38,17 @@ export class MetaApiError extends Error {
   }
 }
 
-export function getMetaConfig() {
+export function getMetaConfig(req?: Request | null) {
   const appId = process.env.META_APP_ID;
   const appSecret = process.env.META_APP_SECRET;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!appId || !appSecret || !appUrl) {
+  if (!appId || !appSecret) {
     return null;
   }
+  const baseUrl = resolveAppBaseUrl(req);
   return {
     appId,
     appSecret,
-    redirectUri: `${appUrl.replace(/\/$/, "")}/api/integrations/meta/callback`,
+    redirectUri: `${baseUrl}/api/integrations/meta/callback`,
   };
 }
 
@@ -83,8 +84,8 @@ async function graphFetchAll<T = any>(path: string, params: Record<string, strin
 
 export function buildMetaAuthUrl(state: string, redirectUriOverride?: string) {
   const cfg = getMetaConfig();
-  if (!cfg) throw new Error("Meta no está configurado (META_APP_ID, META_APP_SECRET, NEXT_PUBLIC_APP_URL).");
-  const redirectUri = redirectUriOverride || cfg.redirectUri;
+  if (!cfg) throw new Error("Meta no está configurado (META_APP_ID, META_APP_SECRET).");
+  const redirectUri = sanitizeHost(redirectUriOverride || cfg.redirectUri);
   const url = new URL(`https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`);
   url.searchParams.set("client_id", cfg.appId);
   url.searchParams.set("redirect_uri", redirectUri);
@@ -98,7 +99,7 @@ export function buildMetaAuthUrl(state: string, redirectUriOverride?: string) {
 export async function exchangeMetaCode(code: string, redirectUriOverride?: string) {
   const cfg = getMetaConfig();
   if (!cfg) throw new Error("Meta no está configurado.");
-  const redirectUri = redirectUriOverride || cfg.redirectUri;
+  const redirectUri = sanitizeHost(redirectUriOverride || cfg.redirectUri);
 
   const short = await graphFetch<{ access_token: string }>(
     graphUrl("oauth/access_token", {

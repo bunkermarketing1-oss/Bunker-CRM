@@ -17,7 +17,6 @@ import {
   Search,
   HelpCircle,
   Sparkles,
-  Lock,
   ChevronDown,
 } from "lucide-react";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";

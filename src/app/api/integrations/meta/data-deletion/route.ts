@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, randomBytes } from "crypto";
+import { resolveAppBaseUrl } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,8 @@ function parseSignedRequest(signedRequest: string, secret: string): { user_id?: 
 }
 
 export async function GET(req: NextRequest) {
-  const url = new URL("/data-deletion", req.url);
+  const baseUrl = resolveAppBaseUrl(req);
+  const url = new URL("/data-deletion", baseUrl);
   return NextResponse.redirect(url);
 }
 
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
     const userId = data?.user_id || "unknown";
 
     const confirmationCode = `DEL-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+    const baseUrl = resolveAppBaseUrl(req);
     const trackingUrl = `${baseUrl.replace(/\/$/, "")}/data-deletion?ticket=${confirmationCode}&user=${userId}`;
 
     return NextResponse.json({

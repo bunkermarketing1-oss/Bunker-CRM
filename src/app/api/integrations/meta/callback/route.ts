@@ -9,15 +9,20 @@ import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS,
 
 import { isCommercialLicenseActive } from "@/lib/license";
 
+import { resolveAppBaseUrl } from "@/lib/url";
+
 export const dynamic = "force-dynamic";
 
 const META_STATE_COOKIE = "meta_oauth_state";
 const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
 
 function backToIntegrations(req: NextRequest, params: Record<string, string>) {
-  const url = new URL("/marketing/integrations", req.url);
+  const baseUrl = resolveAppBaseUrl(req);
+  const url = new URL("/marketing/integrations", baseUrl);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const response = NextResponse.redirect(url);
+  response.cookies.delete({ name: META_STATE_COOKIE, path: "/" });
+  response.cookies.delete({ name: META_REDIRECT_COOKIE, path: "/" });
   response.cookies.delete({ name: META_STATE_COOKIE, path: "/api/integrations/meta" });
   response.cookies.delete({ name: META_REDIRECT_COOKIE, path: "/api/integrations/meta" });
   return response;
@@ -150,8 +155,9 @@ export async function GET(req: NextRequest) {
       connected: INTEGRATION_PROVIDER.META,
       message: `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s), ${leadgen.pages - leadgen.errors.length} página(s) recibiendo leads.`,
     });
-  } catch (err: any) {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error desconocido";
     console.error("Meta OAuth callback error:", err);
-    return backToIntegrations(req, { error: `No se pudo completar la conexión con Meta: ${err.message}` });
+    return backToIntegrations(req, { error: `No se pudo completar la conexión con Meta: ${message}` });
   }
 }

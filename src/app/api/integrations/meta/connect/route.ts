@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { requireAdmin } from "@/lib/auth";
 import { buildMetaAuthUrl, getMetaConfig } from "@/lib/integrations/meta";
 import { isCommercialLicenseActive } from "@/lib/license";
+import { isSecureConnection, resolveAppBaseUrl } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
 
@@ -14,32 +15,24 @@ export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdmin(req);
   if (errorResponse) return errorResponse;
 
+  const baseUrl = resolveAppBaseUrl(req);
+
   if (!isCommercialLicenseActive()) {
     return NextResponse.redirect(
-      new URL("/marketing/integrations?error=" + encodeURIComponent("Módulo de integración Meta Ads bloqueado: Licencia empresarial pendiente de activación comercial."), req.url)
+      new URL("/marketing/integrations?error=" + encodeURIComponent("Módulo de integración Meta Ads bloqueado: Licencia empresarial pendiente de activación comercial."), baseUrl)
     );
   }
 
-  if (!getMetaConfig()) {
+  if (!getMetaConfig(req)) {
     return NextResponse.redirect(
-      new URL("/marketing/integrations?error=" + encodeURIComponent("Meta no está configurado en el servidor (META_APP_ID / META_APP_SECRET)."), req.url)
+      new URL("/marketing/integrations?error=" + encodeURIComponent("Meta no está configurado en el servidor (META_APP_ID / META_APP_SECRET)."), baseUrl)
     );
   }
 
-  // Determinar la URL base exacta de la solicitud (compatible con Dokploy / proxies inversos)
-  const forwardedHost = req.headers.get("x-forwarded-host");
-  const forwardedProto = req.headers.get("x-forwarded-proto") || (req.headers.get("x-forwarded-ssl") === "on" ? "https" : null);
-  const host = forwardedHost || req.headers.get("host") || req.nextUrl.host;
-  const proto = forwardedProto || (req.nextUrl.protocol ? req.nextUrl.protocol.replace(":", "") : "https");
-  const requestOrigin = `${proto}://${host}`;
-
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-  const baseUrl = (envUrl && !envUrl.includes("localhost") ? envUrl : requestOrigin).replace(/\/$/, "");
   const redirectUri = `${baseUrl}/api/integrations/meta/callback`;
-
   const state = randomBytes(24).toString("hex");
   const response = NextResponse.redirect(buildMetaAuthUrl(state, redirectUri));
-  const isSecure = proto === "https" || req.nextUrl.protocol === "https:";
+  const isSecure = isSecureConnection(baseUrl);
 
   response.cookies.set({
     name: META_STATE_COOKIE,
@@ -48,7 +41,7 @@ export async function GET(req: NextRequest) {
     secure: isSecure,
     sameSite: "lax",
     maxAge: 600,
-    path: "/api/integrations/meta",
+    path: "/",
   });
 
   response.cookies.set({
@@ -58,7 +51,7 @@ export async function GET(req: NextRequest) {
     secure: isSecure,
     sameSite: "lax",
     maxAge: 600,
-    path: "/api/integrations/meta",
+    path: "/",
   });
 
   return response;
