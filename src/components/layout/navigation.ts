@@ -71,7 +71,15 @@ export const CLIENT_NAVIGATION: NavSection[] = [
 /** Solo para el dueño del cliente: supervisión de sus asesores. Un asesor no la ve. */
 const OWNER_NAVIGATION_SECTION: NavSection = {
   title: { es: "Mi Equipo", en: "My Team" },
-  items: [{ href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Equipo en vivo", en: "Live Team" } }],
+  items: [
+    {
+      href: ROUTES.TEAM_LIVE,
+      icon: Radio,
+      label: { es: "Equipo en vivo", en: "Live Team" },
+      badge: "CONSTRUCCIÓN",
+      disabled: true,
+    },
+  ],
 };
 
 export const ADMIN_NAVIGATION: NavSection[] = [
@@ -120,7 +128,13 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     title: { es: "Mensajería & Automatización", en: "Messaging & Automation" },
     badge: "ADMIN",
     items: [
-      { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
+      {
+        href: ROUTES.SMS,
+        icon: MessageSquare,
+        label: { es: "Mensajería SMS", en: "SMS Messaging" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
       {
         href: ROUTES.CALLS,
         icon: PhoneCall,
@@ -128,12 +142,19 @@ export const ADMIN_NAVIGATION: NavSection[] = [
         badge: "CONSTRUCCIÓN",
         disabled: true,
       },
-      { href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Asesores en vivo", en: "Live Advisors" } },
+      {
+        href: ROUTES.TEAM_LIVE,
+        icon: Radio,
+        label: { es: "Asesores en vivo", en: "Live Advisors" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
       {
         href: ROUTES.AUTOMATIONS,
         icon: Workflow,
         label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" },
-        badge: "BETA",
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
       },
     ],
   },
