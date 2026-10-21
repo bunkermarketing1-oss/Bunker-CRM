@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Users,
@@ -740,18 +741,25 @@ function LeadsPageContent() {
                       {/* Profile / Company */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] border border-[#D4AF37]/40 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                          <Link
+                            href={`/crm/leads/${lead.id}`}
+                            className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] hover:scale-105 border border-[#D4AF37]/40 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs transition-transform"
+                            title="Ver expediente en InsightCRM"
+                          >
                             {initials}
-                          </div>
+                          </Link>
                           <div>
-                            <div className="font-bold text-[#141414] flex items-center gap-1.5 leading-tight">
+                            <Link
+                              href={`/crm/leads/${lead.id}`}
+                              className="font-bold text-[#141414] hover:text-[#6366F1] hover:underline flex items-center gap-1.5 leading-tight transition-colors"
+                            >
                               <span>{lead.name}</span>
                               {lead.isDemo && (
                                 <span className="text-[9px] bg-[#FAF0D7] text-[#9A7320] font-bold px-1.5 py-0.2 rounded-md border border-[#F2E5C4]">
                                   DEMO
                                 </span>
                               )}
-                            </div>
+                            </Link>
                             <div className="text-[11px] text-[#6B6861] flex items-center gap-1.5 mt-0.5">
                               <Building className="w-3 h-3 text-[#8C887E]" />
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
@@ -897,13 +905,13 @@ function LeadsPageContent() {
                             <Edit className="w-3.5 h-3.5" />
                           </button>
 
-                          <button
-                            onClick={() => setSelectedLead(lead)}
-                            className="p-1.5 rounded-xl bg-[#F6F5F2] hover:bg-white text-[#6B6861] hover:text-[#141414] border border-[#ECEAE3] transition-colors"
-                            title="Ver Ficha Completa"
+                          <Link
+                            href={`/crm/leads/${lead.id}`}
+                            className="p-1.5 rounded-xl bg-[#F6F5F2] hover:bg-[#FAF9F5] text-[#6B6861] hover:text-[#141414] border border-[#ECEAE3] transition-colors"
+                            title="Ver Expediente Completo (InsightCRM)"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </button>
+                            <ExternalLink className="w-3.5 h-3.5 text-[#6366F1]" />
+                          </Link>
 
                           {isAdmin && (
                             <button
