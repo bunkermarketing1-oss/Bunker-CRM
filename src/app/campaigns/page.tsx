@@ -40,15 +40,80 @@ function fmtMetric(metric: Metric, n: number, currency: string | null) {
   return metric === "spend" ? fmtMoney(n, currency) : fmtNumber(n);
 }
 
+interface AccountItem {
+  id: string;
+  accountName: string;
+  accountType: string | null;
+  status: string;
+  lastSyncAt: string | null;
+  client: { id: string; name: string } | null;
+}
+
+interface CampaignItem {
+  id: string;
+  name: string;
+  platform: string;
+  objective: string | null;
+  status: string;
+  currency: string | null;
+  budget: number | null;
+  budgetType: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  connectedAccountId: string | null;
+  accountName: string | null;
+  client: { id: string; name: string } | null;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  costPerConversion: number;
+}
+
+interface DailyItem {
+  date: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  [key: string]: string | number;
+}
+
+interface CampaignsData {
+  success: boolean;
+  days: number;
+  clientId: string | null;
+  selectedAccountId: string;
+  currency: string | null;
+  accounts: AccountItem[];
+  campaigns: CampaignItem[];
+  daily: DailyItem[];
+  totals: {
+    spend: number;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    ctr: number;
+    cpc: number;
+    cpm: number;
+    costPerConversion: number;
+    activeCampaigns: number;
+  };
+}
+
 export default function CampaignsPage() {
   const { user } = useAuth();
   const isClient = Boolean(user?.isClientUser || user?.role === "CLIENT");
 
   const [days, setDays] = useState(30);
   const [clientId, setClientId] = useState("all");
+  const [selectedAccountId, setSelectedAccountId] = useState("all");
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [metric, setMetric] = useState<Metric>("spend");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<CampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +121,7 @@ export default function CampaignsPage() {
     if (!user || isClient) return;
     fetch("/api/clients")
       .then((r) => r.json())
-      .then((json) => json.success && setClients(json.clients.map((c: any) => ({ id: c.id, name: c.name }))))
+      .then((json) => json.success && setClients(json.clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))))
       .catch(console.error);
   }, [user, isClient]);
 
@@ -66,12 +131,14 @@ export default function CampaignsPage() {
     try {
       const params = new URLSearchParams({ days: String(days) });
       if (!isClient && clientId !== "all") params.set("clientId", clientId);
+      if (selectedAccountId !== "all") params.set("accountId", selectedAccountId);
       const res = await fetch(`/api/campaigns?${params}`);
       const json = await res.json();
       if (json.success) setData(json);
       else setError(json.error);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error al cargar campañas";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -80,11 +147,12 @@ export default function CampaignsPage() {
   useEffect(() => {
     if (user) fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, days, clientId]);
+  }, [user, days, clientId, selectedAccountId]);
 
   const currency: string | null = data?.currency || null;
   const totals = data?.totals;
-  const hasAccounts = data?.accounts?.length > 0;
+  const hasAccounts = Boolean(data?.accounts && data.accounts.length > 0);
+  const selectedAccount = data?.accounts.find((a) => a.id === selectedAccountId);
 
   const kpis = totals
     ? [
@@ -120,7 +188,10 @@ export default function CampaignsPage() {
           {!isClient && (
             <select
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
+              onChange={(e) => {
+                setClientId(e.target.value);
+                setSelectedAccountId("all");
+              }}
               className="bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
             >
               <option value="all">Todos los clientes</option>
@@ -180,18 +251,90 @@ export default function CampaignsPage() {
 
       {data && hasAccounts && (
         <>
-          {/* Linked accounts */}
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            {data.accounts.map((a: any) => (
-              <span key={a.id} className="px-2.5 py-1 rounded-full bg-white border border-[#E8E6DF] text-[#4D4C48] flex items-center gap-1.5">
-                {a.status !== ACCOUNT_STATUS.ACTIVE && <AlertTriangle className="w-3 h-3 text-amber-600" />}
-                <span>{a.accountName}</span>
-                {!isClient && a.client && <span className="text-[#82807C]">· {a.client.name}</span>}
-                <span className="text-[#82807C]">
-                  · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sincronizar"}
+          {/* Linked accounts filter chips */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-[#82807C]">
+              <span className="font-medium text-[#4D4C48]">Filtrar por cuenta publicitaria:</span>
+              {selectedAccountId !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedAccountId("all")}
+                  className="text-xs text-[#D97757] hover:underline font-medium"
+                >
+                  Restablecer filtro (ver todas)
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setSelectedAccountId("all")}
+                className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 font-medium ${
+                  selectedAccountId === "all"
+                    ? "bg-[#1F1E1D] text-white border-[#1F1E1D] shadow-sm ring-2 ring-[#D4AF37]/50"
+                    : "bg-white text-[#4D4C48] border-[#E8E6DF] hover:bg-[#FAF9F5] hover:border-[#D4AF37]/50"
+                }`}
+              >
+                <span>Todas las cuentas</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#FAF9F5] text-[#82807C]"
+                  }`}
+                >
+                  {data.accounts.length}
                 </span>
-              </span>
-            ))}
+              </button>
+
+              {data.accounts.map((a) => {
+                const isSelected = selectedAccountId === a.id;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedAccountId(isSelected ? "all" : a.id)}
+                    className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 text-left ${
+                      isSelected
+                        ? "bg-[#1F1E1D] text-white border-[#1F1E1D] shadow-sm ring-2 ring-[#D4AF37]"
+                        : "bg-white text-[#4D4C48] border-[#E8E6DF] hover:bg-[#FAF9F5] hover:border-[#D4AF37]/50"
+                    }`}
+                  >
+                    {a.status !== ACCOUNT_STATUS.ACTIVE && (
+                      <AlertTriangle className={`w-3 h-3 ${isSelected ? "text-amber-300" : "text-amber-600"}`} />
+                    )}
+                    <span className="font-medium">{a.accountName}</span>
+                    {!isClient && a.client && (
+                      <span className={isSelected ? "text-white/70" : "text-[#82807C]"}>
+                        · {a.client.name}
+                      </span>
+                    )}
+                    <span className={isSelected ? "text-white/60 text-[10px]" : "text-[#82807C] text-[10px]"}>
+                      · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sincronizar"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedAccount && (
+              <div className="flex items-center gap-2 p-2.5 px-3 rounded-xl bg-amber-50/70 border border-amber-200/60 text-xs text-amber-900">
+                <span className="font-medium">Filtro activo:</span>
+                <span>
+                  Viendo datos de <strong>{selectedAccount.accountName}</strong>
+                </span>
+                {!isClient && selectedAccount.client && (
+                  <span className="text-amber-800/80">({selectedAccount.client.name})</span>
+                )}
+                <span className="text-amber-700 font-mono text-[11px]">· {data.campaigns.length} campaña(s)</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAccountId("all")}
+                  className="ml-auto text-[11px] underline font-semibold text-amber-950 hover:text-black"
+                >
+                  ✕ Quitar filtro
+                </button>
+              </div>
+            )}
           </div>
 
           {/* KPI tiles */}
@@ -255,7 +398,7 @@ export default function CampaignsPage() {
                       </td>
                     </tr>
                   )}
-                  {data.campaigns.map((c: any) => {
+                  {data.campaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
                     return (
                       <tr key={c.id} className="hover:bg-[#FAF9F5]">
@@ -294,7 +437,7 @@ export default function CampaignsPage() {
 }
 
 /** Barras diarias de una sola métrica, con tooltip al pasar el mouse. */
-function DailyBars({ daily, metric, currency }: { daily: any[]; metric: Metric; currency: string | null }) {
+function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Metric; currency: string | null }) {
   const [hover, setHover] = useState<number | null>(null);
   const W = 800;
   const H = 220;

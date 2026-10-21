@@ -69,9 +69,15 @@ export async function GET(req: NextRequest) {
     });
     const accountIds = accounts.map((a) => a.id);
 
+    const requestedAccountId = searchParams.get("accountId");
+    let targetAccountIds = accountIds;
+    if (requestedAccountId && requestedAccountId !== "all") {
+      targetAccountIds = accountIds.filter((id) => id === requestedAccountId);
+    }
+
     const campaignWhere: any = {
       organizationId: user!.organizationId,
-      connectedAccountId: { in: accountIds },
+      connectedAccountId: { in: targetAccountIds },
       externalId: { not: null },
     };
     if (platform && platform !== "all") campaignWhere.platform = platform;
@@ -161,15 +167,17 @@ export async function GET(req: NextRequest) {
       success: true,
       days,
       clientId,
+      selectedAccountId: requestedAccountId || "all",
       currency: currencies.length === 1 ? currencies[0] : null,
       accounts,
       campaigns: campaignRows,
       daily,
       totals: { ...totals, activeCampaigns: campaigns.filter((c) => c.status === CAMPAIGN_STATUS.ACTIVE).length },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/campaigns error:", error);
-    return NextResponse.json({ success: false, error: "Error al consultar campañas." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Error al consultar campañas.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
