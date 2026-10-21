@@ -185,8 +185,8 @@ export function ClientPortalUsersPanel({
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[#82807C]">
-            El dueño supervisa a los asesores de esta empresa en tiempo real y puede escuchar sus llamadas.
+          <p className="text-[11px] text-[#82807C] leading-relaxed">
+            Estructura del cliente: Cuenta del Dueño (supervisa vendedores y llamadas) y Vendedores comerciales (atienden leads e inbox). Ambos ven métricas de campañas publicitarias en modo de solo lectura.
           </p>
         </div>
 
@@ -439,9 +439,9 @@ export function ClientPortalUsersPanel({
                             : "border-[#E8E6DF] bg-white text-[#716F6A] hover:bg-[#FAF9F5]"
                         }`}
                       >
-                        <span className="block font-semibold text-xs">Asesor</span>
+                        <span className="block font-semibold text-xs">Vendedor Comercial</span>
                         <span className="block text-[10px] mt-0.5 opacity-80">
-                          Atiende leads, tareas y chats.
+                          Vendedor 1, 2... Atiende leads, llamadas e inbox.
                         </span>
                       </button>
 
@@ -455,7 +455,7 @@ export function ClientPortalUsersPanel({
                         }`}
                       >
                         <span className="block font-semibold text-xs flex items-center gap-1">
-                          <Crown className="w-3 h-3 text-amber-500" /> Dueño / Gerente
+                          <Crown className="w-3 h-3 text-amber-500" /> Dueño / Admin Cliente
                         </span>
                         <span className="block text-[10px] mt-0.5 opacity-80">
                           Supervisa en vivo y escucha llamadas.

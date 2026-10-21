@@ -12,6 +12,9 @@ import {
   Building,
   CheckCircle2,
   FileText,
+  Users,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
@@ -46,6 +49,16 @@ interface ConversationItem {
   leadId?: string | null;
   leadPhone?: string | null;
   leadEmail?: string | null;
+  assignedAdvisorId?: string | null;
+  assignedAdvisorName?: string | null;
+}
+
+interface AdvisorOption {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  clientId?: string | null;
 }
 
 interface InboxStats {
@@ -113,6 +126,8 @@ export default function UnifiedInboxPage() {
     comments: 0,
   });
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [advisors, setAdvisors] = useState<AdvisorOption[]>([]);
+  const [assigning, setAssigning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
 
@@ -142,6 +157,7 @@ export default function UnifiedInboxPage() {
         setConversations(json.conversations || []);
         if (json.stats) setStats(json.stats);
         if (json.clients) setClients(json.clients);
+        if (json.advisors) setAdvisors(json.advisors);
 
         // Seleccionar automáticamente la primera si ninguna está seleccionada
         if (!selectedConvId && json.conversations?.length > 0) {
@@ -162,6 +178,50 @@ export default function UnifiedInboxPage() {
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === selectedConvId) || conversations[0] || null;
   }, [conversations, selectedConvId]);
+
+  const handleAssignAdvisor = async (advisorId: string | null) => {
+    if (!activeConversation || assigning) return;
+    setAssigning(true);
+    try {
+      const res = await fetch("/api/inbox", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "assign",
+          conversationId: activeConversation.id,
+          advisorId,
+          leadId: activeConversation.leadId,
+          senderName: activeConversation.senderName,
+          senderPhone: activeConversation.leadPhone,
+          senderEmail: activeConversation.leadEmail,
+          clientId: activeConversation.clientId,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConversation.id
+              ? {
+                  ...c,
+                  leadId: json.leadId ?? c.leadId,
+                  assignedAdvisorId: json.assignedAdvisorId,
+                  assignedAdvisorName: json.assignedAdvisorName,
+                }
+              : c
+          )
+        );
+        setFeedback(json.message || "Asignación comercial actualizada.");
+        setTimeout(() => setFeedback(null), 3500);
+      } else {
+        alert(json.error || "No se pudo asignar el asesor.");
+      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error al asignar asesor.");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -428,14 +488,24 @@ export default function UnifiedInboxPage() {
                         </span>
                       </div>
 
-                      {/* Badge de Cliente asignado */}
+                      {/* Badge de Cliente y Asesor asignado */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${channelConf.badgeCls}`}>
                           {channelConf.label}
                         </span>
                         {conv.clientName && (
-                          <span className="text-[9px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded truncate max-w-[140px]">
+                          <span className="text-[9px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded truncate max-w-[120px]">
                             {conv.clientName}
+                          </span>
+                        )}
+                        {conv.assignedAdvisorName ? (
+                          <span className="text-[9px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded flex items-center gap-0.5 truncate max-w-[110px]">
+                            <UserCheck className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                            <span className="truncate">{conv.assignedAdvisorName}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-medium text-[#82807C] bg-[#FAF9F5] border border-[#E8E6DF] px-1.5 py-0.2 rounded">
+                            Sin asignar
                           </span>
                         )}
                       </div>
@@ -520,6 +590,52 @@ export default function UnifiedInboxPage() {
                       <Building className="w-3.5 h-3.5 text-amber-500" />
                       <span>Ficha 360°</span>
                     </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Barra de Asignación Comercial & Asesor Responsable */}
+              <div className="px-4 py-2.5 bg-[#FAF9F5] border-b border-[#EAECF0] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[#101828] font-semibold text-xs">
+                    <Users className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Vendedor Asignado:</span>
+                  </div>
+
+                  <select
+                    value={activeConversation.assignedAdvisorId ?? ""}
+                    disabled={assigning}
+                    onChange={(e) => handleAssignAdvisor(e.target.value ? e.target.value : null)}
+                    className="bg-white border border-[#EAECF0] rounded-xl px-2.5 py-1 text-xs text-[#101828] font-medium focus:outline-none focus:border-amber-500 shadow-2xs"
+                  >
+                    <option value="">⚠️ Sin Asignar (Bandeja Abierta)</option>
+                    {advisors.map((adv) => (
+                      <option key={adv.id} value={adv.id}>
+                        👤 {adv.name} {user?.id === adv.id ? "(Tú)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {user && activeConversation.assignedAdvisorId !== user.id && (
+                    <button
+                      type="button"
+                      disabled={assigning}
+                      onClick={() => handleAssignAdvisor(user.id)}
+                      className="px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-xs flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-50"
+                      title="Asignarme esta conversación y su lead a mi cartera comercial"
+                    >
+                      <UserPlus className={`w-3.5 h-3.5 text-amber-600 ${assigning ? "animate-spin" : ""}`} />
+                      <span>Tomar Conversación (Asignarme a mí)</span>
+                    </button>
+                  )}
+
+                  {user && activeConversation.assignedAdvisorId === user.id && (
+                    <span className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-xs flex items-center gap-1.5">
+                      <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Atendido por ti</span>
+                    </span>
                   )}
                 </div>
               </div>

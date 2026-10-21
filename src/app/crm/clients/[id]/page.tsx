@@ -270,7 +270,7 @@ export default function ClientProfile360Page() {
     fetchClientData();
 
     // Fetch team
-    fetch("/api/users")
+    fetch("/api/users?scope=bunker")
       .then((r) => r.json())
       .then((j) => {
         if (j.success && Array.isArray(j.users)) setTeamMembers(j.users);
@@ -833,11 +833,26 @@ export default function ClientProfile360Page() {
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
-                        Asesor Asignado
+                        Brand Manager en Bunker
                       </span>
-                      <span className="text-[#101828] font-medium">
-                        {client.owner?.name || "Sin asignar"}
-                      </span>
+                      {isBunkerUser ? (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[#101828] font-semibold">
+                            {client.owner?.name || "Sin asignar (Agencia General)"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditClientOpen(true)}
+                            className="text-[10px] text-amber-600 hover:text-amber-800 underline font-medium"
+                          >
+                            Asignar / Cambiar
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[#101828] font-medium">
+                          {client.owner?.name || "Equipo de Bunker Agency"}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold text-[#667085] tracking-wider block">
@@ -1486,13 +1501,13 @@ export default function ClientProfile360Page() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#101828] mb-1">Asesor Responsable</label>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Brand Manager / Responsable en Bunker</label>
                   <select
                     value={editClientData.ownerId}
                     onChange={(e) => setEditClientData({ ...editClientData, ownerId: e.target.value })}
                     className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   >
-                    <option value="">Sin Asignar</option>
+                    <option value="">Sin Asignar (Agencia General)</option>
                     {teamMembers.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.name}

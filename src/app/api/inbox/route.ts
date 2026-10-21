@@ -17,6 +17,17 @@ const replySchema = z.object({
   commentId: z.string().optional().nullable(),
 });
 
+const assignSchema = z.object({
+  action: z.literal("assign"),
+  conversationId: z.string().min(1, "ID de conversación requerido"),
+  advisorId: z.string().uuid("ID de asesor inválido").nullable(),
+  leadId: z.string().uuid().optional().nullable(),
+  senderName: z.string().optional(),
+  senderPhone: z.string().optional().nullable(),
+  senderEmail: z.string().optional().nullable(),
+  clientId: z.string().uuid().optional().nullable(),
+});
+
 interface ConversationMessage {
   id: string;
   senderName: string;
@@ -48,6 +59,8 @@ interface ConversationItem {
   leadId?: string | null;
   leadPhone?: string | null;
   leadEmail?: string | null;
+  assignedAdvisorId?: string | null;
+  assignedAdvisorName?: string | null;
 }
 
 /**
@@ -126,7 +139,16 @@ export async function GET(req: NextRequest) {
       take: 150,
       include: {
         client: { select: { id: true, name: true } },
-        lead: { select: { id: true, name: true, phone: true, email: true } },
+        lead: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            ownerId: true,
+            owner: { select: { id: true, name: true, email: true } },
+          },
+        },
       },
     });
 
@@ -155,6 +177,8 @@ export async function GET(req: NextRequest) {
           leadId: msg.lead?.id || null,
           leadPhone: msg.lead?.phone || msg.recipient,
           leadEmail: msg.lead?.email || null,
+          assignedAdvisorId: msg.lead?.ownerId || null,
+          assignedAdvisorName: msg.lead?.owner?.name || null,
           messages: [],
         });
       }
@@ -416,6 +440,31 @@ export async function GET(req: NextRequest) {
       ).length,
     };
 
+    // Consultar asesores/vendedores activos para asignación comercial
+    const userWhere: {
+      memberships: { some: { organizationId: string } };
+      isActive: boolean;
+      clientId?: string | null;
+    } = {
+      memberships: { some: { organizationId: user!.organizationId } },
+      isActive: true,
+    };
+    if (user!.isClientUser && user!.clientId) {
+      userWhere.clientId = user!.clientId;
+    }
+
+    const availableAdvisors = await prisma.user.findMany({
+      where: userWhere,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        clientId: true,
+      },
+      orderBy: { name: "asc" },
+    });
+
     return NextResponse.json({
       success: true,
       targetClientId,
@@ -423,6 +472,7 @@ export async function GET(req: NextRequest) {
       stats,
       connectedAccounts,
       clients: user!.isClientUser ? [] : clientsList,
+      advisors: availableAdvisors,
     });
   } catch (error) {
     console.error("GET /api/inbox error:", error);
@@ -483,6 +533,110 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("POST /api/inbox reply error:", error);
     const message = error instanceof Error ? error.message : "Error al enviar la respuesta.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/inbox
+ * Asigna o reasigna un vendedor/asesor comercial a una conversación o prospecto (Lead).
+ * Si la conversación no tiene lead en CRM aún, crea el prospecto automáticamente para seguimiento.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    const body = await req.json().catch(() => ({}));
+    const parsed = assignSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || "Datos de asignación inválidos." },
+        { status: 400 }
+      );
+    }
+
+    const { conversationId, advisorId, leadId, senderName, senderPhone, senderEmail, clientId } = parsed.data;
+
+    let targetClientId = clientId;
+    if (user!.isClientUser) {
+      targetClientId = user!.clientId;
+    }
+
+    // Verificar si el asesor seleccionado pertenece a la organización
+    let assignedAdvisor: { id: string; name: string } | null = null;
+    if (advisorId) {
+      const foundAdvisor = await prisma.user.findFirst({
+        where: {
+          id: advisorId,
+          isActive: true,
+          memberships: { some: { organizationId: user!.organizationId } },
+          ...(user!.isClientUser && user!.clientId ? { clientId: user!.clientId } : {}),
+        },
+        select: { id: true, name: true },
+      });
+
+      if (!foundAdvisor) {
+        return NextResponse.json(
+          { success: false, error: "El asesor seleccionado no pertenece a la organización o empresa." },
+          { status: 404 }
+        );
+      }
+      assignedAdvisor = foundAdvisor;
+    }
+
+    let targetLeadId = leadId;
+
+    if (targetLeadId) {
+      // Actualizar el lead existente
+      await prisma.lead.update({
+        where: { id: targetLeadId },
+        data: { ownerId: advisorId },
+      });
+    } else {
+      // Si la conversación de mensajería no tiene lead en CRM aún, crearlo automáticamente
+      const createdLead = await prisma.lead.create({
+        data: {
+          organizationId: user!.organizationId,
+          clientId: targetClientId || null,
+          name: senderName || "Prospecto de Bandeja Omnicanal",
+          phone: senderPhone || null,
+          email: senderEmail || null,
+          source: "SOCIAL_INBOX",
+          status: "NEW",
+          ownerId: advisorId,
+        },
+        select: { id: true, name: true },
+      });
+      targetLeadId = createdLead.id;
+    }
+
+    // Registrar en auditoría
+    await prisma.auditLog.create({
+      data: {
+        organizationId: user!.organizationId,
+        userId: user!.id,
+        action: "inbox_conversation_assigned",
+        entityType: "Lead",
+        entityId: targetLeadId,
+        detailsJson: JSON.stringify({
+          conversationId,
+          advisorId,
+          advisorName: assignedAdvisor?.name || null,
+        }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: assignedAdvisor ? `Conversación asignada a ${assignedAdvisor.name}` : "Conversación desasignada.",
+      leadId: targetLeadId,
+      assignedAdvisorId: advisorId,
+      assignedAdvisorName: assignedAdvisor?.name || null,
+    });
+  } catch (error) {
+    console.error("PATCH /api/inbox error:", error);
+    const message = error instanceof Error ? error.message : "Error al asignar la conversación.";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
