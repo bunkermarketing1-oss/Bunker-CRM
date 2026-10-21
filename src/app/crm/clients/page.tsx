@@ -324,14 +324,14 @@ export default function ClientsPage() {
             className="p-2 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors"
             title="Refrescar lista"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#6366F1]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
           </button>
           {!isClient && (
             <button
               onClick={() => setIsCreateOpen(true)}
               className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
             >
-              <Sparkles className="w-4 h-4 text-[#6366F1]" />
+              <Sparkles className="w-4 h-4 text-amber-400" />
               <span>+ Nuevo Cliente (Asistente Guiado)</span>
             </button>
           )}
@@ -382,7 +382,7 @@ export default function ClientsPage() {
           <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm">
             <div className="flex items-center justify-between text-[#475467] text-[11px]">
               <span>ARR Proyectado</span>
-              <TrendingUp className="w-3.5 h-3.5 text-[#6366F1]" />
+              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
             </div>
             <div className="text-lg font-semibold text-[#101828] mt-1">
               ${metrics.arrUSD.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-normal text-[#475467]">USD</span>
@@ -438,7 +438,7 @@ export default function ClientsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por cliente, empresa, email, teléfono o sector..."
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl pl-9 pr-3 py-2 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-[#6366F1]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl pl-9 pr-3 py-2 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             />
           </div>
 
@@ -447,7 +447,7 @@ export default function ClientsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             >
               <option value="all">Estado: Todos</option>
               <option value="active">Activo</option>
@@ -461,7 +461,7 @@ export default function ClientsPage() {
             <select
               value={industryFilter}
               onChange={(e) => setIndustryFilter(e.target.value)}
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             >
               <option value="all">Sector: Todos</option>
               {availableIndustries.map((ind) => (
@@ -477,7 +477,7 @@ export default function ClientsPage() {
             <select
               value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             >
               <option value="all">Asesor: Todos</option>
               {teamMembers.map((member) => (
@@ -493,7 +493,7 @@ export default function ClientsPage() {
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             >
               <option value="newest">Más recientes</option>
               <option value="revenue_desc">Mayor Facturación ($)</option>
@@ -521,7 +521,7 @@ export default function ClientsPage() {
             </div>
             <button
               onClick={resetFilters}
-              className="text-[#6366F1] hover:underline font-semibold"
+              className="text-amber-600 hover:text-amber-700 hover:underline font-semibold"
             >
               Limpiar filtros
             </button>
@@ -533,7 +533,7 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading ? (
           <div className="col-span-full py-16 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-2">
-            <RefreshCw className="w-5 h-5 animate-spin text-[#6366F1]" />
+            <RefreshCw className="w-5 h-5 animate-spin text-amber-500" />
             <span>Cargando directorio comercial de clientes...</span>
           </div>
         ) : clients.length === 0 ? (
@@ -585,7 +585,7 @@ export default function ClientsPage() {
                     <div className="space-y-0.5">
                       <Link
                         href={`/crm/clients/${client.id}`}
-                        className="font-semibold text-[#101828] text-base group-hover:text-[#6366F1] transition-colors flex items-center gap-1.5"
+                        className="font-semibold text-[#101828] text-base group-hover:text-amber-600 transition-colors flex items-center gap-1.5"
                       >
                         <span>{client.name}</span>
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -648,7 +648,7 @@ export default function ClientsPage() {
                           href={client.website}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#6366F1] hover:underline truncate"
+                          className="text-amber-600 hover:text-amber-700 hover:underline truncate"
                         >
                           {client.website.replace(/^https?:\/\//, "")}
                         </a>

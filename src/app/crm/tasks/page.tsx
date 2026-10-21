@@ -104,7 +104,7 @@ export default function TasksPage() {
           onClick={() => setIsModalOpen(true)}
           className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
         >
-          <Plus className="w-4 h-4 text-[#6366F1]" />
+          <Plus className="w-4 h-4 text-amber-400" />
           <span>Nueva Tarea</span>
         </button>
       </div>
@@ -135,7 +135,7 @@ export default function TasksPage() {
                     className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors border ${
                       task.status === "completed"
                         ? "bg-emerald-600 border-emerald-600 text-white"
-                        : "border-[#D1CFCA] bg-white hover:border-[#6366F1]"
+                        : "border-[#D1CFCA] bg-white hover:border-amber-500"
                     }`}
                   >
                     {task.status === "completed" && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -192,7 +192,7 @@ export default function TasksPage() {
                   placeholder="ej. Enviar propuesta revisada de Meta Ads"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -201,7 +201,7 @@ export default function TasksPage() {
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 >
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
@@ -216,7 +216,7 @@ export default function TasksPage() {
                   type="date"
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 

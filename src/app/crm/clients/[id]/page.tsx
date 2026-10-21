@@ -595,7 +595,7 @@ export default function ClientProfile360Page() {
   if (loading) {
     return (
       <div className="py-24 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-[#6366F1]" />
+        <RefreshCw className="w-6 h-6 animate-spin text-amber-500" />
         <span>Cargando Ficha Comercial 360° del Cliente...</span>
       </div>
     );
@@ -765,7 +765,7 @@ export default function ClientProfile360Page() {
               onClick={() => setIsOppModalOpen(true)}
               className="w-full py-2.5 px-4 rounded-xl bg-[#101828] hover:bg-[#222222] text-[#F8F9FA] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
             >
-              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
+              <Plus className="w-3.5 h-3.5 text-amber-500" />
               <span>Nueva Oportunidad</span>
             </button>
 
@@ -963,12 +963,12 @@ export default function ClientProfile360Page() {
               <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
                 <div className="flex items-center justify-between pb-3 border-b border-[#F0EEE6]">
                   <h3 className="font-bold text-xs text-[#101828] flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#6366F1]" />
+                    <Sparkles className="w-4 h-4 text-amber-500" />
                     Cuentas Publicitarias Conectadas ({client.connectedAccounts?.length || 0})
                   </h3>
                   <Link
                     href="/marketing/integrations"
-                    className="text-xs font-semibold text-[#6366F1] hover:underline"
+                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline"
                   >
                     + Vincular
                   </Link>
@@ -1010,7 +1010,7 @@ export default function ClientProfile360Page() {
                   </h3>
                   <Link
                     href={ROUTES.LEADS}
-                    className="text-xs font-semibold text-[#6366F1] hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1"
                   >
                     <span>Ver todos</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1026,7 +1026,7 @@ export default function ClientProfile360Page() {
                     {client.leads.slice(0, 10).map((lead) => (
                       <div key={lead.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                         <div className="min-w-0">
-                          <Link href={leadSearchRoute(lead.name)} className="font-bold text-[#101828] hover:text-[#6366F1] block truncate">
+                          <Link href={leadSearchRoute(lead.name)} className="font-bold text-[#101828] hover:text-amber-600 block truncate">
                             {lead.name}
                           </Link>
                           <span className="text-[10px] text-[#667085]">
@@ -1063,7 +1063,7 @@ export default function ClientProfile360Page() {
               {/* Registro Rápido de Interacción */}
               <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-[#F0EEE8]">
-                  <Send className="w-3.5 h-3.5 text-[#6366F1]" />
+                  <Send className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-xs font-bold text-[#101828]">Registrar Nueva Interacción</span>
                 </div>
                 <form onSubmit={handleCreateActivity} className="space-y-2.5">
@@ -1071,7 +1071,7 @@ export default function ClientProfile360Page() {
                     <select
                       value={newActivity.type}
                       onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })}
-                      className="bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-2.5 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                      className="bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-2.5 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     >
                       <option value="call">📞 Llamada</option>
                       <option value="meeting">🤝 Reunión</option>
@@ -1085,7 +1085,7 @@ export default function ClientProfile360Page() {
                       placeholder="Título o asunto..."
                       value={newActivity.title}
                       onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
-                      className="sm:col-span-2 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                      className="sm:col-span-2 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
                   <textarea
@@ -1093,7 +1093,7 @@ export default function ClientProfile360Page() {
                     placeholder="Acuerdos, notas o próximos pasos..."
                     value={newActivity.description}
                     onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                   <div className="flex justify-end">
                     <button
@@ -1101,7 +1101,7 @@ export default function ClientProfile360Page() {
                       disabled={submittingActivity}
                       className="btn-black-gold rounded-xl px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
                     >
-                      <Send className="w-3 h-3 text-[#6366F1]" />
+                      <Send className="w-3 h-3 text-amber-500" />
                       <span>{submittingActivity ? "Guardando..." : "Guardar Actividad"}</span>
                     </button>
                   </div>
@@ -1131,7 +1131,7 @@ export default function ClientProfile360Page() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] shrink-0 font-bold text-xs">
-                              <Clock className="w-4 h-4 text-[#6366F1]" />
+                              <Clock className="w-4 h-4 text-amber-500" />
                             </div>
                             <div className="min-w-0">
                               <h4 className="text-xs font-bold text-[#101828] truncate">{t.title}</h4>
@@ -1212,7 +1212,7 @@ export default function ClientProfile360Page() {
               <button
                 type="button"
                 onClick={() => setIsOppModalOpen(true)}
-                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
+                className="text-[11px] font-semibold text-amber-600 hover:text-amber-700 hover:underline"
               >
                 + Nuevo
               </button>
@@ -1223,7 +1223,7 @@ export default function ClientProfile360Page() {
               onClick={() => setIsOppModalOpen(true)}
               className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#101828] text-xs font-semibold text-[#101828] flex items-center justify-center gap-1.5 transition-colors bg-[#F8F9FA]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
+              <Plus className="w-3.5 h-3.5 text-amber-500" />
               <span>Crear nuevo deal</span>
             </button>
 
@@ -1268,7 +1268,7 @@ export default function ClientProfile360Page() {
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : opp.status === "lost"
                               ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : "bg-purple-50 text-purple-700 border-purple-200"
+                              : "bg-amber-50 text-amber-800 border-amber-300"
                           }`}
                         >
                           {opp.status === "won" ? "Ganada" : opp.status === "lost" ? "Perdida" : "Abierta"}
@@ -1288,7 +1288,7 @@ export default function ClientProfile360Page() {
               <button
                 type="button"
                 onClick={() => setIsTaskModalOpen(true)}
-                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
+                className="text-[11px] font-semibold text-amber-600 hover:text-amber-700 hover:underline"
               >
                 + Nueva
               </button>
@@ -1299,7 +1299,7 @@ export default function ClientProfile360Page() {
               onClick={() => setIsTaskModalOpen(true)}
               className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#101828] text-xs font-semibold text-[#101828] flex items-center justify-center gap-1.5 transition-colors bg-[#F8F9FA]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
+              <Plus className="w-3.5 h-3.5 text-amber-500" />
               <span>Crear nueva tarea</span>
             </button>
 
@@ -1363,7 +1363,7 @@ export default function ClientProfile360Page() {
                   setContactFormData({ firstName: "", lastName: "", email: "", phone: "", jobTitle: "", isPrimary: false });
                   setIsContactModalOpen(true);
                 }}
-                className="text-[11px] font-semibold text-[#6366F1] hover:underline"
+                className="text-[11px] font-semibold text-amber-600 hover:text-amber-700 hover:underline"
               >
                 + Agregar
               </button>
@@ -1417,7 +1417,7 @@ export default function ClientProfile360Page() {
           <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
               <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
-                <Edit className="w-4 h-4 text-[#6366F1]" />
+                <Edit className="w-4 h-4 text-amber-500" />
                 Modificar Ficha Comercial
               </h2>
               <button onClick={() => setIsEditClientOpen(false)} className="text-[#475467] hover:text-[#101828]">
@@ -1433,7 +1433,7 @@ export default function ClientProfile360Page() {
                   required
                   value={editClientData.name}
                   onChange={(e) => setEditClientData({ ...editClientData, name: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1443,7 +1443,7 @@ export default function ClientProfile360Page() {
                   type="text"
                   value={editClientData.companyName}
                   onChange={(e) => setEditClientData({ ...editClientData, companyName: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1454,7 +1454,7 @@ export default function ClientProfile360Page() {
                     type="text"
                     value={editClientData.industry}
                     onChange={(e) => setEditClientData({ ...editClientData, industry: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1462,7 +1462,7 @@ export default function ClientProfile360Page() {
                   <select
                     value={editClientData.status}
                     onChange={(e) => setEditClientData({ ...editClientData, status: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   >
                     <option value="active">Activo</option>
                     <option value="on_hold">En Pausa</option>
@@ -1480,7 +1480,7 @@ export default function ClientProfile360Page() {
                     step="any"
                     value={editClientData.revenue}
                     onChange={(e) => setEditClientData({ ...editClientData, revenue: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1488,7 +1488,7 @@ export default function ClientProfile360Page() {
                   <select
                     value={editClientData.ownerId}
                     onChange={(e) => setEditClientData({ ...editClientData, ownerId: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   >
                     <option value="">Sin Asignar</option>
                     {teamMembers.map((m) => (
@@ -1507,7 +1507,7 @@ export default function ClientProfile360Page() {
                     type="email"
                     value={editClientData.email}
                     onChange={(e) => setEditClientData({ ...editClientData, email: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1516,7 +1516,7 @@ export default function ClientProfile360Page() {
                     type="tel"
                     value={editClientData.phone}
                     onChange={(e) => setEditClientData({ ...editClientData, phone: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -1527,7 +1527,7 @@ export default function ClientProfile360Page() {
                   type="url"
                   value={editClientData.website}
                   onChange={(e) => setEditClientData({ ...editClientData, website: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1537,7 +1537,7 @@ export default function ClientProfile360Page() {
                   rows={2}
                   value={editClientData.notes}
                   onChange={(e) => setEditClientData({ ...editClientData, notes: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1585,7 +1585,7 @@ export default function ClientProfile360Page() {
                     placeholder="ej. Mariana"
                     value={contactFormData.firstName}
                     onChange={(e) => setContactFormData({ ...contactFormData, firstName: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1595,7 +1595,7 @@ export default function ClientProfile360Page() {
                     placeholder="ej. Gómez"
                     value={contactFormData.lastName}
                     onChange={(e) => setContactFormData({ ...contactFormData, lastName: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -1607,7 +1607,7 @@ export default function ClientProfile360Page() {
                   placeholder="ej. Directora Comercial"
                   value={contactFormData.jobTitle}
                   onChange={(e) => setContactFormData({ ...contactFormData, jobTitle: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1618,7 +1618,7 @@ export default function ClientProfile360Page() {
                   placeholder="mariana@empresa.com"
                   value={contactFormData.email}
                   onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1629,7 +1629,7 @@ export default function ClientProfile360Page() {
                   placeholder="+52 55 1234 5678"
                   value={contactFormData.phone}
                   onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1639,7 +1639,7 @@ export default function ClientProfile360Page() {
                   id="isPrimaryCheckbox"
                   checked={contactFormData.isPrimary}
                   onChange={(e) => setContactFormData({ ...contactFormData, isPrimary: e.target.checked })}
-                  className="rounded text-[#6366F1] focus:ring-[#6366F1]"
+                  className="rounded text-amber-500 focus:ring-amber-400"
                 />
                 <label htmlFor="isPrimaryCheckbox" className="text-xs text-[#101828] cursor-pointer">
                   Designar como Contacto Principal de esta cuenta
@@ -1690,7 +1690,7 @@ export default function ClientProfile360Page() {
                   placeholder="ej. Retainer Redes Sociales + Pauta Meta"
                   value={oppFormData.title}
                   onChange={(e) => setOppFormData({ ...oppFormData, title: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1700,7 +1700,7 @@ export default function ClientProfile360Page() {
                   required
                   value={oppFormData.stageId}
                   onChange={(e) => setOppFormData({ ...oppFormData, stageId: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 >
                   {pipelineStages.map((st) => (
                     <option key={st.id} value={st.id}>
@@ -1720,7 +1720,7 @@ export default function ClientProfile360Page() {
                     required
                     value={oppFormData.value}
                     onChange={(e) => setOppFormData({ ...oppFormData, value: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1731,7 +1731,7 @@ export default function ClientProfile360Page() {
                     max="100"
                     value={oppFormData.probability}
                     onChange={(e) => setOppFormData({ ...oppFormData, probability: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -1742,7 +1742,7 @@ export default function ClientProfile360Page() {
                   type="date"
                   value={oppFormData.expectedClose}
                   onChange={(e) => setOppFormData({ ...oppFormData, expectedClose: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1790,7 +1790,7 @@ export default function ClientProfile360Page() {
                   placeholder="ej. Enviar reporte mensual de métricas de pauta"
                   value={taskFormData.title}
                   onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1801,7 +1801,7 @@ export default function ClientProfile360Page() {
                   placeholder="Instrucciones o contexto adicional..."
                   value={taskFormData.description}
                   onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1812,7 +1812,7 @@ export default function ClientProfile360Page() {
                     type="date"
                     value={taskFormData.dueDate}
                     onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -1820,7 +1820,7 @@ export default function ClientProfile360Page() {
                   <select
                     value={taskFormData.priority}
                     onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   >
                     <option value="low">Baja</option>
                     <option value="medium">Media</option>

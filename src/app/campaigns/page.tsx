@@ -195,7 +195,7 @@ export default function CampaignsPage() {
                 setClientId(e.target.value);
                 setSelectedAccountId("all");
               }}
-              className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+              className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400/50"
             >
               <option value="all">Todos los clientes</option>
               {clients.map((c) => (
@@ -209,7 +209,7 @@ export default function CampaignsPage() {
                 key={d}
                 onClick={() => setDays(d)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  days === d ? "bg-[#101828] text-white" : "text-[#475467] hover:text-[#101828]"
+                  days === d ? "bg-[#101828] text-amber-400 shadow-sm" : "text-[#475467] hover:text-[#101828]"
                 }`}
               >
                 {d} días
@@ -219,9 +219,9 @@ export default function CampaignsPage() {
           <button
             onClick={fetchData}
             aria-label="Actualizar"
-            className="p-2 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828]"
+            className="p-2 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828] hover:border-amber-400/60 transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-500" : ""}`} />
           </button>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function CampaignsPage() {
 
       {data && !hasAccounts && (
         <div className="p-8 rounded-2xl bg-white border border-[#EAECF0] text-center space-y-3">
-          <Plug className="w-6 h-6 text-[#6366F1] mx-auto" />
+          <Plug className="w-6 h-6 text-amber-500 mx-auto" />
           <p className="text-sm text-[#101828] font-medium">
             {isClient ? "Aún no hay redes sociales vinculadas a tu cuenta" : "No hay cuentas publicitarias para este filtro"}
           </p>
@@ -262,7 +262,7 @@ export default function CampaignsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId("all")}
-                  className="text-xs text-[#6366F1] hover:underline font-medium"
+                  className="text-xs text-amber-600 hover:text-amber-700 hover:underline font-semibold"
                 >
                   Restablecer filtro (ver todas)
                 </button>
@@ -275,14 +275,14 @@ export default function CampaignsPage() {
                 onClick={() => setSelectedAccountId("all")}
                 className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 font-medium ${
                   selectedAccountId === "all"
-                    ? "bg-[#101828] text-white border-[#101828] shadow-sm ring-2 ring-[#6366F1]/50"
-                    : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-[#6366F1]/50"
+                    ? "bg-[#101828] text-amber-400 border-amber-500/50 shadow-sm ring-2 ring-amber-400/40"
+                    : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-amber-400/40"
                 }`}
               >
                 <span>Todas las cuentas</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#F8F9FA] text-[#667085]"
+                    selectedAccountId === "all" ? "bg-amber-400/20 text-amber-300 font-bold" : "bg-[#F8F9FA] text-[#667085]"
                   }`}
                 >
                   {data.accounts.length}
@@ -298,8 +298,8 @@ export default function CampaignsPage() {
                     onClick={() => setSelectedAccountId(isSelected ? "all" : a.id)}
                     className={`px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 text-left ${
                       isSelected
-                        ? "bg-[#101828] text-white border-[#101828] shadow-sm ring-2 ring-[#6366F1]"
-                        : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-[#6366F1]/50"
+                        ? "bg-[#101828] text-amber-400 border-amber-500/50 shadow-sm ring-2 ring-amber-400/50"
+                        : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA] hover:border-amber-400/40"
                     }`}
                   >
                     {a.status !== ACCOUNT_STATUS.ACTIVE && (
@@ -307,11 +307,11 @@ export default function CampaignsPage() {
                     )}
                     <span className="font-medium">{a.accountName}</span>
                     {!isClient && a.client && (
-                      <span className={isSelected ? "text-white/70" : "text-[#667085]"}>
+                      <span className={isSelected ? "text-amber-200/80" : "text-[#667085]"}>
                         · {a.client.name}
                       </span>
                     )}
-                    <span className={isSelected ? "text-white/60 text-[10px]" : "text-[#667085] text-[10px]"}>
+                    <span className={isSelected ? "text-amber-300/60 text-[10px]" : "text-[#667085] text-[10px]"}>
                       · {a.lastSyncAt ? `act. ${new Date(a.lastSyncAt).toLocaleDateString("es-CO")}` : "sin sincronizar"}
                     </span>
                   </button>
@@ -354,17 +354,19 @@ export default function CampaignsPage() {
           {/* Daily chart */}
           <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm text-[#101828] flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#6366F1]" />
-                {METRICS.find((m) => m.key === metric)?.label} por día
+              <h2 className="text-sm text-[#101828] font-bold flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-amber-500" />
+                <span>{METRICS.find((m) => m.key === metric)?.label} por día</span>
               </h2>
               <div className="flex rounded-xl border border-[#EAECF0] bg-[#F8F9FA] p-0.5">
                 {METRICS.map((m) => (
                   <button
                     key={m.key}
                     onClick={() => setMetric(m.key)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
-                      metric === m.key ? "bg-white text-[#101828] shadow-sm" : "text-[#475467] hover:text-[#101828]"
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                      metric === m.key
+                        ? "bg-[#101828] text-amber-400 shadow-sm border border-amber-500/40"
+                        : "text-[#475467] hover:text-[#101828]"
                     }`}
                   >
                     {m.label}
@@ -426,11 +428,11 @@ export default function CampaignsPage() {
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
                           {c.budget ? `${fmtMoney(c.budget, c.currency)}${c.budgetType === "daily" ? "/día" : ""}` : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#101828]">{fmtMoney(c.spend, c.currency)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-[#101828] font-semibold">{fmtMoney(c.spend, c.currency)}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.impressions)}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.clicks)}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{c.ctr.toFixed(2)}%</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">{fmtNumber(c.conversions)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-amber-700 font-bold">{fmtNumber(c.conversions)}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#475467]">
                           {c.conversions ? fmtMoney(c.costPerConversion, c.currency) : "—"}
                         </td>
@@ -438,10 +440,10 @@ export default function CampaignsPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedCampaignForAds(c)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-white hover:border-[#101828] text-[11px] font-semibold transition-all shadow-sm group"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-sm group"
                             title="Ver imágenes, videos, textos y creativos"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#6366F1] group-hover:text-[#6366F1] transition-colors" />
+                            <Eye className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-400 transition-colors" />
                             <span>Ver Anuncios</span>
                           </button>
                         </td>
@@ -468,7 +470,7 @@ export default function CampaignsPage() {
   );
 }
 
-/** Barras diarias de una sola métrica, con tooltip al pasar el mouse. */
+/** Barras diarias de una sola métrica, con gradiente oro animado y tooltip de lujo al pasar el mouse. */
 function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Metric; currency: string | null }) {
   const [hover, setHover] = useState<number | null>(null);
   const W = 800;
@@ -489,6 +491,21 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[200px]" preserveAspectRatio="none" role="img"
         aria-label={`${metric} diario`} onMouseLeave={() => setHover(null)}>
+        <defs>
+          <linearGradient id="goldBarGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FBBF24" />
+            <stop offset="60%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+          <linearGradient id="goldBarGradHover" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FEF08A" />
+            <stop offset="50%" stopColor="#FBBF24" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+          <filter id="goldBarGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#F59E0B" floodOpacity="0.4" />
+          </filter>
+        </defs>
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <line key={f} x1={PAD.left} x2={W - PAD.right} y1={PAD.top + plotH * (1 - f)} y2={PAD.top + plotH * (1 - f)}
             stroke="#F0EFEA" strokeWidth={1} vectorEffect="non-scaling-stroke" />
@@ -500,6 +517,7 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
           const x = PAD.left + i * slot + (slot - barW) / 2;
           const y = PAD.top + plotH - bh;
           const r = Math.min(4, barW / 2, bh);
+          const isHovered = hover === i;
           return (
             <g key={d.date} onMouseEnter={() => setHover(i)}>
               {/* Área de hover más grande que la barra */}
@@ -507,8 +525,10 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
               {bh > 0 && (
                 <path
                   d={`M${x},${PAD.top + plotH} V${y + r} Q${x},${y} ${x + r},${y} H${x + barW - r} Q${x + barW},${y} ${x + barW},${y + r} V${PAD.top + plotH} Z`}
-                  fill="#6366F1"
-                  opacity={hover === null || hover === i ? 1 : 0.45}
+                  fill={isHovered ? "url(#goldBarGradHover)" : "url(#goldBarGrad)"}
+                  filter={isHovered ? "url(#goldBarGlow)" : undefined}
+                  className="transition-all duration-200"
+                  opacity={hover === null || isHovered ? 1 : 0.45}
                 />
               )}
             </g>
@@ -528,13 +548,13 @@ function DailyBars({ daily, metric, currency }: { daily: DailyItem[]; metric: Me
       </div>
       {h && hover !== null && (
         <div
-          className="pointer-events-none absolute top-0 -translate-x-1/2 px-2.5 py-1.5 rounded-lg bg-[#101828] text-white text-[11px] shadow-lg whitespace-nowrap"
+          className="pointer-events-none absolute top-0 -translate-x-1/2 px-3 py-2 rounded-xl bg-[#0B0F19] border border-amber-500/40 text-white text-[11px] shadow-xl whitespace-nowrap z-10 backdrop-blur-md"
           style={{ left: `${((PAD.left + hover * slot + slot / 2) / W) * 100}%` }}
         >
-          <div className="text-white/70">
+          <div className="text-amber-300/80 text-[10px] font-medium uppercase tracking-wider">
             {new Date(`${h.date}T00:00:00Z`).toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}
           </div>
-          <div className="font-medium tabular-nums">{fmtMetric(metric, h[metric], currency)}</div>
+          <div className="font-bold text-amber-400 tabular-nums text-xs mt-0.5">{fmtMetric(metric, h[metric], currency)}</div>
         </div>
       )}
     </div>

@@ -520,7 +520,7 @@ function LeadsPageContent() {
             className="px-3.5 py-2 rounded-2xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#F8F9FA] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-60"
             title="Sincronizar prospectos desde campañas de Meta Ads"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#667085] ${syncingMeta ? "animate-spin text-[#6366F1]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#667085] ${syncingMeta ? "animate-spin text-amber-500" : ""}`} />
             <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
           </button>
 
@@ -570,8 +570,8 @@ function LeadsPageContent() {
         <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
           <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-medium">Total Prospectos</span>
-            <div className="w-7 h-7 rounded-full bg-[#F4F3FF] border border-[#D9D6FE] flex items-center justify-center">
-              <Users className="w-3.5 h-3.5 text-[#5925DC]" />
+            <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-amber-700" />
             </div>
           </div>
           <div className="text-2xl font-bold text-[#101828] tracking-tight">{totalLeadsCount}</div>
@@ -605,7 +605,7 @@ function LeadsPageContent() {
             ${totalPipelineVal.toLocaleString()}{" "}
             <span className="text-xs font-normal text-[#667085]">USD</span>
           </div>
-          <div className="text-[11px] text-[#5925DC] font-medium">
+          <div className="text-[11px] text-amber-700 font-medium">
             Presupuesto estimado de pautas
           </div>
         </div>
@@ -634,7 +634,7 @@ function LeadsPageContent() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, correo, empresa, teléfono o notas..."
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1] transition-all"
+              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
             />
           </div>
 
@@ -749,7 +749,7 @@ function LeadsPageContent() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-[#667085] text-xs">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-[#6366F1] mb-2" />
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500 mb-2" />
                     <span>Cargando prospectos en tiempo real...</span>
                   </td>
                 </tr>
@@ -783,7 +783,7 @@ function LeadsPageContent() {
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="w-9 h-9 rounded-full bg-[#0F172A] text-white hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs transition-transform"
+                            className="w-9 h-9 rounded-full bg-[#0F172A] text-amber-400 hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs border border-amber-500/30 transition-transform"
                             title="Ver expediente en InsightCRM"
                           >
                             {initials}
@@ -791,11 +791,11 @@ function LeadsPageContent() {
                           <div>
                             <Link
                               href={`/crm/leads/${lead.id}`}
-                              className="font-bold text-[#101828] hover:text-[#6366F1] hover:underline flex items-center gap-1.5 leading-tight transition-colors"
+                              className="font-bold text-[#101828] hover:text-amber-600 hover:underline flex items-center gap-1.5 leading-tight transition-colors"
                             >
                               <span>{lead.name}</span>
                               {lead.isDemo && (
-                                <span className="text-[9px] bg-[#F4F3FF] text-[#5925DC] font-bold px-1.5 py-0.2 rounded-md border border-[#D9D6FE]">
+                                <span className="text-[9px] bg-amber-50 text-amber-800 font-bold px-1.5 py-0.2 rounded-md border border-amber-300">
                                   DEMO
                                 </span>
                               )}
@@ -805,7 +805,7 @@ function LeadsPageContent() {
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
                             </div>
                             {lead.client && isAdmin && (
-                              <span className="inline-block mt-0.5 text-[9px] font-mono font-medium text-[#5925DC] bg-[#F4F3FF] border border-[#D9D6FE] px-1.5 py-0.2 rounded">
+                              <span className="inline-block mt-0.5 text-[9px] font-mono font-medium text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.2 rounded">
                                 Cliente: {lead.client.name}
                               </span>
                             )}
@@ -860,9 +860,9 @@ function LeadsPageContent() {
                               lead.source.includes("meta") ||
                               lead.source.includes("facebook") ||
                               lead.source.includes("instagram")
-                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                                : lead.source.includes("google")
                                 ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : lead.source.includes("google")
+                                ? "bg-sky-50 text-sky-700 border-sky-200"
                                 : lead.source.includes("tiktok")
                                 ? "bg-pink-50 text-pink-700 border-pink-200"
                                 : lead.source === "referral"
@@ -885,7 +885,7 @@ function LeadsPageContent() {
                       <td className="py-3.5 px-4 text-[11px]">
                         {lead.owner ? (
                           <div className="flex items-center gap-1.5 text-[#101828] font-medium">
-                            <UserCheck className="w-3 h-3 text-[#5925DC]" />
+                            <UserCheck className="w-3 h-3 text-amber-600" />
                             <span className="truncate max-w-[120px]">{lead.owner.name}</span>
                           </div>
                         ) : (
@@ -901,7 +901,7 @@ function LeadsPageContent() {
                               score >= 80
                                 ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                 : score >= 60
-                                ? "bg-[#F4F3FF] text-[#5925DC] border-[#D9D6FE]"
+                                ? "bg-amber-50 text-amber-800 border-amber-300"
                                 : "bg-red-50 text-red-800 border-red-200"
                             }`}
                           >
@@ -952,10 +952,10 @@ function LeadsPageContent() {
 
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-[#101828] border border-[#EAECF0] transition-colors"
+                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-amber-600 border border-[#EAECF0] transition-colors"
                             title="Ver Expediente Completo (InsightCRM)"
                           >
-                            <ExternalLink className="w-3.5 h-3.5 text-[#6366F1]" />
+                            <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
                           </Link>
 
                           {isAdmin && (

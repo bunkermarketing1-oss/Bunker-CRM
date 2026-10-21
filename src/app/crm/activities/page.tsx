@@ -72,8 +72,8 @@ export default function ActivitiesPage() {
   const getIcon = (type: string) => {
     switch (type) {
       case "call": return <PhoneCall className="w-4 h-4 text-[#D97757]" />;
-      case "meeting": return <Video className="w-4 h-4 text-purple-600" />;
-      case "email": return <Mail className="w-4 h-4 text-amber-600" />;
+      case "meeting": return <Video className="w-4 h-4 text-amber-600" />;
+      case "email": return <Mail className="w-4 h-4 text-sky-600" />;
       default: return <FileText className="w-4 h-4 text-emerald-600" />;
     }
   };

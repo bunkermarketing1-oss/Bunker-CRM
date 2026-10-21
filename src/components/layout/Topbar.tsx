@@ -46,7 +46,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
       }
     : {
         label: language === "es" ? "Administrador Bunker" : "Bunker Admin",
-        color: "bg-[#F4F3FF] text-[#5925DC] border-[#D9D6FE] dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800",
+        color: "bg-amber-50 text-amber-800 border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700",
       };
 
   const firstName = user?.name?.split(" ")[0] ?? (isClient ? "Cliente" : "Bunker");
@@ -76,7 +76,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-3.5 pr-2 py-1.5 text-xs text-[#98A2B3] hover:border-[#6366F1]/60 transition-colors"
+        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-3.5 pr-2 py-1.5 text-xs text-[#98A2B3] hover:border-amber-400 hover:shadow-[0_0_10px_rgba(245,158,11,0.15)] transition-all"
       >
         <Search className="w-3.5 h-3.5 text-[#98A2B3]" />
         <span className="flex-1 text-left truncate">{t("topbar.search_placeholder", "Buscar prospectos, empresas, teléfonos...")}</span>
@@ -119,7 +119,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           className="btn-black-gold rounded-2xl h-9 px-3 sm:px-4 text-xs font-semibold flex items-center gap-1.5"
           aria-label={t("topbar.register_lead", "+ Registrar Lead")}
         >
-          <Plus className="w-3.5 h-3.5 text-white" />
+          <Plus className="w-3.5 h-3.5 text-amber-400" />
           <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
         </Link>
 
@@ -131,7 +131,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
             aria-label="Menú de usuario"
             className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-2xl bg-white border border-[#EAECF0] text-xs font-medium text-[#101828] hover:bg-[#F8F9FA]"
           >
-            <span className="w-7 h-7 rounded-full bg-[#0F172A] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+            <span className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 text-[10px] font-bold flex items-center justify-center shadow-xs">
               {initialsOf(user?.name, isClient ? "CL" : "BA")}
             </span>
             <span className="hidden xl:flex flex-col text-left leading-tight">

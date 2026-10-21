@@ -139,7 +139,7 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
       >
         <div className="flex items-center gap-3 px-5 border-b border-[#EAECF0]">
           {loading ? (
-            <Loader2 className="w-4 h-4 text-[#6366F1] animate-spin flex-shrink-0" />
+            <Loader2 className="w-4 h-4 text-amber-500 animate-spin flex-shrink-0" />
           ) : (
             <Search className="w-4 h-4 text-[#667085] flex-shrink-0" />
           )}
@@ -180,21 +180,21 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
                   onClick={item.run}
                   onMouseMove={() => setActiveIndex(index)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition-colors ${
-                    isActive ? "bg-[#F4F3FF] dark:bg-indigo-950/40" : ""
+                    isActive ? "bg-amber-50/80 dark:bg-amber-950/40" : ""
                   }`}
                 >
                   <span
                     className={`w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0 ${
-                      isActive ? "border-[#6366F1]/40 bg-white" : "border-[#EAECF0] bg-[#F8F9FA]"
+                      isActive ? "border-amber-400/60 bg-white shadow-2xs" : "border-[#EAECF0] bg-[#F8F9FA]"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? "text-[#5925DC]" : "text-[#667085]"}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? "text-amber-600 dark:text-amber-400" : "text-[#667085]"}`} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-xs font-semibold text-[#101828] truncate">{item.title}</span>
                     {item.subtitle && <span className="block text-[11px] text-[#667085] truncate">{item.subtitle}</span>}
                   </span>
-                  {isActive && <CornerDownLeft className="w-3.5 h-3.5 text-[#5925DC] flex-shrink-0" />}
+                  {isActive && <CornerDownLeft className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
                 </button>
               </React.Fragment>
             );

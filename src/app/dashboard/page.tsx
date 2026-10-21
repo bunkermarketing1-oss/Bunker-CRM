@@ -54,7 +54,7 @@ export default function DashboardPage() {
               Ver reportes
             </Link>
             <Link href={ROUTES.LEADS} className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5 text-[#6366F1]" />
+              <Plus className="w-3.5 h-3.5 text-amber-400" />
               Registrar lead
             </Link>
           </>

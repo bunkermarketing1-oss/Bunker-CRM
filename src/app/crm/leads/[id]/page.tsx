@@ -355,7 +355,7 @@ export default function LeadDetailPage() {
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center space-y-3 text-[#475467]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#6366F1]" />
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
         <span className="text-sm font-medium text-[#101828]">Cargando expediente del prospecto...</span>
       </div>
     );
@@ -434,7 +434,7 @@ export default function LeadDetailPage() {
           <div className="bg-white rounded-3xl border border-[#EAECF0] p-6 shadow-xs text-center space-y-4">
             {/* Avatar Central Circular Grande */}
             <div className="relative inline-block mx-auto">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#6366F1]/30 via-[#F4F3FF] to-amber-100 border-2 border-white shadow-md flex items-center justify-center text-3xl font-extrabold text-[#101828]">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400/30 via-yellow-100 to-amber-200/50 border-2 border-white shadow-md flex items-center justify-center text-3xl font-extrabold text-[#101828]">
                 {initials}
               </div>
               <span
@@ -531,16 +531,16 @@ export default function LeadDetailPage() {
                   type="button"
                   onClick={handleConvert}
                   disabled={converting}
-                  className="w-full py-3 rounded-2xl bg-[#0F172A] hover:bg-black text-white text-xs font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 rounded-2xl btn-black-gold text-xs font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {converting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin text-[#6366F1]" />
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
                       <span>Procesando...</span>
                     </>
                   ) : (
                     <>
-                      <ArrowRightCircle className="w-4 h-4 text-[#6366F1]" />
+                      <ArrowRightCircle className="w-4 h-4 text-amber-400" />
                       <span>Convertir a Contrato / Negocio</span>
                     </>
                   )}
@@ -560,7 +560,7 @@ export default function LeadDetailPage() {
                 >
                   <span>Contacto & Red</span>
                   {leftTab === "address" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366F1]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400" />
                   )}
                 </button>
                 <button
@@ -572,7 +572,7 @@ export default function LeadDetailPage() {
                 >
                   <span>Empresa & Pauta</span>
                   {leftTab === "company" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366F1]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400" />
                   )}
                 </button>
               </div>
@@ -615,7 +615,7 @@ export default function LeadDetailPage() {
                         Campaña de Origen
                       </div>
                       <div className="font-medium text-[#101828] mt-0.5 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-[#6366F1]" />
+                        <Tag className="w-3.5 h-3.5 text-amber-500" />
                         <span>{lead.campaign}</span>
                       </div>
                     </div>
@@ -651,17 +651,17 @@ export default function LeadDetailPage() {
                   </div>
 
                   {/* AI Qualification Bar */}
-                  <div className="p-3 rounded-2xl bg-[#F4F3FF]/60 border border-[#D9D6FE] space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-[#5925DC]">
+                  <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-amber-700">
                       <span className="flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                         Scoring Bunker AI
                       </span>
                       <span>{lead.qualification || 75}/100</span>
                     </div>
-                    <div className="w-full bg-white h-2 rounded-full overflow-hidden border border-[#D9D6FE]">
+                    <div className="w-full bg-white h-2 rounded-full overflow-hidden border border-amber-200">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-400 to-[#6366F1] rounded-full"
+                        className="h-full bg-gradient-to-r from-yellow-400 via-amber-500 to-amber-600 rounded-full"
                         style={{ width: `${Math.min(lead.qualification || 75, 100)}%` }}
                       />
                     </div>
@@ -702,7 +702,7 @@ export default function LeadDetailPage() {
                 >
                   <span>{tab.label}</span>
                   {activeTab === tab.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366F1]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 shadow-sm" />
                   )}
                 </button>
               ))}
@@ -713,9 +713,9 @@ export default function LeadDetailPage() {
                 setActivityType("note");
                 setIsActivityModalOpen(true);
               }}
-              className="text-xs font-semibold text-[#6366F1] hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 text-amber-600" />
               <span>Registrar</span>
             </button>
           </div>
@@ -730,7 +730,7 @@ export default function LeadDetailPage() {
                 onClick={() => setIsTaskModalOpen(true)}
                 className="text-xs text-[#475467] hover:text-[#101828] flex items-center gap-1 font-medium"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-amber-500" />
                 <span>Nueva actividad</span>
               </button>
             </div>
@@ -750,11 +750,11 @@ export default function LeadDetailPage() {
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] shrink-0 mt-0.5">
                           {t.title.toLowerCase().includes("reunión") || t.title.toLowerCase().includes("meet") ? (
-                            <Video className="w-4 h-4 text-purple-600" />
+                            <Video className="w-4 h-4 text-amber-600" />
                           ) : t.title.toLowerCase().includes("llamada") ? (
                             <Phone className="w-4 h-4 text-blue-600" />
                           ) : (
-                            <CheckSquare className="w-4 h-4 text-[#6366F1]" />
+                            <CheckSquare className="w-4 h-4 text-amber-500" />
                           )}
                         </div>
                         <div>
@@ -812,11 +812,11 @@ export default function LeadDetailPage() {
                       {act.type === "call" ? (
                         <Phone className="w-4 h-4 text-blue-600" />
                       ) : act.type === "meeting" ? (
-                        <Video className="w-4 h-4 text-purple-600" />
+                        <Video className="w-4 h-4 text-amber-600" />
                       ) : act.type === "email" ? (
                         <Mail className="w-4 h-4 text-emerald-600" />
                       ) : (
-                        <FileText className="w-4 h-4 text-[#6366F1]" />
+                        <FileText className="w-4 h-4 text-amber-500" />
                       )}
                     </div>
 
@@ -863,9 +863,9 @@ export default function LeadDetailPage() {
             <button
               type="button"
               onClick={() => setIsDealModalOpen(true)}
-              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors hover:border-amber-400/50"
             >
-              <Plus className="w-4 h-4 text-[#6366F1]" />
+              <Plus className="w-4 h-4 text-amber-500" />
               <span>Crear nuevo negocio</span>
             </button>
 
@@ -901,8 +901,8 @@ export default function LeadDetailPage() {
                       <span
                         className="font-bold px-2 py-0.5 rounded-full text-[10px]"
                         style={{
-                          backgroundColor: opp.stage?.color ? `${opp.stage.color}15` : "#F3E8FF",
-                          color: opp.stage?.color || "#7E22CE",
+                          backgroundColor: opp.stage?.color ? `${opp.stage.color}15` : "#FEF3C7",
+                          color: opp.stage?.color || "#B45309",
                         }}
                       >
                         {opp.stage?.name || "En negociación"}
@@ -930,9 +930,9 @@ export default function LeadDetailPage() {
             <button
               type="button"
               onClick={() => setIsTaskModalOpen(true)}
-              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors hover:border-amber-400/50"
             >
-              <Plus className="w-4 h-4 text-[#6366F1]" />
+              <Plus className="w-4 h-4 text-amber-500" />
               <span>Crear nuevo ticket</span>
             </button>
 
@@ -1000,7 +1000,7 @@ export default function LeadDetailPage() {
                   placeholder="ej. Campaña Meta Ads Q4"
                   value={dealTitle}
                   onChange={(e) => setDealTitle(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1012,7 +1012,7 @@ export default function LeadDetailPage() {
                   placeholder="ej. 5000"
                   value={dealValue}
                   onChange={(e) => setDealValue(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1021,7 +1021,7 @@ export default function LeadDetailPage() {
                 <select
                   value={dealStageId}
                   onChange={(e) => setDealStageId(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 >
                   {stages.map((st) => (
                     <option key={st.id} value={st.id}>
@@ -1042,7 +1042,7 @@ export default function LeadDetailPage() {
                 <button
                   type="submit"
                   disabled={submittingAction}
-                  className="px-5 py-2 rounded-xl bg-[#0F172A] text-white font-bold hover:bg-black transition-colors"
+                  className="px-5 py-2 rounded-xl btn-black-gold font-bold"
                 >
                   {submittingAction ? "Guardando..." : "Crear Negocio"}
                 </button>
@@ -1073,7 +1073,7 @@ export default function LeadDetailPage() {
                   placeholder="ej. Enviar propuesta comercial por WhatsApp"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1113,7 +1113,7 @@ export default function LeadDetailPage() {
                 <button
                   type="submit"
                   disabled={submittingAction}
-                  className="px-5 py-2 rounded-xl bg-[#0F172A] text-white font-bold hover:bg-black transition-colors"
+                  className="px-5 py-2 rounded-xl btn-black-gold font-bold"
                 >
                   {submittingAction ? "Guardando..." : "Crear Tarea"}
                 </button>
@@ -1151,7 +1151,7 @@ export default function LeadDetailPage() {
                       onClick={() => setActivityType(t.id as "note" | "call" | "meeting" | "email")}
                       className={`py-2 rounded-xl font-bold border transition-all ${
                         activityType === t.id
-                          ? "bg-[#0F172A] text-white border-[#0F172A]"
+                          ? "bg-[#101828] text-amber-400 border-amber-500/50 shadow-sm"
                           : "bg-white text-[#475467] border-[#EAECF0] hover:bg-[#F8F9FA]"
                       }`}
                     >
@@ -1169,7 +1169,7 @@ export default function LeadDetailPage() {
                   placeholder="ej. Llamada de calificación de requerimiento"
                   value={activityTitle}
                   onChange={(e) => setActivityTitle(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1180,7 +1180,7 @@ export default function LeadDetailPage() {
                   placeholder="Anota acuerdos, fechas o temas clave discutidos..."
                   value={activityDesc}
                   onChange={(e) => setActivityDesc(e.target.value)}
-                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -1195,7 +1195,7 @@ export default function LeadDetailPage() {
                 <button
                   type="submit"
                   disabled={submittingAction}
-                  className="px-5 py-2 rounded-xl bg-[#0F172A] text-white font-bold hover:bg-black transition-colors"
+                  className="px-5 py-2 rounded-xl btn-black-gold font-bold"
                 >
                   {submittingAction ? "Guardando..." : "Guardar Actividad"}
                 </button>

@@ -54,7 +54,7 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
               alt="Bunker"
               className="h-6 w-auto object-contain transition-transform group-hover:scale-105"
             />
-            <span className="text-[10px] font-mono font-bold tracking-wider text-[#5925DC] bg-[#F4F3FF] dark:bg-indigo-950/60 dark:text-indigo-300 border border-[#D9D6FE] px-1.5 py-0.5 rounded-md uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-amber-700 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/80 px-2 py-0.5 rounded-md uppercase shadow-2xs">
               {isClient ? "PORTAL" : "CRM"}
             </span>
           </Link>
@@ -68,8 +68,8 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
           </button>
         </div>
 
-        <div className="bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4">
-          <div className="w-8 h-8 rounded-full bg-[#0F172A] text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+        <div className="bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4 shadow-2xs">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm animate-gold-shimmer">
             {initialsOf(accountName, isClient ? "CL" : "BA")}
           </div>
           <div className="min-w-0">
@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
               <div className="px-3 text-[10px] font-bold tracking-wider text-[#98A2B3] uppercase mb-1.5 flex items-center justify-between">
                 <span>{section.title[language]}</span>
                 {section.badge && (
-                  <span className="text-[9px] bg-[#F4F3FF] text-[#5925DC] border border-[#D9D6FE] px-1.5 rounded font-mono font-semibold">
+                  <span className="text-[9px] bg-amber-50 text-amber-800 border border-amber-300 px-1.5 rounded font-mono font-semibold">
                     {section.badge}
                   </span>
                 )}
@@ -107,14 +107,15 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
           <button
             type="button"
             onClick={onOpenAiModal}
-            className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl bg-[#0F172A] text-left border border-[#1E293B] hover:border-[#6366F1] transition-colors group shadow-sm"
+            className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl bg-[#0F172A] text-left border border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all group shadow-sm"
           >
-            <span className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-[#A5B4FC] group-hover:rotate-12 transition-transform" />
+            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/20 via-amber-500/30 to-amber-600/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
             </span>
             <span className="min-w-0">
-              <span className="block text-xs font-bold text-white">
-                {language === "es" ? "Copiloto IA Bunker" : "Bunker AI Copilot"}
+              <span className="block text-xs font-bold text-white flex items-center gap-1.5">
+                <span>{language === "es" ? "Copiloto IA Bunker" : "Bunker AI Copilot"}</span>
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
               </span>
               <span className="block text-[10px] text-[#94A3B8] truncate">
                 {language === "es" ? "Califica leads, copys y SMS" : "Score leads, copy & SMS"}
@@ -158,10 +159,13 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
           : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA] font-medium border border-transparent"
       }`}
     >
-      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-[#667085]"}`} />
+      {isActive && (
+        <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+      )}
+      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-amber-400" : "text-[#667085]"}`} />
       <span className="truncate">{label}</span>
       {item.badge && (
-        <span className="ml-auto text-[9px] font-mono font-bold bg-[#F4F3FF] text-[#5925DC] px-1.5 rounded">
+        <span className="ml-auto text-[9px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 rounded">
           {item.badge}
         </span>
       )}

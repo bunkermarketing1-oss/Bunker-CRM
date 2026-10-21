@@ -116,7 +116,7 @@ export default function PipelinePage() {
             onClick={() => setIsCreateOpen(true)}
             className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
           >
-            <Plus className="w-4 h-4 text-[#6366F1]" />
+            <Plus className="w-4 h-4 text-amber-400" />
             <span>Nueva Oportunidad</span>
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function PipelinePage() {
                   <div className="flex items-center gap-2">
                     <span
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: stage.color || "#6366F1" }}
+                      style={{ backgroundColor: stage.color || "#F59E0B" }}
                     ></span>
                     <span className="font-semibold text-[#101828] text-xs">{stage.name}</span>
                   </div>
@@ -212,7 +212,7 @@ export default function PipelinePage() {
           <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
               <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
-                <KanbanSquare className="w-4 h-4 text-[#6366F1]" />
+                <KanbanSquare className="w-4 h-4 text-amber-500" />
                 Registrar Oportunidad
               </h2>
               <button onClick={() => setIsCreateOpen(false)} className="text-[#475467] hover:text-[#101828]">
@@ -229,7 +229,7 @@ export default function PipelinePage() {
                   placeholder="ej. Campaña Inmobiliaria Preventa 2026"
                   value={dealForm.title}
                   onChange={(e) => setDealForm({ ...dealForm, title: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export default function PipelinePage() {
                     required
                     value={dealForm.value}
                     onChange={(e) => setDealForm({ ...dealForm, value: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -249,7 +249,7 @@ export default function PipelinePage() {
                   <select
                     value={dealForm.stageId}
                     onChange={(e) => setDealForm({ ...dealForm, stageId: e.target.value })}
-                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                   >
                     {stages.map((st) => (
                       <option key={st.id} value={st.id}>
@@ -268,7 +268,7 @@ export default function PipelinePage() {
                   max="100"
                   value={dealForm.probability}
                   onChange={(e) => setDealForm({ ...dealForm, probability: e.target.value })}
-                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-[#6366F1]"
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
@@ -276,14 +276,14 @@ export default function PipelinePage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs"
+                  className="px-3 py-1.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold"
+                  className="btn-black-gold rounded-xl px-4 py-1.5 text-xs font-semibold"
                 >
                   {submitting ? "Creando..." : "Crear Oportunidad"}
                 </button>

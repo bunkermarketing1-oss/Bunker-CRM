@@ -7,11 +7,11 @@
   --bg-sidebar: #FFFFFF;
   --bg-card: #FFFFFF;
   --border-subtle: #EAECF0;
-  --border-gold: rgba(99, 102, 241, 0.3);
-  --accent-gold: #6366F1;
-  --accent-gold-light: #F4F3FF;
+  --border-gold: rgba(245, 158, 11, 0.35);
+  --accent-gold: #F59E0B;
+  --accent-gold-light: #FEF3C7;
   --btn-black: #0F172A;
-  --btn-black-hover: #1E293B;
+  --btn-black-hover: #020617;
   --text-primary: #101828;
   --text-secondary: #475467;
   --text-muted: #98A2B3;
@@ -22,9 +22,9 @@
   --bg-sidebar: #111827;
   --bg-card: #182235;
   --border-subtle: #243046;
-  --border-gold: rgba(99, 102, 241, 0.5);
-  --accent-gold: #818CF8;
-  --accent-gold-light: #1E1B4B;
+  --border-gold: rgba(245, 158, 11, 0.5);
+  --accent-gold: #FBBF24;
+  --accent-gold-light: #78350F;
   --btn-black: #F8FAFC;
   --btn-black-hover: #FFFFFF;
   --text-primary: #F8FAFC;
@@ -44,6 +44,37 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Animated Liquid Gold Gradients */
+.gold-gradient {
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #D97706 100%);
+}
+
+.gold-gradient-animated {
+  background: linear-gradient(270deg, #F59E0B, #FBBF24, #F59E0B, #D97706);
+  background-size: 300% 300%;
+  animation: gradientX 5s ease infinite;
+}
+
+.gold-badge {
+  background: #FFFBEB !important;
+  color: #B45309 !important;
+  border: 1px solid #FDE68A !important;
+}
+
+.dark .gold-badge {
+  background: rgba(180, 83, 9, 0.25) !important;
+  color: #FCD34D !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+.gold-glow {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.22);
+}
+
+.gold-glow:hover {
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.4);
 }
 
 /* Modern InsightCRM Palette Mappings */
@@ -91,19 +122,19 @@ body {
   color: #98A2B3 !important;
 }
 
-/* Luxury Obsidian Button transformed into Modern SaaS Charcoal */
+/* Black + Liquid Gold Button with micro-animations */
 .btn-black-gold {
   background-color: #0F172A !important;
   color: #FFFFFF !important;
-  border: 1px solid #1E293B !important;
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08) !important;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(245, 158, 11, 0.15) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .btn-black-gold:hover {
-  background-color: #000000 !important;
-  border-color: #000000 !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+  background-color: #020617 !important;
+  border-color: rgba(245, 158, 11, 0.75) !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.22), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -111,7 +142,7 @@ body {
   transform: translateY(0) !important;
 }
 
-/* Secondary Button transformed into Clean SaaS White Pill */
+/* Secondary Button */
 .btn-marfil {
   background-color: #FFFFFF !important;
   color: #101828 !important;
