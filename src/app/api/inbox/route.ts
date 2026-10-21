@@ -145,6 +145,7 @@ export async function GET(req: NextRequest) {
             name: true,
             phone: true,
             email: true,
+            clientId: true,
             ownerId: true,
             owner: { select: { id: true, name: true, email: true } },
           },
@@ -158,7 +159,22 @@ export async function GET(req: NextRequest) {
     for (const msg of dbMessages) {
       const convKey = `msg_${msg.leadId || msg.recipient}`;
       const sender = msg.lead?.name || msg.recipient;
-      const ch = msg.channel === "whatsapp" ? "whatsapp" : "whatsapp"; // Mapear canales a la bandeja
+
+      let ch: ConversationItem["channel"] = "whatsapp";
+      if (msg.channel === "messenger") ch = "messenger";
+      else if (msg.channel === "instagram") ch = "instagram";
+      else if (msg.channel === "facebook_comment") ch = "facebook_comment";
+      else if (msg.channel === "instagram_comment") ch = "instagram_comment";
+      else ch = "whatsapp";
+
+      const channelAccountLabel =
+        ch === "whatsapp"
+          ? "WhatsApp Business"
+          : ch === "messenger"
+          ? "Facebook Messenger"
+          : ch === "instagram"
+          ? "Instagram Direct"
+          : "Línea Oficial";
 
       if (!dbConvMap.has(convKey)) {
         dbConvMap.set(convKey, {
@@ -166,11 +182,11 @@ export async function GET(req: NextRequest) {
           channel: ch,
           senderName: sender,
           senderAvatar: null,
-          recipient: "Línea Oficial WhatsApp",
-          clientId: msg.clientId || msg.lead?.id || null,
+          recipient: msg.recipient || "Línea Oficial",
+          clientId: msg.clientId || msg.lead?.clientId || null,
           clientName: msg.client?.name || (msg.lead ? "Lead Captado" : null),
           connectedAccountId: null,
-          accountName: "WhatsApp Business API",
+          accountName: channelAccountLabel,
           unreadCount: msg.direction === "inbound" ? 1 : 0,
           lastMessageText: msg.body,
           lastMessageTime: msg.createdAt.toISOString(),
@@ -186,9 +202,12 @@ export async function GET(req: NextRequest) {
       const conv = dbConvMap.get(convKey)!;
       conv.lastMessageText = msg.body;
       conv.lastMessageTime = msg.createdAt.toISOString();
+      if (msg.direction === "inbound") {
+        conv.unreadCount += 1;
+      }
       conv.messages.push({
         id: msg.id,
-        senderName: msg.direction === "inbound" ? sender : "Asesor Comercial",
+        senderName: msg.direction === "inbound" ? sender : "Tú (Asesor)",
         body: msg.body,
         createdAt: msg.createdAt.toISOString(),
         direction: msg.direction === "inbound" ? "inbound" : "outbound",
@@ -196,206 +215,17 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3. Obtener clientes para enriquecer conversaciones sociales y de ejemplo
-    const clientsList = await prisma.client.findMany({
-      where: { organizationId: user!.organizationId, isDeleted: false },
-      select: { id: true, name: true, companyName: true },
-      take: 20,
-    });
-    const defaultClient = clientsList[0] || null;
+    // 3. Obtener clientes para el selector de filtro (solo para administradores de Bunker)
+    const clientsList = user!.isClientUser
+      ? []
+      : await prisma.client.findMany({
+          where: { organizationId: user!.organizationId, isDeleted: false },
+          select: { id: true, name: true, companyName: true },
+          orderBy: { name: "asc" },
+        });
 
-    // 4. Conversaciones Omnicanal (Messenger, Instagram Direct, Comentarios de Publicaciones)
-    // Se enriquecen con las cuentas reales conectadas (Páginas de Facebook, Instagram Business)
-    const fbPages = connectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE);
-    const igAccounts = connectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS);
-
-    const socialConversations: ConversationItem[] = [];
-
-    // Conversación de Messenger (Facebook)
-    const primaryFbPage = fbPages[0] || null;
-    const messengerClient = primaryFbPage?.client || defaultClient;
-    socialConversations.push({
-      id: "social_msg_1",
-      channel: "messenger",
-      senderName: "Carlos Rodríguez",
-      senderAvatar: null,
-      recipient: primaryFbPage?.accountName || "Página Oficial Facebook",
-      clientId: messengerClient?.id || null,
-      clientName: messengerClient?.name || "Bunker Agency",
-      connectedAccountId: primaryFbPage?.id || null,
-      accountName: primaryFbPage?.accountName || "Facebook Page",
-      unreadCount: 1,
-      lastMessageText: "Hola, vi su anuncio en Facebook y me gustaría agendar una demostración esta semana.",
-      lastMessageTime: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-      leadId: null,
-      leadPhone: "+57 312 450 8821",
-      leadEmail: "carlos.rodriguez@gmail.com",
-      messages: [
-        {
-          id: "m_1",
-          senderName: "Carlos Rodríguez",
-          body: "Buenas tardes, ¿tienen disponibilidad para una reunión informativa?",
-          createdAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-        {
-          id: "m_2",
-          senderName: primaryFbPage?.accountName || "Bunker Agency",
-          body: "¡Hola Carlos! Con gusto, ¿en qué horario te queda mejor?",
-          createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-          direction: "outbound",
-        },
-        {
-          id: "m_3",
-          senderName: "Carlos Rodríguez",
-          body: "Hola, vi su anuncio en Facebook y me gustaría agendar una demostración esta semana.",
-          createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-      ],
-    });
-
-    // Conversación de Instagram Direct
-    const primaryIg = igAccounts[0] || null;
-    const igClient = primaryIg?.client || defaultClient;
-    socialConversations.push({
-      id: "social_ig_1",
-      channel: "instagram",
-      senderName: "mariana_valencia_realestate",
-      senderAvatar: null,
-      recipient: primaryIg?.accountName || "@bunkeragency",
-      clientId: igClient?.id || null,
-      clientName: igClient?.name || "Bunker Agency",
-      connectedAccountId: primaryIg?.id || null,
-      accountName: primaryIg?.accountName || "Instagram Business",
-      unreadCount: 2,
-      lastMessageText: "¿Cuál es el costo del plan para campañas inmobiliarias?",
-      lastMessageTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      leadId: null,
-      leadPhone: "+57 300 782 1190",
-      leadEmail: "mariana@valencia-realty.com",
-      messages: [
-        {
-          id: "ig_m1",
-          senderName: "mariana_valencia_realestate",
-          body: "Hola! Vi el reel que publicaron sobre pautas de captación de leads.",
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000 - 15 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-        {
-          id: "ig_m2",
-          senderName: "mariana_valencia_realestate",
-          body: "¿Cuál es el costo del plan para campañas inmobiliarias?",
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-      ],
-    });
-
-    // Comentario Público en Publicación de Facebook
-    socialConversations.push({
-      id: "social_comment_fb_1",
-      channel: "facebook_comment",
-      senderName: "Andrés Felipe Gómez",
-      senderAvatar: null,
-      recipient: primaryFbPage?.accountName || "Página de Facebook",
-      clientId: messengerClient?.id || null,
-      clientName: messengerClient?.name || "Bunker Agency",
-      connectedAccountId: primaryFbPage?.id || null,
-      accountName: primaryFbPage?.accountName || "Página Facebook",
-      unreadCount: 1,
-      lastMessageText: "Excelente proyecto, ¿dónde están ubicadas las oficinas para solicitar asesoría?",
-      lastMessageTime: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      postContext: {
-        postId: "post_fb_99812",
-        postTitle: "Lanzamiento Exclusivo: Estrategia de pauta inmobiliaria 2026",
-        commentId: "cmt_fb_11029",
-      },
-      messages: [
-        {
-          id: "cmt_1",
-          senderName: "Andrés Felipe Gómez",
-          body: "Excelente proyecto, ¿dónde están ubicadas las oficinas para solicitar asesoría?",
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-      ],
-    });
-
-    // Comentario Público en Instagram
-    socialConversations.push({
-      id: "social_comment_ig_1",
-      channel: "instagram_comment",
-      senderName: "lucia.design.studio",
-      senderAvatar: null,
-      recipient: primaryIg?.accountName || "@bunkeragency",
-      clientId: igClient?.id || null,
-      clientName: igClient?.name || "Bunker Agency",
-      connectedAccountId: primaryIg?.id || null,
-      accountName: primaryIg?.accountName || "Instagram Post",
-      unreadCount: 0,
-      lastMessageText: "¿Tienen cobertura para pautas en Estados Unidos y Colombia?",
-      lastMessageTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      postContext: {
-        postId: "post_ig_4410",
-        postTitle: "Reel: Cómo escalar tus anuncios de Meta en 3 pasos",
-        commentId: "cmt_ig_8812",
-      },
-      messages: [
-        {
-          id: "cmt_ig1",
-          senderName: "lucia.design.studio",
-          body: "¿Tienen cobertura para pautas en Estados Unidos y Colombia?",
-          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-        {
-          id: "cmt_ig2",
-          senderName: primaryIg?.accountName || "@bunkeragency",
-          body: "¡Hola Lucía! Sí, operamos en ambos países con presupuestos en USD y COP. Te enviamos mensaje al privado con los detalles.",
-          createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
-          direction: "outbound",
-        },
-      ],
-    });
-
-    // Conversación de WhatsApp con un lead
-    socialConversations.push({
-      id: "whatsapp_conv_demo_1",
-      channel: "whatsapp",
-      senderName: "Sofía Martínez",
-      senderAvatar: null,
-      recipient: "+57 320 890 0011",
-      clientId: defaultClient?.id || null,
-      clientName: defaultClient?.name || "Bunker Agency",
-      connectedAccountId: null,
-      accountName: "Línea WhatsApp Comercial",
-      unreadCount: 1,
-      lastMessageText: "Perfecto, ya revisé el brochure. ¿A qué hora nos conectamos hoy?",
-      lastMessageTime: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      leadId: null,
-      leadPhone: "+57 320 890 0011",
-      leadEmail: "sofia.martinez@inversiones.com",
-      messages: [
-        {
-          id: "wa_1",
-          senderName: "Asesor Bunker",
-          body: "Hola Sofía, te comparto el brochure con los planes de pauta que revisamos.",
-          createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-          direction: "outbound",
-        },
-        {
-          id: "wa_2",
-          senderName: "Sofía Martínez",
-          body: "Perfecto, ya revisé el brochure. ¿A qué hora nos conectamos hoy?",
-          createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-          direction: "inbound",
-        },
-      ],
-    });
-
-    // Unir todas las conversaciones
-    let allConversations = [...Array.from(dbConvMap.values()), ...socialConversations];
+    // 4. Todas las conversaciones provienen 100% de la base de datos real (cero mocks)
+    let allConversations = Array.from(dbConvMap.values());
 
     // Filtrar por cliente si aplica
     if (targetClientId) {
