@@ -83,6 +83,8 @@ export default function IntegrationsPage() {
   const [searchFilter, setSearchFilter] = useState("");
   const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "unassigned">("all");
   const [channelSearchFilter, setChannelSearchFilter] = useState("");
+  const [unassignedFilter, setUnassignedFilter] = useState<"all" | "pages" | "ads" | "instagram">("all");
+  const [unassignedSearch, setUnassignedSearch] = useState("");
   const [refreshingMeta, setRefreshingMeta] = useState(false);
 
   // Connect Modal (claves manuales)
@@ -278,6 +280,25 @@ export default function IntegrationsPage() {
   const agencyAccounts = useMemo(() => {
     return allConnectedAccounts.filter((acc) => !acc.clientId);
   }, [allConnectedAccounts]);
+
+  const filteredAgencyAccounts = useMemo(() => {
+    return agencyAccounts.filter((acc) => {
+      if (unassignedSearch.trim()) {
+        const q = unassignedSearch.toLowerCase();
+        if (!acc.accountName.toLowerCase().includes(q)) return false;
+      }
+      if (unassignedFilter === "pages") {
+        return acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+      }
+      if (unassignedFilter === "ads") {
+        return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+      }
+      if (unassignedFilter === "instagram") {
+        return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+      }
+      return true;
+    });
+  }, [agencyAccounts, unassignedSearch, unassignedFilter]);
 
   // Filtrado de clientes por buscador
   const filteredClients = useMemo(() => {
@@ -805,35 +826,40 @@ export default function IntegrationsPage() {
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-              <span className="text-[11px] font-medium text-[#716F6A] block">Cuentas Propias de Bunker</span>
+              <span className="text-[11px] font-medium text-[#716F6A] block">Pendientes de Asignar</span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-xl font-bold text-[#1F1E1D]">{agencyAccounts.length}</span>
-                <span className="text-xs text-[#9C9890]">en portafolio agencia</span>
+                <span className="text-xs text-amber-700 font-medium">cuentas o páginas libres</span>
               </div>
             </div>
           </div>
 
           {/* Banner de Cuentas Pendientes por Asignar a un Cliente */}
-          {agencyAccounts.filter((a) => !a.accountName.toLowerCase().includes("bunker")).length > 0 && (
-            <div className="p-4 rounded-2xl bg-[#FFFBF0] border border-[#FDE68A] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          {agencyAccounts.length > 0 && (
+            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
-                  ⚠️
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-sm">
+                  ⚡
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-amber-900">
-                    Cuentas publicitarias detectadas sin cliente asignado
+                  <h4 className="text-xs font-bold text-amber-950">
+                    {agencyAccounts.length} {agencyAccounts.length === 1 ? "cuenta detectada" : "cuentas detectadas"} sin cliente asignado
                   </h4>
                   <p className="text-[11px] text-amber-800 mt-0.5">
-                    Hay cuentas en tu Meta Business Suite o TikTok que aún no están asignadas a un cliente. Asígnalas a su respectiva empresa para que sus leads no se pierdan.
+                    Asigna cada cuenta a su cliente en la lista inferior o con el asistente para vincular sus campañas y prospectos automáticamente.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 self-end sm:self-auto">
-                <span className="text-xs font-semibold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-lg">
-                  {agencyAccounts.filter((a) => !a.accountName.toLowerCase().includes("bunker")).length} por asignar
-                </span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenConnectGeneral("meta")}
+                  className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-950 hover:bg-amber-100/60 text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Asignar con Asistente</span>
+                </button>
               </div>
             </div>
           )}
@@ -1051,70 +1077,208 @@ export default function IntegrationsPage() {
             })}
           </div>
 
-          {/* Sección Cuentas Propias de Bunker Agency */}
+          {/* Sección Cuentas Detectadas Pendientes por Asignar */}
           <div className="p-6 rounded-3xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F0EEE6]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#1F1E1D] flex items-center justify-center font-bold">
-                  🏢
+                <div className="w-10 h-10 rounded-2xl bg-[#1F1E1D] text-white flex items-center justify-center font-bold shadow-sm">
+                  <Share2 className="w-5 h-5 text-[#E5C158]" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm text-[#1F1E1D]">
-                    Cuentas Oficiales de Bunker Agency (Propias de la Agencia)
-                  </h3>
-                  <p className="text-xs text-[#716F6A]">
-                    Estas son las cuentas administradoras de pauta de la agencia matriz (no asignadas a ningún cliente comercial).
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-[#1F1E1D]">
+                      Cuentas y Páginas Detectadas (Pendientes por Asignar)
+                    </h3>
+                    {agencyAccounts.length > 0 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                        {agencyAccounts.length} sin cliente
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#716F6A] mt-0.5">
+                    Páginas de Facebook, perfiles de Instagram y cuentas de anuncios que aún no están asignadas a ningún cliente.
                   </p>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={() => handleOpenConnectGeneral("meta")}
-                className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] hover:bg-[#F4F3EE] text-xs font-medium text-[#1F1E1D] flex items-center gap-1.5 self-start sm:self-auto"
+                className="btn-black-gold px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm self-start sm:self-auto"
               >
-                <Plus className="w-3.5 h-3.5 text-[#D97757]" />
-                <span>Agregar Cuenta a la Agencia</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                <span>Abrir Asistente Guiado</span>
               </button>
             </div>
 
             {agencyAccounts.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#9C9890] rounded-2xl bg-[#FAF9F5] border border-dashed border-[#E8E6DF]">
-                No hay cuentas asignadas exclusivamente a la agencia. Todas las cuentas conectadas están distribuidas en clientes comerciales.
+              <div className="p-8 text-center text-xs text-[#82807C] rounded-2xl bg-[#FAF9F5] border border-dashed border-[#E8E6DF] space-y-1">
+                <p className="font-semibold text-[#1F1E1D]">✓ Todo organizado</p>
+                <p className="text-[11px] text-[#6B6966]">
+                  Todas las páginas y cuentas publicitarias conectadas están asignadas a clientes comerciales.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {agencyAccounts.map((acc: any) => (
-                  <div
-                    key={acc.id}
-                    className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-[#1F1E1D] truncate">
-                        {acc.accountName}
-                      </span>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        ● Activa
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-[#716F6A] pt-1 border-t border-[#E8E6DF]">
-                      <span className="text-[10px] text-[#9C9890]">Asignar a un cliente:</span>
-                      <select
-                        value=""
-                        disabled={assigningId === acc.id}
-                        onChange={(e) => handleAssignClient(acc.id, e.target.value)}
-                        className="bg-white border border-[#E8E6DF] rounded-md px-1.5 py-0.5 text-[10px] text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                      >
-                        <option value="">(Permanecer en Agencia)</option>
-                        {clients.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            👤 Asignar a {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              <div className="space-y-3">
+                {/* Filtro y Buscador Rápido */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setUnassignedFilter("all")}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        unassignedFilter === "all"
+                          ? "bg-[#1F1E1D] text-white shadow-sm"
+                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                      }`}
+                    >
+                      Todas ({agencyAccounts.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnassignedFilter("pages")}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        unassignedFilter === "pages"
+                          ? "bg-[#1877F2] text-white shadow-sm"
+                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                      }`}
+                    >
+                      Páginas ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnassignedFilter("ads")}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        unassignedFilter === "ads"
+                          ? "bg-[#0081FB] text-white shadow-sm"
+                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                      }`}
+                    >
+                      Anuncios ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnassignedFilter("instagram")}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        unassignedFilter === "instagram"
+                          ? "bg-[#E4405F] text-white shadow-sm"
+                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                      }`}
+                    >
+                      Instagram ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
+                    </button>
                   </div>
-                ))}
+
+                  <div className="relative w-full sm:w-60">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre..."
+                      value={unassignedSearch}
+                      onChange={(e) => setUnassignedSearch(e.target.value)}
+                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+
+                {/* Lista Limpia de Cuentas */}
+                <div className="divide-y divide-[#F0EEE6] rounded-2xl border border-[#E8E6DF] overflow-hidden bg-white">
+                  {filteredAgencyAccounts.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-[#82807C]">
+                      No hay cuentas que coincidan con este filtro.
+                    </div>
+                  ) : (
+                    filteredAgencyAccounts.map((acc) => {
+                      const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+                      const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                      const isAd = acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+                      const isTikTok = acc.provider === "tiktok" || acc.accountType?.includes("tiktok");
+
+                      return (
+                        <div
+                          key={acc.id}
+                          className="p-3.5 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF9F5] transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            {isFB && (
+                              <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                                f
+                              </div>
+                            )}
+                            {isIG && (
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-xs flex-shrink-0 shadow-xs">
+                                📷
+                              </div>
+                            )}
+                            {isAd && (
+                              <div className="w-8 h-8 rounded-xl bg-[#0081FB] text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0 shadow-xs">
+                                ADS
+                              </div>
+                            )}
+                            {isTikTok && (
+                              <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center text-xs flex-shrink-0 shadow-xs">
+                                🎵
+                              </div>
+                            )}
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-semibold text-[#1F1E1D] truncate">
+                                  {acc.accountName}
+                                </span>
+                                {isFB && (
+                                  <span className="text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+                                    Página de Facebook
+                                  </span>
+                                )}
+                                {isIG && (
+                                  <span className="text-[10px] font-medium text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200/60">
+                                    Instagram
+                                  </span>
+                                )}
+                                {isAd && (
+                                  <span className="text-[10px] font-medium text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60">
+                                    Cuenta de Anuncios
+                                  </span>
+                                )}
+                                {isTikTok && (
+                                  <span className="text-[10px] font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
+                                    TikTok Ads
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-[#8C887E] block mt-0.5">
+                                Pendiente por asignar a un cliente comercial
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Selector de Cliente Directo */}
+                          <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                            <select
+                              value=""
+                              disabled={assigningId === acc.id}
+                              onChange={(e) => {
+                                if (e.target.value) handleAssignClient(acc.id, e.target.value);
+                              }}
+                              className="bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] shadow-sm font-medium focus:outline-none focus:border-[#D4AF37] cursor-pointer transition-all"
+                            >
+                              <option value="">➕ Asignar a un cliente...</option>
+                              {clients.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  👤 {c.name} {c.companyName ? `(${c.companyName})` : ""}
+                                </option>
+                              ))}
+                            </select>
+                            {assigningId === acc.id && (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             )}
           </div>
