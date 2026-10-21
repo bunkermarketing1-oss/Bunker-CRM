@@ -444,7 +444,7 @@ export default function IntegrationsPage() {
             }`}
           >
             <Share2 className="w-4 h-4 text-[#1877F2]" />
-            <span>Canales Sociales (Buffer)</span>
+            <span>Canales Sociales</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1877F2]/10 text-[#1877F2] font-bold">
               {allConnectedAccounts.filter((a) => a.externalId !== "meta_master_user").length}
             </span>

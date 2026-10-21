@@ -239,7 +239,7 @@ export function ConnectSocialAccountModal({
                   Conectar Canales Sociales & Pauta
                 </h2>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#FAF0E6] text-[#D97757] border border-[#F2D6C6]">
-                  Estilo Buffer / Auto-Sync
+                  Detección Automática
                 </span>
               </div>
               <p className="text-xs text-[#6B6966] mt-0.5">
