@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Building2, ChevronDown, Globe, LogOut, Menu, Moon, Plus, Search, Shield, Sun } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -14,7 +15,70 @@ interface TopbarProps {
   onOpenSearch: () => void;
 }
 
+function getBreadcrumbs(pathname: string) {
+  if (pathname.startsWith("/crm/leads")) {
+    if (pathname !== "/crm/leads") {
+      return [
+        { label: "CRM Comercial", href: "/crm/leads" },
+        { label: "Prospectos", href: "/crm/leads" },
+        { label: "Expediente", href: null },
+      ];
+    }
+    return [
+      { label: "CRM Comercial", href: "/crm/leads" },
+      { label: "Prospectos", href: null },
+    ];
+  }
+  if (pathname.startsWith("/crm/pipeline")) {
+    return [
+      { label: "CRM Comercial", href: "/crm/pipeline" },
+      { label: "Pipeline", href: null },
+    ];
+  }
+  if (pathname.startsWith("/crm/activities")) {
+    return [
+      { label: "CRM Comercial", href: "/crm/activities" },
+      { label: "Actividades", href: null },
+    ];
+  }
+  if (pathname.startsWith("/campaigns")) {
+    return [
+      { label: "Marketing", href: "/campaigns" },
+      { label: "Campañas", href: null },
+    ];
+  }
+  if (pathname.startsWith("/marketing/integrations")) {
+    return [
+      { label: "Configuración", href: "/marketing/integrations" },
+      { label: "Integraciones", href: null },
+    ];
+  }
+  if (pathname.startsWith("/marketing/social")) {
+    return [
+      { label: "Marketing", href: "/marketing/social" },
+      { label: "Social Media", href: null },
+    ];
+  }
+  if (pathname.startsWith("/analytics")) {
+    return [
+      { label: "Reportes", href: "/analytics" },
+      { label: "Analítica", href: null },
+    ];
+  }
+  if (pathname.startsWith("/dashboard")) {
+    return [
+      { label: "Bunker CRM", href: "/dashboard" },
+      { label: "Dashboard", href: null },
+    ];
+  }
+  return [
+    { label: "Bunker CRM", href: "/dashboard" },
+    { label: "Inicio", href: null },
+  ];
+}
+
 export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
@@ -49,25 +113,55 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
         color: "bg-amber-50 text-amber-800 border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700",
       };
 
-  const firstName = user?.name?.split(" ")[0] ?? (isClient ? "Cliente" : "Bunker");
   const accountName = isClient ? user?.clientName || "Mi Empresa" : user?.organizationName || "Bunker Agency";
+  const breadcrumbs = getBreadcrumbs(pathname || "/");
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-[#EAECF0] fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
-      <div className="flex items-center gap-2 min-w-0">
+    <header className="h-16 bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-md border-b border-[#EAECF0] dark:border-slate-800 fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Abrir menú"
-          className="lg:hidden w-9 h-9 rounded-2xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] flex-shrink-0"
+          className="lg:hidden w-9 h-9 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-center text-[#101828] dark:text-slate-100 flex-shrink-0"
         >
           <Menu className="w-4 h-4" />
         </button>
-        <p className="text-sm sm:text-base font-bold text-[#101828] tracking-tight truncate">
-          {greetingKey ? `${t(greetingKey)}, ${firstName}` : firstName}
-        </p>
+
+        {/* Miga de pan en el Header (Topbar) */}
+        <nav aria-label="Miga de pan" className="flex items-center gap-2 text-xs sm:text-sm">
+          {breadcrumbs.map((crumb, idx) => {
+            const isLast = idx === breadcrumbs.length - 1;
+            return (
+              <React.Fragment key={crumb.label + idx}>
+                {idx > 0 && (
+                  <span className="text-[#98A2B3] dark:text-slate-600 font-light select-none">/</span>
+                )}
+                {crumb.href && !isLast ? (
+                  <Link
+                    href={crumb.href}
+                    className="text-[#667085] dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 font-normal transition-colors truncate max-w-[150px]"
+                  >
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span
+                    className={`truncate max-w-[180px] ${
+                      isLast
+                        ? "font-semibold text-[#101828] dark:text-amber-400"
+                        : "text-[#667085] dark:text-slate-400 font-normal"
+                    }`}
+                  >
+                    {crumb.label}
+                  </span>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </nav>
+
         {isClient && user?.clientName && (
-          <span className="hidden xl:inline text-xs font-medium text-[#475467] bg-[#F8F9FA] px-2.5 py-0.5 rounded-full border border-[#EAECF0]">
+          <span className="hidden xl:inline text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
             {user.clientName}
           </span>
         )}

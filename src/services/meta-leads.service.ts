@@ -253,15 +253,28 @@ async function upsertLeadFromMeta(
   const phone = validateAndNormalizePhone(mapped.phone);
 
   return prisma.$transaction(async (tx) => {
+    let campaignName = metaLead.campaign_name ?? null;
+    if (!campaignName && metaLead.campaign_id) {
+      const dbCamp = await tx.campaign.findFirst({
+        where: { organizationId, externalId: metaLead.campaign_id },
+        select: { name: true },
+      });
+      if (dbCamp?.name) campaignName = dbCamp.name;
+    }
+    if (!campaignName && metaLead.form_id) {
+      const siblingLead = await tx.lead.findFirst({
+        where: { organizationId, externalFormId: metaLead.form_id, campaign: { not: null } },
+        select: { campaign: true },
+      });
+      if (siblingLead?.campaign) campaignName = siblingLead.campaign;
+    }
+
     const lead = await tx.lead.create({
       data: {
         organizationId,
         clientId,
         name: mapped.name,
         email: mapped.email,
-        // Si Meta trae un teléfono que no se puede normalizar se guarda tal cual: es mejor
-        // que el asesor lo vea y lo corrija a perder el dato. `normalizedPhone` queda null en
-        // ese caso, así ni el SMS automático ni las llamadas usan un número sin validar.
         phone: phone.formatted ?? mapped.phone,
         normalizedPhone: phone.normalized ?? null,
         companyName: mapped.companyName,
@@ -275,7 +288,7 @@ async function upsertLeadFromMeta(
           estimatedValue: null,
           source: LEAD_SOURCE.META_ADS,
         }),
-        campaign: metaLead.campaign_name ?? null,
+        campaign: campaignName,
         externalLeadId: metaLead.id,
         externalFormId: metaLead.form_id ?? null,
         externalAdId: metaLead.ad_id ?? null,
@@ -364,6 +377,12 @@ export async function syncMetaLeads(sinceHours: number, organizationId?: string)
       for (const form of forms) {
         const leads = await listFormLeads(form.id, token, sinceUnix);
         for (const metaLead of leads) {
+          if (!metaLead.campaign_name && form.name) {
+            metaLead.campaign_name = form.name.replace(/-final$/i, "").trim() || form.name;
+          }
+          if (!metaLead.form_id) {
+            metaLead.form_id = form.id;
+          }
           const eventId = await createEventIfNew(metaLead.id, page.externalId, metaLead, form.id, metaLead.ad_id);
           if (!eventId) continue;
           if ((await processMetaLeadEvent(eventId)) === META_LEAD_EVENT_STATUS.PROCESSED) summary.recovered++;

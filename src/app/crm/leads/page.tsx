@@ -500,11 +500,6 @@ function LeadsPageContent() {
       {/* Top Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#667085] mb-1">
-            <span>CRM Comercial</span>
-            <span>/</span>
-            <span className="text-[#101828] font-medium">Prospectos</span>
-          </div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
@@ -804,11 +799,18 @@ function LeadsPageContent() {
                               <Building className="w-3 h-3 text-[#667085]" />
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
                             </div>
-                            {lead.client && isAdmin && (
-                              <span className="inline-block mt-0.5 text-[9px] font-mono font-medium text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.2 rounded">
-                                Cliente: {lead.client.name}
-                              </span>
-                            )}
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              {lead.client ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full shadow-2xs">
+                                  <Building className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
+                                  <span>Cliente: {lead.client.name}</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                                  <span>Sin cliente</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
