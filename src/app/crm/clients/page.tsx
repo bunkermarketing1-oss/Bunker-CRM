@@ -424,22 +424,6 @@ export default function ClientsPage() {
       {/* Header Principal con Título y Acciones Dinámicas */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F8F9FA] border border-[#EAECF0] text-[#475467]">
-              {isClient
-                ? "Portal Cliente"
-                : activeTab === "directory"
-                ? "Módulo Comercial • CRM"
-                : "Business Manager • Canales & Pautas"}
-            </span>
-            <span className="text-xs text-[#9C9890]">
-              {isClient
-                ? "• Mi Cuenta"
-                : activeTab === "directory"
-                ? "• Gestión de Empresas"
-                : "• Cuentas de Anuncios"}
-            </span>
-          </div>
           <h1 className="text-3xl font-semibold text-[#101828] tracking-tight">
             {isClient
               ? "Mi Empresa & Contactos"

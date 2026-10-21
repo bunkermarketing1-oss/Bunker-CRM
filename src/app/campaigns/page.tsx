@@ -173,11 +173,6 @@ export default function CampaignsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#667085] mb-1">
-            <span>Marketing</span>
-            <span>/</span>
-            <span className="text-[#101828] font-medium">Campañas</span>
-          </div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Cliente"}
           </h1>

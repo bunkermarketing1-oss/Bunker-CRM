@@ -380,11 +380,6 @@ export default function IntegrationsPage() {
       {/* Header Ejecutivo */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E6DF]">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#82807C] mb-1">
-            <span>Marketing</span>
-            <span>/</span>
-            <span className="text-[#1F1E1D] font-medium">Pautas & Redes Sociales</span>
-          </div>
           <h1 className="text-2xl font-semibold text-[#1F1E1D] tracking-tight">
             Centro de Redes & Pautas por Cliente
           </h1>
