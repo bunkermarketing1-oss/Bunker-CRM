@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { encryptSecret } from "@/lib/crypto";
+import { decryptSecret, encryptSecret } from "@/lib/crypto";
+import { listMetaAdAccounts, listMetaPages } from "@/lib/integrations/meta";
+import { subscribeMetaPagesToLeadgen } from "@/services/meta-leads.service";
 import { ENV_VARS, TWILIO_SMS_ENV_VARS, TWILIO_VOICE_ENV_VARS } from "@/lib/constants/environment";
 import {
   ACCOUNT_STATUS,
+  ACCOUNT_TYPE,
   CONNECTED_ACCOUNT_AUDIT_ACTION,
+  INTEGRATION_PROVIDER,
   INTEGRATION_PROVIDER_NAME,
   INTEGRATION_STATUS,
 } from "@/lib/constants/integrations";
@@ -150,5 +154,216 @@ export function getTwilioEnvStatus(): TwilioEnvStatus {
       ...spec,
       isSet: isSet(spec.name),
     })),
+  };
+}
+
+export interface RefreshMetaCatalogResult {
+  adAccountsCount: number;
+  pagesCount: number;
+  newAccountsCount: number;
+  newPagesCount: number;
+  message: string;
+}
+
+/**
+ * Re-escanea el catálogo de Meta (cuentas publicitarias, páginas de FB e Instagram)
+ * utilizando el token de larga duración almacenado, sin requerir re-autorización OAuth.
+ */
+export async function refreshMetaCatalog(actor: Actor): Promise<RefreshMetaCatalogResult> {
+  const integration = await prisma.integration.findFirst({
+    where: { organizationId: actor.organizationId, provider: INTEGRATION_PROVIDER.META },
+  });
+
+  if (!integration || integration.status !== INTEGRATION_STATUS.CONNECTED) {
+    throw new ConnectedAccountError(
+      "Meta for Business no está conectado en el sistema. Conéctalo primero con el botón de Facebook.",
+      400
+    );
+  }
+
+  // Buscar el token de usuario guardado (en cuentas de tipo meta_ad_account o con token válido)
+  const accountWithUserToken = await prisma.connectedAccount.findFirst({
+    where: {
+      integrationId: integration.id,
+      organizationId: actor.organizationId,
+      accessTokenEnc: { not: null },
+      status: { not: ACCOUNT_STATUS.DISABLED },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { accessTokenEnc: true },
+  });
+
+  if (!accountWithUserToken?.accessTokenEnc) {
+    throw new ConnectedAccountError(
+      "No se encontró un token de acceso guardado para Meta. Por favor vuelve a conectar con Facebook.",
+      400
+    );
+  }
+
+  let userToken: string;
+  try {
+    userToken = decryptSecret(accountWithUserToken.accessTokenEnc);
+  } catch {
+    throw new ConnectedAccountError(
+      "No se pudo descifrar el token de Meta. Por favor vuelve a conectar con Facebook.",
+      400
+    );
+  }
+
+  let adAccounts: Awaited<ReturnType<typeof listMetaAdAccounts>>;
+  let pages: Awaited<ReturnType<typeof listMetaPages>>;
+
+  try {
+    [adAccounts, pages] = await Promise.all([
+      listMetaAdAccounts(userToken),
+      listMetaPages(userToken),
+    ]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Error desconocido al comunicarse con Meta Graph API";
+    throw new ConnectedAccountError(`Error de Meta API: ${msg}`, 400);
+  }
+
+  let newAccountsCount = 0;
+  let newPagesCount = 0;
+
+  const userTokenEnc = encryptSecret(userToken);
+  const base = {
+    organizationId: actor.organizationId,
+    integrationId: integration.id,
+    status: ACCOUNT_STATUS.ACTIVE,
+  };
+
+  // Cuentas de anuncios
+  for (const acc of adAccounts) {
+    const existing = await prisma.connectedAccount.findUnique({
+      where: {
+        integrationId_accountType_externalId: {
+          integrationId: integration.id,
+          accountType: ACCOUNT_TYPE.META_AD_ACCOUNT,
+          externalId: acc.id,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!existing) newAccountsCount++;
+
+    await prisma.connectedAccount.upsert({
+      where: {
+        integrationId_accountType_externalId: {
+          integrationId: integration.id,
+          accountType: ACCOUNT_TYPE.META_AD_ACCOUNT,
+          externalId: acc.id,
+        },
+      },
+      create: {
+        ...base,
+        accountType: ACCOUNT_TYPE.META_AD_ACCOUNT,
+        externalId: acc.id,
+        accountName: acc.name,
+        accessTokenEnc: userTokenEnc,
+        metadataJson: JSON.stringify({ currency: acc.currency, accountStatus: acc.account_status }),
+      },
+      update: {
+        accountName: acc.name,
+        metadataJson: JSON.stringify({ currency: acc.currency, accountStatus: acc.account_status }),
+      },
+    });
+  }
+
+  // Páginas de Facebook e Instagram
+  for (const page of pages) {
+    const pageTokenEnc = encryptSecret(page.access_token);
+    const existing = await prisma.connectedAccount.findUnique({
+      where: {
+        integrationId_accountType_externalId: {
+          integrationId: integration.id,
+          accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+          externalId: page.id,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!existing) newPagesCount++;
+
+    await prisma.connectedAccount.upsert({
+      where: {
+        integrationId_accountType_externalId: {
+          integrationId: integration.id,
+          accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+          externalId: page.id,
+        },
+      },
+      create: {
+        ...base,
+        accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+        externalId: page.id,
+        accountName: page.name,
+        accessTokenEnc: pageTokenEnc,
+      },
+      update: {
+        accountName: page.name,
+        accessTokenEnc: pageTokenEnc,
+      },
+    });
+
+    if (page.instagram_business_account) {
+      const ig = page.instagram_business_account;
+      await prisma.connectedAccount.upsert({
+        where: {
+          integrationId_accountType_externalId: {
+            integrationId: integration.id,
+            accountType: ACCOUNT_TYPE.INSTAGRAM_BUSINESS,
+            externalId: ig.id,
+          },
+        },
+        create: {
+          ...base,
+          accountType: ACCOUNT_TYPE.INSTAGRAM_BUSINESS,
+          externalId: ig.id,
+          accountName: ig.username ? `@${ig.username}` : `Instagram de ${page.name}`,
+          accessTokenEnc: pageTokenEnc,
+          metadataJson: JSON.stringify({ pageId: page.id }),
+        },
+        update: {
+          accountName: ig.username ? `@${ig.username}` : `Instagram de ${page.name}`,
+          accessTokenEnc: pageTokenEnc,
+          metadataJson: JSON.stringify({ pageId: page.id }),
+        },
+      });
+    }
+  }
+
+  // Actualizar suscripción leadgen en páginas
+  await subscribeMetaPagesToLeadgen(integration.id);
+
+  await prisma.integration.update({
+    where: { id: integration.id },
+    data: { lastSyncAt: new Date() },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      organizationId: actor.organizationId,
+      userId: actor.userId,
+      action: "meta_catalog_refreshed",
+      entityType: "Integration",
+      entityId: integration.id,
+      detailsJson: JSON.stringify({
+        adAccountsCount: adAccounts.length,
+        pagesCount: pages.length,
+        newAccountsCount,
+        newPagesCount,
+      }),
+    },
+  });
+
+  return {
+    adAccountsCount: adAccounts.length,
+    pagesCount: pages.length,
+    newAccountsCount,
+    newPagesCount,
+    message: `Catálogo de Meta actualizado: ${adAccounts.length} cuenta(s) publicitaria(s) y ${pages.length} página(s) sincronizadas (${newAccountsCount + newPagesCount} nuevas añadidas).`,
   };
 }

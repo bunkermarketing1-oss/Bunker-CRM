@@ -87,6 +87,17 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Si el usuario no tiene cuentas publicitarias aún, se guarda el token de usuario en un registro base
+    // para permitir re-escanear el catálogo en el futuro sin forzar otro login OAuth.
+    if (adAccounts.length === 0) {
+      await upsertAccount(ACCOUNT_TYPE.META_AD_ACCOUNT, "meta_master_user", {
+        accountName: "Usuario Administrador Meta",
+        accessTokenEnc: userTokenEnc,
+        tokenExpiresAt: expiresAt,
+        metadataJson: JSON.stringify({ isMasterToken: true }),
+      });
+    }
+
     for (const page of pages) {
       // Los tokens de página derivados de un token de larga duración no expiran.
       const pageTokenEnc = encryptSecret(page.access_token);

@@ -1,33 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   X,
   AlertCircle,
+  CheckCircle2,
+  RefreshCw,
+  Search,
+  ExternalLink,
+  Sparkles,
+  Layers,
+  ArrowRight,
   ShieldCheck,
+  Check,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
-  ACCOUNT_TYPES_BY_PROVIDER,
   INTEGRATION_PROVIDER,
   type AccountType,
   type AdProvider,
 } from "@/lib/constants/integrations";
 import { useConnectSocialAccount } from "@/hooks/useConnectSocialAccount";
-
-/** Botones del modal: Instagram es una cuenta de la integración de Meta, no un proveedor propio. */
-const SOCIAL_OPTIONS: Record<string, { provider: AdProvider; accountType: AccountType }> = {
-  meta: { provider: INTEGRATION_PROVIDER.META, accountType: ACCOUNT_TYPE.META_AD_ACCOUNT },
-  instagram: { provider: INTEGRATION_PROVIDER.META, accountType: ACCOUNT_TYPE.INSTAGRAM_BUSINESS },
-  tiktok: { provider: INTEGRATION_PROVIDER.TIKTOK, accountType: ACCOUNT_TYPE.TIKTOK_ADVERTISER },
-};
-
-const ACCOUNT_TYPE_OPTION_LABEL: Record<AccountType, string> = {
-  [ACCOUNT_TYPE.META_AD_ACCOUNT]: "Cuenta de anuncios (Meta Ads)",
-  [ACCOUNT_TYPE.FACEBOOK_PAGE]: "Página de Facebook",
-  [ACCOUNT_TYPE.INSTAGRAM_BUSINESS]: "Perfil de Instagram Business",
-  [ACCOUNT_TYPE.TIKTOK_ADVERTISER]: "Cuenta de TikTok Ads",
-};
 
 export interface ClientOption {
   id: string;
@@ -43,6 +36,17 @@ interface ConnectSocialAccountModalProps {
   initialClientId?: string;
 }
 
+interface ChannelItem {
+  id: string;
+  accountName: string;
+  accountType: string;
+  externalId: string | null;
+  status: string;
+  clientId: string | null;
+  client?: { id: string; name: string } | null;
+  leadgen?: { activeForms?: number; isSubscribed?: boolean } | null;
+}
+
 export function ConnectSocialAccountModal({
   isOpen,
   onClose,
@@ -51,344 +55,823 @@ export function ConnectSocialAccountModal({
   initialProvider = "meta",
   initialClientId = "",
 }: ConnectSocialAccountModalProps) {
-  const [provider, setProvider] = useState<AdProvider>(INTEGRATION_PROVIDER.META);
-  const [accountType, setAccountType] = useState<AccountType>(ACCOUNT_TYPE.META_AD_ACCOUNT);
-  const [targetType, setTargetType] = useState<"agency" | "client">(
-    initialClientId ? "client" : "client"
+  const [activeTab, setActiveTab] = useState<"meta" | "tiktok" | "manual">(
+    initialProvider === "tiktok" ? "tiktok" : "meta"
   );
-  const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId);
-  const [accountName, setAccountName] = useState("");
-  const [externalId, setExternalId] = useState("");
-  const [accessToken, setAccessToken] = useState("");
-  const { connect, submitting, error: errorMessage, setError: setErrorMessage } = useConnectSocialAccount();
+  const [targetClientId, setTargetClientId] = useState<string>(initialClientId);
+  const [channels, setChannels] = useState<ChannelItem[]>([]);
+  const [isMetaConnected, setIsMetaConnected] = useState<boolean>(false);
+  const [loadingChannels, setLoadingChannels] = useState<boolean>(false);
+  const [refreshingCatalog, setRefreshingCatalog] = useState<boolean>(false);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [channelFilter, setChannelFilter] = useState<"all" | "pages" | "ads" | "instagram" | "unassigned">("all");
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Formulario manual avanzado
+  const [manualAccountName, setManualAccountName] = useState("");
+  const [manualExternalId, setManualExternalId] = useState("");
+  const [manualAccessToken, setManualAccessToken] = useState("");
+  const [manualProvider, setManualProvider] = useState<AdProvider>(INTEGRATION_PROVIDER.META);
+  const [manualAccountType, setManualAccountType] = useState<AccountType>(ACCOUNT_TYPE.META_AD_ACCOUNT);
+  const [manualTargetType, setManualTargetType] = useState<"client" | "agency">("client");
+
+  const { connect: connectManual, submitting: manualSubmitting, error: manualError } = useConnectSocialAccount();
+
+  const activeClient = useMemo(() => {
+    return clients.find((c) => c.id === targetClientId);
+  }, [clients, targetClientId]);
+
+  // Cargar canales existentes e info de conexión
+  const loadChannels = useCallback(async () => {
+    try {
+      setLoadingChannels(true);
+      const res = await fetch("/api/integrations");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.integrations)) {
+        const metaInt = json.integrations.find(
+          (it: { provider: string }) => it.provider === INTEGRATION_PROVIDER.META
+        );
+        setIsMetaConnected(metaInt?.status === "connected");
+        const allAccs: ChannelItem[] = json.integrations.flatMap(
+          (it: { connectedAccounts?: ChannelItem[] }) => it.connectedAccounts || []
+        );
+        setChannels(allAccs);
+      }
+    } catch (e) {
+      console.error("Error al cargar canales:", e);
+    } finally {
+      setLoadingChannels(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      if (initialClientId) {
-        setSelectedClientId(initialClientId);
-        setTargetType("client");
-      }
-      const option = SOCIAL_OPTIONS[initialProvider];
-      if (option) {
-        setProvider(option.provider);
-        setAccountType(option.accountType);
-      }
+      setTargetClientId(initialClientId);
+      setActiveTab(initialProvider === "tiktok" ? "tiktok" : "meta");
+      setFeedback(null);
+      setSearchQuery("");
+      setChannelFilter("all");
+      loadChannels();
     }
-  }, [isOpen, initialClientId, initialProvider]);
+  }, [isOpen, initialClientId, initialProvider, loadChannels]);
+
+  // Re-escanear catálogo de Meta con 1 clic (sin OAuth)
+  const handleRefreshMetaCatalog = async () => {
+    setRefreshingCatalog(true);
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/integrations/meta/refresh", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({ type: "success", message: json.message });
+        await loadChannels();
+        onSuccess();
+      } else {
+        setFeedback({ type: "error", message: json.error || "No se pudo actualizar el catálogo de Meta." });
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Error de red al actualizar catálogo de Meta." });
+    } finally {
+      setRefreshingCatalog(false);
+    }
+  };
+
+  // Asignar o desasignar canal con 1 clic
+  const handleAssignChannel = async (accountId: string, newClientId: string | null) => {
+    setAssigningId(accountId);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/integrations/accounts/${accountId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: newClientId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({ type: "success", message: json.message });
+        setChannels((prev) =>
+          prev.map((ch) =>
+            ch.id === accountId
+              ? {
+                  ...ch,
+                  clientId: newClientId,
+                  client: newClientId ? clients.find((c) => c.id === newClientId) || null : null,
+                }
+              : ch
+          )
+        );
+        onSuccess();
+      } else {
+        setFeedback({ type: "error", message: json.error || "Error al asignar canal." });
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Error de conexión al asignar el canal." });
+    } finally {
+      setAssigningId(null);
+    }
+  };
+
+  // Enviar formulario manual para casos avanzados
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualAccountName.trim() || !manualExternalId.trim()) {
+      setFeedback({ type: "error", message: "Nombre e identificador externo son obligatorios." });
+      return;
+    }
+    const success = await connectManual({
+      provider: manualProvider,
+      accountType: manualAccountType,
+      accountName: manualAccountName.trim(),
+      externalId: manualExternalId.trim(),
+      clientId: manualTargetType === "client" ? targetClientId || null : null,
+      accessToken: manualAccessToken.trim() || null,
+    });
+    if (success) {
+      setFeedback({ type: "success", message: "Cuenta registrada exitosamente." });
+      setManualAccountName("");
+      setManualExternalId("");
+      setManualAccessToken("");
+      await loadChannels();
+      onSuccess();
+    }
+  };
+
+  // Filtrar canales según búsqueda y tipo
+  const filteredChannels = useMemo(() => {
+    return channels.filter((ch) => {
+      // Excluir registros técnicos maestros
+      if (ch.externalId === "meta_master_user") return false;
+
+      // Filtro de texto
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesName = ch.accountName.toLowerCase().includes(q);
+        const matchesId = ch.externalId?.toLowerCase().includes(q) ?? false;
+        const matchesClient = ch.client?.name.toLowerCase().includes(q) ?? false;
+        if (!matchesName && !matchesId && !matchesClient) return false;
+      }
+
+      // Filtro por tipo de canal
+      if (channelFilter === "pages") return ch.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+      if (channelFilter === "ads") return ch.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+      if (channelFilter === "instagram") return ch.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+      if (channelFilter === "unassigned") return !ch.clientId;
+
+      return true;
+    });
+  }, [channels, searchQuery, channelFilter]);
 
   if (!isOpen) return null;
 
-  const handleProviderSelect = (key: string) => {
-    const option = SOCIAL_OPTIONS[key];
-    if (!option) return;
-    setProvider(option.provider);
-    setAccountType(option.accountType);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!accountName.trim()) {
-      setErrorMessage("Por favor ingresa el nombre de la cuenta.");
-      return;
-    }
-    if (!externalId.trim()) {
-      setErrorMessage("Por favor ingresa el ID de la cuenta publicitaria o página.");
-      return;
-    }
-    if (targetType === "client" && !selectedClientId) {
-      setErrorMessage("Por favor selecciona a qué cliente pertenece esta cuenta.");
-      return;
-    }
-
-    const connected = await connect({
-      provider,
-      accountType,
-      accountName: accountName.trim(),
-      externalId: externalId.trim(),
-      clientId: targetType === "client" ? selectedClientId : null,
-      accessToken: accessToken.trim() || null,
-    });
-    if (connected) {
-      onSuccess();
-      onClose();
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-[#E8E6DF] overflow-hidden">
-        {/* Header con gradiente sutil */}
-        <div className="px-6 py-5 bg-[#FAF9F5] border-b border-[#E8E6DF] flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D97757]">
-              Conexión de Pauta & Leads
-            </span>
-            <h2 className="text-lg font-semibold text-[#1F1E1D] mt-0.5">
-              Conectar Cuenta de Red Social
-            </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E8E6DF] overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Cabecera Principal */}
+        <div className="px-6 py-4 bg-gradient-to-b from-[#FAF9F5] to-white border-b border-[#E8E6DF] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#1F1E1D] text-white flex items-center justify-center shadow-sm">
+              <Layers className="w-5 h-5 text-[#E5C158]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-[#1F1E1D]">
+                  Conectar Canales Sociales & Pauta
+                </h2>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#FAF0E6] text-[#D97757] border border-[#F2D6C6]">
+                  Estilo Buffer / Auto-Sync
+                </span>
+              </div>
+              <p className="text-xs text-[#6B6966] mt-0.5">
+                {activeClient ? (
+                  <>
+                    Vincula páginas o cuentas de anuncios para{" "}
+                    <strong className="text-[#1F1E1D] font-semibold">{activeClient.name}</strong>
+                  </>
+                ) : (
+                  "Selecciona y asigna cuentas publicitarias y páginas a los clientes de tu agencia."
+                )}
+              </p>
+            </div>
           </div>
+
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#82807C] hover:text-[#1F1E1D] hover:bg-[#E8E6DF] transition-colors"
+            className="p-2 rounded-full text-[#82807C] hover:text-[#1F1E1D] hover:bg-[#F0EEE6] transition-colors"
+            title="Cerrar modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-          {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-600" />
-              <span>{errorMessage}</span>
+        {/* Feedback Alert */}
+        {feedback && (
+          <div
+            className={`mx-6 mt-4 p-3 rounded-2xl text-xs font-medium flex items-center gap-2.5 transition-all ${
+              feedback.type === "success"
+                ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                : "bg-red-50 border border-red-200 text-red-800"
+            }`}
+          >
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            )}
+            <span className="flex-1">{feedback.message}</span>
+            <button
+              onClick={() => setFeedback(null)}
+              className="text-[#82807C] hover:text-[#1F1E1D] text-xs font-semibold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Selector de Pestañas Superiores */}
+        <div className="px-6 pt-3 pb-2 flex items-center justify-between border-b border-[#F0EEE6] bg-white gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setActiveTab("meta")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                activeTab === "meta"
+                  ? "bg-[#1877F2]/10 text-[#1877F2] border border-[#1877F2]/25 shadow-sm"
+                  : "text-[#6B6966] hover:text-[#1F1E1D] hover:bg-[#FAF9F5]"
+              }`}
+            >
+              <div className="w-4 h-4 rounded-full bg-[#1877F2] flex items-center justify-center text-white text-[9px] font-bold">
+                f
+              </div>
+              <span>Meta (Facebook & Instagram)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("tiktok")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                activeTab === "tiktok"
+                  ? "bg-black/10 text-black border border-black/20 shadow-sm"
+                  : "text-[#6B6966] hover:text-[#1F1E1D] hover:bg-[#FAF9F5]"
+              }`}
+            >
+              <span className="text-[11px]">🎵</span>
+              <span>TikTok Ads</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("manual")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+                activeTab === "manual"
+                  ? "bg-[#FAF0E6] text-[#D97757] font-semibold border border-[#F2D6C6]"
+                  : "text-[#82807C] hover:text-[#1F1E1D]"
+              }`}
+            >
+              <span>Avanzado / Token</span>
+            </button>
+          </div>
+
+          {activeTab === "meta" && isMetaConnected && (
+            <button
+              onClick={handleRefreshMetaCatalog}
+              disabled={refreshingCatalog}
+              className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] hover:bg-white text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all"
+              title="Re-escanear catálogo de Facebook sin volver a iniciar sesión"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-[#1877F2]" : ""}`} />
+              <span className="hidden sm:inline">
+                {refreshingCatalog ? "Sincronizando..." : "Buscar nuevas páginas"}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Contenido Dinámico */}
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+          {/* ========================================================= */}
+          {/* PESTAÑA 1: META (FACEBOOK, INSTAGRAM, ADS)                */}
+          {/* ========================================================= */}
+          {activeTab === "meta" && (
+            <div className="space-y-4">
+              {/* CASO A: META NO ESTÁ CONECTADO AÚN */}
+              {!isMetaConnected ? (
+                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1877F2]/10 via-[#FAF9F5] to-white border border-[#1877F2]/20 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#1877F2] to-[#0081FB] text-white flex items-center justify-center mx-auto shadow-md ring-8 ring-blue-50">
+                    <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </div>
+
+                  <div className="space-y-1.5 max-w-md mx-auto">
+                    <h3 className="text-lg font-bold text-[#1F1E1D]">
+                      Conectar Cuenta de Meta for Business
+                    </h3>
+                    <p className="text-xs text-[#6B6966] leading-relaxed">
+                      Al conectar tu cuenta de Facebook, Bunker CRM detectará automáticamente todas tus
+                      <strong> páginas de Facebook, perfiles de Instagram y cuentas de anuncios</strong> sin
+                      que tengas que copiar tokens ni escribir IDs manuales.
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <a
+                      href="/api/integrations/meta/connect"
+                      className="px-6 py-3 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      <span>Continuar con Facebook / Meta (OAuth)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-[#82807C]">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      Cifrado AES-256
+                    </span>
+                    <span>•</span>
+                    <span>Tokens de larga duración (~60 días)</span>
+                    <span>•</span>
+                    <span>Leads en tiempo real</span>
+                  </div>
+                </div>
+              ) : (
+                /* CASO B: META YA ESTÁ CONECTADO (EXPERIENCIA BUFFER) */
+                <div className="space-y-4">
+                  {/* Banner de Estado Conectado */}
+                  <div className="p-4 rounded-2xl bg-[#EBF5EE] border border-[#C2E2CC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-emerald-950">
+                            Meta Business Manager Conectado
+                          </h4>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <p className="text-[11px] text-emerald-800 mt-0.5">
+                          {channels.length} canales detectados en tu cuenta. Asígnalos a tus clientes con un clic.
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/api/integrations/meta/connect"
+                      className="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 underline self-start sm:self-auto flex items-center gap-1"
+                      title="Re-autorizar con otra cuenta de Facebook"
+                    >
+                      <span>Reconectar otra cuenta de Meta</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* Barra de Filtros y Búsqueda de Canales */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+                      <button
+                        onClick={() => setChannelFilter("all")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          channelFilter === "all"
+                            ? "bg-[#1F1E1D] text-white"
+                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        Todos ({channels.length})
+                      </button>
+                      <button
+                        onClick={() => setChannelFilter("pages")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          channelFilter === "pages"
+                            ? "bg-[#1877F2] text-white"
+                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        Páginas (
+                        {channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
+                      </button>
+                      <button
+                        onClick={() => setChannelFilter("ads")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          channelFilter === "ads"
+                            ? "bg-[#0081FB] text-white"
+                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        Ads ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
+                      </button>
+                      <button
+                        onClick={() => setChannelFilter("instagram")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          channelFilter === "instagram"
+                            ? "bg-[#E4405F] text-white"
+                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        Instagram (
+                        {channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
+                      </button>
+                      <button
+                        onClick={() => setChannelFilter("unassigned")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          channelFilter === "unassigned"
+                            ? "bg-amber-600 text-white"
+                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        Sin asignar ({channels.filter((c) => !c.clientId).length})
+                      </button>
+                    </div>
+
+                    <div className="relative w-full sm:w-56">
+                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#9C9890]" />
+                      <input
+                        type="text"
+                        placeholder="Buscar por nombre..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Grid / Lista de Canales Detectados (Buffer Style) */}
+                  <div className="space-y-2.5 max-h-[46vh] overflow-y-auto pr-1">
+                    {loadingChannels ? (
+                      <div className="p-8 text-center text-xs text-[#82807C] flex items-center justify-center gap-2">
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#1877F2]" />
+                        <span>Cargando canales de Meta...</span>
+                      </div>
+                    ) : filteredChannels.length === 0 ? (
+                      <div className="p-8 rounded-2xl bg-[#FAF9F5] border border-dashed border-[#D1CFCA] text-center space-y-2">
+                        <p className="text-xs font-semibold text-[#1F1E1D]">
+                          No se encontraron canales con este filtro
+                        </p>
+                        <p className="text-[11px] text-[#82807C]">
+                          Haz clic en &quot;Buscar nuevas páginas&quot; si creaste recientemente una página o cuenta en tu Meta Business Manager.
+                        </p>
+                      </div>
+                    ) : (
+                      filteredChannels.map((ch) => {
+                        const isFBPage = ch.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+                        const isIG = ch.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                        const isAd = ch.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+                        const isAssignedToCurrent = Boolean(
+                          targetClientId && ch.clientId === targetClientId
+                        );
+                        const isAssignedToOther = Boolean(
+                          targetClientId && ch.clientId && ch.clientId !== targetClientId
+                        );
+
+                        return (
+                          <div
+                            key={ch.id}
+                            className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                              isAssignedToCurrent
+                                ? "bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-300/40"
+                                : "bg-white border-[#E8E6DF] hover:border-[#D1CFCA] hover:shadow-sm"
+                            }`}
+                          >
+                            {/* Icono de Red + Información */}
+                            <div className="flex items-center gap-3 min-w-0">
+                              {/* Icono */}
+                              {isFBPage && (
+                                <div className="w-10 h-10 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                                  f
+                                </div>
+                              )}
+                              {isIG && (
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-sm flex-shrink-0 shadow-sm">
+                                  📷
+                                </div>
+                              )}
+                              {isAd && (
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0081FB] to-[#0668E1] text-white flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm">
+                                  ADS
+                                </div>
+                              )}
+
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-xs font-bold text-[#1F1E1D] truncate">
+                                    {ch.accountName}
+                                  </h4>
+                                  {isFBPage && (
+                                    <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                      Página Facebook
+                                    </span>
+                                  )}
+                                  {isIG && (
+                                    <span className="text-[10px] font-semibold text-pink-800 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
+                                      Instagram Business
+                                    </span>
+                                  )}
+                                  {isAd && (
+                                    <span className="text-[10px] font-semibold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
+                                      Cuenta de Anuncios
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2 text-[11px] text-[#82807C] mt-0.5">
+                                  <span className="font-mono text-[10px]">
+                                    {ch.externalId || ch.id}
+                                  </span>
+                                  <span>•</span>
+                                  {ch.clientId ? (
+                                    <span className="font-medium text-[#1F1E1D]">
+                                      Asignada a:{" "}
+                                      <strong className="text-[#D97757]">
+                                        {ch.client?.name || "Cliente del CRM"}
+                                      </strong>
+                                    </span>
+                                  ) : (
+                                    <span className="text-amber-700 font-medium">
+                                      Portafolio Agencia (Sin cliente)
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Controles de Asignación en 1 Clic */}
+                            <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                              {/* Modo 1: Abierto desde un cliente específico */}
+                              {targetClientId ? (
+                                isAssignedToCurrent ? (
+                                  <button
+                                    onClick={() => handleAssignChannel(ch.id, null)}
+                                    disabled={assigningId === ch.id}
+                                    className="px-3 py-1.5 rounded-xl bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5"
+                                  >
+                                    {assigningId === ch.id ? (
+                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <X className="w-3 h-3" />
+                                    )}
+                                    <span>Desvincular</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAssignChannel(ch.id, targetClientId)}
+                                    disabled={assigningId === ch.id}
+                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
+                                      isAssignedToOther
+                                        ? "bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200"
+                                        : "btn-black-gold"
+                                    }`}
+                                  >
+                                    {assigningId === ch.id ? (
+                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                                    )}
+                                    <span>
+                                      {isAssignedToOther
+                                        ? `Reasignar a ${activeClient?.name}`
+                                        : `+ Vincular a ${activeClient?.name}`}
+                                    </span>
+                                  </button>
+                                )
+                              ) : (
+                                /* Modo 2: Selector General de Clientes */
+                                <div className="flex items-center gap-1.5">
+                                  <select
+                                    value={ch.clientId || ""}
+                                    onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
+                                    disabled={assigningId === ch.id}
+                                    className="bg-white border border-[#E8E6DF] rounded-xl px-2.5 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] shadow-sm max-w-[200px]"
+                                  >
+                                    <option value="">Portafolio Agencia</option>
+                                    {clients.map((c) => (
+                                      <option key={c.id} value={c.id}>
+                                        {c.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {assigningId === ch.id && (
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* 1. Selector de Red Social con Íconos de Marca */}
-          <div>
-            <label className="block text-xs font-semibold text-[#1F1E1D] mb-2.5">
-              1. Selecciona la Red Social o Plataforma de Pauta
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              {/* Facebook / Meta */}
-              <button
-                type="button"
-                onClick={() => handleProviderSelect("meta")}
-                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-2 text-center cursor-pointer ${
-                  provider === INTEGRATION_PROVIDER.META && accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS
-                    ? "border-[#1877F2] bg-blue-50/50 shadow-sm ring-2 ring-[#1877F2]/20"
-                    : "border-[#E8E6DF] bg-white hover:border-[#D1CFCA]"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#1877F2] flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
+          {/* ========================================================= */}
+          {/* PESTAÑA 2: TIKTOK ADS                                     */}
+          {/* ========================================================= */}
+          {activeTab === "tiktok" && (
+            <div className="p-6 rounded-3xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                  🎵
                 </div>
-                <span className="text-xs font-semibold text-[#1F1E1D]">Facebook / Meta</span>
-                <span className="text-[10px] text-[#82807C]">Ads & Páginas</span>
-              </button>
-
-              {/* Instagram */}
-              <button
-                type="button"
-                onClick={() => handleProviderSelect("instagram")}
-                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-2 text-center cursor-pointer ${
-                  accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS
-                    ? "border-[#E4405F] bg-pink-50/50 shadow-sm ring-2 ring-[#E4405F]/20"
-                    : "border-[#E8E6DF] bg-white hover:border-[#D1CFCA]"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                  </svg>
-                </div>
-                <span className="text-xs font-semibold text-[#1F1E1D]">Instagram</span>
-                <span className="text-[10px] text-[#82807C]">Business Profile</span>
-              </button>
-
-              {/* TikTok */}
-              <button
-                type="button"
-                onClick={() => handleProviderSelect("tiktok")}
-                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-2 text-center cursor-pointer ${
-                  provider === INTEGRATION_PROVIDER.TIKTOK
-                    ? "border-black bg-gray-50 shadow-sm ring-2 ring-black/20"
-                    : "border-[#E8E6DF] bg-white hover:border-[#D1CFCA]"
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                  </svg>
-                </div>
-                <span className="text-xs font-semibold text-[#1F1E1D]">TikTok Ads</span>
-                <span className="text-[10px] text-[#82807C]">Advertiser</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 2. ¿A quién pertenece esta cuenta? (BM Agencia vs Cliente Específico) */}
-          <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-3">
-            <label className="block text-xs font-semibold text-[#1F1E1D]">
-              2. ¿A quién pertenece esta cuenta publicitaria?
-            </label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label
-                onClick={() => setTargetType("client")}
-                className={`p-3 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
-                  targetType === "client"
-                    ? "bg-white border-[#D97757] shadow-sm ring-1 ring-[#D97757]"
-                    : "bg-white/60 border-[#E8E6DF] hover:bg-white"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="targetType"
-                  checked={targetType === "client"}
-                  onChange={() => setTargetType("client")}
-                  className="mt-0.5 text-[#D97757] focus:ring-[#D97757]"
-                />
                 <div>
-                  <span className="font-semibold text-[#1F1E1D] block">Cliente Comercial</span>
-                  <span className="text-[11px] text-[#82807C] leading-tight block mt-0.5">
-                    El cliente verá sus campañas y leads en su propio portal.
-                  </span>
+                  <h3 className="text-sm font-bold text-[#1F1E1D]">TikTok for Business</h3>
+                  <p className="text-xs text-[#6B6966]">
+                    Conecta tus cuentas de TikTok Ads Manager para capturar leads y sincronizar métricas de campañas.
+                  </p>
                 </div>
-              </label>
-
-              <label
-                onClick={() => setTargetType("agency")}
-                className={`p-3 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
-                  targetType === "agency"
-                    ? "bg-white border-[#D97757] shadow-sm ring-1 ring-[#D97757]"
-                    : "bg-white/60 border-[#E8E6DF] hover:bg-white"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="targetType"
-                  checked={targetType === "agency"}
-                  onChange={() => setTargetType("agency")}
-                  className="mt-0.5 text-[#D97757] focus:ring-[#D97757]"
-                />
-                <div>
-                  <span className="font-semibold text-[#1F1E1D] block">Portafolio BM Agencia</span>
-                  <span className="text-[11px] text-[#82807C] leading-tight block mt-0.5">
-                    Cuenta base de Bunker Agency (visible para administradores).
-                  </span>
-                </div>
-              </label>
-            </div>
-
-            {targetType === "client" && (
-              <div className="pt-2 animate-in fade-in">
-                <label className="block text-[11px] font-medium text-[#4D4C48] mb-1">
-                  Selecciona el Cliente:
-                </label>
-                <select
-                  value={selectedClientId}
-                  onChange={(e) => setSelectedClientId(e.target.value)}
-                  className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  required
-                >
-                  <option value="">-- Elige un cliente (ej. Carrito Naranja) --</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
               </div>
-            )}
-          </div>
 
-          {/* 3. Datos de la Cuenta (Nombre e ID visibles en Meta) */}
-          <div className="space-y-3.5">
-            <label className="block text-xs font-semibold text-[#1F1E1D]">
-              3. Información de la Cuenta
-            </label>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                Nombre para identificar la cuenta:
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. Workshop Carrito Naranja"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                required
-              />
-              <p className="text-[10px] text-[#82807C] mt-1">
-                💡 El nombre que le das a esta cuenta para reconocerla fácilmente en el CRM.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                  Número Identificador (ID):
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. 5194920503935574"
-                  value={externalId}
-                  onChange={(e) => setExternalId(e.target.value)}
-                  className="w-full font-mono bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  required
-                />
-                <p className="text-[10px] text-[#82807C] mt-1">
-                  💡 Es el número que ves debajo del nombre en Meta Business Suite.
+              <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] space-y-3">
+                <p className="text-xs text-[#1F1E1D]">
+                  Para vincular una cuenta de anunciante de TikTok, ingresa el <strong>Advertiser ID</strong> del cliente.
                 </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                      Nombre de la Cuenta:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. Carrito Naranja TikTok Ads"
+                      value={manualAccountName}
+                      onChange={(e) => setManualAccountName(e.target.value)}
+                      className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                      Advertiser ID de TikTok:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. 709123847561829"
+                      value={manualExternalId}
+                      onChange={(e) => setManualExternalId(e.target.value)}
+                      className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setManualProvider(INTEGRATION_PROVIDER.TIKTOK);
+                    setManualAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
+                    handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
+                  }}
+                  disabled={manualSubmitting}
+                  className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                  <span>Vincular Cuenta de TikTok Ads</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* PESTAÑA 3: REGISTRO MANUAL AVANZADO (TOKEN / CLAVES)      */}
+          {/* ========================================================= */}
+          {activeTab === "manual" && (
+            <form onSubmit={handleManualSubmit} className="space-y-4">
+              <div className="p-4 rounded-2xl bg-[#FFFBF0] border border-[#FDE68A] text-xs text-amber-900 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong>Modo Desarrollador / Claves Directas:</strong>
+                  <p className="text-[11px] text-amber-800 mt-0.5">
+                    Utiliza este modo únicamente si necesitas conectar manualmente una cuenta con un token de acceso propio o externo.
+                  </p>
+                </div>
+              </div>
+
+              {manualError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{manualError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Plataforma
+                  </label>
+                  <select
+                    value={manualProvider}
+                    onChange={(e) => setManualProvider(e.target.value as AdProvider)}
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  >
+                    <option value={INTEGRATION_PROVIDER.META}>Meta (Facebook & Instagram)</option>
+                    <option value={INTEGRATION_PROVIDER.TIKTOK}>TikTok</option>
+                    <option value={INTEGRATION_PROVIDER.GOOGLE_ADS}>Google Ads</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Tipo de Cuenta
+                  </label>
+                  <select
+                    value={manualAccountType}
+                    onChange={(e) => setManualAccountType(e.target.value as AccountType)}
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  >
+                    <option value={ACCOUNT_TYPE.META_AD_ACCOUNT}>Cuenta de anuncios Meta</option>
+                    <option value={ACCOUNT_TYPE.FACEBOOK_PAGE}>Página de Facebook</option>
+                    <option value={ACCOUNT_TYPE.INSTAGRAM_BUSINESS}>Perfil de Instagram</option>
+                    <option value={ACCOUNT_TYPE.TIKTOK_ADVERTISER}>Cuenta de TikTok Ads</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Nombre Descriptivo
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ej. Campañas Principales"
+                    value={manualAccountName}
+                    onChange={(e) => setManualAccountName(e.target.value)}
+                    required
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                    Identificador Externo (ID)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ej. act_123456789 o ID de Página"
+                    value={manualExternalId}
+                    onChange={(e) => setManualExternalId(e.target.value)}
+                    required
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                  ¿Qué tipo de activo es?:
+                <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                  Destino de la cuenta
                 </label>
                 <select
-                  value={accountType}
-                  onChange={(e) => setAccountType(e.target.value as AccountType)}
+                  value={manualTargetType}
+                  onChange={(e) => setManualTargetType(e.target.value as "client" | "agency")}
                   className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
                 >
-                  {/* Solo los tipos del proveedor elegido: el servidor rechaza combinaciones como TikTok + página de Facebook. */}
-                  {ACCOUNT_TYPES_BY_PROVIDER[provider].map((type) => (
-                    <option key={type} value={type}>
-                      {ACCOUNT_TYPE_OPTION_LABEL[type]}
-                    </option>
-                  ))}
+                  <option value="client">
+                    {activeClient ? `Asignar a cliente: ${activeClient.name}` : "Asignar a Cliente Seleccionado"}
+                  </option>
+                  <option value="agency">Portafolio BM Agencia (Sin cliente)</option>
                 </select>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                Clave o Token de Acceso (Opcional):
-              </label>
-              <input
-                type="password"
-                placeholder="Si tienes un token de acceso permanente, pégalo aquí (opcional)"
-                value={accessToken}
-                onChange={(e) => setAccessToken(e.target.value)}
-                className="w-full font-mono bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-              />
-              <p className="text-[10px] text-[#82807C] mt-1">
-                🔒 Tu información y claves se guardan con máxima seguridad y cifrado bancario.
-              </p>
-            </div>
-          </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                  Token de Acceso (Opcional, se cifra con AES-256)
+                </label>
+                <input
+                  type="password"
+                  placeholder="EAAG..."
+                  value={manualAccessToken}
+                  onChange={(e) => setManualAccessToken(e.target.value)}
+                  className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                />
+              </div>
 
-          {/* Botones de acción */}
-          <div className="pt-3 border-t border-[#E8E6DF] flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-[11px] text-[#82807C] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Privacidad garantizada entre clientes</span>
-            </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={manualSubmitting}
+                  className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                  <span>{manualSubmitting ? "Registrando..." : "Guardar Cuenta Manual"}</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 sm:flex-initial px-4 py-2 rounded-xl border border-[#E8E6DF] text-xs font-medium text-[#4D4C48] hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 sm:flex-initial px-5 py-2 rounded-xl btn-black-gold text-xs font-semibold shadow-sm disabled:opacity-50"
-              >
-                {submitting ? "Vinculando..." : "Vincular Cuenta"}
-              </button>
-            </div>
-          </div>
-        </form>
+        {/* Footer del Modal */}
+        <div className="px-6 py-3.5 bg-[#FAF9F5] border-t border-[#E8E6DF] flex items-center justify-between">
+          <span className="text-[11px] text-[#82807C]">
+            💡 Los prospectos de formularios Lead Ads entrarán en tiempo real vía Webhook.
+          </span>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#F0EEE6] text-[#1F1E1D] text-xs font-semibold transition-all shadow-sm"
+          >
+            Listo / Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );

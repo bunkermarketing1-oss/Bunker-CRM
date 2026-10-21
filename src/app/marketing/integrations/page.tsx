@@ -18,8 +18,9 @@ import {
   HelpCircle,
   Sparkles,
   Lock,
+  ChevronDown,
 } from "lucide-react";
-import { ACCOUNT_STATUS, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
 import type { TwilioEnvStatus } from "@/types/integrations";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
@@ -79,9 +80,12 @@ export default function IntegrationsPage() {
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [isLicensed, setIsLicensed] = useState<boolean>(true);
 
-  // Vista comercial vs técnica
-  const [activeView, setActiveView] = useState<"clients" | "platforms">("clients");
+  // Vista comercial vs canales (Buffer) vs técnica
+  const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
   const [searchFilter, setSearchFilter] = useState("");
+  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "unassigned">("all");
+  const [channelSearchFilter, setChannelSearchFilter] = useState("");
+  const [refreshingMeta, setRefreshingMeta] = useState(false);
 
   // Connect Modal (claves manuales)
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
@@ -301,6 +305,51 @@ export default function IntegrationsPage() {
     return clients.filter((c) => (clientAccountsMap.get(c.id) || []).length > 0).length;
   }, [clients, clientAccountsMap]);
 
+  const metaIntegration = useMemo(() => {
+    return integrations.find((it) => it.provider === INTEGRATION_PROVIDER.META);
+  }, [integrations]);
+
+  const isMetaConnected = metaIntegration?.status === INTEGRATION_STATUS.CONNECTED;
+
+  const handleRefreshMeta = async () => {
+    setRefreshingMeta(true);
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/integrations/meta/refresh", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({ type: "success", message: json.message });
+        await fetchIntegrations();
+        await fetchClients();
+      } else {
+        setFeedback({ type: "error", message: json.error || "No se pudo actualizar el catálogo de Meta." });
+      }
+    } catch (e: any) {
+      setFeedback({ type: "error", message: e?.message || "Error al actualizar catálogo de Meta." });
+    } finally {
+      setRefreshingMeta(false);
+    }
+  };
+
+  const filteredChannelsList = useMemo(() => {
+    return allConnectedAccounts.filter((acc: any) => {
+      if (acc.externalId === "meta_master_user") return false;
+      if (channelSearchFilter.trim()) {
+        const q = channelSearchFilter.toLowerCase();
+        const matchesName = acc.accountName?.toLowerCase().includes(q) ?? false;
+        const matchesId = acc.externalId?.toLowerCase().includes(q) ?? false;
+        const clientName = clients.find((c) => c.id === acc.clientId)?.name;
+        const matchesClient = clientName?.toLowerCase().includes(q) ?? false;
+        if (!matchesName && !matchesId && !matchesClient) return false;
+      }
+      if (channelTypeFilter === "pages") return acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+      if (channelTypeFilter === "ads") return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+      if (channelTypeFilter === "instagram") return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+      if (channelTypeFilter === "unassigned") return !acc.clientId;
+      return true;
+    });
+  }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients]);
+
   const handleOpenConnectForClient = (clientId: string, provider: string = "meta") => {
     setModalClientId(clientId);
     setActiveSocialProvider(provider);
@@ -344,20 +393,32 @@ export default function IntegrationsPage() {
             <span>Refrescar</span>
           </button>
 
+          {isMetaConnected && (
+            <button
+              onClick={handleRefreshMeta}
+              disabled={refreshingMeta}
+              className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+              title="Re-escanear páginas y cuentas de Meta sin re-autorizar"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshingMeta ? "animate-spin text-[#1877F2]" : "text-[#1877F2]"}`} />
+              <span>{refreshingMeta ? "Sincronizando..." : "Sincronizar Cuentas Meta"}</span>
+            </button>
+          )}
+
           <button
             onClick={() => setWizardOpen(true)}
-            className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+            className="px-3.5 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
           >
             <Sparkles className="w-4 h-4 text-[#E5C158]" />
-            <span>+ Crear Cliente & Redes (Asistente Guiado)</span>
+            <span>+ Crear Cliente (Asistente)</span>
           </button>
 
           <button
             onClick={() => handleOpenConnectGeneral("meta")}
-            className="px-3.5 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
+            className="px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
           >
-            <Plus className="w-4 h-4 text-[#D97757]" />
-            <span>Vincular Red a Existente</span>
+            <Plus className="w-4 h-4" />
+            <span>+ Conectar Canales / Redes</span>
           </button>
         </div>
       </div>
@@ -379,34 +440,49 @@ export default function IntegrationsPage() {
         </div>
       )}
 
-      {/* Selector de Vista: Vista Comercial por Cliente vs Vista Técnica por Plataforma */}
+      {/* Selector de Vista: Canales (Buffer) vs Clientes vs Técnico */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 bg-[#FAF9F5] rounded-2xl border border-[#E8E6DF]">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+          <button
+            onClick={() => setActiveView("channels")}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeView === "channels"
+                ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
+                : "text-[#716F6A] hover:text-[#1F1E1D]"
+            }`}
+          >
+            <Share2 className="w-4 h-4 text-[#1877F2]" />
+            <span>Canales Sociales (Buffer)</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1877F2]/10 text-[#1877F2] font-bold">
+              {allConnectedAccounts.filter((a) => a.externalId !== "meta_master_user").length}
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveView("clients")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
               activeView === "clients"
                 ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
                 : "text-[#716F6A] hover:text-[#1F1E1D]"
             }`}
           >
             <Users className="w-4 h-4 text-[#D97757]" />
-            <span>Directorio Organizado por Cliente (Comercial)</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F0EEE6] font-bold">
+            <span>Directorio por Cliente</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F0EEE6] font-bold">
               {clients.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveView("platforms")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
               activeView === "platforms"
                 ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
                 : "text-[#716F6A] hover:text-[#1F1E1D]"
             }`}
           >
             <Key className="w-4 h-4 text-[#82807C]" />
-            <span>Configuración Técnica de Plataformas (APIs & BM)</span>
+            <span>APIs & Plataformas</span>
           </button>
         </div>
 
@@ -425,7 +501,268 @@ export default function IntegrationsPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* VISTA 1: DIRECTORIO ORGANIZADO POR CLIENTE (ORIENTADO A VENTAS)           */}
+      {/* VISTA 1: GESTOR DE CANALES SOCIALES & CUENTAS (BUFFER STYLE)              */}
+      {/* ========================================================================= */}
+      {activeView === "channels" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Si Meta no está conectado, banner inicial destacado */}
+          {!isMetaConnected && (
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1877F2]/10 via-[#FAF9F5] to-white border border-[#1877F2]/20 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-2xl shadow-md flex-shrink-0">
+                  f
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#1F1E1D]">
+                    Conecta tu cuenta de Meta for Business en 1 Clic
+                  </h3>
+                  <p className="text-xs text-[#6B6966] mt-1 max-w-xl">
+                    Importa al instante todas tus páginas de Facebook, perfiles de Instagram y cuentas publicitarias. Asigna cada cuenta a su respectivo cliente para recibir leads en tiempo real y sincronizar métricas.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="/api/integrations/meta/connect"
+                className="px-5 py-3 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                <span>Conectar con Facebook (OAuth)</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+
+          {/* Barra de Filtros y Búsqueda de Canales */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-2xl border border-[#E8E6DF] shadow-sm">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <button
+                onClick={() => setChannelTypeFilter("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "all"
+                    ? "bg-[#1F1E1D] text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                Todos ({allConnectedAccounts.filter((a) => a.externalId !== "meta_master_user").length})
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("pages")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "pages"
+                    ? "bg-[#1877F2] text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                Páginas Facebook (
+                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("ads")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "ads"
+                    ? "bg-[#0081FB] text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                Cuentas Ads (
+                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT && a.externalId !== "meta_master_user").length})
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("instagram")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "instagram"
+                    ? "bg-[#E4405F] text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                Instagram (
+                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("unassigned")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "unassigned"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                Sin Asignar ({agencyAccounts.filter((a) => a.externalId !== "meta_master_user").length})
+              </button>
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
+              <input
+                type="text"
+                placeholder="Buscar canal, ID o cliente..."
+                value={channelSearchFilter}
+                onChange={(e) => setChannelSearchFilter(e.target.value)}
+                className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              />
+            </div>
+          </div>
+
+          {/* Grid de Canales (Estilo Buffer / Cards) */}
+          {filteredChannelsList.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl bg-white border border-dashed border-[#D1CFCA] space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#82807C] flex items-center justify-center mx-auto">
+                <Share2 className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-[#1F1E1D]">
+                No se encontraron canales con este filtro
+              </h4>
+              <p className="text-xs text-[#6B6966] max-w-md mx-auto">
+                {isMetaConnected
+                  ? "Puedes hacer clic en 'Sincronizar Cuentas Meta' para buscar páginas o cuentas creadas recientemente en Business Manager."
+                  : "Conecta tu cuenta de Facebook para importar automáticamente tus canales."}
+              </p>
+              <div className="pt-2 flex items-center justify-center gap-3">
+                {isMetaConnected ? (
+                  <button
+                    onClick={handleRefreshMeta}
+                    disabled={refreshingMeta}
+                    className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshingMeta ? "animate-spin" : ""}`} />
+                    <span>Sincronizar Cuentas Meta</span>
+                  </button>
+                ) : (
+                  <a
+                    href="/api/integrations/meta/connect"
+                    className="px-4 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold shadow-sm"
+                  >
+                    Conectar con Facebook
+                  </a>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredChannelsList.map((acc: any) => {
+                const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+                const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                const isAd = acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
+                const assignedClient = clients.find((c) => c.id === acc.clientId);
+                const hasClient = Boolean(assignedClient);
+
+                return (
+                  <div
+                    key={acc.id}
+                    className="rounded-3xl bg-white border border-[#E8E6DF] hover:border-[#D1CFCA] shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between gap-4 overflow-hidden"
+                  >
+                    {/* Header de la Tarjeta del Canal */}
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {isFB && (
+                            <div className="w-11 h-11 rounded-2xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                              f
+                            </div>
+                          )}
+                          {isIG && (
+                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+                              📷
+                            </div>
+                          )}
+                          {isAd && (
+                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0081FB] to-[#0668E1] text-white flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0">
+                              ADS
+                            </div>
+                          )}
+                          {!isFB && !isIG && !isAd && (
+                            <div className="w-11 h-11 rounded-2xl bg-black text-white flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0">
+                              🎵
+                            </div>
+                          )}
+
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-bold text-[#1F1E1D] leading-tight truncate" title={acc.accountName}>
+                              {acc.accountName}
+                            </h4>
+                            <span className="text-[11px] text-[#716F6A] block mt-0.5">
+                              {ACCOUNT_TYPE_LABELS[acc.accountType] || acc.accountType || "Canal Social"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${
+                            isFB
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${isFB ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
+                          <span>{isFB ? "LEADS EN VIVO" : "MÉTRICAS"}</span>
+                        </span>
+                      </div>
+
+                      {/* ID Externo */}
+                      <div className="flex items-center gap-2 text-[11px] text-[#82807C] font-mono bg-[#FAF9F5] px-3 py-1.5 rounded-xl border border-[#F0EEE6]">
+                        <span>ID:</span>
+                        <span className="truncate text-[#1F1E1D] font-medium">{acc.externalId || acc.id}</span>
+                      </div>
+                    </div>
+
+                    {/* Asignación Rápida a Cliente (Estilo Buffer) */}
+                    <div className="pt-3 border-t border-[#F0EEE6] space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-semibold text-[#4D4C48]">
+                          Cliente Asignado:
+                        </span>
+                        {hasClient ? (
+                          <Link
+                            href={`/crm/clients/${assignedClient?.id}`}
+                            className="text-[11px] font-semibold text-[#D97757] hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Ver Ficha</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </Link>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            Portafolio Agencia
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="relative">
+                        <select
+                          value={acc.clientId || ""}
+                          disabled={assigningId === acc.id}
+                          onChange={(e) => handleAssignClient(acc.id, e.target.value)}
+                          className={`w-full rounded-xl px-3 py-2 text-xs font-semibold transition-all appearance-none border focus:outline-none ${
+                            hasClient
+                              ? "bg-[#FAF9F5] border-[#D1CFCA] text-[#1F1E1D] focus:border-[#D97757]"
+                              : "bg-white border-[#E8E6DF] text-[#716F6A] focus:border-[#D97757]"
+                          }`}
+                        >
+                          <option value="">🏢 Portafolio BM Agencia (Sin Cliente)</option>
+                          {clients.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              👤 {c.name} {c.companyName ? `(${c.companyName})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#716F6A]">
+                          {assigningId === acc.id ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VISTA 2: DIRECTORIO ORGANIZADO POR CLIENTE (ORIENTADO A VENTAS)           */}
       {/* ========================================================================= */}
       {activeView === "clients" && (
         <div className="space-y-6">
