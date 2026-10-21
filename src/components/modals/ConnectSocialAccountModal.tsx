@@ -234,22 +234,17 @@ export function ConnectSocialAccountModal({
               <Layers className="w-5 h-5 text-[#E5C158]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#1F1E1D]">
-                  Conectar Canales Sociales & Pauta
-                </h2>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#FAF0E6] text-[#D97757] border border-[#F2D6C6]">
-                  Detección Automática
-                </span>
-              </div>
+              <h2 className="text-base font-bold text-[#1F1E1D]">
+                Vincular Redes Sociales & Anuncios
+              </h2>
               <p className="text-xs text-[#6B6966] mt-0.5">
                 {activeClient ? (
                   <>
-                    Vincula páginas o cuentas de anuncios para{" "}
+                    Selecciona las páginas y cuentas de anuncios para{" "}
                     <strong className="text-[#1F1E1D] font-semibold">{activeClient.name}</strong>
                   </>
                 ) : (
-                  "Selecciona y asigna cuentas publicitarias y páginas a los clientes de tu agencia."
+                  "Asigna cada página o cuenta de anuncios al cliente correspondiente de tu agencia."
                 )}
               </p>
             </div>
@@ -258,7 +253,7 @@ export function ConnectSocialAccountModal({
           <button
             onClick={onClose}
             className="p-2 rounded-full text-[#82807C] hover:text-[#1F1E1D] hover:bg-[#F0EEE6] transition-colors"
-            title="Cerrar modal"
+            title="Cerrar"
           >
             <X className="w-5 h-5" />
           </button>
@@ -288,7 +283,7 @@ export function ConnectSocialAccountModal({
           </div>
         )}
 
-        {/* Selector de Pestañas Superiores */}
+        {/* Selector de Plataformas */}
         <div className="px-6 pt-3 pb-2 flex items-center justify-between border-b border-[#F0EEE6] bg-white gap-2">
           <div className="flex items-center gap-1.5">
             <button
@@ -303,6 +298,11 @@ export function ConnectSocialAccountModal({
                 f
               </div>
               <span>Meta (Facebook & Instagram)</span>
+              {channels.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-bold">
+                  {channels.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -334,18 +334,18 @@ export function ConnectSocialAccountModal({
               onClick={handleRefreshMetaCatalog}
               disabled={refreshingCatalog}
               className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] hover:bg-white text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all"
-              title="Re-escanear catálogo de Facebook sin volver a iniciar sesión"
+              title="Buscar nuevas páginas o cuentas en Meta"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-[#1877F2]" : ""}`} />
               <span className="hidden sm:inline">
-                {refreshingCatalog ? "Sincronizando..." : "Buscar nuevas páginas"}
+                {refreshingCatalog ? "Buscando..." : "Buscar nuevas páginas"}
               </span>
             </button>
           )}
         </div>
 
         {/* Contenido Dinámico */}
-        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* ========================================================= */}
           {/* PESTAÑA 1: META (FACEBOOK, INSTAGRAM, ADS)                */}
           {/* ========================================================= */}
@@ -365,9 +365,8 @@ export function ConnectSocialAccountModal({
                       Conectar Cuenta de Meta for Business
                     </h3>
                     <p className="text-xs text-[#6B6966] leading-relaxed">
-                      Al conectar tu cuenta de Facebook, Bunker CRM detectará automáticamente todas tus
-                      <strong> páginas de Facebook, perfiles de Instagram y cuentas de anuncios</strong> sin
-                      que tengas que copiar tokens ni escribir IDs manuales.
+                      Conecta tu cuenta de Facebook para detectar automáticamente todas tus
+                      <strong> páginas, perfiles de Instagram y cuentas de anuncios</strong> sin configuraciones manuales.
                     </p>
                   </div>
 
@@ -385,7 +384,7 @@ export function ConnectSocialAccountModal({
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                       </svg>
-                      <span>Continuar con Facebook / Meta (OAuth)</span>
+                      <span>Continuar con Facebook / Meta</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </a>
                   </div>
@@ -393,32 +392,32 @@ export function ConnectSocialAccountModal({
                   <div className="pt-2 flex items-center justify-center gap-4 text-[11px] text-[#82807C]">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      Cifrado AES-256
+                      Cifrado seguro AES-256
                     </span>
                     <span>•</span>
-                    <span>Tokens de larga duración (~60 días)</span>
-                    <span>•</span>
-                    <span>Leads en tiempo real</span>
+                    <span>Tokens automáticos de 60 días</span>
                   </div>
                 </div>
               ) : (
-                /* CASO B: META YA ESTÁ CONECTADO (EXPERIENCIA BUFFER) */
-                <div className="space-y-4">
-                  {/* Banner de Estado Conectado */}
-                  <div className="p-4 rounded-2xl bg-[#EBF5EE] border border-[#C2E2CC] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                /* CASO B: META YA ESTÁ CONECTADO (VISTA SIMPLE Y CLARA) */
+                <div className="space-y-3.5">
+                  {/* Banner de Estado Conectado - Limpio y Compacto */}
+                  <div className="p-3.5 px-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm">
-                        <Check className="w-5 h-5" />
+                      <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm text-xs">
+                        ✓
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-xs font-bold text-emerald-950">
-                            Meta Business Manager Conectado
+                            Meta Business Conectado
                           </h4>
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span className="text-[11px] text-emerald-800">
+                            · {channels.length} {channels.length === 1 ? "cuenta disponible" : "cuentas disponibles"}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-emerald-800 mt-0.5">
-                          {channels.length} canales detectados en tu cuenta. Asígnalos a tus clientes con un clic.
+                        <p className="text-[11px] text-emerald-700">
+                          Asigna cada cuenta o página al cliente que le corresponde.
                         </p>
                       </div>
                     </div>
@@ -432,64 +431,62 @@ export function ConnectSocialAccountModal({
                         }
                       }}
                       className="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 underline self-start sm:self-auto flex items-center gap-1"
-                      title="Re-autorizar con otra cuenta de Facebook"
+                      title="Reconectar con otra cuenta de Facebook"
                     >
-                      <span>Reconectar otra cuenta de Meta</span>
+                      <span>Reconectar otra cuenta</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
 
-                  {/* Barra de Filtros y Búsqueda de Canales */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
-                    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+                  {/* Barra de Filtros y Búsqueda */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
                       <button
                         onClick={() => setChannelFilter("all")}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                           channelFilter === "all"
-                            ? "bg-[#1F1E1D] text-white"
-                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                            ? "bg-[#1F1E1D] text-white shadow-sm"
+                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
                         }`}
                       >
-                        Todos ({channels.length})
+                        Todas ({channels.length})
                       </button>
                       <button
                         onClick={() => setChannelFilter("pages")}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                           channelFilter === "pages"
-                            ? "bg-[#1877F2] text-white"
-                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                            ? "bg-[#1877F2] text-white shadow-sm"
+                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
                         }`}
                       >
-                        Páginas (
-                        {channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
+                        Páginas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
                       </button>
                       <button
                         onClick={() => setChannelFilter("ads")}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                           channelFilter === "ads"
-                            ? "bg-[#0081FB] text-white"
-                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                            ? "bg-[#0081FB] text-white shadow-sm"
+                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
                         }`}
                       >
-                        Ads ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
+                        Anuncios ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
                       </button>
                       <button
                         onClick={() => setChannelFilter("instagram")}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                           channelFilter === "instagram"
-                            ? "bg-[#E4405F] text-white"
-                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                            ? "bg-[#E4405F] text-white shadow-sm"
+                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
                         }`}
                       >
-                        Instagram (
-                        {channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
+                        Instagram ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
                       </button>
                       <button
                         onClick={() => setChannelFilter("unassigned")}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
                           channelFilter === "unassigned"
-                            ? "bg-amber-600 text-white"
-                            : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                            ? "bg-amber-600 text-white shadow-sm"
+                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
                         }`}
                       >
                         Sin asignar ({channels.filter((c) => !c.clientId).length})
@@ -497,31 +494,31 @@ export function ConnectSocialAccountModal({
                     </div>
 
                     <div className="relative w-full sm:w-56">
-                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#9C9890]" />
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
                       <input
                         type="text"
                         placeholder="Buscar por nombre..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                        className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
                       />
                     </div>
                   </div>
 
-                  {/* Grid / Lista de Canales Detectados (Buffer Style) */}
-                  <div className="space-y-2.5 max-h-[46vh] overflow-y-auto pr-1">
+                  {/* Lista de Cuentas y Páginas */}
+                  <div className="space-y-2 max-h-[46vh] overflow-y-auto pr-1">
                     {loadingChannels ? (
                       <div className="p-8 text-center text-xs text-[#82807C] flex items-center justify-center gap-2">
                         <RefreshCw className="w-4 h-4 animate-spin text-[#1877F2]" />
-                        <span>Cargando canales de Meta...</span>
+                        <span>Cargando cuentas...</span>
                       </div>
                     ) : filteredChannels.length === 0 ? (
                       <div className="p-8 rounded-2xl bg-[#FAF9F5] border border-dashed border-[#D1CFCA] text-center space-y-2">
                         <p className="text-xs font-semibold text-[#1F1E1D]">
-                          No se encontraron canales con este filtro
+                          No se encontraron cuentas con este filtro
                         </p>
                         <p className="text-[11px] text-[#82807C]">
-                          Haz clic en &quot;Buscar nuevas páginas&quot; si creaste recientemente una página o cuenta en tu Meta Business Manager.
+                          Haz clic en &quot;Buscar nuevas páginas&quot; si creaste una cuenta recientemente en Meta.
                         </p>
                       </div>
                     ) : (
@@ -535,31 +532,33 @@ export function ConnectSocialAccountModal({
                         const isAssignedToOther = Boolean(
                           targetClientId && ch.clientId && ch.clientId !== targetClientId
                         );
+                        const isAssigned = Boolean(ch.clientId && ch.client);
 
                         return (
                           <div
                             key={ch.id}
-                            className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                            className={`p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                               isAssignedToCurrent
-                                ? "bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-300/40"
-                                : "bg-white border-[#E8E6DF] hover:border-[#D1CFCA] hover:shadow-sm"
+                                ? "bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300/40"
+                                : isAssigned
+                                ? "bg-white border-[#E8E6DF] hover:border-[#D1CFCA]"
+                                : "bg-[#FCFCFA] border-[#ECEAE3] hover:border-[#D4AF37]/50"
                             }`}
                           >
-                            {/* Icono de Red + Información */}
+                            {/* Icono + Nombre + Tipo */}
                             <div className="flex items-center gap-3 min-w-0">
-                              {/* Icono */}
                               {isFBPage && (
-                                <div className="w-10 h-10 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                                <div className="w-9 h-9 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
                                   f
                                 </div>
                               )}
                               {isIG && (
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-sm flex-shrink-0 shadow-sm">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-sm flex-shrink-0 shadow-sm">
                                   📷
                                 </div>
                               )}
                               {isAd && (
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0081FB] to-[#0668E1] text-white flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm">
+                                <div className="w-9 h-9 rounded-xl bg-[#0081FB] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 shadow-sm">
                                   ADS
                                 </div>
                               )}
@@ -570,52 +569,45 @@ export function ConnectSocialAccountModal({
                                     {ch.accountName}
                                   </h4>
                                   {isFBPage && (
-                                    <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                                      Página Facebook
+                                    <span className="text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+                                      Página de Facebook
                                     </span>
                                   )}
                                   {isIG && (
-                                    <span className="text-[10px] font-semibold text-pink-800 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
-                                      Instagram Business
+                                    <span className="text-[10px] font-medium text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200/60">
+                                      Instagram
                                     </span>
                                   )}
                                   {isAd && (
-                                    <span className="text-[10px] font-semibold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
+                                    <span className="text-[10px] font-medium text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60">
                                       Cuenta de Anuncios
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="flex items-center gap-2 text-[11px] text-[#82807C] mt-0.5">
-                                  <span className="font-mono text-[10px]">
-                                    {ch.externalId || ch.id}
-                                  </span>
-                                  <span>•</span>
-                                  {ch.clientId ? (
-                                    <span className="font-medium text-[#1F1E1D]">
-                                      Asignada a:{" "}
-                                      <strong className="text-[#D97757]">
-                                        {ch.client?.name || "Cliente del CRM"}
-                                      </strong>
+                                <div className="flex items-center gap-2 text-xs mt-0.5">
+                                  {ch.clientId && ch.client ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
+                                      <Check className="w-3 h-3 text-emerald-600" />
+                                      <span>Asignada a: <strong>{ch.client.name}</strong></span>
                                     </span>
                                   ) : (
-                                    <span className="text-amber-700 font-medium">
-                                      Portafolio Agencia (Sin cliente)
+                                    <span className="text-[11px] text-[#8C887E]">
+                                      Sin cliente asignado
                                     </span>
                                   )}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Controles de Asignación en 1 Clic */}
+                            {/* Selector de Cliente */}
                             <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                              {/* Modo 1: Abierto desde un cliente específico */}
                               {targetClientId ? (
                                 isAssignedToCurrent ? (
                                   <button
                                     onClick={() => handleAssignChannel(ch.id, null)}
                                     disabled={assigningId === ch.id}
-                                    className="px-3 py-1.5 rounded-xl bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5"
+                                    className="px-3 py-1.5 rounded-xl bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium transition-all shadow-sm flex items-center gap-1.5"
                                   >
                                     {assigningId === ch.id ? (
                                       <RefreshCw className="w-3 h-3 animate-spin" />
@@ -647,20 +639,26 @@ export function ConnectSocialAccountModal({
                                   </button>
                                 )
                               ) : (
-                                /* Modo 2: Selector General de Clientes */
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
                                   <select
                                     value={ch.clientId || ""}
                                     onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
                                     disabled={assigningId === ch.id}
-                                    className="bg-white border border-[#E8E6DF] rounded-xl px-2.5 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] shadow-sm max-w-[200px]"
+                                    className={`rounded-xl px-3 py-1.5 text-xs font-medium border transition-all cursor-pointer shadow-sm ${
+                                      ch.clientId
+                                        ? "bg-white text-[#1F1E1D] border-[#E8E6DF] hover:border-[#1F1E1D]"
+                                        : "bg-[#FAF9F5] text-[#6B6966] border-[#D1CFCA] hover:border-[#1F1E1D] hover:text-[#1F1E1D]"
+                                    }`}
                                   >
-                                    <option value="">Portafolio Agencia</option>
+                                    <option value="">➕ Asignar a un cliente...</option>
                                     {clients.map((c) => (
                                       <option key={c.id} value={c.id}>
                                         {c.name}
                                       </option>
                                     ))}
+                                    {ch.clientId && (
+                                      <option value="">✕ Quitar asignación (dejar libre)</option>
+                                    )}
                                   </select>
                                   {assigningId === ch.id && (
                                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
