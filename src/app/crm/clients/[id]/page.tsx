@@ -165,8 +165,9 @@ export default function ClientProfile360Page() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  // Active Tab: summary, contacts, activities, opportunities, tasks, ads_leads, ai_assistant
-  const [activeTab, setActiveTab] = useState<"summary" | "contacts" | "activities" | "opportunities" | "tasks" | "ads_leads" | "ai_assistant">("summary");
+  // 3-Column Layout Tabs: Left profile sub-tab & Center feed tab
+  const [leftTab, setLeftTab] = useState<"contact" | "company" | "portal">("contact");
+  const [centerTab, setCenterTab] = useState<"activity" | "calls" | "meetings" | "notes" | "ads_leads" | "ai_assistant">("activity");
 
   // Auxiliary data
   const [teamMembers, setTeamMembers] = useState<UserMember[]>([]);
@@ -574,6 +575,21 @@ export default function ClientProfile360Page() {
     };
   }, [client]);
 
+  
+
+  // Pending tasks & filtered activities for the 3-column feed
+  const pendingTasks = useMemo(() => {
+    return (client?.tasks || []).filter((t) => t.status !== "completed");
+  }, [client?.tasks]);
+
+  const activitiesToDisplay = useMemo(() => {
+    const list = client?.activities || [];
+    if (centerTab === "calls") return list.filter((a) => a.type === "call");
+    if (centerTab === "meetings") return list.filter((a) => a.type === "meeting");
+    if (centerTab === "notes") return list.filter((a) => a.type === "note");
+    return list;
+  }, [client?.activities, centerTab]);
+
   // Loading Screen
   if (loading) {
     return (
@@ -615,38 +631,11 @@ export default function ClientProfile360Page() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Back Link & Quick Breadcrumb */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#F0EEE6]">
-        <Link
-          href="/crm/clients"
-          className="text-xs text-[#716F6A] hover:text-[#1F1E1D] flex items-center gap-1.5 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Volver al listado de clientes</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fetchClientData()}
-            className="p-1.5 rounded-lg border border-[#E8E6DF] text-[#716F6A] hover:text-[#1F1E1D] text-xs transition-colors"
-            title="Refrescar ficha 360°"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setIsEditClientOpen(true)}
-            className="px-3 py-1.5 rounded-xl border border-[#E8E6DF] bg-[#FFFFFF] hover:border-[#DDD9CF] text-xs font-semibold text-[#1F1E1D] flex items-center gap-1.5 transition-colors shadow-sm"
-          >
-            <Edit className="w-3.5 h-3.5 text-[#D97757]" />
-            <span>Editar Datos de Cuenta</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="space-y-5 animate-in fade-in duration-200">
+      {/* Toast Feedback */}
       {feedback && (
         <div
-          className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between ${
+          className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between shadow-xs ${
             feedback.type === "error"
               ? "bg-rose-50 border-rose-200 text-rose-800"
               : "bg-emerald-50 border-emerald-200 text-emerald-800"
@@ -654,9 +643,9 @@ export default function ClientProfile360Page() {
         >
           <div className="flex items-center gap-2">
             {feedback.type === "error" ? (
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             ) : (
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
             )}
             <span>{feedback.text}</span>
           </div>
@@ -666,811 +655,621 @@ export default function ClientProfile360Page() {
         </div>
       )}
 
-      {/* Account Master Header (Fase C) */}
-      <div className="p-6 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-5">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
-                {statusBadge.label}
-              </span>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#E8E6DF] text-[#716F6A] flex items-center gap-1">
-                <Building className="w-3 h-3 text-[#9C9890]" />
-                {client.industry || "General"}
-              </span>
+      {/* 3-Column Modern Architecture (InsightCRM Style) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        {/* ========================================================= */}
+        {/* COLUMNA 1: PERFIL & DATOS RÁPIDOS (Izquierda, 3 cols)     */}
+        {/* ========================================================= */}
+        <div className="xl:col-span-3 space-y-4">
+          <Link
+            href="/crm/clients"
+            className="inline-flex items-center gap-1.5 text-xs text-[#716F6A] hover:text-[#1F1E1D] font-medium transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Volver a clientes</span>
+          </Link>
+
+          <div className="bg-white rounded-2xl border border-[#E8E6DF] p-5 shadow-xs text-center space-y-4">
+            {/* Avatar Central Grande con Badge de Estado */}
+            <div className="relative inline-block mx-auto">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-200 via-amber-100 to-amber-50 border-2 border-white shadow-md flex items-center justify-center text-2xl font-bold text-amber-900">
+                {client.name.charAt(0).toUpperCase()}
+              </div>
+              <span
+                className={`absolute bottom-0 right-1 w-4 h-4 rounded-full border-2 border-white ${
+                  client.status === "active"
+                    ? "bg-emerald-500"
+                    : client.status === "on_hold"
+                    ? "bg-amber-500"
+                    : "bg-rose-500"
+                }`}
+                title={`Estado: ${statusBadge.label}`}
+              />
+            </div>
+
+            {/* Nombre y Cargo/Empresa */}
+            <div className="space-y-0.5">
+              <h1 className="text-base font-bold text-[#1F1E1D] tracking-tight">
+                {client.name}
+              </h1>
+              <p className="text-xs text-[#716F6A] font-medium truncate">
+                {client.companyName || client.industry || "Cliente Comercial"}
+              </p>
               {client.isDemo && (
-                <span className="text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-2 py-0.5 rounded border border-[#F3D6CB]">
-                  CUENTA DEMO
+                <span className="inline-block text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-2 py-0.5 rounded-full border border-[#F3D6CB] mt-1">
+                  DEMO
                 </span>
               )}
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-semibold text-[#1F1E1D] tracking-tight">
-              {client.name}
-            </h1>
-            {client.companyName && client.companyName !== client.name && (
-              <p className="text-xs text-[#716F6A] font-medium">Razón Social: {client.companyName}</p>
-            )}
-          </div>
-
-          {/* Key Financial Badges (MRR & ARR in USD) */}
-          <div className="flex items-center gap-3">
-            <div className="px-4 py-2.5 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-right">
-              <div className="text-[10px] font-medium uppercase text-[#9C9890]">Facturación MRR</div>
-              <div className="text-xl font-semibold text-[#1F1E1D]">
-                ${(client.revenue || 0).toLocaleString("en-US")}{" "}
-                <span className="text-xs font-normal text-[#716F6A]">USD/mes</span>
-              </div>
-            </div>
-            <div className="px-4 py-2.5 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-right hidden sm:block">
-              <div className="text-[10px] font-medium uppercase text-[#9C9890]">ARR Anualizado</div>
-              <div className="text-lg font-semibold text-[#1F1E1D]">
-                ${((client.revenue || 0) * 12).toLocaleString("en-US")}{" "}
-                <span className="text-xs font-normal text-[#716F6A]">USD</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Commercial & Contact Metadata Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-[#F0EEE6] text-xs text-[#716F6A]">
-          <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-[#9C9890] shrink-0" />
-            <span className="truncate">{client.email || "Sin correo comercial"}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-[#9C9890] shrink-0" />
-            <span>{client.phone || "Sin teléfono registrado"}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-[#9C9890] shrink-0" />
-            {client.website ? (
-              <a
-                href={client.website}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#D97757] hover:underline flex items-center gap-1 truncate"
-              >
-                <span>{client.website.replace(/^https?:\/\//, "")}</span>
-                <ExternalLink className="w-3 h-3 shrink-0" />
-              </a>
-            ) : (
-              <span>Sin sitio web</span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-[#9C9890] shrink-0" />
-            <span>
-              Asesor: <strong className="text-[#1F1E1D]">{client.owner?.name || "Sin asignar"}</strong>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation (Fase C) */}
-      <div className="flex items-center gap-1 border-b border-[#E8E6DF] overflow-x-auto no-scrollbar">
-        {[
-          { key: "summary", label: "Resumen de Cuenta", count: null },
-          { key: "contacts", label: "Contactos", count: client.contacts?.length || 0 },
-          { key: "activities", label: "Cronología de Actividades", count: client.activities?.length || 0 },
-          { key: "opportunities", label: "Oportunidades (Pipeline)", count: client.opportunities?.length || 0 },
-          { key: "tasks", label: "Tareas y Próximas Acciones", count: clientMetrics.pendingTasksCount },
-          { key: "ads_leads", label: "⚡ Pautas & Leads en Vivo", count: client.leads?.length ?? (client.connectedAccounts?.length ? 0 : null) },
-          ...(isAdmin ? [{ key: "ai_assistant", label: "Asistente IA", count: null }] : []),
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === tab.key
-                ? "border-[#D97757] text-[#D97757] bg-[#FFFFFF] shadow-sm"
-                : "border-transparent text-[#716F6A] hover:text-[#1F1E1D] hover:bg-[#FAF9F5]"
-            }`}
-          >
-            <span>{tab.label}</span>
-            {tab.count !== null && (
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  activeTab === tab.key
-                    ? "bg-[#FBF1ED] text-[#C15F3C]"
-                    : "bg-[#F0EEE6] text-[#716F6A]"
-                }`}
-              >
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab 1: Resumen General */}
-      {activeTab === "summary" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
-          <div className="lg:col-span-2 space-y-6">
-            {isBunkerUser && (
-              <ClientPortalUsersPanel
-                clientId={client?.id || clientId}
-                clientName={client?.name || client?.companyName || ""}
-                users={portalUsers.users}
-                error={portalUsers.error}
-                savingId={portalUsers.savingId}
-                onSetRole={portalUsers.setRole}
-                onCreateUser={portalUsers.createUser}
-                onGenerateResetLink={portalUsers.generateResetLink}
-              />
-            )}
-
-            {/* Notes Section */}
-            <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
-              <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#D97757]" />
-                Notas Comerciales y Condiciones de Contrato
-              </h3>
-              <p className="text-xs text-[#716F6A] leading-relaxed whitespace-pre-wrap bg-[#FAF9F5] p-3.5 rounded-xl border border-[#E8E6DF]">
-                {client.notes || "No se han registrado notas comerciales para esta cuenta."}
-              </p>
-            </div>
-
-            {/* Recent Activities Preview */}
-            <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-emerald-600" />
-                  Últimas Actividades Registradas
-                </h3>
-                <button
-                  onClick={() => setActiveTab("activities")}
-                  className="text-xs text-[#D97757] hover:underline font-semibold"
+            {/* Botones Redondos de Acción Rápida */}
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {client.email ? (
+                <a
+                  href={`mailto:${client.email}`}
+                  title={`Enviar correo a ${client.email}`}
+                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
                 >
-                  Ver todas
-                </button>
-              </div>
-
-              {!client.activities || client.activities.length === 0 ? (
-                <div className="text-center py-6 text-xs text-[#9C9890]">
-                  No hay interacciones registradas aún.
-                </div>
+                  <Mail className="w-4 h-4 text-[#716F6A]" />
+                </a>
               ) : (
-                <div className="space-y-2.5">
-                  {client.activities.slice(0, 3).map((act) => (
-                    <div
-                      key={act.id}
-                      className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-start justify-between gap-3 text-xs"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="font-semibold text-[#1F1E1D]">{act.title}</div>
-                        {act.description && <div className="text-[#716F6A] text-[11px]">{act.description}</div>}
-                        <div className="text-[10px] text-[#9C9890] mt-1">
-                          Registrado por: {act.user?.name || "Asesor"} • {new Date(act.performedAt).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#FFFFFF] border border-[#E8E6DF] text-[#716F6A]">
-                        {act.type}
-                      </span>
-                    </div>
-                  ))}
+                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                  <Mail className="w-4 h-4" />
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Right Column: Key Summary & Pending Tasks */}
-          <div className="space-y-6">
-            {/* Commercial Indicators */}
-            <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
-              <h3 className="font-semibold text-sm text-[#1F1E1D]">Indicadores de la Cuenta</h3>
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-[#F0EEE6]">
-                  <span className="text-[#716F6A]">Oportunidades Abiertas</span>
-                  <span className="font-bold text-[#1F1E1D]">{clientMetrics.openOppsCount}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-[#F0EEE6]">
-                  <span className="text-[#716F6A]">Valor en Pipeline (USD)</span>
-                  <span className="font-bold text-blue-900">${clientMetrics.openOppsValue.toLocaleString("en-US")}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-[#F0EEE6]">
-                  <span className="text-[#716F6A]">Deals Ganados (USD)</span>
-                  <span className="font-bold text-emerald-700">${clientMetrics.wonOppsValue.toLocaleString("en-US")}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-[#F0EEE6]">
-                  <span className="text-[#716F6A]">Tareas Pendientes</span>
-                  <span className="font-bold text-amber-700">{clientMetrics.pendingTasksCount}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-[#716F6A]">Cliente Desde</span>
-                  <span className="font-medium text-[#1F1E1D]">
-                    {new Date(client.createdAt).toLocaleDateString("es-MX")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Primary Contact Card */}
-            <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm text-[#1F1E1D]">Contacto Principal</h3>
-                <button
-                  onClick={() => setActiveTab("contacts")}
-                  className="text-xs text-[#D97757] hover:underline font-semibold"
+              {client.phone ? (
+                <a
+                  href={`tel:${client.phone}`}
+                  title={`Llamar a ${client.phone}`}
+                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
                 >
-                  Gestionar
-                </button>
-              </div>
+                  <Phone className="w-4 h-4 text-[#716F6A]" />
+                </a>
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                  <Phone className="w-4 h-4" />
+                </div>
+              )}
 
-              {(() => {
-                const primary = client.contacts?.find((c) => c.isPrimary) || client.contacts?.[0];
-                if (!primary) {
-                  return (
-                    <div className="text-center py-4 text-xs text-[#9C9890]">
-                      No hay contactos registrados.
-                    </div>
-                  );
-                }
-                return (
-                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-1.5 text-xs">
-                    <div className="font-semibold text-[#1F1E1D] flex items-center justify-between">
-                      <span>{primary.firstName} {primary.lastName || ""}</span>
-                      <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                        Principal
-                      </span>
-                    </div>
-                    {primary.jobTitle && <div className="text-[11px] text-[#716F6A]">{primary.jobTitle}</div>}
-                    {primary.email && (
-                      <div className="text-[11px] text-[#716F6A] flex items-center gap-1.5 pt-1">
-                        <Mail className="w-3 h-3 text-[#9C9890]" />
-                        <span>{primary.email}</span>
-                      </div>
-                    )}
-                    {primary.phone && (
-                      <div className="text-[11px] text-[#716F6A] flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 text-[#9C9890]" />
-                        <span>{primary.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-      )}
+              {client.website ? (
+                <a
+                  href={client.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={`Visitar ${client.website}`}
+                  className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+                >
+                  <Globe className="w-4 h-4 text-[#716F6A]" />
+                </a>
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
+                  <Globe className="w-4 h-4" />
+                </div>
+              )}
 
-      {/* Tab 2: Contactos (Fase D) */}
-      {activeTab === "contacts" && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-sm text-[#1F1E1D]">
-                Contactos Vinculados ({client.contacts?.length || 0})
-              </h3>
-              <p className="text-xs text-[#716F6A]">
-                Personas de contacto directo, directores y tomadores de decisión autorizados en la cuenta.
-              </p>
+              <button
+                type="button"
+                onClick={() => setIsEditClientOpen(true)}
+                title="Editar datos del cliente"
+                className="w-9 h-9 rounded-full bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] hover:bg-[#FAF9F5] flex items-center justify-center text-[#1F1E1D] transition-colors shadow-2xs"
+              >
+                <Edit className="w-4 h-4 text-[#716F6A]" />
+              </button>
             </div>
+
+            {/* Botón Principal (Convertir a Oportunidad / Nueva Oportunidad) */}
             <button
-              onClick={() => {
-                setEditingContact(null);
-                setContactFormData({
-                  firstName: "",
-                  lastName: "",
-                  email: "",
-                  phone: "",
-                  jobTitle: "",
-                  isPrimary: (client.contacts?.length || 0) === 0,
-                });
-                setIsContactModalOpen(true);
-              }}
-              className="btn-black-gold rounded-xl px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
-              <span>Añadir Contacto</span>
-            </button>
-          </div>
-
-          {!client.contacts || client.contacts.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs text-[#9C9890] space-y-2">
-              <User className="w-8 h-8 mx-auto text-[#DDD9CF]" />
-              <p>No hay contactos vinculados a este cliente todavía.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {client.contacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  className={`p-4 rounded-2xl bg-[#FFFFFF] border shadow-sm flex flex-col justify-between space-y-3 ${
-                    contact.isPrimary ? "border-amber-300 ring-1 ring-amber-200" : "border-[#E8E6DF]"
-                  }`}
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-semibold text-sm text-[#1F1E1D]">
-                          {contact.firstName} {contact.lastName || ""}
-                        </h4>
-                        {contact.jobTitle && (
-                          <div className="text-[11px] text-[#716F6A]">{contact.jobTitle}</div>
-                        )}
-                      </div>
-                      {contact.isPrimary ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                          <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                          Principal
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleMakePrimaryContact(contact.id)}
-                          className="text-[10px] text-[#716F6A] hover:text-amber-700 hover:bg-amber-50 px-2 py-0.5 rounded border border-[#E8E6DF] transition-colors"
-                          title="Hacer contacto principal de la cuenta"
-                        >
-                          Hacer principal
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-[#F0EEE6] space-y-1 text-xs text-[#716F6A]">
-                      {contact.email && (
-                        <div className="flex items-center gap-1.5">
-                          <Mail className="w-3.5 h-3.5 text-[#9C9890]" />
-                          <span className="truncate">{contact.email}</span>
-                        </div>
-                      )}
-                      {contact.phone && (
-                        <div className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-[#9C9890]" />
-                          <span>{contact.phone}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-[#F0EEE6]">
-                    <button
-                      onClick={() => {
-                        setEditingContact(contact);
-                        setContactFormData({
-                          firstName: contact.firstName,
-                          lastName: contact.lastName || "",
-                          email: contact.email || "",
-                          phone: contact.phone || "",
-                          jobTitle: contact.jobTitle || "",
-                          isPrimary: contact.isPrimary,
-                        });
-                        setIsContactModalOpen(true);
-                      }}
-                      className="p-1.5 rounded-lg text-[#716F6A] hover:text-[#1F1E1D] hover:bg-[#FAF9F5] text-xs transition-colors"
-                      title="Editar contacto"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteContact(contact.id, `${contact.firstName} ${contact.lastName || ""}`)}
-                      className="p-1.5 rounded-lg text-[#716F6A] hover:text-rose-600 hover:bg-rose-50 text-xs transition-colors"
-                      title="Eliminar contacto"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab 3: Timeline de Actividades (Fase E) */}
-      {activeTab === "activities" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
-          {/* Quick Register Activity Form (Col 1) */}
-          <div className="lg:col-span-1">
-            <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-3 sticky top-4">
-              <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
-                <Send className="w-4 h-4 text-[#D97757]" />
-                Registrar Interacción
-              </h3>
-              <p className="text-xs text-[#716F6A]">
-                Guarda notas de llamadas, minutas de reunión o seguimientos comerciales en la cronología.
-              </p>
-
-              <form onSubmit={handleCreateActivity} className="space-y-3 pt-2">
-                <div>
-                  <label className="block text-[11px] font-medium text-[#1F1E1D] mb-1">Tipo de Actividad</label>
-                  <select
-                    value={newActivity.type}
-                    onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  >
-                    <option value="call">📞 Llamada telefónica</option>
-                    <option value="meeting">🤝 Reunión / Videollamada</option>
-                    <option value="email">✉️ Correo electrónico</option>
-                    <option value="note">📝 Nota interna</option>
-                    <option value="follow_up">🎯 Seguimiento comercial</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-[#1F1E1D] mb-1">Título / Asunto *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="ej. Llamada de revisión de pauta mensual"
-                    value={newActivity.title}
-                    onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-[#1F1E1D] mb-1">Descripción / Acuerdos</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Detalles de la conversación, próximos pasos o compromisos pactados..."
-                    value={newActivity.description}
-                    onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submittingActivity}
-                  className="w-full btn-black-gold rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
-                >
-                  <Send className="w-3.5 h-3.5 text-[#E5C158]" />
-                  <span>{submittingActivity ? "Guardando..." : "Guardar en Timeline"}</span>
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Activity Timeline Stream (Col 2-3) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="font-semibold text-sm text-[#1F1E1D]">
-              Cronología de Interacciones ({client.activities?.length || 0})
-            </h3>
-
-            {!client.activities || client.activities.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs text-[#9C9890] space-y-2">
-                <Clock className="w-8 h-8 mx-auto text-[#DDD9CF]" />
-                <p>No se han registrado actividades para este cliente aún.</p>
-              </div>
-            ) : (
-              <div className="space-y-3 relative before:absolute before:inset-0 before:left-5 before:w-0.5 before:bg-[#E8E6DF]">
-                {client.activities.map((act) => {
-                  let icon = <Phone className="w-4 h-4 text-blue-600" />;
-                  if (act.type === "meeting") icon = <Video className="w-4 h-4 text-emerald-600" />;
-                  if (act.type === "email") icon = <Mail className="w-4 h-4 text-purple-600" />;
-                  if (act.type === "note") icon = <FileText className="w-4 h-4 text-amber-600" />;
-                  if (act.type === "follow_up") icon = <TrendingUp className="w-4 h-4 text-[#D97757]" />;
-
-                  return (
-                    <div key={act.id} className="relative pl-11">
-                      <div className="absolute left-2.5 top-3 -translate-x-1/2 w-6 h-6 rounded-full bg-[#FFFFFF] border-2 border-[#E8E6DF] flex items-center justify-center shadow-sm">
-                        {icon}
-                      </div>
-
-                      <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-1.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-xs text-[#1F1E1D]">{act.title}</h4>
-                          <span className="text-[10px] font-semibold text-[#9C9890] whitespace-nowrap">
-                            {new Date(act.performedAt).toLocaleString("es-MX", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })}
-                          </span>
-                        </div>
-
-                        {act.description && (
-                          <p className="text-xs text-[#716F6A] leading-relaxed whitespace-pre-wrap bg-[#FAF9F5] p-2.5 rounded-xl border border-[#E8E6DF]">
-                            {act.description}
-                          </p>
-                        )}
-
-                        <div className="flex items-center justify-between pt-1 text-[10px] text-[#9C9890]">
-                          <span>
-                            Registrado por: <strong className="text-[#1F1E1D]">{act.user?.name || "Asesor"}</strong>
-                          </span>
-                          <span className="capitalize">{act.type}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 4: Oportunidades Comerciales (Fase F) */}
-      {activeTab === "opportunities" && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-sm text-[#1F1E1D]">
-                Oportunidades en Pipeline ({client.opportunities?.length || 0})
-              </h3>
-              <p className="text-xs text-[#716F6A]">
-                Proyectos, contratos de expansión y servicios complementarios gestionados en el embudo comercial.
-              </p>
-            </div>
-            <button
+              type="button"
               onClick={() => setIsOppModalOpen(true)}
-              className="btn-black-gold rounded-xl px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#141414] hover:bg-[#222222] text-[#FAF8F3] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
             >
               <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
               <span>Nueva Oportunidad</span>
             </button>
-          </div>
 
-          {!client.opportunities || client.opportunities.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs text-[#9C9890] space-y-2">
-              <Briefcase className="w-8 h-8 mx-auto text-[#DDD9CF]" />
-              <p>No hay oportunidades registradas para este cliente en el pipeline.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {client.opportunities.map((opp) => {
-                let statusBadge = { label: "ABIERTA", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-                if (opp.status === "won") {
-                  statusBadge = { label: "GANADA", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-                } else if (opp.status === "lost") {
-                  statusBadge = { label: "PERDIDA", cls: "bg-rose-50 text-rose-700 border-rose-200" };
-                }
-
-                return (
-                  <div
-                    key={opp.id}
-                    className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm flex flex-col justify-between space-y-3"
+            {/* Sub-Pestañas: Contacto | Empresa | Portal */}
+            <div className="pt-2 border-t border-[#F0EEE8]">
+              <div className="flex items-center justify-around border-b border-[#F0EEE8] pb-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setLeftTab("contact")}
+                  className={`pb-1 font-semibold transition-colors border-b-2 ${
+                    leftTab === "contact"
+                      ? "border-[#1F1E1D] text-[#1F1E1D]"
+                      : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                  }`}
+                >
+                  Contacto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeftTab("company")}
+                  className={`pb-1 font-semibold transition-colors border-b-2 ${
+                    leftTab === "company"
+                      ? "border-[#1F1E1D] text-[#1F1E1D]"
+                      : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                  }`}
+                >
+                  Empresa
+                </button>
+                {isBunkerUser && (
+                  <button
+                    type="button"
+                    onClick={() => setLeftTab("portal")}
+                    className={`pb-1 font-semibold transition-colors border-b-2 ${
+                      leftTab === "portal"
+                        ? "border-[#1F1E1D] text-[#1F1E1D]"
+                        : "border-transparent text-[#8C887E] hover:text-[#1F1E1D]"
+                    }`}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-semibold text-sm text-[#1F1E1D]">{opp.title}</h4>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
-                          {statusBadge.label}
-                        </span>
-                      </div>
+                    Portal ({portalUsers.users.length})
+                  </button>
+                )}
+              </div>
 
-                      {opp.stage && (
-                        <div className="flex items-center gap-1.5 text-xs text-[#716F6A]">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: opp.stage.color || "#586ff6" }}
-                          />
-                          <span>Etapa: {opp.stage.name}</span>
-                        </div>
-                      )}
-
-                      <div className="pt-2 border-t border-[#F0EEE6] grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <div className="text-[10px] text-[#9C9890] uppercase font-medium">Valor ($ USD)</div>
-                          <div className="font-bold text-[#1F1E1D]">
-                            ${opp.value.toLocaleString("en-US")} USD
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-[#9C9890] uppercase font-medium">Probabilidad</div>
-                          <div className="font-semibold text-[#1F1E1D]">{opp.probability}%</div>
-                        </div>
-                      </div>
-
-                      {opp.expectedClose && (
-                        <div className="text-[11px] text-[#716F6A] flex items-center gap-1 pt-1">
-                          <Calendar className="w-3 h-3 text-[#9C9890]" />
-                          <span>Cierre estimado: {new Date(opp.expectedClose).toLocaleDateString("es-MX")}</span>
-                        </div>
-                      )}
+              {/* Contenido Clave-Valor sin textos innecesarios */}
+              <div className="pt-3 text-left">
+                {leftTab === "contact" && (
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Correo
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium break-all">
+                        {client.email || "Sin registrar"}
+                      </span>
                     </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Teléfono
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium">
+                        {client.phone || "Sin registrar"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Asesor Asignado
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium">
+                        {client.owner?.name || "Sin asignar"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Cliente Desde
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium">
+                        {new Date(client.createdAt).toLocaleDateString("es-MX", { dateStyle: "medium" })}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
-                    {/* Status quick actions */}
-                    {opp.status === "open" && (
-                      <div className="pt-2 border-t border-[#F0EEE6] flex items-center justify-end gap-1.5 text-xs">
-                        <button
-                          onClick={() => handleUpdateOppStatus(opp.id, "won")}
-                          className="px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-semibold border border-emerald-200 transition-colors"
-                        >
-                          Marcar Ganada
-                        </button>
-                        <button
-                          onClick={() => handleUpdateOppStatus(opp.id, "lost")}
-                          className="px-2 py-1 rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 font-semibold border border-rose-200 transition-colors"
-                        >
-                          Marcar Perdida
-                        </button>
+                {leftTab === "company" && (
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Razón Social
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium">
+                        {client.companyName || client.name}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Industria / Sector
+                      </span>
+                      <span className="text-[#1F1E1D] font-medium">
+                        {client.industry || "General"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Facturación Mensual
+                      </span>
+                      <span className="text-[#1F1E1D] font-bold text-sm">
+                        ${(client.revenue || 0).toLocaleString("en-US")} USD
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        Pipeline Activo
+                      </span>
+                      <span className="text-blue-900 font-bold">
+                        ${clientMetrics.openOppsValue.toLocaleString("en-US")} USD
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                        ARR Anualizado
+                      </span>
+                      <span className="text-emerald-700 font-bold">
+                        ${((client.revenue || 0) * 12).toLocaleString("en-US")} USD
+                      </span>
+                    </div>
+                    {client.notes && (
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-[#8C887E] tracking-wider block">
+                          Notas
+                        </span>
+                        <p className="text-[#716F6A] text-[11px] whitespace-pre-wrap mt-0.5 leading-relaxed bg-[#FAF9F5] p-2 rounded-lg border border-[#E8E6DF]">
+                          {client.notes}
+                        </p>
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                )}
 
-      {/* Tab 5: Tareas y Próximas Acciones (Fase G) */}
-      {activeTab === "tasks" && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-sm text-[#1F1E1D]">
-                Tareas Vinculadas a la Cuenta ({client.tasks?.length || 0})
-              </h3>
-              <p className="text-xs text-[#716F6A]">
-                Compromisos, entregables y recordatorios comerciales asignados a esta cuenta.
-              </p>
+                {leftTab === "portal" && (
+                  <div className="space-y-2">
+                    <ClientPortalUsersPanel
+                      clientId={client?.id || clientId}
+                      clientName={client?.name || client?.companyName || ""}
+                      users={portalUsers.users}
+                      error={portalUsers.error}
+                      savingId={portalUsers.savingId}
+                      onSetRole={portalUsers.setRole}
+                      onCreateUser={portalUsers.createUser}
+                      onGenerateResetLink={portalUsers.generateResetLink}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => setIsTaskModalOpen(true)}
-              className="btn-black-gold rounded-xl px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
-              <span>Agendar Tarea</span>
-            </button>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* COLUMNA 2: ACTIVIDAD & FEED CENTRAL (Centro, 6 cols)      */}
+        {/* ========================================================= */}
+        <div className="xl:col-span-6 space-y-4 min-w-0">
+          {/* Pestañas Horizontales Superiores */}
+          <div className="flex items-center gap-6 border-b border-[#E8E6DF] pb-2 text-xs font-semibold overflow-x-auto no-scrollbar">
+            {[
+              { key: "activity", label: "Actividad", count: client.activities?.length || 0 },
+              { key: "calls", label: "Llamadas", count: client.activities?.filter((a) => a.type === "call").length || 0 },
+              { key: "meetings", label: "Reuniones", count: client.activities?.filter((a) => a.type === "meeting").length || 0 },
+              { key: "notes", label: "Notas", count: client.activities?.filter((a) => a.type === "note").length || 0 },
+              { key: "ads_leads", label: "Pautas & Leads", count: client.leads?.length || (client.connectedAccounts?.length || 0) },
+              ...(isAdmin ? [{ key: "ai_assistant", label: "Asistente IA", count: null }] : []),
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setCenterTab(t.key as any)}
+                className={`pb-2 transition-colors relative whitespace-nowrap ${
+                  centerTab === t.key
+                    ? "text-[#1F1E1D] font-bold border-b-2 border-[#1F1E1D]"
+                    : "text-[#8C887E] hover:text-[#1F1E1D] border-b-2 border-transparent"
+                }`}
+              >
+                <span>{t.label}</span>
+                {t.count !== null && t.count > 0 && (
+                  <span className="ml-1.5 text-[10px] font-normal text-[#8C887E]">
+                    ({t.count})
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
-          {!client.tasks || client.tasks.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#FFFFFF] border border-[#E8E6DF] text-xs text-[#9C9890] space-y-2">
-              <CheckSquare className="w-8 h-8 mx-auto text-[#DDD9CF]" />
-              <p>No hay tareas pendientes ni registradas para este cliente.</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {client.tasks.map((task) => {
-                const isCompleted = task.status === "completed";
-                const now = new Date();
-                const isOverdue =
-                  task.dueDate &&
-                  !isCompleted &&
-                  new Date(task.dueDate).getTime() < now.getTime();
-
-                let priorityBadge = { label: "Media", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-                if (task.priority === "urgent" || task.priority === "high") {
-                  priorityBadge = { label: "Alta", cls: "bg-rose-50 text-rose-700 border-rose-200" };
-                } else if (task.priority === "low") {
-                  priorityBadge = { label: "Baja", cls: "bg-gray-50 text-gray-700 border-gray-200" };
-                }
-
-                return (
-                  <div
-                    key={task.id}
-                    className={`p-4 rounded-2xl bg-[#FFFFFF] border shadow-sm flex items-start justify-between gap-3 transition-colors ${
-                      isCompleted ? "opacity-60 bg-[#FAF9F5] border-[#E8E6DF]" : "border-[#E8E6DF]"
-                    }`}
+          {/* Vistas del Feed */}
+          {centerTab === "ads_leads" ? (
+            /* Vista de Pautas y Leads en Vivo */
+            <div className="space-y-4">
+              <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0EEE6]">
+                  <h3 className="font-bold text-xs text-[#1F1E1D] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#D97757]" />
+                    Cuentas Publicitarias Conectadas ({client.connectedAccounts?.length || 0})
+                  </h3>
+                  <Link
+                    href="/marketing/integrations"
+                    className="text-xs font-semibold text-[#D97757] hover:underline"
                   >
-                    <div className="flex items-start gap-3">
-                      <button
-                        onClick={() => handleToggleTask(task)}
-                        className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
-                          isCompleted
-                            ? "bg-emerald-600 border-emerald-600 text-white"
-                            : "border-[#9C9890] hover:border-[#D97757]"
-                        }`}
-                      >
-                        {isCompleted && <Check className="w-3.5 h-3.5" />}
-                      </button>
+                    + Vincular
+                  </Link>
+                </div>
 
-                      <div className="space-y-1">
-                        <div
-                          className={`text-xs font-semibold ${
-                            isCompleted ? "line-through text-[#9C9890]" : "text-[#1F1E1D]"
-                          }`}
-                        >
-                          {task.title}
+                {(!client.connectedAccounts || client.connectedAccounts.length === 0) ? (
+                  <p className="text-xs text-[#8C887E] text-center py-4">
+                    No hay cuentas publicitarias de Meta o TikTok asignadas a este cliente.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {client.connectedAccounts.map((acc) => (
+                      <div
+                        key={acc.id}
+                        className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#1F1E1D] truncate">{acc.accountName}</p>
+                          <span className="text-[10px] text-[#8C887E]">ID: {acc.externalId || "—"}</span>
                         </div>
-                        {task.description && (
-                          <div className="text-[11px] text-[#716F6A] leading-relaxed">{task.description}</div>
-                        )}
-                        <div className="flex items-center gap-3 text-[10px] text-[#9C9890] pt-1">
-                          {task.dueDate && (
-                            <span
-                              className={`flex items-center gap-1 ${
-                                isOverdue ? "text-rose-600 font-bold" : ""
-                              }`}
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          ● Activa
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Leads Recibidos */}
+              <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0EEE6]">
+                  <h3 className="font-bold text-xs text-[#1F1E1D] flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    Leads Entrantes ({client.leads?.length || 0})
+                  </h3>
+                  <Link
+                    href={ROUTES.LEADS}
+                    className="text-xs font-semibold text-[#D97757] hover:underline flex items-center gap-1"
+                  >
+                    <span>Ver todos</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {(!client.leads || client.leads.length === 0) ? (
+                  <p className="text-xs text-[#8C887E] text-center py-4">
+                    Aún no se han captado leads de formularios para esta cuenta.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-[#F0EEE6]">
+                    {client.leads.slice(0, 10).map((lead) => (
+                      <div key={lead.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                          <Link href={leadSearchRoute(lead.name)} className="font-bold text-[#1F1E1D] hover:text-[#D97757] block truncate">
+                            {lead.name}
+                          </Link>
+                          <span className="text-[10px] text-[#8C887E]">
+                            {lead.campaign || lead.source} • {new Date(lead.createdAt).toLocaleDateString("es-MX", { dateStyle: "short" })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            ⚡ {lead.qualification}/100
+                          </span>
+                          {lead.phone && (
+                            <a
+                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold"
                             >
-                              <Calendar className="w-3 h-3" />
-                              <span>
-                                Vence: {new Date(task.dueDate).toLocaleDateString("es-MX")}
-                                {isOverdue && " (Vencida)"}
-                              </span>
-                            </span>
+                              WhatsApp
+                            </a>
                           )}
-                          {task.user && <span>Asignado a: {task.user.name}</span>}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${priorityBadge.cls}`}>
-                        {priorityBadge.label}
-                      </span>
-                    </div>
+                    ))}
                   </div>
-                );
-              })}
+                )}
+              </div>
+            </div>
+          ) : centerTab === "ai_assistant" && isAdmin ? (
+            /* Vista Asistente IA */
+            <ClientAiAssistantPanel clientId={clientId} />
+          ) : (
+            /* Vista Principal de Actividad, Llamadas, Reuniones, Notas */
+            <div className="space-y-5">
+              {/* Registro Rápido de Interacción */}
+              <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#F0EEE8]">
+                  <Send className="w-3.5 h-3.5 text-[#D97757]" />
+                  <span className="text-xs font-bold text-[#1F1E1D]">Registrar Nueva Interacción</span>
+                </div>
+                <form onSubmit={handleCreateActivity} className="space-y-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <select
+                      value={newActivity.type}
+                      onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })}
+                      className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-2.5 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                    >
+                      <option value="call">📞 Llamada</option>
+                      <option value="meeting">🤝 Reunión</option>
+                      <option value="email">✉️ Correo</option>
+                      <option value="note">📝 Nota interna</option>
+                      <option value="follow_up">🎯 Seguimiento</option>
+                    </select>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Título o asunto..."
+                      value={newActivity.title}
+                      onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
+                      className="sm:col-span-2 bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Acuerdos, notas o próximos pasos..."
+                    value={newActivity.description}
+                    onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
+                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={submittingActivity}
+                      className="btn-black-gold rounded-xl px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Send className="w-3 h-3 text-[#E5C158]" />
+                      <span>{submittingActivity ? "Guardando..." : "Guardar Actividad"}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Próximas Actividades (Upcoming Activity - InsightCRM Style) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-[#1F1E1D]">Próximas Actividades</h3>
+                  <span className="text-[11px] text-[#8C887E]">
+                    {pendingTasks.length} {pendingTasks.length === 1 ? "tarea pendiente" : "tareas pendientes"}
+                  </span>
+                </div>
+
+                {pendingTasks.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] text-xs text-[#8C887E] text-center">
+                    No hay compromisos pendientes programados.
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {pendingTasks.map((t) => (
+                      <div
+                        key={t.id}
+                        className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-center text-[#1F1E1D] shrink-0 font-bold text-xs">
+                              <Clock className="w-4 h-4 text-[#D97757]" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-[#1F1E1D] truncate">{t.title}</h4>
+                              <p className="text-[10px] text-[#8C887E]">
+                                Asignado a: {t.user?.name || "Asesor"}
+                              </p>
+                            </div>
+                          </div>
+                          {t.dueDate && (
+                            <span className="text-[10px] font-semibold text-[#716F6A] bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E8E6DF] shrink-0">
+                              Vence: {new Date(t.dueDate).toLocaleDateString("es-MX", { dateStyle: "short" })}
+                            </span>
+                          )}
+                        </div>
+                        {t.description && (
+                          <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#F0EEE8] text-xs text-[#6B6861] leading-relaxed">
+                            {t.description}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Historial de Actividades (Activity History - InsightCRM Timeline) */}
+              <div className="space-y-3 pt-2">
+                <h3 className="font-bold text-sm text-[#1F1E1D]">Historial de Actividades</h3>
+
+                {activitiesToDisplay.length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-white border border-[#E8E6DF] text-xs text-[#8C887E] text-center">
+                    No hay actividades registradas en esta categoría.
+                  </div>
+                ) : (
+                  <div className="space-y-3 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-[#E8E6DF]">
+                    {activitiesToDisplay.map((act) => (
+                      <div key={act.id} className="relative pl-10">
+                        <div className="absolute left-1.5 top-2.5 -translate-x-1/2 w-6 h-6 rounded-full bg-white border-2 border-[#1F1E1D] flex items-center justify-center shadow-xs">
+                          {act.type === "call" && <Phone className="w-3 h-3 text-[#1F1E1D]" />}
+                          {act.type === "meeting" && <Video className="w-3 h-3 text-[#1F1E1D]" />}
+                          {act.type === "email" && <Mail className="w-3 h-3 text-[#1F1E1D]" />}
+                          {act.type === "note" && <FileText className="w-3 h-3 text-[#1F1E1D]" />}
+                          {act.type === "follow_up" && <TrendingUp className="w-3 h-3 text-[#1F1E1D]" />}
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-[#1F1E1D]">{act.title}</span>
+                            <span className="text-[10px] text-[#8C887E] shrink-0">
+                              {new Date(act.performedAt).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#8C887E]">
+                            Registrado por: {act.user?.name || "Asesor"}
+                          </p>
+                          {act.description && (
+                            <p className="text-xs text-[#6B6861] pt-1 leading-relaxed bg-[#FAF9F5] p-2.5 rounded-xl border border-[#F0EEE8]">
+                              {act.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
-      )}
 
-      {/* Tab 6: Pautas & Leads en Vivo (Meta Ads, TikTok, etc.) */}
-      {activeTab === "ads_leads" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Cuentas de Redes / Pautas Conectadas */}
-          <div className="p-6 rounded-3xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F0EEE6]">
-              <div>
-                <h3 className="text-base font-semibold text-[#1F1E1D] flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#D97757]" />
-                  Canales & Cuentas Publicitarias Vinculadas
-                </h3>
-                <p className="text-xs text-[#716F6A] mt-0.5">
-                  Cuentas de Meta Ads, Facebook Pages o TikTok vinculadas a este cliente para recepción automática de prospectos.
-                </p>
-              </div>
-
-              <Link
-                href="/marketing/integrations"
-                className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] hover:bg-[#F4F3EE] text-[#1F1E1D] text-xs font-semibold flex items-center gap-2 transition-colors self-start sm:self-auto"
+        {/* ========================================================= */}
+        {/* COLUMNA 3: DEALS, TAREAS & CONTACTOS (Derecha, 3 cols)    */}
+        {/* ========================================================= */}
+        <div className="xl:col-span-3 space-y-4">
+          {/* Bloque 1: Deals (Oportunidades) */}
+          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Deals</h3>
+              <button
+                type="button"
+                onClick={() => setIsOppModalOpen(true)}
+                className="text-[11px] font-semibold text-[#D97757] hover:underline"
               >
-                <Plus className="w-3.5 h-3.5 text-[#D97757]" />
-                <span>Gestionar en Centro de Conexiones</span>
-              </Link>
+                + Nuevo
+              </button>
             </div>
 
-            {(!client.connectedAccounts || client.connectedAccounts.length === 0) ? (
-              <div className="p-8 text-center rounded-2xl bg-[#FAF9F5] border border-dashed border-[#D1CFCA] space-y-3">
-                <Share2 className="w-8 h-8 text-[#9C9890] mx-auto" />
-                <div className="max-w-md mx-auto space-y-1">
-                  <h4 className="text-xs font-semibold text-[#1F1E1D]">
-                    Aún no hay cuentas publicitarias asignadas a {client.name}
-                  </h4>
-                  <p className="text-[11px] text-[#716F6A]">
-                    Vincula una cuenta de anuncios de Meta (Facebook/Instagram) o TikTok para que los leads de sus formularios se sincronicen directamente aquí en segundos.
-                  </p>
-                </div>
-                <Link
-                  href="/marketing/integrations"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold"
-                >
-                  <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
-                  <span>Vincular Cuenta Publicitaria</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {client.connectedAccounts.map((acc) => (
-                  <div
-                    key={acc.id}
-                    className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] hover:border-[#D1CFCA] transition-all space-y-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                          f
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-[#1F1E1D] leading-tight">
-                            {acc.accountName}
-                          </h4>
-                          <span className="text-[10px] text-[#716F6A] block">
-                            ID: {acc.externalId || "—"}
-                          </span>
-                        </div>
-                      </div>
+            <button
+              type="button"
+              onClick={() => setIsOppModalOpen(true)}
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#1F1E1D] text-xs font-semibold text-[#1F1E1D] flex items-center justify-center gap-1.5 transition-colors bg-[#FAF9F5]"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#D97757]" />
+              <span>Crear nuevo deal</span>
+            </button>
 
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
-                        {acc.status === "active" ? "● Activa" : acc.status}
+            {(!client.opportunities || client.opportunities.length === 0) ? (
+              <p className="text-xs text-[#8C887E] text-center py-2">
+                Sin deals registrados.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {client.opportunities.map((opp) => (
+                  <div
+                    key={opp.id}
+                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between text-[10px] text-[#8C887E]">
+                      <span>{new Date(opp.createdAt).toLocaleDateString("es-MX", { dateStyle: "short" })}</span>
+                      <span className="font-bold text-[#1F1E1D] text-xs">
+                        ${opp.value.toLocaleString("en-US")}$
                       </span>
                     </div>
-
-                    <div className="text-[11px] text-[#716F6A] flex items-center justify-between pt-2 border-t border-[#E8E6DF]/60">
-                      <span>Webhook en tiempo real</span>
-                      <span className="text-emerald-700 font-medium flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        Sincronizando
+                    <h4 className="text-xs font-bold text-[#1F1E1D] leading-snug">
+                      {opp.title}
+                    </h4>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-[#716F6A]">
+                        {opp.stage?.name || "Pipeline"}
                       </span>
+                      <div className="flex items-center gap-1">
+                        {opp.status === "open" && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateOppStatus(opp.id, "won")}
+                            className="text-[9px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 transition-colors"
+                            title="Marcar Ganada"
+                          >
+                            ✓ Ganar
+                          </button>
+                        )}
+                        <span
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                            opp.status === "won"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : opp.status === "lost"
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : "bg-purple-50 text-purple-700 border-purple-200"
+                          }`}
+                        >
+                          {opp.status === "won" ? "Ganada" : opp.status === "lost" ? "Perdida" : "Abierta"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1478,108 +1277,135 @@ export default function ClientProfile360Page() {
             )}
           </div>
 
-          {/* Leads Recibidos en Tiempo Real */}
-          <div className="p-6 rounded-3xl bg-[#FFFFFF] border border-[#E8E6DF] shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F0EEE6]">
-              <div>
-                <h3 className="text-base font-semibold text-[#1F1E1D] flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  Prospectos & Leads Captados de Pauta ({client.leads?.length || 0})
-                </h3>
-                <p className="text-xs text-[#716F6A] mt-0.5">
-                  Leads entrantes desde anuncios de Meta Ads y redes sociales, listos para llamada o WhatsApp directo.
-                </p>
-              </div>
-
-              <Link
-                href={ROUTES.LEADS}
-                className="text-xs font-semibold text-[#D97757] hover:underline flex items-center gap-1"
+          {/* Bloque 2: Tareas */}
+          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Tareas</h3>
+              <button
+                type="button"
+                onClick={() => setIsTaskModalOpen(true)}
+                className="text-[11px] font-semibold text-[#D97757] hover:underline"
               >
-                <span>Ver embudo completo de leads</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+                + Nueva
+              </button>
             </div>
 
-            {(!client.leads || client.leads.length === 0) ? (
-              <div className="p-8 text-center rounded-2xl bg-[#FAF9F5] border border-dashed border-[#D1CFCA] text-xs text-[#716F6A]">
-                No se han registrado leads automáticos de campañas para este cliente recientemente.
-              </div>
+            <button
+              type="button"
+              onClick={() => setIsTaskModalOpen(true)}
+              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#DDD9CF] hover:border-[#1F1E1D] text-xs font-semibold text-[#1F1E1D] flex items-center justify-center gap-1.5 transition-colors bg-[#FAF9F5]"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#D97757]" />
+              <span>Crear nueva tarea</span>
+            </button>
+
+            {(!client.tasks || client.tasks.length === 0) ? (
+              <p className="text-xs text-[#8C887E] text-center py-2">
+                Sin tareas pendientes.
+              </p>
             ) : (
-              <div className="overflow-x-auto no-scrollbar">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-[#E8E6DF] text-[#716F6A]">
-                      <th className="py-2.5 px-3 font-semibold">Prospecto / Nombre</th>
-                      <th className="py-2.5 px-3 font-semibold">Campaña / Origen</th>
-                      <th className="py-2.5 px-3 font-semibold">Teléfono / WhatsApp</th>
-                      <th className="py-2.5 px-3 font-semibold">Calificación IA</th>
-                      <th className="py-2.5 px-3 font-semibold">Estado</th>
-                      <th className="py-2.5 px-3 font-semibold">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F0EEE6]">
-                    {client.leads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-[#FAF9F5] transition-colors">
-                        <td className="py-3 px-3">
-                          <Link href={leadSearchRoute(lead.name)} className="font-semibold text-[#1F1E1D] hover:text-[#D97757]">
-                            {lead.name}
-                          </Link>
-                          {lead.email && <span className="block text-[11px] text-[#716F6A]">{lead.email}</span>}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="inline-block px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E8E6DF] text-[10px] font-medium text-[#1F1E1D]">
-                            {lead.campaign || lead.source}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          {lead.phone ? (
-                            <a
-                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors font-medium text-[11px]"
-                            >
-                              <span>📱 {lead.phone}</span>
-                              <ExternalLink className="w-3 h-3 text-emerald-600" />
-                            </a>
-                          ) : (
-                            <span className="text-[#9C9890]">—</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                            lead.qualification >= 70
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : lead.qualification >= 40
-                              ? "bg-amber-50 text-amber-700 border-amber-200"
-                              : "bg-stone-50 text-stone-600 border-stone-200"
-                          }`}>
-                            ⚡ {lead.qualification}/100
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 uppercase text-[10px] font-bold text-[#716F6A]">
-                          {lead.status}
-                        </td>
-                        <td className="py-3 px-3 text-[#716F6A] text-[11px] whitespace-nowrap">
-                          {new Date(lead.createdAt).toLocaleDateString("es-MX", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {client.tasks.slice(0, 5).map((t) => (
+                  <div
+                    key={t.id}
+                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                          t.priority === "urgent" || t.priority === "high"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {t.priority === "urgent" || t.priority === "high" ? "Alta" : "Media"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleTask(t)}
+                        className={`text-[10px] font-semibold ${
+                          t.status === "completed" ? "text-emerald-600" : "text-[#716F6A] hover:text-[#1F1E1D]"
+                        }`}
+                      >
+                        {t.status === "completed" ? "✓ Hecha" : "Completar"}
+                      </button>
+                    </div>
+                    <h4
+                      className={`text-xs font-semibold leading-snug ${
+                        t.status === "completed" ? "line-through text-[#9C9890]" : "text-[#1F1E1D]"
+                      }`}
+                    >
+                      {t.title}
+                    </h4>
+                    {t.dueDate && (
+                      <p className="text-[10px] text-[#8C887E]">
+                        Vence: {new Date(t.dueDate).toLocaleDateString("es-MX", { dateStyle: "short" })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bloque 3: Contactos Vinculados */}
+          <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-[#1F1E1D]">Contactos</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingContact(null);
+                  setContactFormData({ firstName: "", lastName: "", email: "", phone: "", jobTitle: "", isPrimary: false });
+                  setIsContactModalOpen(true);
+                }}
+                className="text-[11px] font-semibold text-[#D97757] hover:underline"
+              >
+                + Agregar
+              </button>
+            </div>
+
+            {(!client.contacts || client.contacts.length === 0) ? (
+              <p className="text-xs text-[#8C887E] text-center py-2">
+                Sin contactos registrados.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {client.contacts.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-white border border-[#E8E6DF] flex items-center justify-center font-bold text-xs text-[#1F1E1D] shrink-0">
+                        {c.firstName.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#1F1E1D] truncate">
+                          {c.firstName} {c.lastName || ""}
+                        </p>
+                        <p className="text-[10px] text-[#8C887E] truncate">
+                          {c.jobTitle || c.email || c.phone || "Contacto"}
+                        </p>
+                      </div>
+                    </div>
+                    {c.phone && (
+                      <a
+                        href={`tel:${c.phone}`}
+                        title="Llamar"
+                        className="p-1 rounded-lg border border-[#E8E6DF] hover:bg-white text-[#716F6A]"
+                      >
+                        <Phone className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Tab 7: Asistente de IA fuera de horario (solo admin) */}
-      {activeTab === "ai_assistant" && isAdmin && <ClientAiAssistantPanel clientId={clientId} />}
 
       {/* MODAL 1: Edit Client Profile */}
       {isEditClientOpen && (
