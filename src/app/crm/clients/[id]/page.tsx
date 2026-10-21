@@ -694,7 +694,9 @@ export default function ClientProfile360Page() {
                 {client.name}
               </h1>
               <p className="text-xs text-[#475467] font-medium truncate">
-                {client.companyName || client.industry || "Cliente Comercial"}
+                {client.companyName && client.companyName.trim().toLowerCase() !== client.name.trim().toLowerCase()
+                  ? client.companyName
+                  : client.industry || "Cliente Comercial"}
               </p>
               {client.isDemo && (
                 <span className="inline-block text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-2 py-0.5 rounded-full border border-[#F3D6CB] mt-1">

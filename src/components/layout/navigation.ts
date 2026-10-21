@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarDays,
   CheckSquare,
+  Inbox,
   KanbanSquare,
   LayoutDashboard,
   LineChart,
@@ -45,6 +46,7 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     title: { es: "Gestión Comercial", en: "Commercial Hub" },
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Inicio", en: "Home" } },
+      { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Inbox" } },
       { href: ROUTES.LEADS, icon: Users, label: { es: "Mis Leads", en: "My Leads" } },
       { href: ROUTES.CLIENTS, icon: Building2, label: { es: "Mi Empresa & Contactos", en: "My Company & Contacts" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline Comercial", en: "Sales Pipeline" } },
@@ -87,6 +89,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     title: { es: "Operaciones & CRM", en: "Operations & CRM" },
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Dashboard General", en: "Main Dashboard" } },
+      { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Unified Inbox" } },
       { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Clientes & Cuentas", en: "Clients & Accounts" } },
       { href: ROUTES.LEADS, icon: Users, label: { es: "Leads y Prospectos", en: "Leads & Prospects" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline de Ventas", en: "Sales Pipeline" } },

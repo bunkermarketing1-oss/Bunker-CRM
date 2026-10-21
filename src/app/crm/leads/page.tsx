@@ -43,6 +43,9 @@ interface Lead {
   source: string;
   campaign: string | null;
   externalLeadId: string | null;
+  externalFormId?: string | null;
+  externalAdId?: string | null;
+  externalCampaignId?: string | null;
   status: string;
   qualification: number;
   aiSummary: string | null;
@@ -899,7 +902,9 @@ function LeadsPageContent() {
                             title="Ver respuestas del formulario y anuncio de Meta Ads"
                           >
                             <FileText className="w-2.5 h-2.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
-                            <span className="truncate group-hover:underline">Buyer - Just Listed - Boulder-final</span>
+                            <span className="truncate group-hover:underline">
+                              {lead.externalAdId ? `Anuncio: ${lead.externalAdId}` : lead.externalFormId ? `Form: ${lead.externalFormId}` : (lead.campaign || "Ver contenido & respuestas")}
+                            </span>
                           </button>
                         </div>
                       </td>
@@ -1029,7 +1034,7 @@ function LeadsPageContent() {
                   <h2 className="text-base font-bold text-[#101828] dark:text-white flex items-center gap-2">
                     <span>{selectedLead.name}</span>
                     <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full">
-                      Cliente: {selectedLead.client?.name || "Darwin"}
+                      Cliente: {selectedLead.client?.name || "Bunker Agency (Propio)"}
                     </span>
                   </h2>
                   <p className="text-xs text-[#475467] dark:text-slate-400">
@@ -1055,40 +1060,44 @@ function LeadsPageContent() {
                     <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     Atribución & Campaña de Origen
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                    META LEAD ADS
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 uppercase">
+                    {selectedLead.source.replace(/_/g, " ")}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
                     <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Campaña Publicitaria</div>
-                    <div className="font-bold text-[#101828] dark:text-white mt-0.5 truncate" title={selectedLead.campaign || "Buyer - Just Listed - Boulder"}>
-                      {selectedLead.campaign || "Buyer - Just Listed - Boulder"}
+                    <div className="font-bold text-[#101828] dark:text-white mt-0.5 truncate" title={selectedLead.campaign || "Campaña no especificada"}>
+                      {selectedLead.campaign || "Campaña no especificada"}
                     </div>
                   </div>
 
                   <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Cliente Bunker</div>
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Cliente Asignado</div>
                     <div className="font-bold text-amber-700 dark:text-amber-400 mt-0.5 capitalize">
-                      {selectedLead.client?.name || "Darwin"}
+                      {selectedLead.client?.name || "Sin cliente (Agencia Bunker)"}
                     </div>
                   </div>
 
                   <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Formulario de Captación</div>
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Formulario / Origen</div>
                     <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
-                      Buyer - Just Listed - Boulder-final
+                      {selectedLead.externalFormId ? `Formulario Meta Lead Ads` : selectedLead.source}
                     </div>
-                    <div className="text-[9px] text-[#667085] font-mono mt-0.5">Form ID: 1230453512591237</div>
+                    {selectedLead.externalFormId && (
+                      <div className="text-[9px] text-[#667085] font-mono mt-0.5">Form ID: {selectedLead.externalFormId}</div>
+                    )}
                   </div>
 
                   <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">FanPage / Anuncio</div>
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Anuncio / Creativo</div>
                     <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
-                      Nissa Hall - Realtor
+                      {selectedLead.externalAdId ? `Anuncio Meta` : (selectedLead.campaign || "Lead Inbound")}
                     </div>
-                    <div className="text-[9px] text-[#667085] font-mono mt-0.5">Page ID: 264503443889803</div>
+                    {selectedLead.externalAdId && (
+                      <div className="text-[9px] text-[#667085] font-mono mt-0.5">Ad ID: {selectedLead.externalAdId}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1157,7 +1166,7 @@ function LeadsPageContent() {
                 {(selectedLead.normalizedPhone || selectedLead.phone) && (
                   <a
                     href={`https://wa.me/${(selectedLead.normalizedPhone || selectedLead.phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(
-                      `Hola ${selectedLead.name}, te escribo de Bunker Agency para dar seguimiento a tu solicitud de información sobre la propiedad en Boulder.`
+                      `Hola ${selectedLead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento comercial.`
                     )}`}
                     target="_blank"
                     rel="noreferrer"

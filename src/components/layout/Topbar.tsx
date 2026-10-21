@@ -16,6 +16,25 @@ interface TopbarProps {
 }
 
 function getBreadcrumbs(pathname: string) {
+  if (pathname.startsWith("/inbox")) {
+    return [
+      { label: "Comunicaciones", href: "/inbox" },
+      { label: "Bandeja de Entrada", href: null },
+    ];
+  }
+  if (pathname.startsWith("/crm/clients")) {
+    if (pathname !== "/crm/clients") {
+      return [
+        { label: "CRM Comercial", href: "/crm/clients" },
+        { label: "Clientes & Cuentas", href: "/crm/clients" },
+        { label: "Ficha 360°", href: null },
+      ];
+    }
+    return [
+      { label: "CRM Comercial", href: "/crm/clients" },
+      { label: "Clientes & Cuentas", href: null },
+    ];
+  }
   if (pathname.startsWith("/crm/leads")) {
     if (pathname !== "/crm/leads") {
       return [
@@ -41,28 +60,40 @@ function getBreadcrumbs(pathname: string) {
       { label: "Actividades", href: null },
     ];
   }
+  if (pathname.startsWith("/crm/tasks")) {
+    return [
+      { label: "CRM Comercial", href: "/crm/tasks" },
+      { label: "Tareas", href: null },
+    ];
+  }
   if (pathname.startsWith("/campaigns")) {
     return [
       { label: "Marketing", href: "/campaigns" },
-      { label: "Campañas", href: null },
+      { label: "Campañas & Anuncios", href: null },
     ];
   }
   if (pathname.startsWith("/marketing/integrations")) {
     return [
-      { label: "Configuración", href: "/marketing/integrations" },
-      { label: "Integraciones", href: null },
+      { label: "Marketing", href: "/marketing/integrations" },
+      { label: "Integraciones Oficiales", href: null },
     ];
   }
-  if (pathname.startsWith("/marketing/social")) {
+  if (pathname.startsWith("/marketing/posts")) {
     return [
-      { label: "Marketing", href: "/marketing/social" },
-      { label: "Social Media", href: null },
+      { label: "Marketing", href: "/marketing/posts" },
+      { label: "Publicaciones Sociales", href: null },
     ];
   }
-  if (pathname.startsWith("/analytics")) {
+  if (pathname.startsWith("/reports")) {
     return [
-      { label: "Reportes", href: "/analytics" },
-      { label: "Analítica", href: null },
+      { label: "Resultados", href: "/reports" },
+      { label: "Reportes & ROI", href: null },
+    ];
+  }
+  if (pathname.startsWith("/settings")) {
+    return [
+      { label: "Administración", href: "/settings" },
+      { label: "Configuración", href: null },
     ];
   }
   if (pathname.startsWith("/dashboard")) {
