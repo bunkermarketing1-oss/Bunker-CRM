@@ -55,8 +55,6 @@ export const CLIENT_NAVIGATION: NavSection[] = [
         href: ROUTES.CALLS,
         icon: PhoneCall,
         label: { es: "Llamar", en: "Calls" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
       },
       { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas Pendientes", en: "Pending Tasks" } },
     ],
@@ -78,8 +76,6 @@ const OWNER_NAVIGATION_SECTION: NavSection = {
       href: ROUTES.TEAM_LIVE,
       icon: Radio,
       label: { es: "Equipo en vivo", en: "Live Team" },
-      badge: "CONSTRUCCIÓN",
-      disabled: true,
     },
   ],
 };
@@ -142,15 +138,11 @@ export const ADMIN_NAVIGATION: NavSection[] = [
         href: ROUTES.CALLS,
         icon: PhoneCall,
         label: { es: "Llamadas & Líneas", en: "Calls & Lines" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
       },
       {
         href: ROUTES.TEAM_LIVE,
         icon: Radio,
         label: { es: "Asesores en vivo", en: "Live Advisors" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
       },
       {
         href: ROUTES.AUTOMATIONS,
