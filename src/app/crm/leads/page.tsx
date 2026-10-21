@@ -24,6 +24,7 @@ import {
   UserCheck,
   Tag,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
@@ -86,6 +87,7 @@ function LeadsPageContent() {
 
   // Notifications & Feedback
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [syncingMeta, setSyncingMeta] = useState(false);
 
   // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -129,6 +131,31 @@ function LeadsPageContent() {
   const showNotification = (text: string, type: "success" | "error" = "success") => {
     setFeedback({ text, type });
     setTimeout(() => setFeedback(null), 5000);
+  };
+
+  const handleSyncMetaLeads = async () => {
+    try {
+      setSyncingMeta(true);
+      const res = await fetch("/api/leads/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hours: 720 }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showNotification(
+          `Sincronización completada: ${json.summary?.recovered ?? 0} prospectos recuperados de Meta Ads.`,
+          "success"
+        );
+        fetchLeads();
+      } else {
+        showNotification(json.error || "No se pudo sincronizar los leads de Meta.", "error");
+      }
+    } catch {
+      showNotification("Error de conexión al sincronizar con Meta.", "error");
+    } finally {
+      setSyncingMeta(false);
+    }
   };
 
   // Fetch Team Members
@@ -464,6 +491,16 @@ function LeadsPageContent() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSyncMetaLeads}
+            disabled={syncingMeta}
+            className="px-3.5 py-2 rounded-2xl bg-white border border-[#ECEAE3] text-[#141414] hover:bg-[#FAF9F5] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-60"
+            title="Sincronizar prospectos desde campañas de Meta Ads"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#8C887E] ${syncingMeta ? "animate-spin text-[#0081FB]" : ""}`} />
+            <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
+          </button>
+
           <button
             onClick={handleExportCSV}
             className="px-3.5 py-2 rounded-2xl bg-white border border-[#ECEAE3] text-[#141414] hover:bg-[#FAF9F5] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"

@@ -14,7 +14,8 @@ export type SocialAccountType =
   | string;
 
 interface SocialNetworkIconProps {
-  type: SocialAccountType;
+  type?: SocialAccountType;
+  provider?: SocialAccountType;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -34,8 +35,13 @@ const SIZE_MAP = {
   },
 };
 
-export function SocialNetworkIcon({ type, size = "md", className = "" }: SocialNetworkIconProps) {
-  const norm = (type || "").toLowerCase();
+export function SocialNetworkIcon({
+  type,
+  provider,
+  size = "md",
+  className = "",
+}: SocialNetworkIconProps) {
+  const norm = (type || provider || "").toLowerCase();
   const currentSize = SIZE_MAP[size] || SIZE_MAP.md;
 
   // 1. Facebook Page / Facebook
@@ -133,7 +139,9 @@ export function SocialNetworkIcon({ type, size = "md", className = "" }: SocialN
     <div
       className={`${currentSize.container} bg-[#1F1E1D] text-white flex items-center justify-center text-xs font-bold shadow-xs flex-shrink-0 ${className}`}
     >
-      {(type || "BM").substring(0, 2).toUpperCase()}
+      {((type || provider) || "BM").substring(0, 2).toUpperCase()}
     </div>
   );
 }
+
+export default SocialNetworkIcon;

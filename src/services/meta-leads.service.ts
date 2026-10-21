@@ -179,12 +179,33 @@ export async function processMetaLeadEvent(eventId: string): Promise<MetaLeadEve
     if (!page.accessTokenEnc) throw new Error(`La página ${event.pageId} no tiene token.`);
     const metaLead = await getMetaLead(event.leadgenId, decryptSecret(page.accessTokenEnc));
     const isRecent = isRecentMetaLead(metaLead.created_time, new Date(), META_LEAD_AUTOMATION_MAX_AGE_MINUTES);
-    const leadId = await upsertLeadFromMeta(page.organizationId, page.clientId, metaLead, isRecent);
+
+    // Atribución de cliente: si la página no tiene cliente asignado pero la campaña pertenece
+    // a una cuenta publicitaria vinculada a un cliente, se le asigna automáticamente.
+    let targetClientId = page.clientId;
+    if (!targetClientId && metaLead.campaign_id) {
+      const matchedCampaign = await prisma.campaign.findFirst({
+        where: {
+          organizationId: page.organizationId,
+          externalId: metaLead.campaign_id,
+        },
+        select: {
+          connectedAccount: {
+            select: { clientId: true },
+          },
+        },
+      });
+      if (matchedCampaign?.connectedAccount?.clientId) {
+        targetClientId = matchedCampaign.connectedAccount.clientId;
+      }
+    }
+
+    const leadId = await upsertLeadFromMeta(page.organizationId, targetClientId, metaLead, isRecent);
 
     // También cuando el lead ya existía: si un intento anterior lo creó y murió antes del SMS,
     // este lo manda; `runLeadCreatedAutomations` no lo repite si ya salió.
     if (isRecent) await runLeadCreatedAutomations(leadId);
-    else await noteSkippedAutomations(leadId, page.clientId);
+    else await noteSkippedAutomations(leadId, targetClientId);
 
     await prisma.metaLeadEvent.update({
       where: { id: event.id },
@@ -320,12 +341,17 @@ export interface MetaLeadsSyncSummary {
  * leads de las últimas `sinceHours` horas que no llegaron (o quedaron sin procesar) y
  * reintenta los eventos fallidos o abandonados en `received`.
  */
-export async function syncMetaLeads(sinceHours: number): Promise<MetaLeadsSyncSummary> {
+export async function syncMetaLeads(sinceHours: number, organizationId?: string): Promise<MetaLeadsSyncSummary> {
   const summary: MetaLeadsSyncSummary = { pages: 0, recovered: 0, retried: 0, errors: [] };
   const sinceUnix = Math.floor((Date.now() - sinceHours * 60 * 60 * 1000) / 1000);
 
+  const pageWhere: Record<string, unknown> = { ...connectedPageWhere };
+  if (organizationId) {
+    pageWhere.organizationId = organizationId;
+  }
+
   const pages = await prisma.connectedAccount.findMany({
-    where: connectedPageWhere,
+    where: pageWhere,
     select: { externalId: true, accountName: true, accessTokenEnc: true },
   });
 
@@ -348,15 +374,20 @@ export async function syncMetaLeads(sinceHours: number): Promise<MetaLeadsSyncSu
     }
   }
 
+  const pendingWhere: Record<string, unknown> = {
+    attempts: { lt: META_LEAD_MAX_ATTEMPTS },
+    OR: [
+      { status: META_LEAD_EVENT_STATUS.FAILED },
+      // Un `received` reciente puede estar procesándolo el webhook: solo los abandonados.
+      { status: META_LEAD_EVENT_STATUS.RECEIVED, updatedAt: { lt: staleReceivedBefore() } },
+    ],
+  };
+  if (organizationId) {
+    pendingWhere.organizationId = organizationId;
+  }
+
   const pending = await prisma.metaLeadEvent.findMany({
-    where: {
-      attempts: { lt: META_LEAD_MAX_ATTEMPTS },
-      OR: [
-        { status: META_LEAD_EVENT_STATUS.FAILED },
-        // Un `received` reciente puede estar procesándolo el webhook: solo los abandonados.
-        { status: META_LEAD_EVENT_STATUS.RECEIVED, updatedAt: { lt: staleReceivedBefore() } },
-      ],
-    },
+    where: pendingWhere,
     select: { id: true },
     orderBy: { createdAt: "asc" },
   });

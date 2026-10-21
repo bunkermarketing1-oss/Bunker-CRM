@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, RefreshCw, Plug, AlertTriangle, Lock } from "lucide-react";
+import { BarChart3, RefreshCw, Plug, AlertTriangle, Lock, Eye } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
+import SocialNetworkIcon from "@/components/common/SocialNetworkIcon";
+import CampaignAdsModal from "@/components/campaigns/CampaignAdsModal";
 
 type Metric = "spend" | "clicks" | "conversions" | "impressions";
 
@@ -116,6 +118,7 @@ export default function CampaignsPage() {
   const [data, setData] = useState<CampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
 
   useEffect(() => {
     if (!user || isClient) return;
@@ -388,12 +391,13 @@ export default function CampaignsPage() {
                     <th className="text-right font-medium px-4 py-2.5">CTR</th>
                     <th className="text-right font-medium px-4 py-2.5">Leads / Conv.</th>
                     <th className="text-right font-medium px-4 py-2.5">Costo / Lead</th>
+                    <th className="text-center font-medium px-4 py-2.5">Creativos</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {data.campaigns.length === 0 && (
                     <tr>
-                      <td colSpan={isClient ? 9 : 10} className="px-4 py-6 text-center text-[#82807C]">
+                      <td colSpan={isClient ? 10 : 11} className="px-4 py-6 text-center text-[#82807C]">
                         No hay campañas sincronizadas todavía.
                       </td>
                     </tr>
@@ -401,11 +405,18 @@ export default function CampaignsPage() {
                   {data.campaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
                     return (
-                      <tr key={c.id} className="hover:bg-[#FAF9F5]">
+                      <tr key={c.id} className="hover:bg-[#FAF9F5] transition-colors">
                         <td className="px-4 py-2.5">
-                          <div className="text-[#1F1E1D] font-medium">{c.name}</div>
-                          <div className="text-[11px] text-[#82807C]">
-                            {PLATFORM_LABELS[c.platform] || c.platform} · {c.accountName}
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5 shrink-0">
+                              <SocialNetworkIcon provider={c.platform} size="sm" />
+                            </div>
+                            <div>
+                              <div className="text-[#1F1E1D] font-medium leading-tight">{c.name}</div>
+                              <div className="text-[11px] text-[#82807C] mt-0.5">
+                                {PLATFORM_LABELS[c.platform] || c.platform} · {c.accountName}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         {!isClient && <td className="px-4 py-2.5 text-[#4D4C48]">{c.client?.name || "—"}</td>}
@@ -423,6 +434,17 @@ export default function CampaignsPage() {
                         <td className="px-4 py-2.5 text-right tabular-nums text-[#4D4C48]">
                           {c.conversions ? fmtMoney(c.costPerConversion, c.currency) : "—"}
                         </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCampaignForAds(c)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E8E6DF] text-[#1F1E1D] hover:bg-[#1F1E1D] hover:text-white hover:border-[#1F1E1D] text-[11px] font-semibold transition-all shadow-sm group"
+                            title="Ver imágenes, videos, textos y creativos"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#D97757] group-hover:text-[#D4AF37] transition-colors" />
+                            <span>Ver Anuncios</span>
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -431,6 +453,16 @@ export default function CampaignsPage() {
             </div>
           </div>
         </>
+      )}
+
+      {selectedCampaignForAds && (
+        <CampaignAdsModal
+          campaignId={selectedCampaignForAds.id}
+          campaignName={selectedCampaignForAds.name}
+          platform={selectedCampaignForAds.platform}
+          accountName={selectedCampaignForAds.accountName}
+          onClose={() => setSelectedCampaignForAds(null)}
+        />
       )}
     </div>
   );
