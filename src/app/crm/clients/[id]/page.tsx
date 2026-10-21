@@ -8,6 +8,7 @@ import { useClientPortalUsers } from "@/hooks/useClientPortalUsers";
 import { ClientPortalUsersPanel } from "@/components/clients/ClientPortalUsersPanel";
 import { useParams, useRouter } from "next/navigation";
 import { ClientAiAssistantPanel } from "@/components/clients/ClientAiAssistantPanel";
+import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import {
   ArrowLeft,
   Building,
@@ -982,13 +983,16 @@ export default function ClientProfile360Page() {
                     {client.connectedAccounts.map((acc) => (
                       <div
                         key={acc.id}
-                        className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2"
+                        className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] flex items-center justify-between gap-2.5"
                       >
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#1F1E1D] truncate">{acc.accountName}</p>
-                          <span className="text-[10px] text-[#8C887E]">ID: {acc.externalId || "—"}</span>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <SocialNetworkIcon type={acc.accountType || "meta_ad_account"} size="sm" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-[#1F1E1D] truncate">{acc.accountName}</p>
+                            <span className="text-[10px] text-[#8C887E]">ID: {acc.externalId || "—"}</span>
+                          </div>
                         </div>
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex-shrink-0">
                           ● Activa
                         </span>
                       </div>

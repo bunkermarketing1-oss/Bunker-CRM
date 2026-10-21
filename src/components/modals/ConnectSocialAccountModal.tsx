@@ -21,6 +21,7 @@ import {
   type AdProvider,
 } from "@/lib/constants/integrations";
 import { useConnectSocialAccount } from "@/hooks/useConnectSocialAccount";
+import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
 export interface ClientOption {
   id: string;
@@ -547,21 +548,7 @@ export function ConnectSocialAccountModal({
                           >
                             {/* Icono + Nombre + Tipo */}
                             <div className="flex items-center gap-3 min-w-0">
-                              {isFBPage && (
-                                <div className="w-9 h-9 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
-                                  f
-                                </div>
-                              )}
-                              {isIG && (
-                                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-sm flex-shrink-0 shadow-sm">
-                                  📷
-                                </div>
-                              )}
-                              {isAd && (
-                                <div className="w-9 h-9 rounded-xl bg-[#0081FB] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 shadow-sm">
-                                  ADS
-                                </div>
-                              )}
+                              <SocialNetworkIcon type={ch.accountType} size="md" />
 
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">

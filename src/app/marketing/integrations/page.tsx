@@ -25,6 +25,7 @@ import type { TwilioEnvStatus } from "@/types/integrations";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
 import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
+import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
 const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
@@ -664,8 +665,6 @@ export default function IntegrationsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredChannelsList.map((acc: any) => {
                 const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
-                const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
-                const isAd = acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
                 const assignedClient = clients.find((c) => c.id === acc.clientId);
                 const hasClient = Boolean(assignedClient);
 
@@ -678,26 +677,7 @@ export default function IntegrationsPage() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          {isFB && (
-                            <div className="w-11 h-11 rounded-2xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
-                              f
-                            </div>
-                          )}
-                          {isIG && (
-                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
-                              📷
-                            </div>
-                          )}
-                          {isAd && (
-                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0081FB] to-[#0668E1] text-white flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0">
-                              ADS
-                            </div>
-                          )}
-                          {!isFB && !isIG && !isAd && (
-                            <div className="w-11 h-11 rounded-2xl bg-black text-white flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0">
-                              🎵
-                            </div>
-                          )}
+                          <SocialNetworkIcon type={acc.accountType} size="lg" />
 
                           <div className="min-w-0">
                             <h4 className="text-sm font-bold text-[#1F1E1D] leading-tight truncate" title={acc.accountName}>
@@ -963,11 +943,6 @@ export default function IntegrationsPage() {
                     ) : (
                       <div className="space-y-2">
                         {accounts.map((acc: any) => {
-                          const isMeta = acc.provider === "meta" || acc.accountType?.includes("meta") || acc.accountType?.includes("facebook");
-                          const isInstagram = acc.accountType === "instagram_business";
-                          const isTikTok = acc.provider === "tiktok" || acc.accountType?.includes("tiktok");
-                          const isGoogle = acc.provider === "google_ads";
-
                           return (
                             <div
                               key={acc.id}
@@ -975,26 +950,7 @@ export default function IntegrationsPage() {
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  {isMeta && !isInstagram && (
-                                    <div className="w-7 h-7 rounded-lg bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                      f
-                                    </div>
-                                  )}
-                                  {isInstagram && (
-                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FD1D1D] to-[#C13584] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                      ig
-                                    </div>
-                                  )}
-                                  {isTikTok && (
-                                    <div className="w-7 h-7 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                      tt
-                                    </div>
-                                  )}
-                                  {isGoogle && (
-                                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                      G
-                                    </div>
-                                  )}
+                                  <SocialNetworkIcon type={acc.accountType} size="sm" />
 
                                   <div className="min-w-0">
                                     <h5 className="text-xs font-semibold text-[#1F1E1D] truncate leading-tight">
