@@ -129,6 +129,25 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
 
 function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; isActive: boolean }) {
   const Icon = item.icon;
+
+  if (item.disabled) {
+    return (
+      <div
+        className="relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs text-[#8C887E] opacity-60 cursor-not-allowed select-none border border-transparent"
+        title="Módulo en construcción"
+        aria-disabled="true"
+      >
+        <Icon className="w-4 h-4 flex-shrink-0 text-[#A09B90]" />
+        <span className="truncate">{label}</span>
+        {item.badge && (
+          <span className="ml-auto text-[8.5px] font-mono font-bold tracking-tight bg-[#FAF0D7] dark:bg-[#2e2615] text-[#9A7320] dark:text-[#E5C158] border border-[#F2E5C4] dark:border-[#473a1e] px-1.5 py-0.5 rounded whitespace-nowrap">
+            {item.badge}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Link
       href={item.href}

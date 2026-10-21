@@ -63,6 +63,7 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
 
     const pages = sections
       .flatMap((section) => section.items)
+      .filter((item) => !item.disabled)
       .filter((item) => !query || normalize(item.label[language]).includes(query))
       .map<PaletteItem>((item) => ({
         key: `page:${item.href}`,

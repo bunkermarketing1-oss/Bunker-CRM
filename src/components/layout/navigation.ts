@@ -25,8 +25,9 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   label: { es: string; en: string };
-  /** Módulo visible pero aún sin datos reales: se marca para no presentarlo como terminado. */
-  badge?: "BETA";
+  /** Módulo visible pero aún sin datos reales o en desarrollo. */
+  badge?: "BETA" | "CONSTRUCCIÓN" | string;
+  disabled?: boolean;
 }
 
 export interface NavSection {
@@ -48,7 +49,13 @@ export const CLIENT_NAVIGATION: NavSection[] = [
       { href: ROUTES.CLIENTS, icon: Building2, label: { es: "Mi Empresa & Contactos", en: "My Company & Contacts" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline Comercial", en: "Sales Pipeline" } },
       { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades & Llamadas", en: "Activities & Calls" } },
-      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamar", en: "Calls" } },
+      {
+        href: ROUTES.CALLS,
+        icon: PhoneCall,
+        label: { es: "Llamar", en: "Calls" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
       { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas Pendientes", en: "Pending Tasks" } },
     ],
   },
@@ -85,9 +92,27 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     badge: "ADMIN",
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
-      { href: ROUTES.AI_OPTIMIZER, icon: Sparkles, label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" } },
-      { href: ROUTES.SOCIAL_POSTS, icon: Share2, label: { es: "Publicaciones Sociales", en: "Social Posts" } },
-      { href: ROUTES.CONTENT_CALENDAR, icon: CalendarDays, label: { es: "Calendario Editorial", en: "Content Calendar" } },
+      {
+        href: ROUTES.AI_OPTIMIZER,
+        icon: Sparkles,
+        label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
+      {
+        href: ROUTES.SOCIAL_POSTS,
+        icon: Share2,
+        label: { es: "Publicaciones Sociales", en: "Social Posts" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
+      {
+        href: ROUTES.CONTENT_CALENDAR,
+        icon: CalendarDays,
+        label: { es: "Calendario Editorial", en: "Content Calendar" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
       { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
     ],
   },
@@ -96,7 +121,13 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     badge: "ADMIN",
     items: [
       { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
-      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamadas & Líneas", en: "Calls & Lines" } },
+      {
+        href: ROUTES.CALLS,
+        icon: PhoneCall,
+        label: { es: "Llamadas & Líneas", en: "Calls & Lines" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
       { href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Asesores en vivo", en: "Live Advisors" } },
       {
         href: ROUTES.AUTOMATIONS,
