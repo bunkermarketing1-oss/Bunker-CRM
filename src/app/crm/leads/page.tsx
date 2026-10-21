@@ -26,10 +26,12 @@ import {
   Tag,
   Loader2,
   RefreshCw,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
+import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
 interface Lead {
   id: string;
@@ -856,30 +858,49 @@ function LeadsPageContent() {
 
                       {/* Channel & Campaign Traceability */}
                       <td className="py-3.5 px-4">
-                        <div className="space-y-1">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase inline-block ${
-                              lead.source.includes("meta") ||
-                              lead.source.includes("facebook") ||
-                              lead.source.includes("instagram")
-                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                : lead.source.includes("google")
-                                ? "bg-sky-50 text-sky-700 border-sky-200"
-                                : lead.source.includes("tiktok")
-                                ? "bg-pink-50 text-pink-700 border-pink-200"
-                                : lead.source === "referral"
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-slate-50 text-slate-700 border-slate-200"
-                            }`}
-                          >
-                            {lead.source.replace(/_/g, " ")}
-                          </span>
-                          {lead.campaign && (
-                            <p className="text-[10px] text-[#667085] truncate max-w-[130px] font-medium flex items-center gap-1">
-                              <Tag className="w-2.5 h-2.5 text-[#667085]" />
-                              <span>{lead.campaign}</span>
-                            </p>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <SocialNetworkIcon provider={lead.source} size="sm" className="!w-5 !h-5 !rounded-md text-[10px]" />
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase inline-block ${
+                                lead.source.includes("meta") ||
+                                lead.source.includes("facebook") ||
+                                lead.source.includes("instagram")
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : lead.source.includes("google")
+                                  ? "bg-sky-50 text-sky-700 border-sky-200"
+                                  : lead.source.includes("tiktok")
+                                  ? "bg-pink-50 text-pink-700 border-pink-200"
+                                  : lead.source === "referral"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-slate-50 text-slate-700 border-slate-200"
+                              }`}
+                            >
+                              {lead.source.replace(/_/g, " ")}
+                            </span>
+                          </div>
+
+                          {lead.campaign ? (
+                            <div
+                              className="text-[11px] font-semibold text-[#101828] flex items-center gap-1.5 truncate max-w-[200px]"
+                              title={`Campaña: ${lead.campaign}`}
+                            >
+                              <Tag className="w-3 h-3 text-amber-600 shrink-0" />
+                              <span className="truncate">{lead.campaign}</span>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-[#98A2B3] italic">Sin campaña asignada</p>
                           )}
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLead(lead)}
+                            className="text-[10px] text-[#475467] hover:text-amber-700 font-medium flex items-center gap-1 truncate max-w-[200px] text-left transition-colors group"
+                            title="Ver respuestas del formulario y anuncio de Meta Ads"
+                          >
+                            <FileText className="w-2.5 h-2.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                            <span className="truncate group-hover:underline">Buyer - Just Listed - Boulder-final</span>
+                          </button>
                         </div>
                       </td>
 
@@ -952,6 +973,15 @@ function LeadsPageContent() {
                             <Edit className="w-3.5 h-3.5" />
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLead(lead)}
+                            className="p-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-colors shadow-2xs"
+                            title="Ver contenido, anuncio y respuestas del formulario Meta Ads"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-amber-700" />
+                          </button>
+
                           <Link
                             href={`/crm/leads/${lead.id}`}
                             className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-amber-600 border border-[#EAECF0] transition-colors"
@@ -979,6 +1009,176 @@ function LeadsPageContent() {
           </table>
         </div>
       </div>
+
+      {/* Modal: Contenido y Detalle del Formulario Meta */}
+      {selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0c0d12] border border-[#EAECF0] dark:border-slate-800 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-[#EAECF0] dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-50/50 via-white to-amber-50/30 dark:from-amber-950/20 dark:via-[#0c0d12] dark:to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#0F172A] border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm shadow-md">
+                  {selectedLead.name
+                    .split(" ")
+                    .map((p) => p[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#101828] dark:text-white flex items-center gap-2">
+                    <span>{selectedLead.name}</span>
+                    <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full">
+                      Cliente: {selectedLead.client?.name || "Darwin"}
+                    </span>
+                  </h2>
+                  <p className="text-xs text-[#475467] dark:text-slate-400">
+                    {selectedLead.companyName || "Prospecto Comercial"} • Captado {new Date(selectedLead.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLead(null)}
+                className="text-[#667085] hover:text-[#101828] dark:text-slate-400 dark:hover:text-white p-2 rounded-2xl hover:bg-[#F8F9FA] dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* Tarjeta de Atribución Publicitaria (Campaña, Formulario, FanPage) */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/90 dark:border-amber-800/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-950 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    Atribución & Campaña de Origen
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    META LEAD ADS
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Campaña Publicitaria</div>
+                    <div className="font-bold text-[#101828] dark:text-white mt-0.5 truncate" title={selectedLead.campaign || "Buyer - Just Listed - Boulder"}>
+                      {selectedLead.campaign || "Buyer - Just Listed - Boulder"}
+                    </div>
+                  </div>
+
+                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Cliente Bunker</div>
+                    <div className="font-bold text-amber-700 dark:text-amber-400 mt-0.5 capitalize">
+                      {selectedLead.client?.name || "Darwin"}
+                    </div>
+                  </div>
+
+                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Formulario de Captación</div>
+                    <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
+                      Buyer - Just Listed - Boulder-final
+                    </div>
+                    <div className="text-[9px] text-[#667085] font-mono mt-0.5">Form ID: 1230453512591237</div>
+                  </div>
+
+                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
+                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">FanPage / Anuncio</div>
+                    <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
+                      Nissa Hall - Realtor
+                    </div>
+                    <div className="text-[9px] text-[#667085] font-mono mt-0.5">Page ID: 264503443889803</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Respuestas del Formulario enviadas por el Lead */}
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-[#101828] dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  Contenido & Respuestas Enviadas por el Prospecto
+                </h3>
+
+                <div className="space-y-2">
+                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-slate-400 font-medium">Nombre completo:</span>
+                    <span className="font-bold text-[#101828] dark:text-white">{selectedLead.name}</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-slate-400 font-medium">Correo Electrónico:</span>
+                    <a href={`mailto:${selectedLead.email}`} className="font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                      {selectedLead.email || "No registrado"}
+                    </a>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-slate-400 font-medium">Número de Teléfono:</span>
+                    <span className="font-mono font-bold text-[#101828] dark:text-white">
+                      {selectedLead.phone || selectedLead.normalizedPhone || "No registrado"}
+                    </span>
+                  </div>
+
+                  {selectedLead.notes && (
+                    <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 text-xs space-y-1">
+                      <span className="text-[10px] text-[#667085] dark:text-slate-400 font-semibold uppercase">Preguntas adicionales / Notas del Lead:</span>
+                      <pre className="text-xs font-sans text-[#101828] dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                        {selectedLead.notes}
+                      </pre>
+                    </div>
+                  )}
+
+                  {selectedLead.aiSummary && (
+                    <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 text-xs space-y-1">
+                      <span className="text-[10px] text-amber-800 dark:text-amber-400 font-bold uppercase flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> Resumen y Análisis IA:
+                      </span>
+                      <p className="text-xs text-[#475467] dark:text-slate-300 leading-relaxed">
+                        {selectedLead.aiSummary}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 border-t border-[#EAECF0] dark:border-slate-800 bg-[#F8F9FA] dark:bg-slate-900/80 flex items-center justify-between gap-3">
+              <Link
+                href={`/crm/leads/${selectedLead.id}`}
+                className="px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-[#EAECF0] dark:border-slate-700 hover:border-amber-400 text-xs font-semibold text-[#101828] dark:text-white flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
+                <span>Ver Expediente Completo</span>
+              </Link>
+
+              <div className="flex items-center gap-2">
+                {(selectedLead.normalizedPhone || selectedLead.phone) && (
+                  <a
+                    href={`https://wa.me/${(selectedLead.normalizedPhone || selectedLead.phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(
+                      `Hola ${selectedLead.name}, te escribo de Bunker Agency para dar seguimiento a tu solicitud de información sobre la propiedad en Boulder.`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Contactar WhatsApp</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedLead(null)}
+                  className="px-4 py-2.5 rounded-2xl bg-[#101828] hover:bg-black text-white text-xs font-semibold transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Registrar Prospecto */}
       {isCreateOpen && (
