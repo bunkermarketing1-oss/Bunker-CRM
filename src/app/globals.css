@@ -3,131 +3,138 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #F6F5F2;
-  --bg-sidebar: #F0EFEA;
+  --bg-main: #F8F9FA;
+  --bg-sidebar: #FFFFFF;
   --bg-card: #FFFFFF;
-  --border-subtle: #ECEAE3;
-  --border-gold: rgba(212, 175, 55, 0.45);
-  --accent-gold: #D4AF37;
-  --accent-gold-light: #FBF7ED;
-  --btn-black: #141414;
-  --btn-black-hover: #222222;
-  --text-primary: #141414;
-  --text-secondary: #6B6861;
-  --text-muted: #9C988F;
+  --border-subtle: #EAECF0;
+  --border-gold: rgba(99, 102, 241, 0.3);
+  --accent-gold: #6366F1;
+  --accent-gold-light: #F4F3FF;
+  --btn-black: #0F172A;
+  --btn-black-hover: #1E293B;
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-muted: #98A2B3;
 }
 
 .dark {
-  --bg-main: #111113;
-  --bg-sidebar: #18181B;
-  --bg-card: #1E1E22;
-  --border-subtle: #2E2E34;
-  --border-gold: rgba(229, 193, 88, 0.5);
-  --accent-gold: #E5C158;
-  --accent-gold-light: #2A2415;
-  --btn-black: #FAF8F3;
+  --bg-main: #0B0F19;
+  --bg-sidebar: #111827;
+  --bg-card: #182235;
+  --border-subtle: #243046;
+  --border-gold: rgba(99, 102, 241, 0.5);
+  --accent-gold: #818CF8;
+  --accent-gold-light: #1E1B4B;
+  --btn-black: #F8FAFC;
   --btn-black-hover: #FFFFFF;
-  --text-primary: #FAF8F3;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
 }
 
-h1, h2, h3, h4 {
-  letter-spacing: -0.015em;
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 body {
   background-color: var(--bg-main);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", var(--font-inter), Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.dark body {
-  background-color: #111113 !important;
-  color: #FAF8F3 !important;
+/* Modern InsightCRM Palette Mappings */
+.bg-\[\#F6F5F2\],
+.bg-\[\#FAF9F5\],
+.bg-\[\#FAF8F3\],
+.bg-\[\#FAF8F2\],
+.bg-\[\#F4F3EE\],
+.bg-\[\#F8F7F3\] {
+  background-color: #F8F9FA !important;
 }
 
-.dark header {
-  background-color: rgba(24, 24, 27, 0.95) !important;
-  border-color: #2E2E34 !important;
+.bg-\[\#F0EFEA\] {
+  background-color: #FFFFFF !important;
 }
 
-.dark aside {
-  background-color: #18181B !important;
-  border-color: #2E2E34 !important;
+.border-\[\#ECEAE3\],
+.border-\[\#E8E6DF\],
+.border-\[\#E6E2D8\],
+.border-\[\#F0EEE6\],
+.border-\[\#DDD9CF\],
+.border-\[\#F0EFEA\],
+.border-\[\#F4F3EE\] {
+  border-color: #EAECF0 !important;
 }
 
-.dark .bg-\[\#FFFFFF\],
-.dark .bg-white {
-  background-color: #1E1E22 !important;
-  color: #FAF8F3;
+.text-\[\#141414\],
+.text-\[\#1F1E1D\],
+.text-\[\#1A1918\] {
+  color: #101828 !important;
 }
 
-.dark .bg-\[\#FAF9F5\],
-.dark .bg-\[\#F0EFEA\],
-.dark .bg-\[\#F6F5F2\],
-.dark .bg-\[\#FAF8F2\],
-.dark .bg-\[\#FAF8F3\],
-.dark .bg-\[\#F4F3EE\] {
-  background-color: #161619 !important;
+.text-\[\#6B6861\],
+.text-\[\#716F6A\],
+.text-\[\#8C887E\],
+.text-\[\#4D4C48\] {
+  color: #475467 !important;
 }
 
-.dark .text-\[\#1F1E1D\],
-.dark .text-\[\#141414\],
-.dark .text-\[\#1A1918\] {
-  color: #FAF8F3 !important;
+.text-\[\#9C9890\],
+.text-\[\#9C988F\],
+.text-\[\#A09B90\],
+.text-\[\#B3AFA5\],
+.text-\[\#C7C5BE\] {
+  color: #98A2B3 !important;
 }
 
-.dark .text-\[\#716F6A\],
-.dark .text-\[\#6B6861\],
-.dark .text-\[\#8C887E\] {
-  color: #A1A1AA !important;
+/* Luxury Obsidian Button transformed into Modern SaaS Charcoal */
+.btn-black-gold {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #1E293B !important;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.dark .text-\[\#9C9890\],
-.dark .text-\[\#9C988F\],
-.dark .text-\[\#B3AFA5\] {
-  color: #71717A !important;
+.btn-black-gold:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+  transform: translateY(-1px) !important;
 }
 
-.dark .border-\[\#E8E6DF\],
-.dark .border-\[\#ECEAE3\],
-.dark .border-\[\#E6E2D8\],
-.dark .border-\[\#F0EEE6\],
-.dark .border-\[\#DDD9CF\] {
-  border-color: #2E2E34 !important;
+.btn-black-gold:active {
+  transform: translateY(0) !important;
 }
 
-.dark input,
-.dark select,
-.dark textarea {
-  background-color: #161619 !important;
-  color: #FAF8F3 !important;
-  border-color: #2E2E34 !important;
+/* Secondary Button transformed into Clean SaaS White Pill */
+.btn-marfil {
+  background-color: #FFFFFF !important;
+  color: #101828 !important;
+  border: 1px solid #EAECF0 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  transition: all 0.15s ease !important;
 }
 
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: #71717A !important;
+.btn-marfil:hover {
+  background-color: #F8F9FA !important;
+  border-color: #D0D5DD !important;
 }
 
-.dark .card-marfil {
-  background-color: #1E1E22 !important;
-  border-color: #2E2E34 !important;
+/* Clean Modern Card */
+.card-marfil {
+  background: #FFFFFF !important;
+  border: 1px solid #EAECF0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
 }
 
-.dark .btn-black-gold {
-  background-color: #26262B !important;
-  color: #FAF8F3 !important;
-  border-color: rgba(229, 193, 88, 0.45) !important;
-}
-
-.dark .btn-black-gold:hover {
-  background-color: #323238 !important;
-  border-color: rgba(229, 193, 88, 0.75) !important;
+.card-marfil:hover {
+  border-color: #D0D5DD !important;
 }
 
 /* Minimal Scrollbar */
@@ -139,61 +146,107 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D9D6CC;
+  background: #E4E7EC;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BFBCB2;
+  background: #D0D5DD;
+}
+
+/* Dark mode specific overrides */
+.dark body {
+  background-color: #0B0F19 !important;
+  color: #F8FAFC !important;
+}
+
+.dark header {
+  background-color: rgba(17, 24, 39, 0.95) !important;
+  border-color: #243046 !important;
+}
+
+.dark aside {
+  background-color: #111827 !important;
+  border-color: #243046 !important;
+}
+
+.dark .bg-\[\#FFFFFF\],
+.dark .bg-white {
+  background-color: #182235 !important;
+  color: #F8FAFC;
+}
+
+.dark .bg-\[\#F6F5F2\],
+.dark .bg-\[\#FAF9F5\],
+.dark .bg-\[\#F0EFEA\],
+.dark .bg-\[\#FAF8F2\],
+.dark .bg-\[\#FAF8F3\],
+.dark .bg-\[\#F4F3EE\],
+.dark .bg-\[\#F8F7F3\] {
+  background-color: #0F172A !important;
+}
+
+.dark .text-\[\#1F1E1D\],
+.dark .text-\[\#141414\],
+.dark .text-\[\#1A1918\] {
+  color: #F8FAFC !important;
+}
+
+.dark .text-\[\#716F6A\],
+.dark .text-\[\#6B6861\],
+.dark .text-\[\#8C887E\],
+.dark .text-\[\#4D4C48\] {
+  color: #94A3B8 !important;
+}
+
+.dark .text-\[\#9C9890\],
+.dark .text-\[\#9C988F\],
+.dark .text-\[\#A09B90\],
+.dark .text-\[\#B3AFA5\],
+.dark .text-\[\#C7C5BE\] {
+  color: #64748B !important;
+}
+
+.dark .border-\[\#E8E6DF\],
+.dark .border-\[\#ECEAE3\],
+.dark .border-\[\#E6E2D8\],
+.dark .border-\[\#F0EEE6\],
+.dark .border-\[\#DDD9CF\],
+.dark .border-\[\#F0EFEA\],
+.dark .border-\[\#F4F3EE\] {
+  border-color: #243046 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+  border-color: #243046 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+.dark .card-marfil {
+  background-color: #182235 !important;
+  border-color: #243046 !important;
+}
+
+.dark .btn-black-gold {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+}
+
+.dark .btn-black-gold:hover {
+  background-color: #334155 !important;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #3F3F46;
+  background: #334155;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #52525B;
-}
-
-/* Luxury Obsidian Black & Gold Ivory Buttons */
-.btn-black-gold {
-  background-color: #141414;
-  color: #FAF8F3;
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.12);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.btn-black-gold:hover {
-  background-color: #222222;
-  border-color: rgba(212, 175, 55, 0.75);
-  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.22);
-  transform: translateY(-1px);
-}
-
-.btn-black-gold:active {
-  transform: translateY(0);
-}
-
-/* Ivory Marfil Button */
-.btn-marfil {
-  background-color: #FAF8F2;
-  color: #1A1918;
-  border: 1px solid #E6E2D8;
-  transition: all 0.2s ease;
-}
-
-.btn-marfil:hover {
-  background-color: #F1EDE2;
-  border-color: #DDD8CB;
-}
-
-/* Marfil Neo-Card */
-.card-marfil {
-  background: #FFFFFF;
-  border: 1px solid #ECEAE3;
-  border-radius: 24px;
-  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
-}
-
-.card-marfil:hover {
-  border-color: #DFDBD0;
+  background: #475569;
 }

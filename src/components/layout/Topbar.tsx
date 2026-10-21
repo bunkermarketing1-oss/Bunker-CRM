@@ -46,28 +46,28 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
       }
     : {
         label: language === "es" ? "Administrador Bunker" : "Bunker Admin",
-        color: "bg-[#141414] text-[#E5C158] border-[#D4AF37]/40 dark:bg-[#1a1918] dark:border-[#D4AF37]/60",
+        color: "bg-[#F4F3FF] text-[#5925DC] border-[#D9D6FE] dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800",
       };
 
   const firstName = user?.name?.split(" ")[0] ?? (isClient ? "Cliente" : "Bunker");
   const accountName = isClient ? user?.clientName || "Mi Empresa" : user?.organizationName || "Bunker Agency";
 
   return (
-    <header className="h-16 bg-[#F6F5F2]/95 backdrop-blur-md border-b border-[#ECEAE3] fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-[#EAECF0] fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
       <div className="flex items-center gap-2 min-w-0">
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Abrir menú"
-          className="lg:hidden w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center text-[#141414] flex-shrink-0"
+          className="lg:hidden w-9 h-9 rounded-2xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] flex-shrink-0"
         >
           <Menu className="w-4 h-4" />
         </button>
-        <p className="text-sm sm:text-base font-bold text-[#141414] tracking-tight truncate">
+        <p className="text-sm sm:text-base font-bold text-[#101828] tracking-tight truncate">
           {greetingKey ? `${t(greetingKey)}, ${firstName}` : firstName}
         </p>
         {isClient && user?.clientName && (
-          <span className="hidden xl:inline text-xs font-normal text-[#8C887E] bg-white px-2.5 py-0.5 rounded-full border border-[#ECEAE3]">
+          <span className="hidden xl:inline text-xs font-medium text-[#475467] bg-[#F8F9FA] px-2.5 py-0.5 rounded-full border border-[#EAECF0]">
             {user.clientName}
           </span>
         )}
@@ -76,11 +76,11 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-white border border-[#ECEAE3] rounded-2xl pl-3.5 pr-2 py-1.5 text-xs text-[#8C887E] hover:border-[#D4AF37]/60 transition-colors"
+        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-3.5 pr-2 py-1.5 text-xs text-[#98A2B3] hover:border-[#6366F1]/60 transition-colors"
       >
-        <Search className="w-3.5 h-3.5" />
+        <Search className="w-3.5 h-3.5 text-[#98A2B3]" />
         <span className="flex-1 text-left truncate">{t("topbar.search_placeholder", "Buscar prospectos, empresas, teléfonos...")}</span>
-        <kbd className="text-[10px] font-mono bg-[#F4F3EE] px-1.5 py-0.5 rounded border border-[#ECEAE3]">{isMac ? "⌘K" : "Ctrl K"}</kbd>
+        <kbd className="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded border border-[#EAECF0] text-[#475467]">{isMac ? "⌘K" : "Ctrl K"}</kbd>
       </button>
 
       <div className="flex items-center gap-2 flex-shrink-0">
