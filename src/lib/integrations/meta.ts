@@ -20,14 +20,12 @@ export const META_SCOPES = [
   "ads_read",
   "ads_management",
   "business_management",
-  "read_insights",
   "pages_show_list",
   "pages_read_engagement",
   "pages_manage_ads",
   "pages_manage_metadata",
   "leads_retrieval",
   "instagram_basic",
-  "instagram_manage_insights",
 ];
 
 export class MetaApiError extends Error {
