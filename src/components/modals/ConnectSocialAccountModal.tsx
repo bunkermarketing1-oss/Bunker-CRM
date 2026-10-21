@@ -374,6 +374,12 @@ export function ConnectSocialAccountModal({
                   <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <a
                       href="/api/integrations/meta/connect"
+                      onClick={(e) => {
+                        if (typeof window !== "undefined") {
+                          e.preventDefault();
+                          window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                        }
+                      }}
                       className="px-6 py-3 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -419,6 +425,12 @@ export function ConnectSocialAccountModal({
 
                     <a
                       href="/api/integrations/meta/connect"
+                      onClick={(e) => {
+                        if (typeof window !== "undefined") {
+                          e.preventDefault();
+                          window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                        }
+                      }}
                       className="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 underline self-start sm:self-auto flex items-center gap-1"
                       title="Re-autorizar con otra cuenta de Facebook"
                     >

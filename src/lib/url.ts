@@ -12,6 +12,9 @@ export interface RequestLike {
   nextUrl?: {
     host?: string;
     protocol?: string;
+    searchParams?: {
+      get(name: string): string | null;
+    };
   };
 }
 
@@ -36,55 +39,85 @@ export function isSecureConnection(baseUrl: string): boolean {
 }
 
 /**
+ * Extrae de forma segura el origen de una URL string si es válida y no es 0.0.0.0.
+ */
+function extractValidOrigin(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+  try {
+    const parsed = new URL(rawUrl.trim());
+    if ((parsed.protocol === "http:" || parsed.protocol === "https:") && !parsed.host.includes("0.0.0.0")) {
+      return parsed.origin;
+    }
+  } catch {
+    // Si no es URL completa válida, ignorar
+  }
+  return null;
+}
+
+/**
  * Resuelve la URL base pública y canónica de Bunker CRM.
- * Compatible con:
- * - Desarrollo local (`localhost:3000` o `0.0.0.0:3000`)
- * - Deployments en Dokploy / Docker / Proxies inversos (Nginx, Traefik, Nixpacks)
- * - Meta OAuth (requiere URLs válidas y registradas, nunca 0.0.0.0)
+ * Prioriza el dominio real de producción en todo momento:
+ * 1. NEXT_PUBLIC_APP_URL si es un dominio real (ej. https://crm.179.236.72.72.sslip.io)
+ * 2. Parámetro `origin` de la query string (enviado desde el navegador del usuario)
+ * 3. Cabecera `x-forwarded-host` + `x-forwarded-proto` (enviada por Dokploy / Traefik / Nginx)
+ * 4. Cabecera `referer` o `origin` (el origen exacto desde el que el usuario hizo clic)
+ * 5. Host del request
+ * 6. Fallback seguro
  */
 export function resolveAppBaseUrl(req?: RequestLike | null): string {
-  let host: string | null = null;
-  let proto: string | null = null;
-
-  if (req) {
-    const forwardedHost = req.headers.get("x-forwarded-host");
-    const forwardedProto =
-      req.headers.get("x-forwarded-proto") || (req.headers.get("x-forwarded-ssl") === "on" ? "https" : null);
-
-    host = forwardedHost || req.headers.get("host");
-
-    if (!host && req.nextUrl?.host) {
-      host = req.nextUrl.host;
-    }
-
-    proto = forwardedProto;
-    if (!proto && req.nextUrl?.protocol) {
-      proto = req.nextUrl.protocol.replace(":", "");
-    }
-  }
-
-  // 1. Si hay un host detectado en la petición, sanitizar 0.0.0.0
-  if (host) {
-    host = sanitizeHost(host);
-  }
-
-  // 2. Revisar variable de entorno NEXT_PUBLIC_APP_URL
+  // 1. Variable de entorno de producción (máxima prioridad si es dominio real)
   const rawEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   const envUrl = rawEnv ? sanitizeHost(rawEnv) : null;
-
-  // Si envUrl es un dominio de producción real (no localhost), tiene máxima prioridad
   if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
     return envUrl.replace(/\/$/, "");
   }
 
-  // 3. Si tenemos información del request HTTP
-  if (host) {
-    const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
-    // En entornos locales forzar http a menos que un proxy certifique https explícito
-    const scheme = isLocal ? (proto === "https" && req?.headers.get("x-forwarded-proto") === "https" ? "https" : "http") : (proto || "https");
-    return `${scheme}://${host}`.replace(/\/$/, "");
+  // 2. Parámetro explícito de query string si existe
+  if (req?.nextUrl?.searchParams) {
+    const queryOrigin = extractValidOrigin(req.nextUrl.searchParams.get("origin"));
+    if (queryOrigin) {
+      return queryOrigin;
+    }
   }
 
-  // 4. Fallback si no hay request ni dominio de producción
+  if (req) {
+    // 3. Proxy inverso de producción (Dokploy / Traefik / Nginx)
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const forwardedProto =
+      req.headers.get("x-forwarded-proto") || (req.headers.get("x-forwarded-ssl") === "on" ? "https" : null);
+
+    if (forwardedHost) {
+      // Traefik o Nginx pueden concatenar hosts separados por coma
+      const primaryHost = forwardedHost.split(",")[0].trim();
+      if (primaryHost && !primaryHost.includes("0.0.0.0")) {
+        const proto = forwardedProto || (primaryHost.includes("localhost") ? "http" : "https");
+        return `${proto}://${primaryHost}`.replace(/\/$/, "");
+      }
+    }
+
+    // 4. Cabeceras referer u origin del navegador del usuario
+    const refererOrigin = extractValidOrigin(req.headers.get("referer"));
+    if (refererOrigin) {
+      return refererOrigin;
+    }
+
+    const originHeader = extractValidOrigin(req.headers.get("origin"));
+    if (originHeader) {
+      return originHeader;
+    }
+
+    // 5. Host directo de la petición
+    let host = req.headers.get("host") || req.nextUrl?.host;
+    const proto = forwardedProto || (req.nextUrl?.protocol ? req.nextUrl.protocol.replace(":", "") : null);
+
+    if (host) {
+      host = sanitizeHost(host);
+      const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+      const scheme = isLocal ? (proto === "https" && req.headers.get("x-forwarded-proto") === "https" ? "https" : "http") : (proto || "https");
+      return `${scheme}://${host}`.replace(/\/$/, "");
+    }
+  }
+
+  // 6. Fallback final
   return (envUrl || "http://localhost:3000").replace(/\/$/, "");
 }

@@ -54,6 +54,38 @@ test("resolveAppBaseUrl prioritizes reverse proxy forwarded headers for Dokploy/
   assert.equal(url, "https://crm.bunkermarketing.com");
 });
 
+test("resolveAppBaseUrl extracts real production domain from referer header when on real domain", () => {
+  const map = new Map([
+    ["referer", "https://crm.179.236.72.72.sslip.io/marketing/integrations"],
+    ["host", "0.0.0.0:3000"],
+  ]);
+  const req = {
+    headers: {
+      get: (k) => map.get(k.toLowerCase()) ?? null,
+    },
+  };
+
+  const url = resolveAppBaseUrl(req);
+  assert.equal(url, "https://crm.179.236.72.72.sslip.io");
+});
+
+test("resolveAppBaseUrl extracts origin query parameter passed by frontend on real domain", () => {
+  const map = new Map([["host", "0.0.0.0:3000"]]);
+  const req = {
+    headers: {
+      get: (k) => map.get(k.toLowerCase()) ?? null,
+    },
+    nextUrl: {
+      searchParams: {
+        get: (k) => (k === "origin" ? "https://crm.midominio.com" : null),
+      },
+    },
+  };
+
+  const url = resolveAppBaseUrl(req);
+  assert.equal(url, "https://crm.midominio.com");
+});
+
 test("resolveAppBaseUrl falls back safely to NEXT_PUBLIC_APP_URL or localhost", () => {
   const old = process.env.NEXT_PUBLIC_APP_URL;
   try {

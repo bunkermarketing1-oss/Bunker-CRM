@@ -515,6 +515,12 @@ export default function IntegrationsPage() {
 
               <a
                 href="/api/integrations/meta/connect"
+                onClick={(e) => {
+                  if (typeof window !== "undefined") {
+                    e.preventDefault();
+                    window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                  }
+                }}
                 className="px-5 py-3 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 flex-shrink-0"
               >
                 <span>Conectar con Facebook (OAuth)</span>
@@ -620,6 +626,12 @@ export default function IntegrationsPage() {
                 ) : (
                   <a
                     href="/api/integrations/meta/connect"
+                    onClick={(e) => {
+                      if (typeof window !== "undefined") {
+                        e.preventDefault();
+                        window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                      }
+                    }}
                     className="px-4 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold shadow-sm"
                   >
                     Conectar con Facebook
