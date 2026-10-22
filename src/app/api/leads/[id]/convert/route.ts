@@ -77,20 +77,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           throw new AlreadyConvertedError();
         }
 
-        const client = await tx.client.create({
-          data: {
-            organizationId: user!.organizationId,
-            ownerId: lead.ownerId || user!.id,
-            name: lead.companyName || lead.name,
-            companyName: lead.companyName || lead.name,
-            email: lead.email,
-            phone: lead.phone,
-            status: "active",
-            revenue: lead.estimatedValue || 0,
-            notes: `Convertido desde Lead: ${lead.name}. ${lead.aiSummary || ""}`,
-            isDemo: lead.isDemo,
-          },
-        });
+        let clientId = lead.clientId;
+        let client = null;
+
+        if (clientId) {
+          client = await tx.client.findFirst({
+            where: { id: clientId, organizationId: user!.organizationId, isDeleted: false },
+          });
+        }
+
+        if (!client) {
+          client = await tx.client.create({
+            data: {
+              organizationId: user!.organizationId,
+              ownerId: lead.ownerId || user!.id,
+              name: lead.companyName || lead.name,
+              companyName: lead.companyName || lead.name,
+              email: lead.email,
+              phone: lead.phone,
+              status: "active",
+              revenue: lead.estimatedValue || 0,
+              notes: `Convertido desde Lead: ${lead.name}. ${lead.aiSummary || ""}`,
+              isDemo: lead.isDemo,
+            },
+          });
+          clientId = client.id;
+          await tx.lead.update({
+            where: { id: lead.id },
+            data: { clientId: client.id },
+          });
+        }
 
         await tx.contact.create({
           data: {
@@ -112,7 +128,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               stageId,
               clientId: client.id,
               leadId: lead.id,
-              title: `Negocio: ${client.name}`,
+              title: `Negocio: ${lead.name}`,
               value: lead.estimatedValue || 0,
               probability: 50,
               status: "open",
