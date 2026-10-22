@@ -6,6 +6,8 @@ export const MESSAGE_CHANNEL = {
   SMS: "sms",
   WHATSAPP: "whatsapp",
   EMAIL: "email",
+  MESSENGER: "messenger",
+  INSTAGRAM: "instagram",
 } as const;
 export type MessageChannel = ValueOf<typeof MESSAGE_CHANNEL>;
 

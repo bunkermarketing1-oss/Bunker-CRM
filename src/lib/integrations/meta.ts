@@ -12,10 +12,8 @@ export { verifyMetaSignature } from "./meta-webhook";
 export const META_GRAPH_VERSION = process.env.META_GRAPH_VERSION || "v23.0";
 const GRAPH_URL = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
 
-// El CRM es comercial: métricas, gestión de campañas y captura de leads. No se piden
-// permisos de publicación para que la revisión de la app en Meta sea más sencilla.
-// leads_retrieval + pages_manage_ads + pages_manage_metadata son los que exige Meta para
-// suscribir una página al webhook `leadgen` y leer los leads de sus formularios.
+// El CRM es comercial: métricas, gestión de campañas, captura de leads y mensajería directa
+// (Facebook Messenger e Instagram Direct). No se piden permisos de publicación en feed.
 export const META_SCOPES = [
   "ads_read",
   "ads_management",
@@ -26,6 +24,8 @@ export const META_SCOPES = [
   "pages_manage_metadata",
   "leads_retrieval",
   "instagram_basic",
+  "pages_messaging",
+  "instagram_manage_messages",
 ];
 
 export class MetaApiError extends Error {
@@ -227,21 +227,89 @@ export interface MetaLeadgenChange {
   created_time?: number; // unix
 }
 
+export interface MetaMessagingAttachment {
+  type: string;
+  payload?: { url?: string };
+}
+
+export interface MetaMessagingItem {
+  sender: { id: string };
+  recipient: { id: string };
+  timestamp: number;
+  message?: {
+    mid: string;
+    text?: string;
+    is_echo?: boolean;
+    attachments?: MetaMessagingAttachment[];
+  };
+  postback?: {
+    mid?: string;
+    title?: string;
+    payload?: string;
+  };
+}
+
 export interface MetaWebhookPayload {
-  object?: string; // "page"
+  object?: string; // "page" | "instagram"
   entry?: {
     id: string;
     time: number;
     changes?: { field: string; value: MetaLeadgenChange }[];
+    messaging?: MetaMessagingItem[];
   }[];
 }
 
-/** Suscribe la app al campo `leadgen` de una página (requiere token de página). */
+/** Suscribe la app a los eventos de leads y mensajería directa (requiere token de página). */
 export async function subscribePageToLeadgen(pageId: string, pageToken: string) {
   return graphFetch<{ success: boolean }>(
-    graphUrl(`${pageId}/subscribed_apps`, { subscribed_fields: "leadgen", access_token: pageToken }),
+    graphUrl(`${pageId}/subscribed_apps`, {
+      subscribed_fields: "leadgen,messages,messaging_postbacks",
+      access_token: pageToken,
+    }),
     { method: "POST" }
   );
+}
+
+export interface SendMetaMessageResult {
+  recipient_id: string;
+  message_id: string;
+}
+
+/** Envía un mensaje de texto oficial a un prospecto por Facebook Messenger o Instagram Direct. */
+export async function sendMetaDirectMessage(pageToken: string, recipientId: string, text: string) {
+  return graphFetch<SendMetaMessageResult>(
+    graphUrl("me/messages", { access_token: pageToken }),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: recipientId },
+        message: { text },
+        messaging_type: "RESPONSE",
+      }),
+    }
+  );
+}
+
+export interface MetaSenderProfile {
+  id?: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  profile_pic?: string;
+  username?: string;
+}
+
+/** Consulta el perfil básico de un usuario remitente en Messenger o Instagram Direct. */
+export async function getMetaSenderProfile(pageToken: string, senderId: string, isInstagram = false): Promise<MetaSenderProfile | null> {
+  try {
+    const fields = isInstagram ? "name,username,profile_pic" : "name,first_name,last_name,profile_pic";
+    return await graphFetch<MetaSenderProfile>(
+      graphUrl(senderId, { fields, access_token: pageToken })
+    );
+  } catch {
+    return null;
+  }
 }
 
 export interface MetaLeadField {

@@ -25,6 +25,8 @@ export type OpportunityStatus = ValueOf<typeof OPPORTUNITY_STATUS>;
 export const LEAD_SOURCE = {
   META_ADS: "meta_ads",
   REFERRAL: "referral",
+  FACEBOOK_MESSENGER: "facebook_messenger",
+  INSTAGRAM_DIRECT: "instagram_direct",
 } as const;
 
 /** Etiquetas visibles de las fuentes de lead (`Lead.source`). */
@@ -35,6 +37,8 @@ export const LEAD_SOURCE_LABEL: Record<string, string> = {
   google_ads: "Google Ads",
   tiktok_ads: "TikTok Ads",
   whatsapp: "WhatsApp",
+  facebook_messenger: "Facebook Messenger",
+  instagram_direct: "Instagram Direct",
   website: "Sitio web",
   referral: "Referidos",
   sales_outreach: "Prospección comercial",

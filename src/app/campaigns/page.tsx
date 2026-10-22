@@ -14,7 +14,6 @@ import {
   MessageSquare,
   FileSpreadsheet,
   Globe,
-  Building,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
@@ -475,7 +474,6 @@ export default function CampaignsPage() {
                 <thead className="bg-[#F8F9FA] text-slate-500 border-b border-[#EAECF0]">
                   <tr>
                     <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Campaña</th>
-                    {!isClient && <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Cliente</th>}
                     <th className="text-left font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Estado</th>
                     <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Presupuesto</th>
                     <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Inversión</th>
@@ -490,7 +488,7 @@ export default function CampaignsPage() {
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {data.campaigns.length === 0 && (
                     <tr>
-                      <td colSpan={isClient ? 10 : 11} className="px-4 py-8 text-center text-[#667085]">
+                      <td colSpan={10} className="px-4 py-8 text-center text-[#667085]">
                         No hay campañas sincronizadas todavía.
                       </td>
                     </tr>
@@ -539,25 +537,6 @@ export default function CampaignsPage() {
                             </div>
                           </div>
                         </td>
-
-                        {!isClient && (
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            {c.client ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F2F4F7] text-[#344054] text-[11px] font-medium border border-[#EAECF0]">
-                                <Building className="w-3 h-3 text-[#667085]" />
-                                {c.client.name}
-                              </span>
-                            ) : (
-                              <Link
-                                href="/marketing/integrations"
-                                className="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-2 py-0.5 rounded-md font-medium transition-colors"
-                                title="Cuenta sin asignar a un cliente. Haz clic para asignarla en Integraciones."
-                              >
-                                <span>+ Asignar</span>
-                              </Link>
-                            )}
-                          </td>
-                        )}
 
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>

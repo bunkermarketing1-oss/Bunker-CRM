@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { ROUTES } from "@/lib/constants/routes";
@@ -13,10 +13,10 @@ import { isNavItemActive, navigationFor, type NavItem } from "./navigation";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenAiModal: () => void;
+  onOpenAiModal?: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const { language } = useLanguage();
@@ -102,26 +102,6 @@ export default function Sidebar({ isOpen, onClose, onOpenAiModal }: SidebarProps
             </div>
           ))}
         </nav>
-
-        {!isClient && (
-          <button
-            type="button"
-            onClick={onOpenAiModal}
-            className="mt-3 w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0F172A] text-left border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 transition-all group shadow-2xs"
-          >
-            <span className="w-7 h-7 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-xs font-medium text-white group-hover:text-amber-400 transition-colors">
-                {language === "es" ? "Asistente Bunker" : "Bunker Assistant"}
-              </span>
-              <span className="block text-[10px] text-slate-400 truncate">
-                {language === "es" ? "Análisis, copys y scoring" : "Analysis, copy & scoring"}
-              </span>
-            </span>
-          </button>
-        )}
       </aside>
     </>
   );

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
+import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
+import { sendMetaOutboundReply } from "@/services/meta-messaging.service";
 
 export const dynamic = "force-dynamic";
 
@@ -135,8 +137,8 @@ export async function GET(req: NextRequest) {
 
     const dbMessages = await prisma.message.findMany({
       where: messageWhere,
-      orderBy: { createdAt: "asc" },
-      take: 150,
+      orderBy: { createdAt: "desc" },
+      take: 250,
       include: {
         client: { select: { id: true, name: true } },
         lead: {
@@ -152,6 +154,9 @@ export async function GET(req: NextRequest) {
         },
       },
     });
+
+    // Reordenar cronológicamente para que la conversación fluya de más antiguo a más nuevo
+    dbMessages.reverse();
 
     // Agrupar mensajes de BD por conversación (por destinatario/remitente o lead)
     const dbConvMap = new Map<string, ConversationItem>();
@@ -334,19 +339,37 @@ export async function POST(req: NextRequest) {
       targetClientId = user!.clientId;
     }
 
-    // Registrar mensaje en la base de datos para trazabilidad
-    const savedMessage = await prisma.message.create({
-      data: {
-        organizationId: user!.organizationId,
-        clientId: targetClientId || null,
-        leadId: leadId || null,
-        channel: channel.includes("whatsapp") ? "whatsapp" : "sms",
-        direction: "outbound",
-        recipient: recipient || "Usuario Social",
-        body: messageBody,
-        status: "sent",
-      },
-    });
+    let savedMessage;
+    if ((channel === "messenger" || channel === "instagram") && recipient && recipient !== "Usuario Social") {
+      try {
+        savedMessage = await sendMetaOutboundReply({
+          organizationId: user!.organizationId,
+          senderUserId: user!.id,
+          targetClientId,
+          leadId,
+          recipient,
+          channel: channel as "messenger" | "instagram",
+          body: messageBody,
+        });
+      } catch (sendErr) {
+        const msg = sendErr instanceof Error ? sendErr.message : "Error al enviar mensaje por Meta.";
+        return NextResponse.json({ success: false, error: msg }, { status: 400 });
+      }
+    } else {
+      // Registrar mensaje en la base de datos para trazabilidad (SMS o WhatsApp)
+      savedMessage = await prisma.message.create({
+        data: {
+          organizationId: user!.organizationId,
+          clientId: targetClientId || null,
+          leadId: leadId || null,
+          channel: channel.includes("whatsapp") ? MESSAGE_CHANNEL.WHATSAPP : MESSAGE_CHANNEL.SMS,
+          direction: MESSAGE_DIRECTION.OUTBOUND,
+          recipient: recipient || "Usuario Social",
+          body: messageBody,
+          status: MESSAGE_STATUS.SENT,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { verifyMetaSignature, type MetaWebhookPayload } from "@/lib/integrations/meta";
 import { processMetaLeadEvent, recordLeadgenEvents } from "@/services/meta-leads.service";
+import { processMetaMessaging } from "@/services/meta-messaging.service";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Webhook de Meta (objeto `page`, campo `leadgen`). Es público: Meta no envía sesión,
+ * Webhook de Meta (objeto `page` e `instagram`). Es público: Meta no envía sesión,
  * la autenticidad la da la firma `X-Hub-Signature-256`.
+ * Procesa tanto captura de clientes potenciales (Lead Ads) como mensajería directa
+ * (Facebook Messenger e Instagram Direct).
  * URL de callback en la app de Meta: https://<dominio>/api/integrations/meta/webhook
  */
 
@@ -43,11 +46,23 @@ export async function POST(req: NextRequest) {
   }
 
   // Siempre 200 con firma válida: si respondemos error Meta reintenta y, tras muchos
-  // fallos, desactiva el webhook. Los errores quedan en MetaLeadEvent y el cron los reintenta.
+  // fallos, desactiva el webhook.
   try {
-    const eventIds = await recordLeadgenEvents(payload);
-    await Promise.allSettled(eventIds.map((id) => processMetaLeadEvent(id)));
-    return NextResponse.json({ success: true, received: eventIds.length });
+    const [leadgenOutcome, messagingOutcome] = await Promise.allSettled([
+      recordLeadgenEvents(payload).then((eventIds) =>
+        Promise.allSettled(eventIds.map((id) => processMetaLeadEvent(id)))
+      ),
+      processMetaMessaging(payload),
+    ]);
+
+    const leadEventsCount = leadgenOutcome.status === "fulfilled" ? leadgenOutcome.value.length : 0;
+    const messagesCount = messagingOutcome.status === "fulfilled" ? messagingOutcome.value.processed : 0;
+
+    return NextResponse.json({
+      success: true,
+      leadEventsReceived: leadEventsCount,
+      messagesProcessed: messagesCount,
+    });
   } catch (error) {
     console.error("POST /api/integrations/meta/webhook error:", error);
     return NextResponse.json({ success: true, received: 0 });
