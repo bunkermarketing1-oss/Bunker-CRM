@@ -226,26 +226,23 @@ export function ConnectSocialAccountModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E8E6DF] overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Cabecera Principal */}
-        <div className="px-6 py-4 bg-gradient-to-b from-[#FAF9F5] to-white border-b border-[#E8E6DF] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#1F1E1D] text-white flex items-center justify-center shadow-sm">
-              <Layers className="w-5 h-5 text-[#E5C158]" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]">
+        {/* Cabecera Limpia */}
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
+              <Layers className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#1F1E1D]">
-                Vincular Redes Sociales & Anuncios
+              <h2 className="text-sm font-semibold text-slate-900">
+                Vincular Redes & Activos
               </h2>
-              <p className="text-xs text-[#6B6966] mt-0.5">
+              <p className="text-[11px] text-slate-500">
                 {activeClient ? (
-                  <>
-                    Selecciona las páginas y cuentas de anuncios para{" "}
-                    <strong className="text-[#1F1E1D] font-semibold">{activeClient.name}</strong>
-                  </>
+                  <>Asigna páginas y cuentas para <strong className="text-slate-900 font-semibold">{activeClient.name}</strong></>
                 ) : (
-                  "Asigna cada página o cuenta de anuncios al cliente correspondiente de tu agencia."
+                  "Asigna cada página, Instagram o cuenta de anuncios a su empresa."
                 )}
               </p>
             </div>
@@ -253,54 +250,54 @@ export function ConnectSocialAccountModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-[#82807C] hover:text-[#1F1E1D] hover:bg-[#F0EEE6] transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             title="Cerrar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`mx-6 mt-4 p-3 rounded-2xl text-xs font-medium flex items-center gap-2.5 transition-all ${
+            className={`mx-5 mt-3 p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all ${
               feedback.type === "success"
                 ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
                 : "bg-red-50 border border-red-200 text-red-800"
             }`}
           >
             {feedback.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
             )}
             <span className="flex-1">{feedback.message}</span>
             <button
               onClick={() => setFeedback(null)}
-              className="text-[#82807C] hover:text-[#1F1E1D] text-xs font-semibold"
+              className="text-slate-400 hover:text-slate-700 text-xs font-bold"
             >
               ✕
             </button>
           </div>
         )}
 
-        {/* Selector de Plataformas */}
-        <div className="px-6 pt-3 pb-2 flex items-center justify-between border-b border-[#F0EEE6] bg-white gap-2">
-          <div className="flex items-center gap-1.5">
+        {/* Barra de Plataformas + Acciones Rápidas */}
+        <div className="px-5 pt-3 pb-2 flex items-center justify-between border-b border-slate-100 bg-white gap-2 flex-wrap">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab("meta")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 activeTab === "meta"
-                  ? "bg-[#1877F2]/10 text-[#1877F2] border border-[#1877F2]/25 shadow-sm"
-                  : "text-[#6B6966] hover:text-[#1F1E1D] hover:bg-[#FAF9F5]"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200 font-semibold"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <div className="w-4 h-4 rounded-full bg-[#1877F2] flex items-center justify-center text-white text-[9px] font-bold">
+              <div className="w-3.5 h-3.5 rounded-full bg-[#1877F2] flex items-center justify-center text-white text-[8px] font-bold">
                 f
               </div>
-              <span>Meta (Facebook & Instagram)</span>
+              <span>Meta</span>
               {channels.length > 0 && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-bold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-semibold">
                   {channels.length}
                 </span>
               )}
@@ -308,45 +305,60 @@ export function ConnectSocialAccountModal({
 
             <button
               onClick={() => setActiveTab("tiktok")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 activeTab === "tiktok"
-                  ? "bg-black/10 text-black border border-black/20 shadow-sm"
-                  : "text-[#6B6966] hover:text-[#1F1E1D] hover:bg-[#FAF9F5]"
+                  ? "bg-slate-900 text-white font-semibold"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <span className="text-[11px]">🎵</span>
+              <span className="text-[10px]">🎵</span>
               <span>TikTok Ads</span>
             </button>
 
             <button
               onClick={() => setActiveTab("manual")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 activeTab === "manual"
-                  ? "bg-[#FAF0E6] text-[#D97757] font-semibold border border-[#F2D6C6]"
-                  : "text-[#82807C] hover:text-[#1F1E1D]"
+                  ? "bg-amber-50 text-amber-800 border border-amber-200 font-semibold"
+                  : "text-slate-500 hover:bg-slate-100"
               }`}
             >
-              <span>Avanzado / Token</span>
+              <span>Token Manual</span>
             </button>
           </div>
 
           {activeTab === "meta" && isMetaConnected && (
-            <button
-              onClick={handleRefreshMetaCatalog}
-              disabled={refreshingCatalog}
-              className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] hover:bg-white text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all"
-              title="Buscar nuevas páginas o cuentas en Meta"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-[#1877F2]" : ""}`} />
-              <span className="hidden sm:inline">
-                {refreshingCatalog ? "Buscando..." : "Buscar nuevas páginas"}
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefreshMetaCatalog}
+                disabled={refreshingCatalog}
+                className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                title="Detectar nuevas páginas o cuentas"
+              >
+                <RefreshCw className={`w-3 h-3 ${refreshingCatalog ? "animate-spin text-blue-600" : ""}`} />
+                <span>{refreshingCatalog ? "Buscando..." : "Buscar nuevas páginas"}</span>
+              </button>
+
+              <a
+                href="/api/integrations/meta/connect"
+                onClick={(e) => {
+                  if (typeof window !== "undefined") {
+                    e.preventDefault();
+                    window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                  }
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                title="Reconectar otra cuenta de Facebook"
+              >
+                <span>Reconectar</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           )}
         </div>
 
         {/* Contenido Dinámico */}
-        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+        <div className="p-5 overflow-y-auto flex-1">
           {/* ========================================================= */}
           {/* PESTAÑA 1: META (FACEBOOK, INSTAGRAM, ADS)                */}
           {/* ========================================================= */}
@@ -401,200 +413,149 @@ export function ConnectSocialAccountModal({
                 </div>
               ) : (
                 /* CASO B: META YA ESTÁ CONECTADO (VISTA SIMPLE Y CLARA) */
-                <div className="space-y-3.5">
-                  {/* Banner de Estado Conectado - Limpio y Compacto */}
-                  <div className="p-3.5 px-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-sm text-xs">
-                        ✓
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-emerald-950">
-                            Meta Business Conectado
-                          </h4>
-                          <span className="text-[11px] text-emerald-800">
-                            · {channels.length} {channels.length === 1 ? "cuenta disponible" : "cuentas disponibles"}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-emerald-700">
-                          Asigna cada cuenta o página al cliente que le corresponde.
-                        </p>
-                      </div>
-                    </div>
-
-                    <a
-                      href="/api/integrations/meta/connect"
-                      onClick={(e) => {
-                        if (typeof window !== "undefined") {
-                          e.preventDefault();
-                          window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
-                        }
-                      }}
-                      className="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 underline self-start sm:self-auto flex items-center gap-1"
-                      title="Reconectar con otra cuenta de Facebook"
-                    >
-                      <span>Reconectar otra cuenta</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-
+                <div className="space-y-3">
                   {/* Barra de Filtros y Búsqueda */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
                       <button
                         onClick={() => setChannelFilter("all")}
-                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
                           channelFilter === "all"
-                            ? "bg-[#1F1E1D] text-white shadow-sm"
-                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                            ? "bg-slate-900 text-white font-medium"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         Todas ({channels.length})
                       </button>
                       <button
                         onClick={() => setChannelFilter("pages")}
-                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
                           channelFilter === "pages"
-                            ? "bg-[#1877F2] text-white shadow-sm"
-                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                            ? "bg-slate-900 text-white font-medium"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         Páginas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
                       </button>
                       <button
-                        onClick={() => setChannelFilter("ads")}
-                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
-                          channelFilter === "ads"
-                            ? "bg-[#0081FB] text-white shadow-sm"
-                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
-                        }`}
-                      >
-                        Anuncios ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
-                      </button>
-                      <button
                         onClick={() => setChannelFilter("instagram")}
-                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
                           channelFilter === "instagram"
-                            ? "bg-[#E4405F] text-white shadow-sm"
-                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                            ? "bg-slate-900 text-white font-medium"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         Instagram ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
                       </button>
                       <button
+                        onClick={() => setChannelFilter("ads")}
+                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                          channelFilter === "ads"
+                            ? "bg-slate-900 text-white font-medium"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Anuncios ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
+                      </button>
+                      <button
                         onClick={() => setChannelFilter("unassigned")}
-                        className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
                           channelFilter === "unassigned"
-                            ? "bg-amber-600 text-white shadow-sm"
-                            : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                            ? "bg-amber-600 text-white font-medium"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         Sin asignar ({channels.filter((c) => !c.clientId).length})
                       </button>
                     </div>
 
-                    <div className="relative w-full sm:w-56">
-                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
+                    <div className="relative w-full sm:w-48">
+                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Buscar por nombre..."
+                        placeholder="Buscar..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white"
                       />
                     </div>
                   </div>
 
-                  {/* Lista de Cuentas y Páginas */}
-                  <div className="space-y-2 max-h-[46vh] overflow-y-auto pr-1">
+                  {/* Lista Limpia de Cuentas */}
+                  <div className="space-y-1.5 max-h-[48vh] overflow-y-auto pr-0.5">
                     {loadingChannels ? (
-                      <div className="p-8 text-center text-xs text-[#82807C] flex items-center justify-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-[#1877F2]" />
+                      <div className="py-8 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                        <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
                         <span>Cargando cuentas...</span>
                       </div>
                     ) : filteredChannels.length === 0 ? (
-                      <div className="p-8 rounded-2xl bg-[#FAF9F5] border border-dashed border-[#D1CFCA] text-center space-y-2">
-                        <p className="text-xs font-semibold text-[#1F1E1D]">
-                          No se encontraron cuentas con este filtro
-                        </p>
-                        <p className="text-[11px] text-[#82807C]">
-                          Haz clic en &quot;Buscar nuevas páginas&quot; si creaste una cuenta recientemente en Meta.
-                        </p>
+                      <div className="py-8 text-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        No se encontraron cuentas con este filtro
                       </div>
                     ) : (
                       filteredChannels.map((ch) => {
                         const isFBPage = ch.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
                         const isIG = ch.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
                         const isAd = ch.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
-                        const isAssignedToCurrent = Boolean(
-                          targetClientId && ch.clientId === targetClientId
-                        );
-                        const isAssignedToOther = Boolean(
-                          targetClientId && ch.clientId && ch.clientId !== targetClientId
-                        );
                         const isAssigned = Boolean(ch.clientId && ch.client);
 
                         return (
                           <div
                             key={ch.id}
-                            className={`p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                              isAssignedToCurrent
-                                ? "bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300/40"
-                                : isAssigned
-                                ? "bg-white border-[#E8E6DF] hover:border-[#D1CFCA]"
-                                : "bg-[#FCFCFA] border-[#ECEAE3] hover:border-[#D4AF37]/50"
+                            className={`px-3 py-2.5 rounded-xl border transition-colors flex items-center justify-between gap-3 ${
+                              isAssigned
+                                ? "bg-white border-slate-200 hover:border-slate-300"
+                                : "bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-slate-300"
                             }`}
                           >
                             {/* Icono + Nombre + Tipo */}
-                            <div className="flex items-center gap-3 min-w-0">
-                              <SocialNetworkIcon type={ch.accountType} size="md" />
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <SocialNetworkIcon type={ch.accountType} size="sm" />
 
                               <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="text-xs font-bold text-[#1F1E1D] truncate">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h4 className="text-xs font-semibold text-slate-900 truncate">
                                     {ch.accountName}
                                   </h4>
                                   {isFBPage && (
-                                    <span className="text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
-                                      Página de Facebook
+                                    <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded">
+                                      Página
                                     </span>
                                   )}
                                   {isIG && (
-                                    <span className="text-[10px] font-medium text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200/60">
+                                    <span className="text-[10px] font-medium text-pink-600 bg-pink-50 px-1.5 py-0.2 rounded">
                                       Instagram
                                     </span>
                                   )}
                                   {isAd && (
-                                    <span className="text-[10px] font-medium text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60">
-                                      Cuenta de Anuncios
+                                    <span className="text-[10px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.2 rounded">
+                                      Anuncios
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="flex items-center gap-2 text-xs mt-0.5">
+                                <div className="text-[11px] mt-0.5">
                                   {ch.clientId && ch.client ? (
-                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
-                                      <Check className="w-3 h-3 text-emerald-600" />
-                                      <span>Asignada a: <strong>{ch.client.name}</strong></span>
+                                    <span className="text-emerald-700 font-medium">
+                                      Asignada a: <strong>{ch.client.name}</strong>
                                     </span>
                                   ) : (
-                                    <span className="text-[11px] text-[#8C887E]">
-                                      Sin cliente asignado
+                                    <span className="text-slate-400">
+                                      Sin asignar
                                     </span>
                                   )}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Selector de Cliente */}
-                            <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                            {/* Selector de Asignación Directa */}
+                            <div className="flex items-center gap-1.5 shrink-0">
                               {targetClientId ? (
-                                isAssignedToCurrent ? (
+                                ch.clientId === targetClientId ? (
                                   <button
                                     onClick={() => handleAssignChannel(ch.id, null)}
                                     disabled={assigningId === ch.id}
-                                    className="px-3 py-1.5 rounded-xl bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium transition-all shadow-sm flex items-center gap-1.5"
+                                    className="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition-colors flex items-center gap-1"
                                   >
                                     {assigningId === ch.id ? (
                                       <RefreshCw className="w-3 h-3 animate-spin" />
@@ -607,48 +568,40 @@ export function ConnectSocialAccountModal({
                                   <button
                                     onClick={() => handleAssignChannel(ch.id, targetClientId)}
                                     disabled={assigningId === ch.id}
-                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ${
-                                      isAssignedToOther
-                                        ? "bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200"
-                                        : "btn-black-gold"
-                                    }`}
+                                    className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors flex items-center gap-1"
                                   >
                                     {assigningId === ch.id ? (
                                       <RefreshCw className="w-3 h-3 animate-spin" />
                                     ) : (
-                                      <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                                      <Check className="w-3 h-3" />
                                     )}
-                                    <span>
-                                      {isAssignedToOther
-                                        ? `Reasignar a ${activeClient?.name}`
-                                        : `+ Vincular a ${activeClient?.name}`}
-                                    </span>
+                                    <span>Vincular a {activeClient?.name}</span>
                                   </button>
                                 )
                               ) : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   <select
                                     value={ch.clientId || ""}
                                     onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
                                     disabled={assigningId === ch.id}
-                                    className={`rounded-xl px-3 py-1.5 text-xs font-medium border transition-all cursor-pointer shadow-sm ${
+                                    className={`rounded-lg px-2.5 py-1 text-xs font-medium border transition-colors cursor-pointer ${
                                       ch.clientId
-                                        ? "bg-white text-[#1F1E1D] border-[#E8E6DF] hover:border-[#1F1E1D]"
-                                        : "bg-[#FAF9F5] text-[#6B6966] border-[#D1CFCA] hover:border-[#1F1E1D] hover:text-[#1F1E1D]"
+                                        ? "bg-white text-slate-800 border-slate-300"
+                                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
                                     }`}
                                   >
-                                    <option value="">➕ Asignar a un cliente...</option>
+                                    <option value="">Asignar a empresa...</option>
                                     {clients.map((c) => (
                                       <option key={c.id} value={c.id}>
                                         {c.name}
                                       </option>
                                     ))}
                                     {ch.clientId && (
-                                      <option value="">✕ Quitar asignación (dejar libre)</option>
+                                      <option value="">✕ Desvincular (dejar libre)</option>
                                     )}
                                   </select>
                                   {assigningId === ch.id && (
-                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
+                                    <RefreshCw className="w-3 h-3 animate-spin text-amber-500" />
                                   )}
                                 </div>
                               )}
@@ -857,14 +810,14 @@ export function ConnectSocialAccountModal({
           )}
         </div>
 
-        {/* Footer del Modal */}
-        <div className="px-6 py-3.5 bg-[#FAF9F5] border-t border-[#E8E6DF] flex items-center justify-between">
-          <span className="text-[11px] text-[#82807C]">
-            💡 Los prospectos de formularios Lead Ads entrarán en tiempo real vía Webhook.
+        {/* Footer Limpio */}
+        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <span className="text-xs text-slate-500">
+            {channels.length} {channels.length === 1 ? "cuenta disponible" : "cuentas disponibles"}
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#F0EEE6] text-[#1F1E1D] text-xs font-semibold transition-all shadow-sm"
+            className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors shadow-xs"
           >
             Listo / Cerrar
           </button>
