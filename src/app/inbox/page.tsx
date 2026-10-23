@@ -143,9 +143,9 @@ export default function UnifiedInboxPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchInbox = useCallback(async () => {
+  const fetchInbox = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const params = new URLSearchParams();
       if (activeChannel !== "all") params.set("channel", activeChannel);
       if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
@@ -167,12 +167,16 @@ export default function UnifiedInboxPage() {
     } catch (err) {
       console.error("Error al cargar la bandeja de entrada:", err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [activeChannel, selectedClientId, search, isClient, selectedConvId]);
 
   useEffect(() => {
     fetchInbox();
+    const interval = setInterval(() => {
+      fetchInbox(true);
+    }, 15000);
+    return () => clearInterval(interval);
   }, [fetchInbox]);
 
   const activeConversation = useMemo(() => {
@@ -299,7 +303,7 @@ export default function UnifiedInboxPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchInbox}
+            onClick={() => fetchInbox(false)}
             disabled={loading}
             className="p-2 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
             title="Refrescar bandeja"
@@ -467,6 +471,16 @@ export default function UnifiedInboxPage() {
                 <p className="text-[11px] text-[#667085]">
                   No se encontraron mensajes en este canal o filtro seleccionado.
                 </p>
+                {!isClient && (
+                  <div className="pt-2">
+                    <Link
+                      href="/marketing/integrations"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs"
+                    >
+                      <span>Vincular cuentas o redes</span>
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               conversations.map((conv) => {

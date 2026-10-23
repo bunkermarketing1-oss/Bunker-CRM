@@ -456,7 +456,7 @@ export default function ClientsPage() {
               className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
             >
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>+ Nuevo Cliente (Asistente Guiado)</span>
+              <span>+ Nueva Empresa</span>
             </button>
           )}
 
@@ -489,7 +489,7 @@ export default function ClientsPage() {
               }`}
             >
               <Building className="w-4 h-4 text-amber-500" />
-              <span>Directorio Comercial (Clientes)</span>
+              <span>Directorio de Empresas</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F0EEE6] font-bold text-[#101828]">
                 {clients.length}
               </span>
@@ -505,7 +505,7 @@ export default function ClientsPage() {
               }`}
             >
               <Share2 className="w-4 h-4 text-[#1877F2]" />
-              <span>Cuentas de Nuestros Clientes (BM & Anuncios)</span>
+              <span>Cuentas Publicitarias & Redes</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1877F2]/10 text-[#1877F2] font-bold">
                 {allConnectedAccounts.length}
               </span>

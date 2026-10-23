@@ -269,7 +269,7 @@ export default function CampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
-            {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Cliente"}
+            {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
           </h1>
           <p className="text-xs text-[#475467] mt-0.5">
             Inversión, alcance y resultados de las campañas pagadas en Meta (Facebook e Instagram) y TikTok.
@@ -287,7 +287,7 @@ export default function CampaignsPage() {
               }}
               className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400/50"
             >
-              <option value="all">Todos los clientes</option>
+              <option value="all">Todas las empresas</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}

@@ -86,7 +86,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Dashboard General", en: "Main Dashboard" } },
       { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Unified Inbox" } },
-      { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Clientes & Cuentas", en: "Clients & Accounts" } },
+      { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Empresas & Cuentas", en: "Companies & Accounts" } },
       { href: ROUTES.LEADS, icon: Users, label: { es: "Leads y Prospectos", en: "Leads & Prospects" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline de Ventas", en: "Sales Pipeline" } },
       { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades y Llamadas", en: "Activities & Calls" } },
