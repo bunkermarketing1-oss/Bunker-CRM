@@ -27,6 +27,7 @@ import {
   Loader2,
   RefreshCw,
   FileText,
+  Inbox,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
@@ -709,11 +710,11 @@ function LeadsPageContent() {
                 onChange={(e) => setClientFilter(e.target.value)}
                 className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
               >
-                <option value="all">Todos los Clientes</option>
-                <option value="unassigned">Sin Cliente Asignado</option>
+                <option value="all">Todas las Empresas</option>
+                <option value="unassigned">Sin Empresa Asignada</option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
-                    Cliente: {c.name}
+                    Empresa: {c.name}
                   </option>
                 ))}
               </select>
@@ -804,8 +805,8 @@ function LeadsPageContent() {
                               <Building className="w-3 h-3 text-[#667085]" />
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
                             </div>
-                            {/* Mostrar badge de empresa solo a administradores en vista global multicliente */}
-                            {isAdmin && clientFilter === "all" && lead.client && (
+                            {/* Mostrar badge de empresa asignada */}
+                            {lead.client && (
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full shadow-2xs">
                                   <Building className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
@@ -852,6 +853,14 @@ function LeadsPageContent() {
                                 <span>WhatsApp</span>
                               </a>
                             )}
+                            <Link
+                              href={`/inbox?search=${encodeURIComponent(lead.name)}`}
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors text-[10px] font-semibold"
+                              title="Abrir chat en la Bandeja de Entrada"
+                            >
+                              <Inbox className="w-2.5 h-2.5 text-amber-700" />
+                              <span>Bandeja</span>
+                            </Link>
                           </div>
                         </div>
                       </td>
@@ -960,7 +969,7 @@ function LeadsPageContent() {
                             <button
                               onClick={() => handleConvert(lead.id)}
                               className="btn-black-gold rounded-xl px-2 py-1 text-[11px] font-semibold flex items-center gap-1 shadow-xs"
-                              title="Convertir a Cliente y crear Negocio"
+                              title="Convertir a Contacto y Oportunidad"
                             >
                               <ArrowRightCircle className="w-3 h-3 text-white" />
                               <span>Convertir</span>
@@ -1072,9 +1081,9 @@ function LeadsPageContent() {
                     </div>
                   </div>
 
-                  {isAdmin && selectedLead.client && (
+                  {selectedLead.client && (
                     <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                      <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Cliente Asignado</div>
+                      <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Empresa Gestora / Cuenta</div>
                       <div className="font-bold text-amber-700 dark:text-amber-400 mt-0.5 capitalize">
                         {selectedLead.client.name}
                       </div>
@@ -1203,9 +1212,18 @@ function LeadsPageContent() {
                     className="btn-black-gold rounded-2xl px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
                   >
                     <ArrowRightCircle className="w-3.5 h-3.5 text-[#E5C158]" />
-                    <span>Convertir a Cliente</span>
+                    <span>Convertir</span>
                   </button>
                 )}
+
+                <Link
+                  href={`/inbox?search=${encodeURIComponent(selectedLead.name)}`}
+                  className="px-3.5 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                  title="Abrir chat en la Bandeja de Entrada"
+                >
+                  <Inbox className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Bandeja de Entrada</span>
+                </Link>
 
                 {getWhatsAppNumber(selectedLead) && (
                   <a

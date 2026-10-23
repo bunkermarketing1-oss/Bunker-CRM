@@ -475,7 +475,7 @@ export default function IntegrationsPage() {
             }`}
           >
             <Users className="w-4 h-4 text-[#D97757]" />
-            <span>Directorio por Cliente</span>
+            <span>Cuentas por Empresa</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F0EEE6] font-bold">
               {clients.length}
             </span>
@@ -499,7 +499,7 @@ export default function IntegrationsPage() {
             <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
             <input
               type="text"
-              placeholder="Buscar cliente..."
+              placeholder="Buscar empresa..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               className="w-full bg-white border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
@@ -608,7 +608,7 @@ export default function IntegrationsPage() {
               <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
               <input
                 type="text"
-                placeholder="Buscar canal, ID o cliente..."
+                placeholder="Buscar canal, ID o empresa..."
                 value={channelSearchFilter}
                 onChange={(e) => setChannelSearchFilter(e.target.value)}
                 className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
@@ -736,10 +736,10 @@ export default function IntegrationsPage() {
                               : "bg-white border-[#E8E6DF] text-[#716F6A] focus:border-[#D97757]"
                           }`}
                         >
-                          <option value="">Portafolio BM Agencia (Sin cliente)</option>
+                          <option value="">Portafolio Agencia (Sin empresa asignada)</option>
                           {clients.map((c) => (
                             <option key={c.id} value={c.id}>
-                              {c.name} {c.companyName ? `(${c.companyName})` : ""}
+                              {c.name} {c.companyName && c.companyName !== c.name ? `(${c.companyName})` : ""}
                             </option>
                           ))}
                         </select>
@@ -818,10 +818,10 @@ export default function IntegrationsPage() {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-amber-950">
-                    {agencyAccounts.length} {agencyAccounts.length === 1 ? "cuenta detectada" : "cuentas detectadas"} sin cliente asignado
+                    {agencyAccounts.length} {agencyAccounts.length === 1 ? "cuenta detectada" : "cuentas detectadas"} sin empresa asignada
                   </h4>
                   <p className="text-[11px] text-amber-800 mt-0.5">
-                    Asigna cada cuenta a su cliente en la lista inferior o con el asistente para vincular sus campañas y prospectos automáticamente.
+                    Asigna cada cuenta a su empresa en la lista inferior o con el asistente para vincular sus campañas y prospectos automáticamente.
                   </p>
                 </div>
               </div>

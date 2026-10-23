@@ -604,14 +604,25 @@ export default function UnifiedInboxPage() {
                     </a>
                   )}
 
+                  {activeConversation.leadId && (
+                    <Link
+                      href={`/crm/leads?search=${encodeURIComponent(activeConversation.senderName || "")}`}
+                      className="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-medium flex items-center gap-1 transition-colors"
+                      title="Ver prospecto en el CRM"
+                    >
+                      <UserCheck className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Ver Prospecto</span>
+                    </Link>
+                  )}
+
                   {activeConversation.clientId && (
                     <Link
                       href={`/crm/clients/${activeConversation.clientId}`}
                       className="px-2.5 py-1.5 rounded-lg bg-[#F8F9FA] hover:bg-[#EAECF0] text-[#101828] border border-[#EAECF0] text-xs font-medium flex items-center gap-1 transition-colors"
-                      title="Ver ficha comercial 360°"
+                      title="Ver ficha comercial de la empresa"
                     >
                       <Building className="w-3.5 h-3.5 text-[#667085]" />
-                      <span>Ficha 360°</span>
+                      <span>Ficha Empresa</span>
                     </Link>
                   )}
                 </div>
