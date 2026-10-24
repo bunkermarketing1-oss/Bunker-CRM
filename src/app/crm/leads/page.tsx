@@ -28,6 +28,10 @@ import {
   RefreshCw,
   FileText,
   Inbox,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
@@ -98,6 +102,14 @@ function LeadsPageContent() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
+  const tableTopRef = React.useRef<HTMLDivElement>(null);
+
+  // Resetear a la primera página cuando cambie cualquier filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, sourceFilter, ownerFilter, clientFilter, pageSize]);
 
   // Notifications & Feedback
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -453,6 +465,32 @@ function LeadsPageContent() {
         )
       : 0;
 
+  // Paginación (100 por página por defecto)
+  const totalPages = Math.max(1, Math.ceil(totalLeadsCount / pageSize));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalLeadsCount);
+  const paginatedLeads = leads.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+    tableTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (validCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (validCurrentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", validCurrentPage - 1, validCurrentPage, validCurrentPage + 1, "...", totalPages];
+  };
+
   // Export CSV
   const handleExportCSV = () => {
     const headers = [
@@ -724,12 +762,36 @@ function LeadsPageContent() {
       </div>
 
       {/* Main Leads Table */}
-      <div className="bg-white rounded-3xl border border-[#EAECF0] shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+      <div ref={tableTopRef} className="bg-white rounded-3xl border border-[#EAECF0] shadow-xs overflow-hidden scroll-mt-6">
+        <div className="p-4 border-b border-[#EAECF0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F8F9FA]">
           <div className="text-xs font-bold text-[#101828]">
             Directorio de Prospectos{" "}
-            <span className="text-[#667085] font-normal">({leads.length})</span>
+            <span className="text-[#667085] font-normal">({totalLeadsCount.toLocaleString()})</span>
           </div>
+          {totalLeadsCount > 0 && (
+            <div className="flex items-center gap-3 text-xs text-[#667085]">
+              <span>
+                Mostrando <strong className="text-[#101828] font-semibold">{startIndex + 1}–{endIndex}</strong> de{" "}
+                <strong className="text-[#101828] font-semibold">{totalLeadsCount.toLocaleString()}</strong>
+              </span>
+              <div className="flex items-center gap-1.5 pl-2 border-l border-[#EAECF0]">
+                <span className="text-[11px] text-[#667085]">Por página:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white border border-[#EAECF0] rounded-lg px-2 py-0.5 text-xs font-semibold text-[#101828] focus:outline-none cursor-pointer"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -761,7 +823,7 @@ function LeadsPageContent() {
                   </td>
                 </tr>
               ) : (
-                leads.map((lead) => {
+                paginatedLeads.map((lead) => {
                   const initials = lead.name
                     ? lead.name
                         .split(" ")
@@ -1019,6 +1081,82 @@ function LeadsPageContent() {
             </tbody>
           </table>
         </div>
+
+        {/* Barra de Paginación */}
+        {totalLeadsCount > pageSize && (
+          <div className="p-3.5 border-t border-[#EAECF0] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
+            <div className="text-xs text-[#667085]">
+              Página <strong className="font-semibold text-[#101828]">{validCurrentPage}</strong> de{" "}
+              <strong className="font-semibold text-[#101828]">{totalPages}</strong>{" "}
+              <span className="text-[#98A2B3]">({totalLeadsCount.toLocaleString()} prospectos en total)</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handlePageChange(1)}
+                disabled={validCurrentPage === 1}
+                className="p-1.5 rounded-lg border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Primera página"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(validCurrentPage - 1)}
+                disabled={validCurrentPage === 1}
+                className="px-2.5 py-1.5 rounded-lg border border-[#EAECF0] bg-white text-xs font-medium text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Anterior</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {getPageNumbers().map((num, idx) =>
+                  num === "..." ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-[#98A2B3]">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={`page-${num}`}
+                      type="button"
+                      onClick={() => handlePageChange(num as number)}
+                      className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-medium transition-colors ${
+                        validCurrentPage === num
+                          ? "bg-[#0F172A] text-white font-bold shadow-xs"
+                          : "border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828]"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(validCurrentPage + 1)}
+                disabled={validCurrentPage === totalPages}
+                className="px-2.5 py-1.5 rounded-lg border border-[#EAECF0] bg-white text-xs font-medium text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              >
+                <span className="hidden sm:inline">Siguiente</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={validCurrentPage === totalPages}
+                className="p-1.5 rounded-lg border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Última página"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal: Contenido y Detalle del Formulario Meta */}
