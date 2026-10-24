@@ -83,6 +83,7 @@ model Client {
   phone          String?
   website        String?
   industry       String?
+  logoUrl        String?
   status         String        @default("active") // active, churned, on_hold
   revenue        Float?        @default(0)
   notes          String?

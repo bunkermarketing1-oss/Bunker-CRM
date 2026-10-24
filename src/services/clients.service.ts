@@ -87,6 +87,7 @@ export async function createClient(actor: Actor, input: CreateClientInput) {
         phone: input.phone,
         website: input.website,
         industry: input.industry || "General",
+        logoUrl: input.logoUrl,
         revenue: input.revenue ?? 0,
         notes: input.notes,
         ownerId: input.ownerId || actor.userId,

@@ -27,6 +27,9 @@ import {
   ExternalLink,
   Layers,
   Search,
+  Edit,
+  Upload,
+  Camera,
 } from "lucide-react";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
@@ -73,6 +76,7 @@ interface Client {
   phone: string | null;
   website: string | null;
   industry: string | null;
+  logoUrl?: string | null;
   status: string; // active, on_hold, churned
   revenue: number | null;
   notes: string | null;
@@ -167,11 +171,84 @@ export default function ClientsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [socialConnectClientId, setSocialConnectClientId] = useState<string>("");
+  // Modal de Edición Rápida de Empresa
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    companyName: "",
+    industry: "",
+    email: "",
+    phone: "",
+    website: "",
+    logoUrl: "",
+    status: "active",
+    revenue: "0",
+    notes: "",
+    ownerId: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+
+  const handleOpenEditModal = (c: Client) => {
+    setEditingClient(c);
+    setEditFormData({
+      name: c.name || "",
+      companyName: c.companyName || "",
+      industry: c.industry || "General",
+      email: c.email || "",
+      phone: c.phone || "",
+      website: c.website || "",
+      logoUrl: c.logoUrl || "",
+      status: c.status || "active",
+      revenue: String(c.revenue || 0),
+      notes: c.notes || "",
+      ownerId: c.owner?.id || "",
+    });
+  };
+
+  const handleSaveClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClient) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/clients/${editingClient.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editFormData.name,
+          companyName: editFormData.companyName,
+          industry: editFormData.industry,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          website: editFormData.website,
+          logoUrl: editFormData.logoUrl || null,
+          status: editFormData.status,
+          revenue: editFormData.revenue,
+          notes: editFormData.notes,
+          ownerId: editFormData.ownerId || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback("¡Ficha de la empresa actualizada con éxito!");
+        setTimeout(() => setFeedback(null), 4000);
+        setEditingClient(null);
+        fetchClients();
+      } else {
+        setErrorMsg(json.error || "No se pudo actualizar la empresa.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Error al guardar empresa");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
 
   // Fetch Team Members
   const fetchTeam = useCallback(async () => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users?scope=bunker");
       const json = await res.json();
       if (json.success && Array.isArray(json.users)) {
         setTeamMembers(json.users);
@@ -766,26 +843,41 @@ export default function ClientsPage() {
                     className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#EAECF0] shadow-sm hover:border-[#DDD9CF] hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
                   >
                     <div>
-                      {/* Top Bar: Title, Industry, Badges */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-0.5">
-                          <Link
-                            href={`/crm/clients/${client.id}`}
-                            className="font-semibold text-[#101828] text-base group-hover:text-amber-600 transition-colors flex items-center gap-1.5"
-                          >
-                            <span>{client.name}</span>
-                            <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </Link>
-                          {client.companyName && client.companyName.trim().toLowerCase() !== client.name.trim().toLowerCase() && (
-                            <div className="text-[11px] text-[#475467] font-medium">{client.companyName}</div>
+                      {/* Top Bar: Logo, Title, Industry, Badges */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          {/* Logo de la empresa */}
+                          {client.logoUrl ? (
+                            <img
+                              src={client.logoUrl}
+                              alt={client.name}
+                              className="w-12 h-12 rounded-2xl object-cover border border-[#EAECF0] shadow-2xs shrink-0 bg-white"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-2xl bg-[#0F172A] border border-amber-500/20 text-amber-400 font-bold text-sm flex items-center justify-center shadow-xs shrink-0">
+                              {client.name.slice(0, 2).toUpperCase()}
+                            </div>
                           )}
-                          <div className="text-[11px] text-[#475467] flex items-center gap-1">
-                            <Building className="w-3 h-3 text-[#9C9890]" />
-                            <span>{client.industry || "General"}</span>
+
+                          <div className="space-y-0.5 min-w-0">
+                            <Link
+                              href={`/crm/clients/${client.id}`}
+                              className="font-semibold text-[#101828] text-base group-hover:text-amber-600 transition-colors flex items-center gap-1.5 truncate"
+                            >
+                              <span className="truncate">{client.name}</span>
+                              <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            </Link>
+                            {client.companyName && client.companyName.trim().toLowerCase() !== client.name.trim().toLowerCase() && (
+                              <div className="text-[11px] text-[#475467] font-medium truncate">{client.companyName}</div>
+                            )}
+                            <div className="text-[11px] text-[#475467] flex items-center gap-1">
+                              <Building className="w-3 h-3 text-[#9C9890] shrink-0" />
+                              <span className="truncate">{client.industry || "General"}</span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-1 shrink-0">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
@@ -907,6 +999,16 @@ export default function ClientsPage() {
                       </div>
 
                       <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(client)}
+                          className="px-2.5 py-1.5 rounded-xl border border-[#EAECF0] bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-[#101828] text-xs font-semibold flex items-center gap-1 transition-colors shadow-2xs"
+                          title="Editar información y foto de la empresa"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          <span>Editar</span>
+                        </button>
+
                         {!isClient && (
                           <button
                             onClick={() => handleDelete(client.id, client.name)}
@@ -1248,6 +1350,234 @@ export default function ClientsPage() {
           }}
           teamMembers={teamMembers}
         />
+      )}
+
+      {/* Modal: Editar Empresa y Completar Información */}
+      {editingClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA] sticky top-0 z-10">
+              <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
+                <Edit className="w-4 h-4 text-amber-500" />
+                <span>Editar Empresa: {editingClient.name}</span>
+              </h2>
+              <button
+                onClick={() => setEditingClient(null)}
+                className="text-[#475467] hover:text-[#101828] p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveClient} className="p-5 space-y-4">
+              {/* Foto o Logo de la Empresa */}
+              <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] space-y-2.5">
+                <label className="block text-xs font-semibold text-[#101828]">Foto o Logo de la Empresa</label>
+                <div className="flex items-center gap-3">
+                  {editFormData.logoUrl ? (
+                    <img
+                      src={editFormData.logoUrl}
+                      alt="Logo preview"
+                      className="w-16 h-16 rounded-2xl object-cover border border-[#EAECF0] shadow-xs shrink-0 bg-white"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-[#0F172A] text-amber-400 font-bold text-lg flex items-center justify-center border border-amber-500/20 shrink-0">
+                      {editFormData.name ? editFormData.name.slice(0, 2).toUpperCase() : "EM"}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-medium cursor-pointer shadow-2xs inline-flex items-center gap-1.5 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Subir imagen</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const result = event.target?.result;
+                                if (typeof result === "string") {
+                                  setEditFormData((prev) => ({ ...prev, logoUrl: result }));
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      {editFormData.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setEditFormData((prev) => ({ ...prev, logoUrl: "" }))}
+                          className="px-2 py-1.5 text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium cursor-pointer"
+                        >
+                          Quitar foto
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      placeholder="O pegar URL de imagen (https://...)"
+                      value={editFormData.logoUrl}
+                      onChange={(e) => setEditFormData({ ...editFormData, logoUrl: e.target.value })}
+                      className="w-full bg-white border border-[#EAECF0] rounded-xl px-2.5 py-1.5 text-xs text-[#101828] focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nombres y Razón Social */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Nombre Comercial *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-medium"
+                    placeholder="ej. Regal Furniture"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Razón Social / Nombre Legal</label>
+                  <input
+                    type="text"
+                    value={editFormData.companyName}
+                    onChange={(e) => setEditFormData({ ...editFormData, companyName: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="ej. Regal Furniture DFW LLC"
+                  />
+                </div>
+              </div>
+
+              {/* Sector y Estado */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Sector / Industria</label>
+                  <input
+                    type="text"
+                    value={editFormData.industry}
+                    onChange={(e) => setEditFormData({ ...editFormData, industry: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="ej. Mueblería, Retail, Bienes Raíces..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Estado de la Relación</label>
+                  <select
+                    value={editFormData.status}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  >
+                    <option value="active">Activo</option>
+                    <option value="on_hold">En Pausa</option>
+                    <option value="churned">Cancelado</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Canales Oficiales: Sitio Web, Teléfono, Correo */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Sitio Web</label>
+                  <input
+                    type="url"
+                    value={editFormData.website}
+                    onChange={(e) => setEditFormData({ ...editFormData, website: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="+1 469..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="contacto@empresa.com"
+                  />
+                </div>
+              </div>
+
+              {/* Facturación y Asesor */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Facturación MRR ($ USD/mes)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={editFormData.revenue}
+                    onChange={(e) => setEditFormData({ ...editFormData, revenue: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#101828] mb-1">Brand Manager / Asesor en Bunker</label>
+                  <select
+                    value={editFormData.ownerId}
+                    onChange={(e) => setEditFormData({ ...editFormData, ownerId: e.target.value })}
+                    className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  >
+                    <option value="">Sin Asignar (Dirección Bunker)</option>
+                    {teamMembers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Notas Comerciales */}
+              <div>
+                <label className="block text-xs font-medium text-[#101828] mb-1">Notas Comerciales y Objetivos</label>
+                <textarea
+                  rows={2}
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  placeholder="Detalles sobre acuerdos, productos destacados, horarios o especificaciones..."
+                  className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-[#F0EEE6]">
+                <button
+                  type="button"
+                  onClick={() => setEditingClient(null)}
+                  className="px-3.5 py-2 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] text-[#475467] text-xs font-medium hover:bg-white"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+                >
+                  {savingEdit ? "Guardando..." : "Actualizar Empresa"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Connect Social Account Modal (BM) */}

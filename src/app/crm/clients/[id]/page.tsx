@@ -42,6 +42,8 @@ import {
   AlertCircle,
   Sparkles,
   Share2,
+  Camera,
+  Upload,
 } from "lucide-react";
 
 interface ConnectedAccountItem {
@@ -127,6 +129,7 @@ interface ClientDetail {
   phone: string | null;
   website: string | null;
   industry: string | null;
+  logoUrl?: string | null;
   status: string; // active, on_hold, churned
   revenue: number | null;
   notes: string | null;
@@ -182,6 +185,7 @@ export default function ClientProfile360Page() {
     email: "",
     phone: "",
     website: "",
+    logoUrl: "",
     industry: "",
     status: "active",
     revenue: "0",
@@ -251,6 +255,7 @@ export default function ClientProfile360Page() {
           email: json.client.email || "",
           phone: json.client.phone || "",
           website: json.client.website || "",
+          logoUrl: json.client.logoUrl || "",
           industry: json.client.industry || "General",
           status: json.client.status || "active",
           revenue: String(json.client.revenue || 0),
@@ -311,6 +316,7 @@ export default function ClientProfile360Page() {
           email: editClientData.email,
           phone: editClientData.phone,
           website: editClientData.website,
+          logoUrl: editClientData.logoUrl || null,
           industry: editClientData.industry,
           status: editClientData.status,
           revenue: editClientData.revenue,
@@ -671,11 +677,19 @@ export default function ClientProfile360Page() {
           </Link>
 
           <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs text-center space-y-4">
-            {/* Avatar Central Grande con Badge de Estado */}
-            <div className="relative inline-block mx-auto">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-200 via-amber-100 to-amber-50 border-2 border-white shadow-md flex items-center justify-center text-2xl font-bold text-amber-900">
-                {client.name.charAt(0).toUpperCase()}
-              </div>
+            {/* Avatar Central Grande con Badge de Estado y Botón de Foto */}
+            <div className="relative inline-block mx-auto group">
+              {client.logoUrl ? (
+                <img
+                  src={client.logoUrl}
+                  alt={client.name}
+                  className="w-20 h-20 rounded-2xl object-cover border-2 border-white shadow-md mx-auto"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#0F172A] to-slate-800 border-2 border-white shadow-md flex items-center justify-center text-2xl font-bold text-amber-400 mx-auto">
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <span
                 className={`absolute bottom-0 right-1 w-4 h-4 rounded-full border-2 border-white ${
                   client.status === "active"
@@ -686,6 +700,15 @@ export default function ClientProfile360Page() {
                 }`}
                 title={`Estado: ${statusBadge.label}`}
               />
+              <button
+                type="button"
+                onClick={() => setIsEditClientOpen(true)}
+                className="absolute inset-0 bg-black/55 text-white rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[10px] font-medium transition-opacity cursor-pointer shadow-sm"
+                title="Cambiar foto o información"
+              >
+                <Camera className="w-5 h-5 text-amber-400 mb-0.5" />
+                <span>Foto</span>
+              </button>
             </div>
 
             {/* Nombre y Cargo/Empresa */}
@@ -1431,8 +1454,8 @@ export default function ClientProfile360Page() {
       {/* MODAL 1: Edit Client Profile */}
       {isEditClientOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+          <div className="bg-[#FFFFFF] border border-[#EAECF0] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA] sticky top-0 z-10">
               <h2 className="text-sm font-semibold text-[#101828] flex items-center gap-2">
                 <Edit className="w-4 h-4 text-amber-500" />
                 Modificar Ficha Comercial
@@ -1443,6 +1466,66 @@ export default function ClientProfile360Page() {
             </div>
 
             <form onSubmit={handleSaveClientDetails} className="p-5 space-y-3.5">
+              {/* Foto o Logo de la Empresa */}
+              <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] space-y-2.5">
+                <label className="block text-xs font-semibold text-[#101828]">Foto o Logo de la Empresa</label>
+                <div className="flex items-center gap-3">
+                  {editClientData.logoUrl ? (
+                    <img
+                      src={editClientData.logoUrl}
+                      alt="Logo preview"
+                      className="w-16 h-16 rounded-2xl object-cover border border-[#EAECF0] shadow-xs shrink-0 bg-white"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-[#0F172A] text-amber-400 font-bold text-lg flex items-center justify-center border border-amber-500/20 shrink-0">
+                      {editClientData.name ? editClientData.name.slice(0, 2).toUpperCase() : "EM"}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-medium cursor-pointer shadow-2xs inline-flex items-center gap-1.5 transition-colors">
+                        <Upload className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Subir imagen</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const result = event.target?.result;
+                                if (typeof result === "string") {
+                                  setEditClientData((prev) => ({ ...prev, logoUrl: result }));
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      {editClientData.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setEditClientData((prev) => ({ ...prev, logoUrl: "" }))}
+                          className="px-2 py-1.5 text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium cursor-pointer"
+                        >
+                          Quitar foto
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      placeholder="O pega una URL (https://ejemplo.com/logo.png)"
+                      value={editClientData.logoUrl.startsWith("data:") ? "" : editClientData.logoUrl}
+                      onChange={(e) => setEditClientData((prev) => ({ ...prev, logoUrl: e.target.value }))}
+                      className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-2.5 py-1.5 text-[11px] text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-[#101828] mb-1">Nombre Comercial *</label>
                 <input

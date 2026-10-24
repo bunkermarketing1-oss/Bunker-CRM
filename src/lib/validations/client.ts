@@ -59,6 +59,7 @@ export const createClientSchema = z
     phone: optionalText(40),
     website: optionalText(255),
     industry: optionalText(100),
+    logoUrl: optionalText(500000),
     revenue: amountField(REVENUE_MESSAGE).optional(),
     notes: optionalText(2000),
     ownerId: optionalId,
