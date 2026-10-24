@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Sparkles,
   ChevronDown,
+  Trash2,
 } from "lucide-react";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
@@ -162,6 +163,30 @@ export default function IntegrationsPage() {
       setFeedback({ type: "error", message: e.message });
     } finally {
       setAssigningId(null);
+    }
+  };
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteAccount = async (accountId: string, accountName: string) => {
+    if (!window.confirm(`¿Deseas desvincular y eliminar la cuenta "${accountName}" del CRM?`)) {
+      return;
+    }
+    setDeletingId(accountId);
+    try {
+      const res = await fetch(`/api/integrations/accounts/${accountId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({ type: "success", message: json.message });
+        await fetchIntegrations();
+        await fetchClients();
+      } else {
+        setFeedback({ type: "error", message: json.error || "No se pudo eliminar la cuenta." });
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Error de conexión al eliminar la cuenta." });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -697,10 +722,20 @@ export default function IntegrationsPage() {
                         </span>
                       </div>
 
-                      {/* ID Externo */}
-                      <div className="flex items-center gap-2 text-[11px] text-[#82807C] font-mono bg-[#FAF9F5] px-3 py-1.5 rounded-xl border border-[#F0EEE6]">
-                        <span>ID:</span>
-                        <span className="truncate text-[#1F1E1D] font-medium">{acc.externalId || acc.id}</span>
+                      {/* ID Externo y Acción de Eliminar */}
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-[#82807C] font-mono bg-[#FAF9F5] px-3 py-1.5 rounded-xl border border-[#F0EEE6]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span>ID:</span>
+                          <span className="truncate text-[#1F1E1D] font-medium">{acc.externalId || acc.id}</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteAccount(acc.id, acc.accountName)}
+                          disabled={deletingId === acc.id}
+                          className="text-[#9C9890] hover:text-red-600 transition-colors p-0.5 shrink-0 cursor-pointer"
+                          title="Desvincular y eliminar esta cuenta del CRM"
+                        >
+                          <Trash2 className={`w-3.5 h-3.5 ${deletingId === acc.id ? "animate-pulse" : ""}`} />
+                        </button>
                       </div>
                     </div>
 

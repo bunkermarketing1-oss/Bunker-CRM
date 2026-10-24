@@ -60,3 +60,43 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ success: false, error: "Error al asignar la cuenta." }, { status: 500 });
   }
 }
+
+/**
+ * Elimina una cuenta conectada del CRM si la agencia no desea gestionarla ni verla en su portafolio.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { user, errorResponse } = await requireAdmin(req);
+    if (errorResponse) return errorResponse;
+
+    const account = await prisma.connectedAccount.findFirst({
+      where: { id: params.id, organizationId: user!.organizationId },
+    });
+    if (!account) {
+      return NextResponse.json({ success: false, error: "Cuenta conectada no encontrada en su organización." }, { status: 404 });
+    }
+
+    await prisma.connectedAccount.delete({
+      where: { id: account.id },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        organizationId: user!.organizationId,
+        userId: user!.id,
+        action: "connected_account_deleted",
+        entityType: "ConnectedAccount",
+        entityId: account.id,
+        detailsJson: JSON.stringify({ accountName: account.accountName, externalId: account.externalId, accountType: account.accountType }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Cuenta "${account.accountName}" desvinculada y eliminada del CRM.`,
+    });
+  } catch (error) {
+    console.error("DELETE /api/integrations/accounts/[id] error:", error);
+    return NextResponse.json({ success: false, error: "Error al eliminar la cuenta conectada." }, { status: 500 });
+  }
+}
