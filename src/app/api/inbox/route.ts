@@ -3,9 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
-import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
+import { ACCOUNT_TYPE, ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
-import { sendMetaOutboundReply } from "@/services/meta-messaging.service";
+import { sendMetaOutboundReply, syncConnectedPageConversations } from "@/services/meta-messaging.service";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -124,18 +125,43 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // 2. Obtener mensajes registrados en base de datos (WhatsApp / SMS)
-    const messageWhere: {
-      organizationId: string;
-      clientId?: string;
-    } = {
-      organizationId: user!.organizationId,
-    };
-    if (targetClientId) {
-      messageWhere.clientId = targetClientId;
+    // Sincronizar conversaciones de páginas conectadas si se solicita ?sync=true
+    const shouldSync = searchParams.get("sync") === "true";
+    if (shouldSync) {
+      const pageAccounts = await prisma.connectedAccount.findMany({
+        where: {
+          organizationId: user!.organizationId,
+          ...(targetClientId ? { clientId: targetClientId } : {}),
+          accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+          status: ACCOUNT_STATUS.ACTIVE,
+          accessTokenEnc: { not: null },
+        },
+        select: { id: true },
+      });
+
+      for (const page of pageAccounts) {
+        try {
+          await syncConnectedPageConversations(page.id);
+        } catch (syncErr) {
+          console.error(`[INBOX_SYNC] Error sincronizando página ${page.id}:`, syncErr);
+        }
+      }
     }
 
-    const dbMessages = await prisma.message.findMany({
+    // 2. Obtener mensajes registrados en base de datos (WhatsApp / SMS / Messenger / Instagram)
+    const messageWhere: Prisma.MessageWhereInput = {
+      organizationId: user!.organizationId,
+      ...(targetClientId
+        ? {
+            OR: [
+              { clientId: targetClientId },
+              { lead: { clientId: targetClientId } },
+            ],
+          }
+        : {}),
+    };
+
+    let dbMessages = await prisma.message.findMany({
       where: messageWhere,
       orderBy: { createdAt: "desc" },
       take: 250,
@@ -155,6 +181,53 @@ export async function GET(req: NextRequest) {
         },
       },
     });
+
+    // Si aún no hay mensajes en la BD y no se forzó sync explícito, ejecutar sincronización inicial
+    if (dbMessages.length === 0 && !shouldSync) {
+      const pageAccounts = await prisma.connectedAccount.findMany({
+        where: {
+          organizationId: user!.organizationId,
+          ...(targetClientId ? { clientId: targetClientId } : {}),
+          accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+          status: ACCOUNT_STATUS.ACTIVE,
+          accessTokenEnc: { not: null },
+        },
+        select: { id: true },
+      });
+
+      let importedAny = false;
+      for (const page of pageAccounts) {
+        try {
+          const res = await syncConnectedPageConversations(page.id);
+          if (res.messages > 0) importedAny = true;
+        } catch (syncErr) {
+          console.error(`[INBOX_AUTO_SYNC] Error en sincronización inicial:`, syncErr);
+        }
+      }
+
+      if (importedAny) {
+        dbMessages = await prisma.message.findMany({
+          where: messageWhere,
+          orderBy: { createdAt: "desc" },
+          take: 250,
+          include: {
+            client: { select: { id: true, name: true } },
+            lead: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+                clientId: true,
+                client: { select: { id: true, name: true } },
+                ownerId: true,
+                owner: { select: { id: true, name: true, email: true } },
+              },
+            },
+          },
+        });
+      }
+    }
 
     // Reordenar cronológicamente para que la conversación fluya de más antiguo a más nuevo
     dbMessages.reverse();
@@ -193,7 +266,7 @@ export async function GET(req: NextRequest) {
           clientName: msg.client?.name || msg.lead?.client?.name || null,
           connectedAccountId: null,
           accountName: channelAccountLabel,
-          unreadCount: msg.direction === "inbound" ? 1 : 0,
+          unreadCount: 0,
           lastMessageText: msg.body,
           lastMessageTime: msg.createdAt.toISOString(),
           leadId: msg.lead?.id || null,

@@ -3,6 +3,7 @@ import { decryptSecret } from "@/lib/crypto";
 import {
   sendMetaDirectMessage,
   getMetaSenderProfile,
+  listPageConversations,
   type MetaWebhookPayload,
   type MetaMessagingItem,
 } from "@/lib/integrations/meta";
@@ -270,4 +271,93 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
   });
 
   return savedMessage;
+}
+
+/**
+ * Sincroniza conversaciones históricas y recientes de una página de Facebook conectada
+ * hacia la base de datos (Inbox y Leads).
+ */
+export async function syncConnectedPageConversations(connectedAccountId: string) {
+  const account = await prisma.connectedAccount.findUnique({
+    where: { id: connectedAccountId },
+    select: {
+      id: true,
+      organizationId: true,
+      clientId: true,
+      externalId: true,
+      accountType: true,
+      accessTokenEnc: true,
+      accountName: true,
+    },
+  });
+
+  if (
+    !account ||
+    account.accountType !== ACCOUNT_TYPE.FACEBOOK_PAGE ||
+    !account.accessTokenEnc ||
+    !account.externalId
+  ) {
+    return { synced: 0, messages: 0 };
+  }
+
+  const pageToken = decryptSecret(account.accessTokenEnc);
+  const convs = await listPageConversations(account.externalId, pageToken, 25);
+
+  let importedMsgs = 0;
+  for (const conv of convs) {
+    const customer = (conv.senders?.data || []).find((s) => s.id !== account.externalId) || {
+      id: conv.id,
+      name: "Cliente Messenger",
+    };
+
+    let lead = await prisma.lead.findFirst({
+      where: {
+        organizationId: account.organizationId,
+        externalLeadId: customer.id,
+      },
+    });
+
+    if (!lead) {
+      lead = await prisma.lead.create({
+        data: {
+          organizationId: account.organizationId,
+          clientId: account.clientId,
+          name: customer.name || "Cliente Messenger",
+          source: LEAD_SOURCE.FACEBOOK_MESSENGER,
+          externalLeadId: customer.id,
+          status: LEAD_STATUS.CONTACTED,
+        },
+      });
+    } else if (!lead.clientId && account.clientId) {
+      await prisma.lead.update({
+        where: { id: lead.id },
+        data: { clientId: account.clientId },
+      });
+    }
+
+    const messages = conv.messages?.data || [];
+    for (const msg of messages) {
+      if (!msg.message && !msg.id) continue;
+      const existing = await prisma.message.findUnique({ where: { providerMsgId: msg.id } });
+      if (!existing) {
+        await prisma.message.create({
+          data: {
+            organizationId: account.organizationId,
+            clientId: account.clientId,
+            leadId: lead.id,
+            channel: MESSAGE_CHANNEL.MESSENGER,
+            direction: msg.from?.id === account.externalId ? MESSAGE_DIRECTION.OUTBOUND : MESSAGE_DIRECTION.INBOUND,
+            recipient: customer.id,
+            body: msg.message || "[Mensaje multimedia]",
+            providerMsgId: msg.id,
+            status: MESSAGE_STATUS.DELIVERED,
+            createdAt: new Date(msg.created_time),
+          },
+        });
+        importedMsgs++;
+      }
+    }
+  }
+
+  return { synced: convs.length, messages: importedMsgs };
 }

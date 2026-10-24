@@ -269,6 +269,37 @@ export async function subscribePageToLeadgen(pageId: string, pageToken: string) 
   );
 }
 
+export interface MetaConversationSender {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
+export interface MetaConversationMessageItem {
+  id: string;
+  message?: string;
+  created_time: string;
+  from?: { id: string; name?: string; email?: string };
+}
+
+export interface MetaPageConversation {
+  id: string;
+  updated_time: string;
+  snippet?: string;
+  unread_count?: number;
+  senders?: { data?: MetaConversationSender[] };
+  messages?: { data?: MetaConversationMessageItem[] };
+}
+
+/** Obtiene las conversaciones recientes de Messenger recibidas en la página de Facebook */
+export async function listPageConversations(pageId: string, pageToken: string, limit = 20) {
+  return graphFetchAll<MetaPageConversation>(`${pageId}/conversations`, {
+    access_token: pageToken,
+    fields: "id,updated_time,snippet,unread_count,senders,messages.limit(20){id,message,created_time,from}",
+    limit: String(limit),
+  });
+}
+
 export interface SendMetaMessageResult {
   recipient_id: string;
   message_id: string;

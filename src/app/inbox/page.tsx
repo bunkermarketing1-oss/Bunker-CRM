@@ -143,13 +143,14 @@ export default function UnifiedInboxPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchInbox = useCallback(async (isSilent = false) => {
+  const fetchInbox = useCallback(async (isSilent = false, triggerSync = false) => {
     try {
       if (!isSilent) setLoading(true);
       const params = new URLSearchParams();
       if (activeChannel !== "all") params.set("channel", activeChannel);
       if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
       if (search.trim()) params.set("search", search.trim());
+      if (triggerSync) params.set("sync", "true");
 
       const res = await fetch(`/api/inbox?${params.toString()}`);
       const json = await res.json();
@@ -160,16 +161,14 @@ export default function UnifiedInboxPage() {
         if (json.advisors) setAdvisors(json.advisors);
 
         // Seleccionar automáticamente la primera si ninguna está seleccionada
-        if (!selectedConvId && json.conversations?.length > 0) {
-          setSelectedConvId(json.conversations[0].id);
-        }
+        setSelectedConvId((current) => (!current && json.conversations?.length > 0 ? json.conversations[0].id : current));
       }
     } catch (err) {
       console.error("Error al cargar la bandeja de entrada:", err);
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [activeChannel, selectedClientId, search, isClient, selectedConvId]);
+  }, [activeChannel, selectedClientId, search, isClient]);
 
   useEffect(() => {
     fetchInbox();
@@ -303,12 +302,13 @@ export default function UnifiedInboxPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => fetchInbox(false)}
+            onClick={() => fetchInbox(false, true)}
             disabled={loading}
-            className="p-2 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
-            title="Refrescar bandeja"
+            className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs flex items-center gap-1.5 font-medium cursor-pointer"
+            title="Refrescar y sincronizar conversaciones de redes sociales"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-500" : ""}`} />
+            <span>Sincronizar</span>
           </button>
         </div>
       </div>
@@ -471,16 +471,24 @@ export default function UnifiedInboxPage() {
                 <p className="text-[11px] text-[#667085]">
                   No se encontraron mensajes en este canal o filtro seleccionado.
                 </p>
-                {!isClient && (
-                  <div className="pt-2">
+                <div className="pt-2 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => fetchInbox(false, true)}
+                    disabled={loading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-medium hover:bg-amber-600 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                    <span>Sincronizar ahora</span>
+                  </button>
+                  {!isClient && (
                     <Link
                       href="/marketing/integrations"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs"
                     >
                       <span>Vincular cuentas o redes</span>
                     </Link>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               conversations.map((conv) => {
