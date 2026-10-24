@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
             tokenExpiresAt: true,
             lastSyncAt: true,
             clientId: true,
+            client: { select: { id: true, name: true } },
             metadataJson: true, // solo para calcular el estado de leads; no se devuelve
           },
           orderBy: [{ accountType: "asc" }, { accountName: "asc" }],

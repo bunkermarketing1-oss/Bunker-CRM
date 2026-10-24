@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Check,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
@@ -49,6 +50,8 @@ interface ChannelItem {
   leadgen?: { activeForms?: number; isSubscribed?: boolean } | null;
 }
 
+type ChannelFilterType = "all" | "pages" | "ads" | "instagram" | "unassigned";
+
 export function ConnectSocialAccountModal({
   isOpen,
   onClose,
@@ -67,7 +70,7 @@ export function ConnectSocialAccountModal({
   const [refreshingCatalog, setRefreshingCatalog] = useState<boolean>(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [channelFilter, setChannelFilter] = useState<"all" | "pages" | "ads" | "instagram" | "unassigned">("all");
+  const [channelFilter, setChannelFilter] = useState<ChannelFilterType>("all");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Formulario manual avanzado
@@ -227,23 +230,23 @@ export function ConnectSocialAccountModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]">
-        {/* Cabecera Limpia */}
-        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-white">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[88vh]">
+        {/* Cabecera Limpia & Minimalista */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
               <Layers className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
                 Vincular Redes & Activos
               </h2>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 {activeClient ? (
-                  <>Asigna páginas y cuentas para <strong className="text-slate-900 font-semibold">{activeClient.name}</strong></>
+                  <>Asignar activos para <strong className="text-slate-900 font-semibold">{activeClient.name}</strong></>
                 ) : (
-                  "Asigna cada página, Instagram o cuenta de anuncios a su empresa."
+                  "Asigna cada página, Instagram o cuenta de anuncios a su empresa"
                 )}
               </p>
             </div>
@@ -251,7 +254,7 @@ export function ConnectSocialAccountModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             title="Cerrar"
           >
             <X className="w-4 h-4" />
@@ -261,7 +264,7 @@ export function ConnectSocialAccountModal({
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`mx-5 mt-3 p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all ${
+            className={`mx-6 mt-3 p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all ${
               feedback.type === "success"
                 ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
                 : "bg-red-50 border border-red-200 text-red-800"
@@ -282,15 +285,15 @@ export function ConnectSocialAccountModal({
           </div>
         )}
 
-        {/* Barra de Plataformas + Acciones Rápidas */}
-        <div className="px-5 pt-3 pb-2 flex items-center justify-between border-b border-slate-100 bg-white gap-2 flex-wrap">
-          <div className="flex items-center gap-1">
+        {/* Barra de Plataformas Unificada */}
+        <div className="px-6 pt-3 pb-3 border-b border-slate-100 bg-white flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl">
             <button
               onClick={() => setActiveTab("meta")}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "meta"
-                  ? "bg-blue-50 text-blue-700 border border-blue-200 font-semibold"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-white text-slate-900 font-semibold shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <div className="w-3.5 h-3.5 rounded-full bg-[#1877F2] flex items-center justify-center text-white text-[8px] font-bold">
@@ -298,7 +301,7 @@ export function ConnectSocialAccountModal({
               </div>
               <span>Meta</span>
               {channels.length > 0 && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-semibold">
                   {channels.length}
                 </span>
               )}
@@ -306,22 +309,22 @@ export function ConnectSocialAccountModal({
 
             <button
               onClick={() => setActiveTab("tiktok")}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "tiktok"
-                  ? "bg-slate-900 text-white font-semibold"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-white text-slate-900 font-semibold shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <span className="text-[10px]">🎵</span>
+              <span className="text-xs">🎵</span>
               <span>TikTok Ads</span>
             </button>
 
             <button
               onClick={() => setActiveTab("manual")}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 activeTab === "manual"
-                  ? "bg-amber-50 text-amber-800 border border-amber-200 font-semibold"
-                  : "text-slate-500 hover:bg-slate-100"
+                  ? "bg-white text-slate-900 font-semibold shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Token Manual</span>
@@ -333,11 +336,11 @@ export function ConnectSocialAccountModal({
               <button
                 onClick={handleRefreshMetaCatalog}
                 disabled={refreshingCatalog}
-                className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
-                title="Detectar nuevas páginas o cuentas"
+                className="px-2.5 py-1.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Detectar activos nuevos de Meta"
               >
-                <RefreshCw className={`w-3 h-3 ${refreshingCatalog ? "animate-spin text-blue-600" : ""}`} />
-                <span>{refreshingCatalog ? "Buscando..." : "Buscar nuevas páginas"}</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-blue-600" : ""}`} />
+                <span>{refreshingCatalog ? "Buscando..." : "Sincronizar"}</span>
               </button>
 
               <a
@@ -348,8 +351,8 @@ export function ConnectSocialAccountModal({
                     window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
                   }
                 }}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                title="Reconectar otra cuenta de Facebook"
+                className="text-xs text-slate-500 hover:text-blue-600 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1"
+                title="Reconectar con otra cuenta de Facebook"
               >
                 <span>Reconectar</span>
                 <ExternalLink className="w-3 h-3" />
@@ -359,15 +362,14 @@ export function ConnectSocialAccountModal({
         </div>
 
         {/* Contenido Dinámico */}
-        <div className="p-5 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1">
           {/* ========================================================= */}
           {/* PESTAÑA 1: META (FACEBOOK, INSTAGRAM, ADS)                */}
           {/* ========================================================= */}
           {activeTab === "meta" && (
             <div className="space-y-4">
-              {/* CASO A: META NO ESTÁ CONECTADO AÚN */}
               {!isMetaConnected ? (
-                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1877F2]/10 via-[#FAF9F5] to-white border border-[#1877F2]/20 text-center space-y-4 shadow-sm">
+                <div className="p-8 rounded-3xl bg-gradient-to-br from-[#1877F2]/10 via-[#FAF9F5] to-white border border-[#1877F2]/20 text-center space-y-4 shadow-sm">
                   <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#1877F2] to-[#0081FB] text-white flex items-center justify-center mx-auto shadow-md ring-8 ring-blue-50">
                     <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -413,196 +415,199 @@ export function ConnectSocialAccountModal({
                   </div>
                 </div>
               ) : (
-                /* CASO B: META YA ESTÁ CONECTADO (VISTA SIMPLE Y CLARA) */
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {/* Barra de Filtros y Búsqueda */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
-                      <button
-                        onClick={() => setChannelFilter("all")}
-                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                          channelFilter === "all"
-                            ? "bg-slate-900 text-white font-medium"
-                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Todas ({channels.length})
-                      </button>
-                      <button
-                        onClick={() => setChannelFilter("pages")}
-                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                          channelFilter === "pages"
-                            ? "bg-slate-900 text-white font-medium"
-                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Páginas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
-                      </button>
-                      <button
-                        onClick={() => setChannelFilter("instagram")}
-                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                          channelFilter === "instagram"
-                            ? "bg-slate-900 text-white font-medium"
-                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Instagram ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
-                      </button>
-                      <button
-                        onClick={() => setChannelFilter("ads")}
-                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                          channelFilter === "ads"
-                            ? "bg-slate-900 text-white font-medium"
-                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Anuncios ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
-                      </button>
-                      <button
-                        onClick={() => setChannelFilter("unassigned")}
-                        className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                          channelFilter === "unassigned"
-                            ? "bg-amber-600 text-white font-medium"
-                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        Sin asignar ({channels.filter((c) => !c.clientId).length})
-                      </button>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                      {(
+                        [
+                          { id: "all", label: "Todas", count: channels.length },
+                          { id: "pages", label: "Páginas", count: channels.filter((c) => c.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length },
+                          { id: "instagram", label: "Instagram", count: channels.filter((c) => c.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length },
+                          { id: "ads", label: "Anuncios", count: channels.filter((c) => c.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length },
+                          { id: "unassigned", label: "Sin asignar", count: channels.filter((c) => !c.clientId).length },
+                        ] as const
+                      ).map((f) => {
+                        const active = channelFilter === f.id;
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => setChannelFilter(f.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                              active
+                                ? "bg-slate-900 text-white font-semibold shadow-xs"
+                                : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span>{f.label}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                                active ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600"
+                              }`}
+                            >
+                              {f.count}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    <div className="relative w-full sm:w-48">
-                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
+                    <div className="relative w-full sm:w-48 shrink-0">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Buscar..."
+                        placeholder="Buscar activo..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white"
+                        className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20 transition-all"
                       />
                     </div>
                   </div>
 
                   {/* Lista Limpia de Cuentas */}
-                  <div className="space-y-1.5 max-h-[48vh] overflow-y-auto pr-0.5">
+                  <div className="space-y-2 max-h-[46vh] overflow-y-auto pr-1">
                     {loadingChannels ? (
-                      <div className="py-8 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                      <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
                         <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-                        <span>Cargando cuentas...</span>
+                        <span>Cargando cuentas vinculadas...</span>
                       </div>
                     ) : filteredChannels.length === 0 ? (
-                      <div className="py-8 text-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        No se encontraron cuentas con este filtro
+                      <div className="py-10 text-center text-xs text-slate-400 bg-slate-50/80 rounded-2xl border border-dashed border-slate-200">
+                        No se encontraron activos con el filtro seleccionado
                       </div>
                     ) : (
                       filteredChannels.map((ch) => {
                         const isFBPage = ch.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
                         const isIG = ch.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
                         const isAd = ch.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
-                        const isAssigned = Boolean(ch.clientId && ch.client);
+                        const assignedClient = ch.client || (ch.clientId ? clients.find((c) => c.id === ch.clientId) : null);
+                        const isAssigned = Boolean(ch.clientId && assignedClient);
 
                         return (
                           <div
                             key={ch.id}
-                            className={`px-3 py-2.5 rounded-xl border transition-colors flex items-center justify-between gap-3 ${
+                            className={`px-4 py-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                               isAssigned
-                                ? "bg-white border-slate-200 hover:border-slate-300"
-                                : "bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-slate-300"
+                                ? "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
+                                : "bg-slate-50/60 border-slate-200/60 hover:bg-white hover:border-slate-300"
                             }`}
                           >
-                            {/* Icono + Nombre + Tipo */}
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <SocialNetworkIcon type={ch.accountType} size="sm" />
+                            {/* Left: Icon & Info */}
+                            <div className="flex items-center gap-3 min-w-0">
+                              <SocialNetworkIcon type={ch.accountType} size="md" className="rounded-xl shadow-2xs shrink-0" />
 
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <h4 className="text-xs font-semibold text-slate-900 truncate">
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-xs font-semibold text-slate-900 truncate" title={ch.accountName}>
                                     {ch.accountName}
                                   </h4>
+
                                   {isFBPage && (
-                                    <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded">
+                                    <span className="text-[10px] font-medium text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full shrink-0">
                                       Página
                                     </span>
                                   )}
                                   {isIG && (
-                                    <span className="text-[10px] font-medium text-pink-600 bg-pink-50 px-1.5 py-0.2 rounded">
+                                    <span className="text-[10px] font-medium text-pink-700 bg-pink-50 border border-pink-100 px-2 py-0.5 rounded-full shrink-0">
                                       Instagram
                                     </span>
                                   )}
                                   {isAd && (
-                                    <span className="text-[10px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.2 rounded">
+                                    <span className="text-[10px] font-medium text-sky-700 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-full shrink-0">
                                       Anuncios
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="text-[11px] mt-0.5">
-                                  {ch.clientId && ch.client ? (
-                                    <span className="text-emerald-700 font-medium">
-                                      Asignada a: <strong>{ch.client.name}</strong>
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-400">
-                                      Sin asignar
-                                    </span>
-                                  )}
-                                </div>
+                                {ch.externalId && (
+                                  <p className="text-[10px] font-mono text-slate-400 truncate max-w-[200px]">
+                                    ID: {ch.externalId}
+                                  </p>
+                                )}
                               </div>
                             </div>
 
-                            {/* Selector de Asignación Directa */}
-                            <div className="flex items-center gap-1.5 shrink-0">
+                            {/* Right: Sleek Assignment Control */}
+                            <div className="flex items-center gap-2 shrink-0">
                               {targetClientId ? (
                                 ch.clientId === targetClientId ? (
-                                  <button
-                                    onClick={() => handleAssignChannel(ch.id, null)}
-                                    disabled={assigningId === ch.id}
-                                    className="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition-colors flex items-center gap-1"
-                                  >
-                                    {assigningId === ch.id ? (
-                                      <RefreshCw className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <X className="w-3 h-3" />
-                                    )}
-                                    <span>Desvincular</span>
-                                  </button>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-xl">
+                                      <Check className="w-3 h-3 text-emerald-600" />
+                                      <span>Vinculada</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAssignChannel(ch.id, null)}
+                                      disabled={assigningId === ch.id}
+                                      className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                      title="Desvincular"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 ) : (
                                   <button
                                     onClick={() => handleAssignChannel(ch.id, targetClientId)}
                                     disabled={assigningId === ch.id}
-                                    className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors flex items-center gap-1"
+                                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                                   >
                                     {assigningId === ch.id ? (
-                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                     ) : (
-                                      <Check className="w-3 h-3" />
+                                      <Plus className="w-3.5 h-3.5" />
                                     )}
-                                    <span>Vincular a {activeClient?.name}</span>
+                                    <span>Asignar</span>
                                   </button>
                                 )
                               ) : (
                                 <div className="flex items-center gap-1.5">
-                                  <select
-                                    value={ch.clientId || ""}
-                                    onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
-                                    disabled={assigningId === ch.id}
-                                    className={`rounded-lg px-2.5 py-1 text-xs font-medium border transition-colors cursor-pointer ${
-                                      ch.clientId
-                                        ? "bg-white text-slate-800 border-slate-300"
-                                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
-                                    }`}
-                                  >
-                                    <option value="">Asignar a empresa...</option>
-                                    {clients.map((c) => (
-                                      <option key={c.id} value={c.id}>
-                                        {c.name}
+                                  <div className="relative">
+                                    <select
+                                      value={ch.clientId || ""}
+                                      onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
+                                      disabled={assigningId === ch.id}
+                                      className={`appearance-none text-xs font-semibold rounded-xl pl-3 pr-7 py-1.5 border transition-all cursor-pointer focus:outline-none ${
+                                        isAssigned
+                                          ? "bg-emerald-50/80 hover:bg-emerald-100/70 text-emerald-900 border-emerald-200/90"
+                                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                                      }`}
+                                    >
+                                      <option value="" className="text-slate-400 font-normal">
+                                        Asignar a empresa...
                                       </option>
-                                    ))}
-                                    {ch.clientId && (
-                                      <option value="">✕ Desvincular (dejar libre)</option>
-                                    )}
-                                  </select>
+                                      {clients.map((c) => (
+                                        <option key={c.id} value={c.id} className="text-slate-900 font-medium">
+                                          {c.name}
+                                        </option>
+                                      ))}
+                                      {ch.clientId && (
+                                        <option value="" className="text-rose-600 font-medium">
+                                          ✕ Quitar asignación
+                                        </option>
+                                      )}
+                                    </select>
+                                    <ChevronDown
+                                      className={`w-3.5 h-3.5 pointer-events-none absolute right-2 top-2 ${
+                                        isAssigned ? "text-emerald-700" : "text-slate-400"
+                                      }`}
+                                    />
+                                  </div>
+
+                                  {isAssigned && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAssignChannel(ch.id, null)}
+                                      disabled={assigningId === ch.id}
+                                      className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                      title="Quitar asignación"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+
                                   {assigningId === ch.id && (
-                                    <RefreshCw className="w-3 h-3 animate-spin text-amber-500" />
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
                                   )}
                                 </div>
                               )}
@@ -613,17 +618,16 @@ export function ConnectSocialAccountModal({
                     )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                  <div className="pt-2 flex items-center justify-between text-xs text-slate-500">
                     <span className="text-[11px] text-slate-500">
-                      ¿Deseas autorizar más páginas o cuentas publicitarias de otro perfil de Facebook?
+                      ¿No encuentras una página o cuenta publicitaria?
                     </span>
                     <a
                       href="/api/integrations/meta/connect"
-                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold flex items-center gap-1.5 transition-colors text-xs shrink-0"
-                      title="Autorizar o sumar cuentas de Meta con Facebook"
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Conectar otra cuenta de Meta</span>
+                      <Plus className="w-3 h-3" />
+                      <span>Conectar otro perfil de Meta</span>
                     </a>
                   </div>
                 </div>
@@ -825,16 +829,19 @@ export function ConnectSocialAccountModal({
           )}
         </div>
 
-        {/* Footer Limpio */}
-        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <span className="text-xs text-slate-500">
-            {channels.length} {channels.length === 1 ? "cuenta disponible" : "cuentas disponibles"}
-          </span>
+        {/* Footer Minimalista */}
+        <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>
+              {channels.length} {channels.length === 1 ? "activo vinculado" : "activos vinculados"}
+            </span>
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors shadow-xs"
+            className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
-            Listo / Cerrar
+            Listo
           </button>
         </div>
       </div>
