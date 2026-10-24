@@ -27,7 +27,7 @@ interface PaletteItem {
 
 const KIND_META: Record<SearchResultKind, { icon: LucideIcon; group: string }> = {
   lead: { icon: User, group: "Leads" },
-  client: { icon: Building2, group: "Clientes" },
+  client: { icon: Building2, group: "Empresas" },
   contact: { icon: UserRound, group: "Contactos" },
 };
 
@@ -147,7 +147,7 @@ export default function CommandPalette({ isOpen, onClose, sections, language, on
             ref={inputRef}
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder={language === "es" ? "Buscar leads, clientes, contactos o páginas…" : "Search leads, clients, contacts or pages…"}
+            placeholder={language === "es" ? "Buscar leads, empresas, contactos o páginas…" : "Search leads, companies, contacts or pages…"}
             className="flex-1 bg-transparent py-4 text-sm text-[#101828] placeholder-[#98A2B3] focus:outline-none"
           />
           <kbd className="text-[10px] font-mono text-[#667085] bg-[#F8F9FA] px-1.5 py-0.5 rounded border border-[#EAECF0]">ESC</kbd>

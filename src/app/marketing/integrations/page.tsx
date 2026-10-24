@@ -1313,14 +1313,26 @@ export default function IntegrationsPage() {
                   <div className="flex items-center justify-between pt-3 border-t border-[#F0EEE6] text-xs">
                     {isConnected ? (
                       <>
-                        <button
-                          onClick={() => handleSync(it.id)}
-                          disabled={syncingId === it.id}
-                          className="px-3 py-1.5 rounded-xl bg-[#F4F3EE] hover:bg-[#ECEAE3] text-[#1F1E1D] font-medium flex items-center gap-1.5 transition-all text-xs"
-                        >
-                          <RefreshCw className={`w-3.5 h-3.5 ${syncingId === it.id ? "animate-spin" : ""}`} />
-                          <span>{syncingId === it.id ? "Sincronizando..." : "Sincronizar"}</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSync(it.id)}
+                            disabled={syncingId === it.id}
+                            className="px-3 py-1.5 rounded-xl bg-[#F4F3EE] hover:bg-[#ECEAE3] text-[#1F1E1D] font-medium flex items-center gap-1.5 transition-all text-xs"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${syncingId === it.id ? "animate-spin" : ""}`} />
+                            <span>{syncingId === it.id ? "Sincronizando..." : "Sincronizar"}</span>
+                          </button>
+                          {it.provider === INTEGRATION_PROVIDER.META && (
+                            <a
+                              href="/api/integrations/meta/connect"
+                              className="px-3 py-1.5 rounded-xl bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] font-semibold flex items-center gap-1 transition-all text-xs"
+                              title="Conectar otro perfil o autorizar más cuentas publicitarias y páginas"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Vincular más cuentas</span>
+                            </a>
+                          )}
+                        </div>
                         <button
                           onClick={() => handleDisconnect(it.id)}
                           className="text-xs text-[#82807C] hover:text-red-700 font-medium"

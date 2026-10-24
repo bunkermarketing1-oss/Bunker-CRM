@@ -25,7 +25,6 @@ export const META_SCOPES = [
   "leads_retrieval",
   "instagram_basic",
   "pages_messaging",
-  "instagram_manage_messages",
 ];
 
 export class MetaApiError extends Error {

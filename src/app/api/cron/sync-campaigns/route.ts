@@ -33,9 +33,10 @@ export async function POST(req: NextRequest) {
         },
       });
       results.push({ integrationId: integration.id, provider: integration.provider, ...summary });
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
       console.error(`Cron sync error (${integration.id}):`, err);
-      results.push({ integrationId: integration.id, provider: integration.provider, errors: [err.message] });
+      results.push({ integrationId: integration.id, provider: integration.provider, errors: [message] });
     }
   }
 

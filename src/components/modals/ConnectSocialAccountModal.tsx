@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Check,
+  Plus,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
@@ -610,6 +611,20 @@ export function ConnectSocialAccountModal({
                         );
                       })
                     )}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                    <span className="text-[11px] text-slate-500">
+                      ¿Deseas autorizar más páginas o cuentas publicitarias de otro perfil de Facebook?
+                    </span>
+                    <a
+                      href="/api/integrations/meta/connect"
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold flex items-center gap-1.5 transition-colors text-xs shrink-0"
+                      title="Autorizar o sumar cuentas de Meta con Facebook"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Conectar otra cuenta de Meta</span>
+                    </a>
                   </div>
                 </div>
               )}
