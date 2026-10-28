@@ -216,6 +216,13 @@ export default function CampaignsPage() {
   const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("clientId");
+      if (param) setClientId(param);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!user || isClient) return;
     fetch("/api/clients")
       .then((r) => r.json())
@@ -241,6 +248,13 @@ export default function CampaignsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("clientId");
+      if (param) setClientId(param);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) fetchData();

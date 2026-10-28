@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { X, ChevronDown, Check, Inbox, Users, BarChart3, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { ROUTES } from "@/lib/constants/routes";
+import { useClientOptions } from "@/hooks/useClientOptions";
+import { ROUTES, clientDetailRoute } from "@/lib/constants/routes";
 import { initialsOf } from "@/lib/greeting";
 import { isNavItemActive, navigationFor, type NavItem } from "./navigation";
 
@@ -29,6 +30,61 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   }, [pathname, onClose]);
 
   const accountName = isClient ? user?.clientName || "Mi Empresa" : user?.organizationName || "Bunker Agency";
+
+  const clients = useClientOptions();
+  const [selectedClientId, setSelectedClientId] = useState<string>("all");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("bunker_selected_client_id");
+      if (saved) setSelectedClientId(saved);
+    }
+  }, []);
+
+  const handleSelectClient = (id: string) => {
+    setSelectedClientId(id);
+    setIsDropdownOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bunker_selected_client_id", id);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const selectedClient = useMemo(() => {
+    if (selectedClientId === "all") return null;
+    return clients.find((c) => c.id === selectedClientId) || null;
+  }, [clients, selectedClientId]);
+
+  const adaptedSections = useMemo(() => {
+    if (isClient || selectedClientId === "all") return sections;
+    return sections.map((sec) => ({
+      ...sec,
+      items: sec.items.map((item) => {
+        if (item.href === ROUTES.INBOX || item.href === ROUTES.LEADS || item.href === ROUTES.CAMPAIGNS) {
+          return {
+            ...item,
+            href: `${item.href}?clientId=${selectedClientId}`,
+          };
+        }
+        return item;
+      }),
+    }));
+  }, [sections, isClient, selectedClientId]);
 
   return (
     <>

@@ -337,6 +337,7 @@ export interface MetaSenderProfile {
   first_name?: string;
   last_name?: string;
   profile_pic?: string;
+  picture?: { data?: { url?: string } };
   username?: string;
 }
 
@@ -344,16 +345,20 @@ export interface MetaSenderProfile {
 export async function getMetaSenderProfile(pageToken: string, senderId: string, isInstagram = false): Promise<MetaSenderProfile | null> {
   if (!senderId || !pageToken) return null;
   try {
-    const fields = isInstagram ? "name,username,profile_pic" : "name,first_name,last_name,profile_pic";
-    return await graphFetch<MetaSenderProfile>(
+    const fields = isInstagram ? "name,username,profile_pic" : "first_name,last_name,profile_pic";
+    const res = await graphFetch<MetaSenderProfile>(
       graphUrl(senderId, { fields, access_token: pageToken })
     );
+    if (res && !res.profile_pic && res.picture?.data?.url) res.profile_pic = res.picture.data.url;
+    return res;
   } catch {
     try {
-      const fallbackFields = isInstagram ? "username,profile_pic" : "first_name,last_name,profile_pic";
-      return await graphFetch<MetaSenderProfile>(
+      const fallbackFields = isInstagram ? "username,profile_pic" : "first_name,last_name,picture.type(large)";
+      const res = await graphFetch<MetaSenderProfile>(
         graphUrl(senderId, { fields: fallbackFields, access_token: pageToken })
       );
+      if (res && !res.profile_pic && res.picture?.data?.url) res.profile_pic = res.picture.data.url;
+      return res;
     } catch {
       return null;
     }

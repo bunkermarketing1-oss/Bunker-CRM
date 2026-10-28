@@ -177,6 +177,14 @@ export default function UnifiedInboxPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFetchingRef = useRef(false);
 
+  // Leer clientId de la URL al cargar si viene de un acceso directo o selector
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("clientId");
+      if (param) setSelectedClientId(param);
+    }
+  }, []);
+
   // Debounce del input de búsqueda para no saturar consultas en servidor
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -704,10 +712,11 @@ export default function UnifiedInboxPage() {
               {/* Header de la Conversación Activa */}
               <div className="p-3.5 border-b border-[#EAECF0] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <SocialNetworkIcon
-                    type={CHANNEL_CONFIG[activeConversation.channel]?.iconType || "meta"}
-                    size="sm"
-                    className="shrink-0"
+                  <ContactAvatar
+                    name={activeConversation.senderName}
+                    avatarUrl={activeConversation.senderAvatar}
+                    channel={activeConversation.channel}
+                    size="md"
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

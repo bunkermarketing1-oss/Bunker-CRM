@@ -8,8 +8,8 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/dashboard");
@@ -19,12 +19,16 @@ export function useDashboard() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     refresh();
+    const interval = setInterval(() => {
+      refresh(true);
+    }, 15000);
+    return () => clearInterval(interval);
   }, [refresh]);
 
   return { dashboard, loading, error, refresh };

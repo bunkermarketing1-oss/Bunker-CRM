@@ -18,7 +18,16 @@ export default function RecentLeadsList({ leads }: { leads: DashboardLead[] }) {
             className="flex items-center gap-3 px-2 py-3 rounded-2xl hover:bg-[#FAF9F5] transition-colors"
           >
             <span className="w-9 h-9 rounded-full bg-[#141414] text-[#FAF8F3] border border-[#D4AF37]/40 flex items-center justify-center font-bold text-[11px] flex-shrink-0">
-              {initialsOf(lead.name, "LD")}
+              {lead.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={lead.avatarUrl}
+                  alt={lead.name}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                initialsOf(lead.name, "LD")
+              )}
             </span>
 
             <span className="min-w-0 flex-1">

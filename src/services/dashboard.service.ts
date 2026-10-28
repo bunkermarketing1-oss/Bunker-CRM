@@ -104,7 +104,7 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
       where: leadWhere,
       orderBy: { createdAt: "desc" },
       take: RECENT_LEADS,
-      select: { id: true, name: true, companyName: true, email: true, phone: true, source: true, status: true, createdAt: true },
+      select: { id: true, name: true, companyName: true, email: true, phone: true, avatarUrl: true, source: true, status: true, createdAt: true },
     }),
     scope.clientId
       ? Promise.resolve([])

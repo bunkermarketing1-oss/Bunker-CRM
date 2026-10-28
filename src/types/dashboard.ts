@@ -22,6 +22,7 @@ export interface DashboardLead {
   companyName: string | null;
   email: string | null;
   phone: string | null;
+  avatarUrl?: string | null;
   source: string;
   status: string;
   createdAt: string;
