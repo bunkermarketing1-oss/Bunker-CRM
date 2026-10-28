@@ -66,7 +66,7 @@ export async function getInboxConversations(
       where: {
         organizationId,
         ...(targetClientId ? { clientId: targetClientId } : {}),
-        accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+        accountType: { in: [ACCOUNT_TYPE.FACEBOOK_PAGE, ACCOUNT_TYPE.INSTAGRAM_BUSINESS] },
         status: ACCOUNT_STATUS.ACTIVE,
         accessTokenEnc: { not: null },
       },
@@ -137,7 +137,7 @@ export async function getInboxConversations(
       where: {
         organizationId,
         ...(targetClientId ? { clientId: targetClientId } : {}),
-        accountType: ACCOUNT_TYPE.FACEBOOK_PAGE,
+        accountType: { in: [ACCOUNT_TYPE.FACEBOOK_PAGE, ACCOUNT_TYPE.INSTAGRAM_BUSINESS] },
         status: ACCOUNT_STATUS.ACTIVE,
         accessTokenEnc: { not: null },
       },

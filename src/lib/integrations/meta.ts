@@ -24,6 +24,7 @@ export const META_SCOPES = [
   "pages_manage_metadata",
   "leads_retrieval",
   "instagram_basic",
+  "instagram_manage_messages",
   "pages_messaging",
 ];
 
@@ -262,7 +263,7 @@ export interface MetaWebhookPayload {
 export async function subscribePageToLeadgen(pageId: string, pageToken: string) {
   return graphFetch<{ success: boolean }>(
     graphUrl(`${pageId}/subscribed_apps`, {
-      subscribed_fields: "leadgen,messages,messaging_postbacks",
+      subscribed_fields: "leadgen,messages,messaging_postbacks,message_echoes",
       access_token: pageToken,
     }),
     { method: "POST" }
@@ -292,13 +293,14 @@ export interface MetaPageConversation {
 }
 
 /** Obtiene las conversaciones recientes de Messenger recibidas en la página de Facebook */
-export async function listPageConversations(pageId: string, pageToken: string, limit = 25) {
+export async function listPageConversations(pageId: string, pageToken: string, limit = 25, platform?: "messenger" | "instagram") {
   try {
     const res = await graphFetch<{ data?: MetaPageConversation[] }>(
       graphUrl(`${pageId}/conversations`, {
         access_token: pageToken,
         fields: "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}",
         limit: String(limit),
+        ...(platform ? { platform } : {}),
       })
     );
     return res.data || [];

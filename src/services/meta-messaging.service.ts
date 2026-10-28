@@ -338,7 +338,8 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
 
   if (
     !account ||
-    account.accountType !== ACCOUNT_TYPE.FACEBOOK_PAGE ||
+    (account.accountType !== ACCOUNT_TYPE.FACEBOOK_PAGE &&
+      account.accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS) ||
     !account.accessTokenEnc ||
     !account.externalId
   ) {
@@ -353,7 +354,8 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     return { synced: 0, messages: 0 };
   }
 
-  const convs = await listPageConversations(account.externalId, pageToken, 25);
+  const isInstagram = account.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+  const convs = await listPageConversations(account.externalId, pageToken, 25, isInstagram ? "instagram" : undefined);
 
   let importedMsgs = 0;
   for (const conv of convs) {
@@ -372,7 +374,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     }
 
     if (!customerId) customerId = conv.id;
-    const customer = { id: customerId, name: customerName || "Cliente Messenger" };
+    const customer = { id: customerId, name: customerName || (isInstagram ? "Cliente Instagram" : "Cliente Messenger") };
 
     let lead = await prisma.lead.findFirst({
       where: {
@@ -387,7 +389,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
 
     if (!lead || isGenericLeadName(lead.name) || !lead.avatarUrl) {
       try {
-        const profile = await getMetaSenderProfile(pageToken, customer.id, false);
+        const profile = await getMetaSenderProfile(pageToken, customer.id, isInstagram);
         if (profile) {
           const profileName =
             profile.name ||
@@ -402,7 +404,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     }
 
     if (!lead) {
-      const finalName = !isGenericLeadName(realName) ? realName : "Cliente Messenger";
+      const finalName = !isGenericLeadName(realName) ? realName : (isInstagram ? "Cliente Instagram" : "Cliente Messenger");
       try {
         lead = await prisma.lead.create({
           data: {
@@ -410,7 +412,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
             clientId: account.clientId,
             name: finalName,
             avatarUrl: profilePic,
-            source: LEAD_SOURCE.FACEBOOK_MESSENGER,
+            source: isInstagram ? LEAD_SOURCE.INSTAGRAM_DIRECT : LEAD_SOURCE.FACEBOOK_MESSENGER,
             externalLeadId: customer.id,
             status: LEAD_STATUS.CONTACTED,
           },
@@ -457,7 +459,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
             organizationId: account.organizationId,
             clientId: account.clientId,
             leadId: lead.id,
-            channel: MESSAGE_CHANNEL.MESSENGER,
+            channel: isInstagram ? MESSAGE_CHANNEL.INSTAGRAM : MESSAGE_CHANNEL.MESSENGER,
             direction: (msg.from?.id === account.externalId || (Boolean(msg.from?.name && account.accountName) && msg.from!.name!.toLowerCase() === account.accountName!.toLowerCase())) ? MESSAGE_DIRECTION.OUTBOUND : MESSAGE_DIRECTION.INBOUND,
             recipient: customer.id,
             body: msg.message || "[Mensaje multimedia]",
