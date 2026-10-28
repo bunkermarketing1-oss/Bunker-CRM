@@ -8,6 +8,8 @@ export const MESSAGE_CHANNEL = {
   EMAIL: "email",
   MESSENGER: "messenger",
   INSTAGRAM: "instagram",
+  FACEBOOK_COMMENT: "facebook_comment",
+  INSTAGRAM_COMMENT: "instagram_comment",
 } as const;
 export type MessageChannel = ValueOf<typeof MESSAGE_CHANNEL>;
 

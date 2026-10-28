@@ -176,6 +176,8 @@ model Lead {
 
   // Evita duplicados cuando Meta reintenta el webhook o el cron recupera el mismo lead.
   @@unique([organizationId, externalLeadId])
+  @@index([clientId])
+  @@index([organizationId])
 }
 
 model PipelineStage {
@@ -326,6 +328,12 @@ model Message {
   contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
   @@index([recipient, createdAt]) // asociar respuestas entrantes al último envío
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@index([organizationId, clientId, createdAt(sort: Desc)])
+  @@index([leadId])
+  @@index([organizationId, recipient, createdAt])
+  @@index([channel])
   // Un número recibe a lo sumo un SMS por lote, aunque el lote se ejecute dos veces a la vez.
   @@unique([organizationId, bulkBatchId, recipient])
 }

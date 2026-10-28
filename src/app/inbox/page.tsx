@@ -15,60 +15,15 @@ import {
   Users,
   UserCheck,
   UserPlus,
+  Loader2,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
-
-interface ConversationMessage {
-  id: string;
-  senderName: string;
-  body: string;
-  createdAt: string;
-  direction: "inbound" | "outbound";
-  status?: string;
-}
-
-interface ConversationItem {
-  id: string;
-  channel: "whatsapp" | "messenger" | "instagram" | "facebook_comment" | "instagram_comment";
-  senderName: string;
-  senderAvatar?: string | null;
-  recipient: string;
-  clientId: string | null;
-  clientName: string | null;
-  connectedAccountId: string | null;
-  accountName: string | null;
-  unreadCount: number;
-  lastMessageText: string;
-  lastMessageTime: string;
-  postContext?: {
-    postId: string;
-    postTitle: string;
-    commentId: string;
-  } | null;
-  messages: ConversationMessage[];
-  leadId?: string | null;
-  leadPhone?: string | null;
-  leadEmail?: string | null;
-  assignedAdvisorId?: string | null;
-  assignedAdvisorName?: string | null;
-}
-
-interface AdvisorOption {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  clientId?: string | null;
-}
-
-interface InboxStats {
-  total: number;
-  unread: number;
-  whatsapp: number;
-  messenger: number;
-  instagram: number;
-  comments: number;
-}
+import type {
+  ConversationItem,
+  ConversationMessage,
+  AdvisorOption,
+  InboxStats,
+} from "@/types/inbox";
 
 const CHANNEL_CONFIG: Record<
   string,
@@ -88,6 +43,11 @@ const CHANNEL_CONFIG: Record<
     label: "Instagram Direct",
     badgeCls: "bg-pink-50 text-pink-700 border-pink-200",
     iconType: "instagram",
+  },
+  sms: {
+    label: "Twilio SMS",
+    badgeCls: "bg-purple-50 text-purple-700 border-purple-200",
+    iconType: "sms",
   },
   facebook_comment: {
     label: "Comentario Facebook",
@@ -123,18 +83,21 @@ export default function UnifiedInboxPage() {
     whatsapp: 0,
     messenger: 0,
     instagram: 0,
+    sms: 0,
     comments: 0,
   });
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [advisors, setAdvisors] = useState<AdvisorOption[]>([]);
   const [assigning, setAssigning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingThread, setLoadingThread] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
 
   // Filtros
   const [activeChannel, setActiveChannel] = useState<string>("all");
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Respuestas
   const [replyText, setReplyText] = useState("");
@@ -142,45 +105,122 @@ export default function UnifiedInboxPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
 
-  const fetchInbox = useCallback(async (isSilent = false, triggerSync = false) => {
-    try {
-      if (!isSilent) setLoading(true);
-      const params = new URLSearchParams();
-      if (activeChannel !== "all") params.set("channel", activeChannel);
-      if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
-      if (search.trim()) params.set("search", search.trim());
-      if (triggerSync) params.set("sync", "true");
+  // Debounce del input de búsqueda para no saturar consultas en servidor
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [search]);
 
-      const res = await fetch(`/api/inbox?${params.toString()}`);
-      const json = await res.json();
-      if (json.success) {
-        setConversations(json.conversations || []);
-        if (json.stats) setStats(json.stats);
-        if (json.clients) setClients(json.clients);
-        if (json.advisors) setAdvisors(json.advisors);
+  const fetchInbox = useCallback(
+    async (isSilent = false, triggerSync = false) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-        // Seleccionar automáticamente la primera si ninguna está seleccionada
-        setSelectedConvId((current) => (!current && json.conversations?.length > 0 ? json.conversations[0].id : current));
+      try {
+        if (!isSilent) setLoading(true);
+        const params = new URLSearchParams();
+        if (activeChannel !== "all") params.set("channel", activeChannel);
+        if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (triggerSync) params.set("sync", "true");
+
+        const res = await fetch(`/api/inbox?${params.toString()}`);
+        const json = await res.json();
+        if (json.success) {
+          const newConvs: ConversationItem[] = json.conversations || [];
+          setConversations((prev) => {
+            // Preservar mensajes extendidos ya cargados en conversaciones activas
+            const prevMsgMap = new Map<string, ConversationMessage[]>();
+            for (const c of prev) {
+              if (c.messages.length > 0) prevMsgMap.set(c.id, c.messages);
+            }
+
+            return newConvs.map((c) => {
+              const existingMessages = prevMsgMap.get(c.id);
+              if (existingMessages && existingMessages.length > c.messages.length) {
+                return { ...c, messages: existingMessages };
+              }
+              return c;
+            });
+          });
+
+          if (json.stats) setStats(json.stats);
+          if (json.clients) setClients(json.clients);
+          if (json.advisors) setAdvisors(json.advisors);
+
+          // Preservar la conversación seleccionada o fijar la primera si no hay ninguna
+          setSelectedConvId((current) => {
+            if (current && newConvs.some((c) => c.id === current)) return current;
+            return newConvs.length > 0 ? newConvs[0].id : null;
+          });
+        }
+      } catch (err) {
+        console.error("Error al cargar la bandeja de entrada:", err);
+      } finally {
+        isFetchingRef.current = false;
+        if (!isSilent) setLoading(false);
       }
-    } catch (err) {
-      console.error("Error al cargar la bandeja de entrada:", err);
-    } finally {
-      if (!isSilent) setLoading(false);
-    }
-  }, [activeChannel, selectedClientId, search, isClient]);
+    },
+    [activeChannel, selectedClientId, debouncedSearch, isClient]
+  );
 
+  // Carga inicial y sondeo periódico en segundo plano
   useEffect(() => {
     fetchInbox();
     const interval = setInterval(() => {
       fetchInbox(true);
-    }, 15000);
+    }, 20000);
     return () => clearInterval(interval);
   }, [fetchInbox]);
 
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === selectedConvId) || conversations[0] || null;
   }, [conversations, selectedConvId]);
+
+  const convId = activeConversation?.id;
+  const recipient = activeConversation?.recipient;
+  const leadId = activeConversation?.leadId || "";
+  const msgCount = activeConversation?.messages.length ?? 0;
+
+  // Cargar el historial cronológico completo del hilo cuando se selecciona una conversación
+  useEffect(() => {
+    if (!convId || !recipient) return;
+
+    let isCancelled = false;
+
+    // Si ya tiene más de 1 mensaje cargado, evitar spinner invasivo pero sincronizar
+    if (msgCount <= 1) {
+      setLoadingThread(true);
+    }
+
+    const params = new URLSearchParams({
+      thread: "true",
+      recipient,
+      ...(leadId ? { leadId } : {}),
+    });
+
+    fetch(`/api/inbox?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!isCancelled && json.success && Array.isArray(json.messages) && json.messages.length > 0) {
+          setConversations((prev) =>
+            prev.map((c) => (c.id === convId ? { ...c, messages: json.messages } : c))
+          );
+        }
+      })
+      .catch((err) => console.error("Error al cargar historial completo del hilo:", err))
+      .finally(() => {
+        if (!isCancelled) setLoadingThread(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [convId, recipient, leadId, msgCount]);
 
   const handleAssignAdvisor = async (advisorId: string | null) => {
     if (!activeConversation || assigning) return;
@@ -252,14 +292,14 @@ export default function UnifiedInboxPage() {
       });
       const json = await res.json();
       if (json.success) {
-        // Agregar localmente el mensaje saliente a la conversación
         const newMsg: ConversationMessage = {
-          id: `sent_${Date.now()}`,
+          id: json.reply?.id || `sent_${Date.now()}`,
           senderName: "Tú (Asesor)",
           body: replyText.trim(),
           createdAt: new Date().toISOString(),
           direction: "outbound",
           status: "sent",
+          channel: activeConversation.channel,
         };
 
         setConversations((prev) =>
@@ -296,8 +336,11 @@ export default function UnifiedInboxPage() {
         <div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
             <Inbox className="w-6 h-6 text-amber-500 shrink-0" />
-            <span>Bandeja de Entrada</span>
+            <span>Bandeja de Entrada Omnicanal</span>
           </h1>
+          <p className="text-xs text-[#667085] mt-0.5">
+            Atención unificada de WhatsApp, Facebook Messenger, Instagram Direct y SMS en tiempo real.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -326,7 +369,7 @@ export default function UnifiedInboxPage() {
                 : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
             }`}
           >
-            <span>Todos los canales</span>
+            <span>Todos</span>
             <span
               className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                 activeChannel === "all" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
@@ -398,6 +441,26 @@ export default function UnifiedInboxPage() {
 
           <button
             type="button"
+            onClick={() => setActiveChannel("sms")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
+              activeChannel === "sms"
+                ? "bg-[#0F172A] text-white shadow-xs"
+                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+            }`}
+          >
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <span>SMS</span>
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                activeChannel === "sms" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+              }`}
+            >
+              {stats.sms}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveChannel("comments")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
               activeChannel === "comments"
@@ -417,7 +480,7 @@ export default function UnifiedInboxPage() {
           </button>
         </div>
 
-        {/* Filtro por Cliente (Para Administradores) */}
+        {/* Filtro por Empresa (Para Administradores) */}
         {!isClient && (
           <div className="flex items-center gap-2 shrink-0 px-1">
             <span className="text-xs text-[#667085] font-medium hidden sm:inline">Empresa:</span>
@@ -443,7 +506,7 @@ export default function UnifiedInboxPage() {
         {/* COLUMNA IZQUIERDA: LISTA DE CONVERSACIONES (4 cols)      */}
         {/* ========================================================= */}
         <div className="lg:col-span-4 bg-white rounded-xl border border-[#EAECF0] shadow-xs flex flex-col overflow-hidden">
-          {/* Buscador de Chats */}
+          {/* Buscador de Chats en Servidor */}
           <div className="p-2.5 border-b border-[#EAECF0]">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -451,7 +514,7 @@ export default function UnifiedInboxPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar remitente, mensaje o teléfono..."
+                placeholder="Buscar prospecto, mensaje o teléfono..."
                 className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
               />
             </div>
@@ -586,11 +649,23 @@ export default function UnifiedInboxPage() {
                     </div>
 
                     <p className="text-[11px] text-[#667085] flex items-center gap-1.5 mt-0.5 truncate">
-                      <span>Cuenta: <strong>{activeConversation.accountName || "Cuenta Oficial"}</strong></span>
+                      <span>
+                        Canal: <strong>{activeConversation.accountName || "Línea Oficial"}</strong>
+                      </span>
                       {activeConversation.clientName && (
                         <>
                           <span>•</span>
-                          <span>Empresa: <strong className="text-slate-800">{activeConversation.clientName}</strong></span>
+                          <span>
+                            Empresa: <strong className="text-slate-800">{activeConversation.clientName}</strong>
+                          </span>
+                        </>
+                      )}
+                      {activeConversation.leadPhone && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Tel: <strong className="text-slate-800 font-mono">{activeConversation.leadPhone}</strong>
+                          </span>
                         </>
                       )}
                     </p>
@@ -697,30 +772,37 @@ export default function UnifiedInboxPage() {
               )}
 
               {/* Historial de Mensajes / Chat Bubbles con Scroll */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#F8F9FA]/40">
-                {activeConversation.messages.map((m) => {
-                  const isOutbound = m.direction === "outbound";
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#F8F9FA]/40 relative">
+                {loadingThread && activeConversation.messages.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-2 text-xs text-[#9C9890]">
+                    <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+                    <span>Cargando historial de la conversación...</span>
+                  </div>
+                ) : (
+                  activeConversation.messages.map((m) => {
+                    const isOutbound = m.direction === "outbound";
 
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex flex-col ${isOutbound ? "items-end" : "items-start"}`}
-                    >
-                      <div className="text-[10px] text-[#9C9890] mb-1 px-1 font-medium">
-                        {m.senderName} • {formatTimeAgo(m.createdAt)}
-                      </div>
+                    return (
                       <div
-                        className={`max-w-md sm:max-w-lg p-3 rounded-xl text-xs leading-relaxed shadow-2xs whitespace-pre-wrap ${
-                          isOutbound
-                            ? "bg-[#0F172A] text-white rounded-br-xs"
-                            : "bg-white text-[#101828] border border-[#EAECF0] rounded-bl-xs"
-                        }`}
+                        key={m.id}
+                        className={`flex flex-col ${isOutbound ? "items-end" : "items-start"}`}
                       >
-                        {m.body}
+                        <div className="text-[10px] text-[#9C9890] mb-1 px-1 font-medium">
+                          {m.senderName} • {formatTimeAgo(m.createdAt)}
+                        </div>
+                        <div
+                          className={`max-w-md sm:max-w-lg p-3 rounded-xl text-xs leading-relaxed shadow-2xs whitespace-pre-wrap ${
+                            isOutbound
+                              ? "bg-[#0F172A] text-white rounded-br-xs"
+                              : "bg-white text-[#101828] border border-[#EAECF0] rounded-bl-xs"
+                          }`}
+                        >
+                          {m.body}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -773,7 +855,7 @@ export default function UnifiedInboxPage() {
               <Inbox className="w-12 h-12 text-[#DDD9CF]" />
               <h3 className="font-bold text-sm text-[#101828]">Selecciona una conversación</h3>
               <p className="text-xs text-[#667085] max-w-sm">
-                Haz clic en cualquier mensaje de la lista izquierda para ver el historial y responder en tiempo real por WhatsApp, Messenger, Instagram o Comentarios.
+                Haz clic en cualquier mensaje de la lista izquierda para ver el historial y responder en tiempo real por WhatsApp, Messenger, Instagram, SMS o Comentarios.
               </p>
             </div>
           )}

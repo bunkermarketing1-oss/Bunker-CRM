@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { getPagesLeadgenStatus } from "@/services/meta-leads.service";
 import { getTwilioEnvStatus } from "@/services/integrations.service";
+import { testTwilioConnection } from "@/lib/integrations/twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -124,13 +125,59 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      // Las credenciales de Twilio solo se leen de variables de entorno del servidor
-      // (src/lib/integrations/twilio.ts): marcarla "conectada" aquí no habilitaría ningún envío.
+      // Para Twilio: prueba la conexión real contra la API REST y actualiza el estado
       if (integration.provider === INTEGRATION_PROVIDER.TWILIO) {
+        const testResult = await testTwilioConnection(credentials);
+        if (!testResult.connected) {
+          await prisma.integration.update({
+            where: { id },
+            data: {
+              status: INTEGRATION_STATUS.ERROR,
+              errorMessage: testResult.error,
+            },
+          });
+          return NextResponse.json(
+            {
+              success: false,
+              error: testResult.error || "No se pudo autenticar con la API de Twilio. Revisa tus credenciales.",
+              testResult,
+            },
+            { status: 400 }
+          );
+        }
+
+        const updated = await prisma.integration.update({
+          where: { id },
+          data: {
+            status: INTEGRATION_STATUS.CONNECTED,
+            lastSyncAt: new Date(),
+            errorMessage: null,
+          },
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            organizationId: user!.organizationId,
+            userId: user!.id,
+            action: "integration_connected",
+            entityType: "Integration",
+            entityId: integration.id,
+            detailsJson: JSON.stringify({
+              provider: integration.provider,
+              accountName: testResult.accountName,
+              accountSid: testResult.accountSid,
+              smsReady: testResult.smsReady,
+              voiceReady: testResult.voiceReady,
+            }),
+          },
+        });
+
         return NextResponse.json({
-          success: false,
-          error: "Twilio se configura con variables de entorno del servidor (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER), no desde este panel.",
-        }, { status: 400 });
+          success: true,
+          message: `Conexión autorizada exitosamente con Twilio (${testResult.accountName || "Cuenta activa"}).`,
+          integration: updated,
+          testResult,
+        });
       }
 
       const { apiKey, apiSecret, accountId } = credentials || {};
