@@ -141,6 +141,7 @@ model Lead {
   email          String?
   phone          String?
   normalizedPhone String?
+  avatarUrl      String?      // Foto de perfil del prospecto
   source         String       @default("website") // website, referral, meta_ads, google_ads, manual, etc.
   campaign       String?
   externalLeadId String?

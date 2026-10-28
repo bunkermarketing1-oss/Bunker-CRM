@@ -25,12 +25,17 @@ interface GetInboxOptions {
  * Obtiene las conversaciones y estadísticas de la bandeja de entrada omnicanal
  * filtradas estrictamente por organización y cliente (multi-tenant).
  */
+// Control de auto-sincronización periódica por organización (mínimo 15s entre llamadas a Meta)
+const orgLastSyncMap = new Map<string, number>();
+const AUTO_SYNC_COOLDOWN_MS = 15000;
+
 export async function getInboxConversations(
   organizationId: string,
   targetClientId: string | null,
   options: GetInboxOptions = {}
 ): Promise<InboxResponse> {
   const { channel = "all", search = "", limit = 500, triggerSync = false, isClientUser = false } = options;
+  const cleanSearch = search.trim();
 
   // 1. Obtener cuentas conectadas vinculadas
   const accountWhere: Prisma.ConnectedAccountWhereInput = {
@@ -50,8 +55,13 @@ export async function getInboxConversations(
     },
   });
 
-  // 2. Sincronizar páginas conectadas si se solicita
-  if (triggerSync) {
+  // 2. Sincronizar páginas conectadas (bajo demanda o auto-sync cada 15s)
+  const now = Date.now();
+  const lastSync = orgLastSyncMap.get(organizationId) || 0;
+  const shouldAutoSync = triggerSync || (now - lastSync > AUTO_SYNC_COOLDOWN_MS && !cleanSearch && channel === "all");
+
+  if (shouldAutoSync) {
+    orgLastSyncMap.set(organizationId, now);
     const pageAccounts = await prisma.connectedAccount.findMany({
       where: {
         organizationId,
@@ -88,7 +98,7 @@ export async function getInboxConversations(
     }
   }
 
-  const cleanSearch = search.trim();
+  
   if (cleanSearch) {
     messageWhere.OR = [
       { recipient: { contains: cleanSearch, mode: "insensitive" } },
@@ -111,6 +121,7 @@ export async function getInboxConversations(
           name: true,
           phone: true,
           email: true,
+          avatarUrl: true,
           clientId: true,
           client: { select: { id: true, name: true } },
           ownerId: true,
@@ -156,6 +167,7 @@ export async function getInboxConversations(
               name: true,
               phone: true,
               email: true,
+              avatarUrl: true,
               clientId: true,
               client: { select: { id: true, name: true } },
               ownerId: true,
@@ -204,14 +216,14 @@ export async function getInboxConversations(
         id: convKey,
         channel: ch,
         senderName: sender,
-        senderAvatar: null,
+        senderAvatar: msg.lead?.avatarUrl || null,
         recipient: msg.recipient || "Línea Oficial",
         clientId: msg.clientId || msg.lead?.clientId || null,
         clientName: msg.client?.name || msg.lead?.client?.name || null,
         connectedAccountId: null,
         accountName: channelAccountLabel,
         unreadCount: 0,
-        lastMessageText: msg.body,
+        lastMessageText: msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body,
         lastMessageTime: msg.createdAt.toISOString(),
         leadId: msg.lead?.id || null,
         leadPhone: msg.lead?.phone || msg.recipient,
@@ -223,8 +235,11 @@ export async function getInboxConversations(
     }
 
     const conv = dbConvMap.get(convKey)!;
-    conv.lastMessageText = msg.body;
+    conv.lastMessageText = msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body;
     conv.lastMessageTime = msg.createdAt.toISOString();
+    if (msg.lead?.avatarUrl && !conv.senderAvatar) {
+      conv.senderAvatar = msg.lead.avatarUrl;
+    }
     if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
       conv.unreadCount += 1;
     }

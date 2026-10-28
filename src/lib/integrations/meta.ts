@@ -292,12 +292,20 @@ export interface MetaPageConversation {
 }
 
 /** Obtiene las conversaciones recientes de Messenger recibidas en la página de Facebook */
-export async function listPageConversations(pageId: string, pageToken: string, limit = 20) {
-  return graphFetchAll<MetaPageConversation>(`${pageId}/conversations`, {
-    access_token: pageToken,
-    fields: "id,updated_time,snippet,unread_count,senders,messages.limit(20){id,message,created_time,from}",
-    limit: String(limit),
-  });
+export async function listPageConversations(pageId: string, pageToken: string, limit = 25) {
+  try {
+    const res = await graphFetch<{ data?: MetaPageConversation[] }>(
+      graphUrl(`${pageId}/conversations`, {
+        access_token: pageToken,
+        fields: "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}",
+        limit: String(limit),
+      })
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error(`[META_CONVERSATIONS] Error al listar conversaciones de la página ${pageId}:`, err);
+    return [];
+  }
 }
 
 export interface SendMetaMessageResult {
@@ -332,13 +340,21 @@ export interface MetaSenderProfile {
 
 /** Consulta el perfil básico de un usuario remitente en Messenger o Instagram Direct. */
 export async function getMetaSenderProfile(pageToken: string, senderId: string, isInstagram = false): Promise<MetaSenderProfile | null> {
+  if (!senderId || !pageToken) return null;
   try {
     const fields = isInstagram ? "name,username,profile_pic" : "name,first_name,last_name,profile_pic";
     return await graphFetch<MetaSenderProfile>(
       graphUrl(senderId, { fields, access_token: pageToken })
     );
   } catch {
-    return null;
+    try {
+      const fallbackFields = isInstagram ? "username,profile_pic" : "first_name,last_name,profile_pic";
+      return await graphFetch<MetaSenderProfile>(
+        graphUrl(senderId, { fields: fallbackFields, access_token: pageToken })
+      );
+    } catch {
+      return null;
+    }
   }
 }
 

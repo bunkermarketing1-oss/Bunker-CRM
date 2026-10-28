@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -60,6 +61,75 @@ const CHANNEL_CONFIG: Record<
     iconType: "instagram",
   },
 };
+
+function ContactAvatar({
+  name,
+  avatarUrl,
+  channel,
+  size = "md",
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  channel: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  const [imageError, setImageError] = useState(false);
+  const channelConf = CHANNEL_CONFIG[channel] || {
+    label: channel,
+    badgeCls: "bg-slate-50 text-slate-700 border-slate-200",
+    iconType: "meta",
+  };
+
+  const dimCls =
+    size === "sm"
+      ? "w-8 h-8 text-[11px]"
+      : size === "lg"
+      ? "w-11 h-11 text-sm"
+      : "w-10 h-10 text-xs";
+
+  const badgeCls =
+    size === "sm"
+      ? "w-3.5 h-3.5 -bottom-0.5 -right-0.5"
+      : size === "lg"
+      ? "w-4 h-4 -bottom-0.5 -right-0.5"
+      : "w-3.5 h-3.5 -bottom-0.5 -right-0.5";
+
+  const cleanName = (name || "").trim();
+  const initials = cleanName
+    ? cleanName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() || "")
+        .join("") || "?"
+    : "?";
+
+  return (
+    <div className={`relative shrink-0 ${dimCls}`}>
+      {avatarUrl && !imageError ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          onError={() => setImageError(true)}
+          className={`${dimCls} rounded-full object-cover border border-[#EAECF0] shadow-2xs`}
+        />
+      ) : (
+        <div
+          className={`${dimCls} rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-amber-300 font-semibold flex items-center justify-center border border-[#EAECF0] shadow-2xs`}
+        >
+          {initials}
+        </div>
+      )}
+
+      {/* Badge del canal superpuesto */}
+      <div
+        className={`absolute ${badgeCls} rounded-full bg-white p-0.5 shadow-xs flex items-center justify-center border border-white`}
+      >
+        <SocialNetworkIcon type={channelConf.iconType} size="xs" />
+      </div>
+    </div>
+  );
+}
 
 function formatTimeAgo(isoString: string): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
@@ -173,7 +243,7 @@ export default function UnifiedInboxPage() {
     fetchInbox();
     const interval = setInterval(() => {
       fetchInbox(true);
-    }, 20000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [fetchInbox]);
 
@@ -572,7 +642,12 @@ export default function UnifiedInboxPage() {
                     }`}
                   >
                     {/* Icono de Red / Canal */}
-                    <SocialNetworkIcon type={channelConf.iconType} size="sm" className="mt-0.5 shrink-0" />
+                    <ContactAvatar
+                      name={conv.senderName}
+                      avatarUrl={conv.senderAvatar}
+                      channel={conv.channel}
+                      size="md"
+                    />
 
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center justify-between gap-1">
