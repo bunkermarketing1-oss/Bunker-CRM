@@ -124,20 +124,155 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <div className="bg-[#F8F9FA] rounded-xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4 shadow-2xs">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
-            {initialsOf(accountName, isClient ? "CL" : "BA")}
-          </div>
-          <div className="min-w-0">
-            <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5">
-              {isClient ? (language === "es" ? "Portal Cliente" : "Client Portal") : "Admin Bunker"}
+        {isClient ? (
+          <div className="bg-[#F8F9FA] rounded-xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4 shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
+              {initialsOf(accountName, "CL")}
             </div>
-            <div className="text-xs font-semibold text-[#101828] truncate leading-tight">{accountName}</div>
+            <div className="min-w-0">
+              <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5">
+                {language === "es" ? "Portal Cliente" : "Client Portal"}
+              </div>
+              <div className="text-xs font-semibold text-[#101828] truncate leading-tight">{accountName}</div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="relative mb-3.5" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="w-full text-left bg-[#F8F9FA] hover:bg-[#F2F4F7] border border-[#EAECF0] p-2 rounded-xl flex items-center gap-2.5 shadow-2xs transition-colors cursor-pointer group"
+            >
+              <div
+                className={`w-8 h-8 rounded-lg ${
+                  selectedClient
+                    ? "bg-gradient-to-br from-amber-500 to-amber-700 text-white"
+                    : "bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950"
+                } flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs`}
+              >
+                {selectedClient ? initialsOf(selectedClient.name, "CL") : initialsOf(accountName, "BA")}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5 flex items-center justify-between">
+                  <span>{selectedClient ? "Empresa Activa" : "Admin Bunker"}</span>
+                  <span className="text-[9px] text-amber-700 font-semibold uppercase">
+                    {selectedClient ? "Filtro activo" : "Global"}
+                  </span>
+                </div>
+                <div className="text-xs font-semibold text-[#101828] truncate leading-tight">
+                  {selectedClient ? selectedClient.name : accountName}
+                </div>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-[#667085] transition-transform duration-200 shrink-0 ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Dropdown Menu de selección de empresa */}
+            {isDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-[#EAECF0] rounded-xl shadow-lg p-1.5 max-h-60 overflow-y-auto space-y-0.5">
+                <div className="px-2 py-1 text-[10px] font-semibold text-[#98A2B3] uppercase">
+                  Espacio de trabajo
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectClient("all")}
+                  className={`w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                    selectedClientId === "all"
+                      ? "bg-amber-50 text-amber-900 font-semibold"
+                      : "text-[#344054] hover:bg-[#F8F9FA]"
+                  }`}
+                >
+                  <span className="truncate flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    Todas las empresas (Global)
+                  </span>
+                  {selectedClientId === "all" && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                </button>
+
+                {clients.length > 0 && (
+                  <>
+                    <div className="border-t border-[#F2F4F7] my-1" />
+                    <div className="px-2 py-0.5 text-[9px] font-semibold text-[#98A2B3] uppercase">
+                      Empresas Clientes ({clients.length})
+                    </div>
+                    {clients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleSelectClient(c.id)}
+                        className={`w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                          selectedClientId === c.id
+                            ? "bg-amber-50 text-amber-900 font-semibold"
+                            : "text-[#344054] hover:bg-[#F8F9FA]"
+                        }`}
+                      >
+                        <span className="truncate flex items-center gap-2">
+                          <span className="w-5 h-5 rounded bg-[#EAECF0] text-[#344054] text-[9px] font-bold flex items-center justify-center shrink-0">
+                            {initialsOf(c.name, "CL")}
+                          </span>
+                          <span className="truncate">{c.name}</span>
+                        </span>
+                        {selectedClientId === c.id && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Opciones directas de la empresa conectada */}
+            {selectedClient && (
+              <div className="mt-2 p-2 bg-gradient-to-b from-amber-50/70 to-[#FFFDF5] border border-amber-200/80 rounded-xl shadow-2xs">
+                <div className="flex items-center justify-between text-[10px] font-semibold text-amber-950 px-1 mb-1.5">
+                  <span className="truncate font-bold">Opciones de {selectedClient.name}:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectClient("all")}
+                    className="text-[9px] text-amber-700 hover:text-amber-900 underline font-medium cursor-pointer"
+                  >
+                    Ver todas
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Link
+                    href={`${ROUTES.INBOX}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-amber-200/80 hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Inbox className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Bandeja</span>
+                  </Link>
+                  <Link
+                    href={`${ROUTES.LEADS}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-amber-200/80 hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Users className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Leads</span>
+                  </Link>
+                  <Link
+                    href={`${ROUTES.CAMPAIGNS}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-amber-200/80 hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Campañas</span>
+                  </Link>
+                  <Link
+                    href={clientDetailRoute(selectedClient.id)}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-amber-200/80 hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Ficha</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <nav className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1" aria-label="Navegación principal">
-          {sections.map((section) => (
+          {adaptedSections.map((section) => (
             <div key={section.title.es} className="space-y-0.5">
               <div className="px-3 text-[10px] font-semibold tracking-wider text-[#98A2B3] uppercase mb-1.5 flex items-center justify-between">
                 <span>{section.title[language]}</span>
