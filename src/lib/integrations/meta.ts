@@ -24,7 +24,7 @@ export const META_SCOPES = [
   "pages_manage_metadata",
   "leads_retrieval",
   "instagram_basic",
-  "instagram_manage_messages",
+
   "pages_messaging",
 ];
 
