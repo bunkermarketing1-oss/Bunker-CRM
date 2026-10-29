@@ -37,6 +37,14 @@ export async function GET(req: NextRequest) {
   const scope = scopeFromUser(user!);
   if (!scope) return NextResponse.json({ success: true, ...EMPTY_DASHBOARD });
 
+  // Si un administrador solicita un clientId específico por query param:
+  if (!user!.isClientUser) {
+    const requestedClientId = req.nextUrl.searchParams.get("clientId");
+    if (requestedClientId && requestedClientId !== "all") {
+      scope.clientId = requestedClientId;
+    }
+  }
+
   try {
     const dashboard = await getDashboard(scope);
     return NextResponse.json({ success: true, ...dashboard });

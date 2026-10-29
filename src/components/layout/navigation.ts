@@ -189,6 +189,7 @@ export function navigationFor(user: NavigationRole | null | undefined): NavSecti
 /** El dashboard solo se marca activo en su ruta exacta; el resto también en sus subrutas. */
 export function isNavItemActive(href: string, pathname: string | null): boolean {
   if (!pathname) return false;
-  if (href === ROUTES.DASHBOARD) return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const baseHref = href.split("?")[0];
+  if (baseHref === ROUTES.DASHBOARD) return pathname === baseHref;
+  return pathname === baseHref || pathname.startsWith(`${baseHref}/`);
 }

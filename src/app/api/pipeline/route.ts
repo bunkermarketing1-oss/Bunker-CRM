@@ -25,6 +25,11 @@ export async function GET(req: NextRequest) {
     const oppWhere: any = { isDeleted: false, organizationId: user!.organizationId };
     if (user!.isClientUser) {
       oppWhere.clientId = user!.clientId || "__NO_CLIENT__";
+    } else {
+      const requestedClientId = req.nextUrl.searchParams.get("clientId");
+      if (requestedClientId && requestedClientId !== "all") {
+        oppWhere.clientId = requestedClientId;
+      }
     }
 
     const stages = await prisma.pipelineStage.findMany({

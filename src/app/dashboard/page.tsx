@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { useClientOptions } from "@/hooks/useClientOptions";
 import Link from "next/link";
 import {
   Activity,
@@ -27,22 +29,36 @@ import { useAuth } from "@/context/AuthContext";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatCompactMoney, formatNumber, formatPercent } from "@/lib/format";
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const { user } = useAuth();
-  const { dashboard, loading, error } = useDashboard();
+  const searchParams = useSearchParams();
+  const clientId = searchParams.get("clientId");
+  const { dashboard, loading, error } = useDashboard(clientId);
+  const clients = useClientOptions();
+  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
   const [now] = useState(() => new Date());
   const isClient = Boolean(user?.isClientUser);
   const metrics = dashboard?.metrics;
 
   const today = new Intl.DateTimeFormat("es-CO", { weekday: "long", day: "numeric", month: "long" }).format(now);
   const clientsHint =
-    typeof metrics?.activeClients === "number" ? ` · ${formatNumber(metrics.activeClients)} clientes activos` : "";
+    typeof metrics?.activeClients === "number"
+      ? ` · ${formatNumber(metrics.activeClients)} clientes activos`
+      : activeClient
+      ? ` · Marca: ${activeClient.name}`
+      : "";
 
   return (
     <div className="space-y-6">
       <PageHeader
         section={isClient ? "Portal" : "Inicio"}
-        title={isClient ? `Resumen de ${user?.clientName ?? "tu empresa"}` : "Dashboard General"}
+        title={
+          isClient
+            ? `Resumen de ${user?.clientName ?? "tu empresa"}`
+            : activeClient
+            ? `Resumen de ${activeClient.name}`
+            : "Dashboard General"
+        }
         description={`${today.charAt(0).toUpperCase()}${today.slice(1)}${clientsHint}`}
         actions={
           <>
@@ -150,6 +166,14 @@ export default function DashboardPage() {
         </>
       ) : null}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }
 
