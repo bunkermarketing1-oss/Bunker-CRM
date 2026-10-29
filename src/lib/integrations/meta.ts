@@ -270,6 +270,17 @@ export async function subscribePageToLeadgen(pageId: string, pageToken: string) 
   );
 }
 
+/** Suscribe la cuenta de Instagram Business a los eventos de mensajería directa en Meta. */
+export async function subscribeInstagramToMessaging(igAccountId: string, pageToken: string) {
+  return graphFetch<{ success: boolean }>(
+    graphUrl(`${igAccountId}/subscribed_apps`, {
+      subscribed_fields: "messages,messaging_postbacks,message_reactions",
+      access_token: pageToken,
+    }),
+    { method: "POST" }
+  );
+}
+
 export interface MetaConversationSender {
   id: string;
   name?: string;

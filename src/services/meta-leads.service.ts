@@ -6,6 +6,7 @@ import {
   listFormLeads,
   listPageLeadForms,
   subscribePageToLeadgen,
+  subscribeInstagramToMessaging,
   type MetaLead,
   type MetaLeadgenChange,
   type MetaWebhookPayload,
@@ -442,6 +443,26 @@ export async function subscribeMetaPagesToLeadgen(integrationId: string) {
     }
     await prisma.connectedAccount.update({ where: { id: page.id }, data: { metadataJson: JSON.stringify(metadata) } });
   }
+  const igAccounts = await prisma.connectedAccount.findMany({
+    where: { integrationId, accountType: ACCOUNT_TYPE.INSTAGRAM_BUSINESS, accessTokenEnc: { not: null } },
+    select: { id: true, externalId: true, accountName: true, accessTokenEnc: true, metadataJson: true },
+  });
+
+  for (const ig of igAccounts) {
+    if (!ig.externalId || !ig.accessTokenEnc) continue;
+    const metadata = JSON.parse(ig.metadataJson || "{}");
+    try {
+      await subscribeInstagramToMessaging(ig.externalId, decryptSecret(ig.accessTokenEnc));
+      metadata.messagingSubscribed = true;
+      delete metadata.messagingError;
+    } catch (error) {
+      metadata.messagingSubscribed = false;
+      metadata.messagingError = errorMessage(error);
+      errors.push(`${ig.accountName}: ${metadata.messagingError}`);
+    }
+    await prisma.connectedAccount.update({ where: { id: ig.id }, data: { metadataJson: JSON.stringify(metadata) } });
+  }
+
   return { pages: pages.length, errors };
 }
 

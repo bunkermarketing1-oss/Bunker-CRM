@@ -114,6 +114,7 @@ async function handleSingleMessagingItem(
       accountType: true,
       accessTokenEnc: true,
       accountName: true,
+      metadataJson: true,
     },
   });
 
@@ -333,6 +334,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
       accountType: true,
       accessTokenEnc: true,
       accountName: true,
+      metadataJson: true,
     },
   });
 
@@ -355,17 +357,27 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
   }
 
   const isInstagram = account.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
-  const convs = await listPageConversations(account.externalId, pageToken, 25, isInstagram ? "instagram" : undefined);
+  let targetAssetId = account.externalId;
+  if (isInstagram && account.metadataJson) {
+    try {
+      const parsedMeta = JSON.parse(account.metadataJson);
+      if (parsedMeta.pageId) targetAssetId = parsedMeta.pageId;
+    } catch {
+      // Fallback
+    }
+  }
+
+  const convs = await listPageConversations(targetAssetId, pageToken, 25, isInstagram ? "instagram" : undefined);
 
   let importedMsgs = 0;
   for (const conv of convs) {
     // Determinar remitente (buscar en senders y en el primer mensaje entrante si senders está enmascarado)
-    let customerId = (conv.senders?.data || []).find((s) => s.id !== account.externalId)?.id;
-    let customerName = (conv.senders?.data || []).find((s) => s.id !== account.externalId)?.name;
+    let customerId = (conv.senders?.data || []).find((s) => s.id !== account.externalId && s.id !== targetAssetId)?.id;
+    let customerName = (conv.senders?.data || []).find((s) => s.id !== account.externalId && s.id !== targetAssetId)?.name;
 
     if (!customerId || customerId.startsWith("t_")) {
       const inboundMsg = (conv.messages?.data || []).find(
-        (m) => m.from?.id && m.from.id !== account.externalId
+        (m) => m.from?.id && m.from.id !== account.externalId && m.from.id !== targetAssetId
       );
       if (inboundMsg?.from?.id) {
         customerId = inboundMsg.from.id;
