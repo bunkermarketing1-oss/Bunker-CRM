@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, ChevronDown, Check, Inbox, Users, BarChart3, Building2, Plug } from "lucide-react";
+import { X, ChevronDown, Check, Inbox, Users, BarChart3, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClientOptions } from "@/hooks/useClientOptions";
@@ -224,13 +224,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
             )}
 
-            {/* Opciones directas: Bunker vs Marca seleccionada */}
-            <div className="mt-2 p-2 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl shadow-2xs">
-              <div className="flex items-center justify-between px-1 mb-1.5 text-[10px] text-[#475467] font-semibold">
-                <span className="truncate">
-                  {selectedClient ? `Opciones de ${selectedClient.name}:` : "Opciones de Bunker:"}
-                </span>
-                {selectedClient ? (
+            {/* Opciones directas: Solo aparecen cuando una empresa cliente está seleccionada */}
+            {selectedClient && (
+              <div className="mt-2 p-2 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl shadow-2xs">
+                <div className="flex items-center justify-between px-1 mb-1.5 text-[10px] text-[#475467] font-semibold">
+                  <span className="truncate">Opciones de {selectedClient.name}:</span>
                   <button
                     type="button"
                     onClick={() => handleSelectClient("all")}
@@ -238,78 +236,39 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   >
                     Ver Bunker
                   </button>
-                ) : (
-                  <span className="text-[9px] text-amber-800 bg-amber-50 border border-amber-300/80 px-1.5 py-0.5 rounded font-mono uppercase font-semibold">
-                    Matriz
-                  </span>
-                )}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Link
+                    href={`${ROUTES.INBOX}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Inbox className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
+                    <span className="truncate">Bandeja</span>
+                  </Link>
+                  <Link
+                    href={`${ROUTES.LEADS}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Users className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
+                    <span className="truncate">Leads</span>
+                  </Link>
+                  <Link
+                    href={`${ROUTES.CAMPAIGNS}?clientId=${selectedClient.id}`}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
+                    <span className="truncate">Campañas</span>
+                  </Link>
+                  <Link
+                    href={clientDetailRoute(selectedClient.id)}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
+                    <span className="truncate">Ficha</span>
+                  </Link>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                {selectedClient ? (
-                  <>
-                    <Link
-                      href={`${ROUTES.INBOX}?clientId=${selectedClient.id}`}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Inbox className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Bandeja</span>
-                    </Link>
-                    <Link
-                      href={`${ROUTES.LEADS}?clientId=${selectedClient.id}`}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Users className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Leads</span>
-                    </Link>
-                    <Link
-                      href={`${ROUTES.CAMPAIGNS}?clientId=${selectedClient.id}`}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Campañas</span>
-                    </Link>
-                    <Link
-                      href={clientDetailRoute(selectedClient.id)}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Ficha</span>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href={ROUTES.CLIENTS}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Empresas</span>
-                    </Link>
-                    <Link
-                      href={ROUTES.INTEGRATIONS}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Plug className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Canales</span>
-                    </Link>
-                    <Link
-                      href={ROUTES.INBOX}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <Inbox className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Bandeja</span>
-                    </Link>
-                    <Link
-                      href={ROUTES.DASHBOARD}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-105 transition-transform" />
-                      <span className="truncate">Dashboard</span>
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         )}
 
