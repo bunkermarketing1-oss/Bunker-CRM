@@ -697,6 +697,7 @@ function IntegrationsPageContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredChannelsList.map((acc: any) => {
                 const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
+                const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
                 const assignedClient = clients.find((c) => c.id === acc.clientId);
                 const hasClient = Boolean(assignedClient);
 
@@ -724,13 +725,15 @@ function IntegrationsPageContent() {
                         {/* Status Badge */}
                         <span
                           className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${
-                            isFB
+                            isIG
+                              ? "bg-pink-50 text-pink-700 border-pink-200"
+                              : isFB
                               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                               : "bg-blue-50 text-blue-800 border-blue-200"
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${isFB ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
-                          <span>{isFB ? "LEADS EN VIVO" : "MÉTRICAS"}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isIG ? "bg-pink-500 animate-pulse" : isFB ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
+                          <span>{isIG ? "DMS & MENSAJES" : isFB ? "LEADS & MENSAJES" : "MÉTRICAS & ANUNCIOS"}</span>
                         </span>
                       </div>
 
@@ -1188,7 +1191,8 @@ function IntegrationsPageContent() {
                   ) : (
                     filteredAgencyAccounts.map((acc) => {
                       const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
-                      const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+
                       const isAd = acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
                       const isTikTok = acc.provider === "tiktok" || acc.accountType?.includes("tiktok");
 

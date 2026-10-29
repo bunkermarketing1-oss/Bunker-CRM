@@ -310,8 +310,11 @@ export async function listPageConversations(pageId: string, pageToken: string, l
     const res = await graphFetch<{ data?: MetaPageConversation[] }>(
       graphUrl(`${pageId}/conversations`, {
         access_token: pageToken,
-        fields: "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}",
-        limit: String(limit),
+        fields:
+          platform === "instagram"
+            ? "id,updated_time,snippet,unread_count,senders,messages.limit(5){id,message,created_time,from}"
+            : "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}",
+        limit: platform === "instagram" ? "10" : String(limit),
         ...(platform ? { platform } : {}),
       })
     );
