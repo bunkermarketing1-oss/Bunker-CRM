@@ -33,7 +33,7 @@ export interface NavItem {
 
 export interface NavSection {
   title: { es: string; en: string };
-  badge?: "ADMIN";
+  badge?: "ADMIN" | "PRÓXIMAMENTE" | string;
   items: NavItem[];
 }
 
@@ -99,41 +99,13 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     badge: "ADMIN",
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
-      {
-        href: ROUTES.AI_OPTIMIZER,
-        icon: Sparkles,
-        label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
-      {
-        href: ROUTES.SOCIAL_POSTS,
-        icon: Share2,
-        label: { es: "Publicaciones Sociales", en: "Social Posts" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
-      {
-        href: ROUTES.CONTENT_CALENDAR,
-        icon: CalendarDays,
-        label: { es: "Calendario Editorial", en: "Content Calendar" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
       { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
     ],
   },
   {
-    title: { es: "Mensajería & Automatización", en: "Messaging & Automation" },
+    title: { es: "Mensajería & Telefonía", en: "Messaging & Calls" },
     badge: "ADMIN",
     items: [
-      {
-        href: ROUTES.SMS,
-        icon: MessageSquare,
-        label: { es: "Mensajería SMS", en: "SMS Messaging" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
       {
         href: ROUTES.CALLS,
         icon: PhoneCall,
@@ -144,19 +116,48 @@ export const ADMIN_NAVIGATION: NavSection[] = [
         icon: Radio,
         label: { es: "Asesores en vivo", en: "Live Advisors" },
       },
-      {
-        href: ROUTES.AUTOMATIONS,
-        icon: Workflow,
-        label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
     ],
   },
   {
     title: { es: "Administración", en: "Agency Settings" },
     items: [
       { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración & Servidor", en: "Settings & Server" } },
+    ],
+  },
+  {
+    title: { es: "En Construcción", en: "Under Construction" },
+    badge: "PRÓXIMAMENTE",
+    items: [
+      {
+        href: ROUTES.AI_OPTIMIZER,
+        icon: Sparkles,
+        label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" },
+        disabled: true,
+      },
+      {
+        href: ROUTES.SOCIAL_POSTS,
+        icon: Share2,
+        label: { es: "Publicaciones Sociales", en: "Social Posts" },
+        disabled: true,
+      },
+      {
+        href: ROUTES.CONTENT_CALENDAR,
+        icon: CalendarDays,
+        label: { es: "Calendario Editorial", en: "Content Calendar" },
+        disabled: true,
+      },
+      {
+        href: ROUTES.SMS,
+        icon: MessageSquare,
+        label: { es: "Mensajería SMS", en: "SMS Messaging" },
+        disabled: true,
+      },
+      {
+        href: ROUTES.AUTOMATIONS,
+        icon: Workflow,
+        label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" },
+        disabled: true,
+      },
     ],
   },
 ];
