@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   BarChart3,
   RefreshCw,
@@ -202,11 +203,20 @@ interface CampaignsData {
 }
 
 export default function CampaignsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando campañas...</div>}>
+      <CampaignsPageContent />
+    </Suspense>
+  );
+}
+
+function CampaignsPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser || user?.role === "CLIENT");
 
   const [days, setDays] = useState(30);
-  const [clientId, setClientId] = useState("all");
+  const [clientId, setClientId] = useState(searchParams.get("clientId") ?? "all");
   const [selectedAccountId, setSelectedAccountId] = useState("all");
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [metric, setMetric] = useState<Metric>("spend");
@@ -216,11 +226,9 @@ export default function CampaignsPage() {
   const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const param = new URLSearchParams(window.location.search).get("clientId");
-      if (param) setClientId(param);
-    }
-  }, []);
+    const param = searchParams.get("clientId") ?? "all";
+    setClientId(param);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user || isClient) return;
@@ -249,12 +257,7 @@ export default function CampaignsPage() {
     }
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const param = new URLSearchParams(window.location.search).get("clientId");
-      if (param) setClientId(param);
-    }
-  }, []);
+  
 
   useEffect(() => {
     if (user) fetchData();

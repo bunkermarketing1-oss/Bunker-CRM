@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Inbox,
@@ -143,7 +144,16 @@ function formatTimeAgo(isoString: string): string {
 }
 
 export default function UnifiedInboxPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando bandeja de entrada...</div>}>
+      <UnifiedInboxPageContent />
+    </Suspense>
+  );
+}
+
+function UnifiedInboxPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser);
 
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -165,9 +175,15 @@ export default function UnifiedInboxPage() {
 
   // Filtros
   const [activeChannel, setActiveChannel] = useState<string>("all");
-  const [selectedClientId, setSelectedClientId] = useState<string>("all");
+  const [selectedClientId, setSelectedClientId] = useState<string>(searchParams.get("clientId") ?? "all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Sincronizar clientId cuando cambie el selector de empresa o la URL
+  useEffect(() => {
+    const cid = searchParams.get("clientId") ?? "all";
+    setSelectedClientId(cid);
+  }, [searchParams]);
 
   // Respuestas
   const [replyText, setReplyText] = useState("");
@@ -176,14 +192,6 @@ export default function UnifiedInboxPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFetchingRef = useRef(false);
-
-  // Leer clientId de la URL al cargar si viene de un acceso directo o selector
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const param = new URLSearchParams(window.location.search).get("clientId");
-      if (param) setSelectedClientId(param);
-    }
-  }, []);
 
   // Debounce del input de búsqueda para no saturar consultas en servidor
   useEffect(() => {

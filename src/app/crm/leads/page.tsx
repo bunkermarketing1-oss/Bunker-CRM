@@ -105,8 +105,8 @@ function LeadsPageContent() {
 
   // Sincronizar filtro si cambia el parámetro de URL (ej. navegación desde el Sidebar)
   useEffect(() => {
-    const cid = searchParams.get("clientId");
-    if (cid && cid !== clientFilter) {
+    const cid = searchParams.get("clientId") ?? "all";
+    if (cid !== clientFilter) {
       setClientFilter(cid);
     }
   }, [searchParams, clientFilter]);

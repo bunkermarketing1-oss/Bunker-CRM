@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   KanbanSquare,
   Plus,
@@ -8,8 +9,22 @@ import {
   Building,
   X,
 } from "lucide-react";
+import { useClientOptions } from "@/hooks/useClientOptions";
 
 export default function PipelinePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando pipeline...</div>}>
+      <PipelineContent />
+    </Suspense>
+  );
+}
+
+function PipelineContent() {
+  const searchParams = useSearchParams();
+  const clientId = searchParams.get("clientId");
+  const clients = useClientOptions();
+  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+
   const [stages, setStages] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({ totalPipelineValue: 0, openDealsCount: 0 });
   const [loading, setLoading] = useState(true);
@@ -23,10 +38,11 @@ export default function PipelinePage() {
     probability: "50",
   });
 
-  const fetchPipeline = async () => {
+  const fetchPipeline = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/pipeline");
+      const query = clientId && clientId !== "all" ? `?clientId=${encodeURIComponent(clientId)}` : "";
+      const res = await fetch(`/api/pipeline${query}`);
       const json = await res.json();
       if (json.success) {
         setStages(json.stages);
@@ -40,11 +56,11 @@ export default function PipelinePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clientId, dealForm.stageId]);
 
   useEffect(() => {
     fetchPipeline();
-  }, []);
+  }, [fetchPipeline]);
 
   const handleMoveStage = async (oppId: string, nextStageId: string, status?: string) => {
     try {
@@ -66,10 +82,14 @@ export default function PipelinePage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const payload: Record<string, any> = { ...dealForm };
+      if (clientId && clientId !== "all") {
+        payload.clientId = clientId;
+      }
       const res = await fetch("/api/pipeline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dealForm),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (json.success) {
@@ -96,11 +116,18 @@ export default function PipelinePage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#EAECF0]">
         <div>
-          <h1 className="text-3xl font-semibold text-[#101828] tracking-tight">
-            Pipeline Comercial de Negocios
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-semibold text-[#101828] tracking-tight">
+              Pipeline Comercial de Negocios
+            </h1>
+            {activeClient && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300">
+                {activeClient.name}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-[#475467] mt-1 max-w-xl">
-            Embudo visual por etapas. Monitorea probabilidad de cierre y valor proyectado de la agencia.
+            Embudo visual por etapas. Monitorea probabilidad de cierre y valor proyectado {activeClient ? `de ${activeClient.name}` : "de la agencia"}.
           </p>
         </div>
 

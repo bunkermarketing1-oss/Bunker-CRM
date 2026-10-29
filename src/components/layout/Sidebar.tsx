@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { X, ChevronDown, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -17,12 +17,27 @@ interface SidebarProps {
   onOpenAiModal?: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar(props: SidebarProps) {
+  return (
+    <Suspense fallback={null}>
+      <SidebarContent {...props} />
+    </Suspense>
+  );
+}
+
+function SidebarContent({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { language } = useLanguage();
   const isClient = Boolean(user?.isClientUser);
   const sections = navigationFor(user);
+
+  const filtrableRoutes = useMemo<string[]>(
+    () => [ROUTES.DASHBOARD, ROUTES.INBOX, ROUTES.LEADS, ROUTES.CAMPAIGNS, ROUTES.PIPELINE],
+    []
+  );
 
   // En móvil el menú es un panel superpuesto: al navegar debe cerrarse solo.
   useEffect(() => {
@@ -36,18 +51,38 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sincronizar el cliente seleccionado con los parámetros de la URL activa
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("bunker_selected_client_id");
-      if (saved) setSelectedClientId(saved);
+    const urlCid = searchParams.get("clientId");
+    if (urlCid) {
+      setSelectedClientId(urlCid);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("bunker_selected_client_id", urlCid);
+      }
+    } else if (filtrableRoutes.includes(pathname)) {
+      setSelectedClientId("all");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("bunker_selected_client_id", "all");
+      }
     }
-  }, []);
+  }, [searchParams, pathname, filtrableRoutes]);
 
   const handleSelectClient = (id: string) => {
     setSelectedClientId(id);
     setIsDropdownOpen(false);
     if (typeof window !== "undefined") {
       localStorage.setItem("bunker_selected_client_id", id);
+    }
+
+    const isFiltrable = filtrableRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+    if (isFiltrable) {
+      const baseRoute =
+        filtrableRoutes.find((route) => pathname === route || pathname.startsWith(`${route}/`)) || pathname;
+      if (id !== "all") {
+        router.push(`${baseRoute}?clientId=${encodeURIComponent(id)}`);
+      } else {
+        router.push(baseRoute);
+      }
     }
   };
 
@@ -75,10 +110,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return sections.map((sec) => ({
       ...sec,
       items: sec.items.map((item) => {
-        if (item.href === ROUTES.INBOX || item.href === ROUTES.LEADS || item.href === ROUTES.CAMPAIGNS) {
+        if (
+          item.href === ROUTES.DASHBOARD ||
+          item.href === ROUTES.INBOX ||
+          item.href === ROUTES.LEADS ||
+          item.href === ROUTES.CAMPAIGNS ||
+          item.href === ROUTES.PIPELINE
+        ) {
           return {
             ...item,
-            href: `${item.href}?clientId=${selectedClientId}`,
+            href: `${item.href}?clientId=${encodeURIComponent(selectedClientId)}`,
           };
         }
         return item;
@@ -103,7 +144,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }`}
       >
         <div className="flex items-center justify-between px-2 pt-1 pb-3 mb-1">
-          <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 group">
+          <Link
+            href={
+              selectedClientId !== "all" && !isClient
+                ? `${ROUTES.DASHBOARD}?clientId=${encodeURIComponent(selectedClientId)}`
+                : ROUTES.DASHBOARD
+            }
+            className="flex items-center gap-2 group"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/bunker-logo.png"
@@ -197,7 +245,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <>
                     <div className="border-t border-[#F2F4F7] my-1" />
                     <div className="px-2 py-0.5 text-[9px] font-semibold text-[#98A2B3] uppercase">
-                      Clientes y Marcas (${clients.length})
+                      Clientes y Marcas ({clients.length})
                     </div>
                     {clients.map((c) => (
                       <button
@@ -223,7 +271,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 )}
               </div>
             )}
-
           </div>
         )}
 
