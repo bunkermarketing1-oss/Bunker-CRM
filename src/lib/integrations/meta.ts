@@ -332,18 +332,49 @@ export interface SendMetaMessageResult {
 
 /** Envía un mensaje de texto oficial a un prospecto por Facebook Messenger o Instagram Direct. */
 export async function sendMetaDirectMessage(pageToken: string, recipientId: string, text: string) {
-  return graphFetch<SendMetaMessageResult>(
-    graphUrl("me/messages", { access_token: pageToken }),
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipient: { id: recipientId },
-        message: { text },
-        messaging_type: "RESPONSE",
-      }),
+  try {
+    return await graphFetch<SendMetaMessageResult>(
+      graphUrl("me/messages", { access_token: pageToken }),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message: { text },
+          messaging_type: "RESPONSE",
+        }),
+      }
+    );
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    if (
+      errMsg.includes("(#10)") ||
+      errMsg.includes("fuera del período permitido") ||
+      errMsg.includes("allowed window") ||
+      errMsg.includes("outside")
+    ) {
+      try {
+        return await graphFetch<SendMetaMessageResult>(
+          graphUrl("me/messages", { access_token: pageToken }),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              recipient: { id: recipientId },
+              message: { text },
+              messaging_type: "MESSAGE_TAG",
+              tag: "HUMAN_AGENT",
+            }),
+          }
+        );
+      } catch {
+        throw new Error(
+          "Meta bloqueó la respuesta: pasaron más de 24 horas desde el último mensaje del cliente (política oficial de Meta/Facebook). El cliente debe volver a escribirte, o puedes contactarlo por WhatsApp, llamada o SMS."
+        );
+      }
     }
-  );
+    throw err;
+  }
 }
 
 export interface MetaSenderProfile {

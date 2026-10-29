@@ -18,6 +18,8 @@ import {
   UserCheck,
   UserPlus,
   Loader2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import type {
@@ -189,6 +191,7 @@ function UnifiedInboxPageContent() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFetchingRef = useRef(false);
@@ -266,6 +269,10 @@ function UnifiedInboxPageContent() {
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === selectedConvId) || conversations[0] || null;
   }, [conversations, selectedConvId]);
+
+  useEffect(() => {
+    setErrorMessage(null);
+  }, [selectedConvId]);
 
   const convId = activeConversation?.id;
   const recipient = activeConversation?.recipient;
@@ -362,6 +369,7 @@ function UnifiedInboxPageContent() {
 
     setSending(true);
     setFeedback(null);
+    setErrorMessage(null);
     try {
       const res = await fetch("/api/inbox", {
         method: "POST",
@@ -405,11 +413,11 @@ function UnifiedInboxPageContent() {
         setFeedback("¡Respuesta enviada correctamente!");
         setTimeout(() => setFeedback(null), 3000);
       } else {
-        alert(json.error || "No se pudo enviar la respuesta.");
+        setErrorMessage(json.error || "No se pudo enviar la respuesta.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error de conexión al enviar respuesta.";
-      alert(msg);
+      setErrorMessage(msg);
     } finally {
       setSending(false);
     }
@@ -903,6 +911,24 @@ function UnifiedInboxPageContent() {
                 <div className="px-4 py-2 bg-emerald-50 border-t border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   <span>{feedback}</span>
+                </div>
+              )}
+
+              {/* Banner de Error / Ventana 24h de Meta */}
+              {errorMessage && (
+                <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 text-xs text-amber-900 flex items-start justify-between gap-3 animate-in fade-in">
+                  <div className="flex items-start gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed font-medium">{errorMessage}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setErrorMessage(null)}
+                    className="text-amber-700 hover:text-amber-950 p-0.5 shrink-0"
+                    title="Cerrar aviso"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 
