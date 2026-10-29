@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, ChevronDown, Check, Inbox, Users, BarChart3, Building2 } from "lucide-react";
+import { X, ChevronDown, Check, Inbox, Users, BarChart3, Building2, Shield, Tag, Plug } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useClientOptions } from "@/hooks/useClientOptions";
@@ -138,6 +138,40 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         ) : (
           <div className="relative mb-3.5" ref={dropdownRef}>
+            {/* Pestañas de separación clara: Bunker (Agencia) vs Marcas / Clientes */}
+            <div className="flex items-center p-1 bg-[#F2F4F7] rounded-xl mb-2 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => handleSelectClient("all")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all cursor-pointer ${
+                  selectedClientId === "all"
+                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                    : "text-[#667085] hover:text-slate-900"
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="truncate">Bunker</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedClientId === "all" && clients.length > 0) {
+                    handleSelectClient(clients[0].id);
+                  }
+                  setIsDropdownOpen((prev) => !prev);
+                }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all cursor-pointer ${
+                  selectedClientId !== "all"
+                    ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                    : "text-[#667085] hover:text-slate-900"
+                }`}
+              >
+                <Tag className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="truncate">Marcas ({clients.length})</span>
+              </button>
+            </div>
+
+            {/* Selector interactivo de cuenta activa */}
             <button
               type="button"
               onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -150,17 +184,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     : "bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950"
                 } flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs`}
               >
-                {selectedClient ? initialsOf(selectedClient.name, "CL") : initialsOf(accountName, "BA")}
+                {selectedClient ? initialsOf(selectedClient.name, "CL") : "BM"}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5 flex items-center justify-between">
-                  <span>{selectedClient ? "Empresa Activa" : "Admin Bunker"}</span>
-                  <span className="text-[9px] text-amber-700 font-semibold uppercase">
-                    {selectedClient ? "Filtro activo" : "Global"}
+                  <span>{selectedClient ? "Marca / Cliente" : "Agencia Matriz"}</span>
+                  <span className="text-[9px] text-amber-700 font-semibold uppercase font-mono">
+                    {selectedClient ? "Marca activa" : "Bunker"}
                   </span>
                 </div>
                 <div className="text-xs font-semibold text-[#101828] truncate leading-tight">
-                  {selectedClient ? selectedClient.name : accountName}
+                  {selectedClient ? selectedClient.name : "Bunker Marketing Agency"}
                 </div>
               </div>
               <ChevronDown
@@ -170,11 +204,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               />
             </button>
 
-            {/* Dropdown Menu de selección de empresa */}
+            {/* Dropdown Menu de selección con separación por Agencia vs Clientes/Marcas */}
             {isDropdownOpen && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-[#EAECF0] rounded-xl shadow-lg p-1.5 max-h-60 overflow-y-auto space-y-0.5">
-                <div className="px-2 py-1 text-[10px] font-semibold text-[#98A2B3] uppercase">
-                  Espacio de trabajo
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-[#EAECF0] rounded-xl shadow-xl p-1.5 max-h-64 overflow-y-auto space-y-1">
+                <div className="px-2 pt-1 pb-0.5 text-[10px] font-semibold text-[#98A2B3] uppercase tracking-wider">
+                  Agencia Bunker
                 </div>
                 <button
                   type="button"
@@ -185,46 +219,54 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       : "text-[#344054] hover:bg-[#F8F9FA]"
                   }`}
                 >
-                  <span className="truncate flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    Todas las empresas (Global)
-                  </span>
-                  {selectedClientId === "all" && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-5 h-5 rounded bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-bold text-[9px] flex items-center justify-center shrink-0">
+                      BM
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-medium">Bunker Marketing Agency</div>
+                    </div>
+                  </div>
+                  {selectedClientId === "all" && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-1" />}
                 </button>
 
-                {clients.length > 0 && (
-                  <>
-                    <div className="border-t border-[#F2F4F7] my-1" />
-                    <div className="px-2 py-0.5 text-[9px] font-semibold text-[#98A2B3] uppercase">
-                      Empresas Clientes ({clients.length})
-                    </div>
-                    {clients.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => handleSelectClient(c.id)}
-                        className={`w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
-                          selectedClientId === c.id
-                            ? "bg-amber-50 text-amber-900 font-semibold"
-                            : "text-[#344054] hover:bg-[#F8F9FA]"
-                        }`}
-                      >
-                        <span className="truncate flex items-center gap-2">
-                          <span className="w-5 h-5 rounded bg-[#EAECF0] text-[#344054] text-[9px] font-bold flex items-center justify-center shrink-0">
-                            {initialsOf(c.name, "CL")}
-                          </span>
-                          <span className="truncate">{c.name}</span>
-                        </span>
-                        {selectedClientId === c.id && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
-                      </button>
-                    ))}
-                  </>
+                <div className="border-t border-[#F2F4F7] my-1" />
+
+                <div className="px-2 pt-0.5 pb-1 flex items-center justify-between text-[10px] font-semibold text-[#98A2B3] uppercase tracking-wider">
+                  <span>Clientes o Marcas ({clients.length})</span>
+                </div>
+
+                {clients.length === 0 ? (
+                  <div className="px-3 py-2 text-xs text-[#98A2B3] italic text-center">
+                    No hay marcas conectadas aún
+                  </div>
+                ) : (
+                  clients.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => handleSelectClient(c.id)}
+                      className={`w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                        selectedClientId === c.id
+                          ? "bg-amber-50 text-amber-900 font-semibold"
+                          : "text-[#344054] hover:bg-[#F8F9FA]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-5 h-5 rounded bg-[#EAECF0] text-[#344054] font-bold text-[9px] flex items-center justify-center shrink-0">
+                          {initialsOf(c.name, "CL")}
+                        </div>
+                        <span className="truncate text-xs">{c.name}</span>
+                      </div>
+                      {selectedClientId === c.id && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-1" />}
+                    </button>
+                  ))
                 )}
               </div>
             )}
 
-            {/* Opciones directas de la empresa conectada */}
-            {selectedClient && (
+            {/* Botones directos: Si hay cliente seleccionado, muestra opciones de la marca */}
+            {selectedClient ? (
               <div className="mt-2 p-2 bg-gradient-to-b from-amber-50/70 to-[#FFFDF5] border border-amber-200/80 rounded-xl shadow-2xs">
                 <div className="flex items-center justify-between text-[10px] font-semibold text-amber-950 px-1 mb-1.5">
                   <span className="truncate font-bold">Opciones de {selectedClient.name}:</span>
@@ -233,7 +275,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     onClick={() => handleSelectClient("all")}
                     className="text-[9px] text-amber-700 hover:text-amber-900 underline font-medium cursor-pointer"
                   >
-                    Ver todas
+                    Volver a Bunker
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -263,7 +305,47 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-amber-200/80 hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
                   >
                     <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
-                    <span className="truncate">Ficha</span>
+                    <span className="truncate">Ficha 360°</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* Botones exclusivos para Bunker cuando es directamente de Bunker */
+              <div className="mt-2 p-2 bg-gradient-to-b from-slate-50 to-[#F8F9FA] border border-[#EAECF0] rounded-xl shadow-2xs">
+                <div className="flex items-center justify-between text-[10px] font-semibold text-slate-700 px-1 mb-1.5">
+                  <span className="truncate font-bold">Opciones de Bunker:</span>
+                  <span className="text-[9px] text-amber-800 bg-amber-50 border border-amber-300/80 px-1.5 py-0.5 rounded font-mono uppercase font-semibold">
+                    Matriz
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Link
+                    href={ROUTES.CLIENTS}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Empresas</span>
+                  </Link>
+                  <Link
+                    href={ROUTES.INTEGRATIONS}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Plug className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Integraciones</span>
+                  </Link>
+                  <Link
+                    href={ROUTES.INBOX}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <Inbox className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Bandeja</span>
+                  </Link>
+                  <Link
+                    href={ROUTES.DASHBOARD}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-900 bg-white border border-[#EAECF0] hover:bg-amber-50 hover:border-amber-300 transition-colors shadow-2xs group"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate">Dashboard</span>
                   </Link>
                 </div>
               </div>

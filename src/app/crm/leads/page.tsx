@@ -101,7 +101,15 @@ function LeadsPageContent() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState(searchParams.get("clientId") ?? "all");
+
+  // Sincronizar filtro si cambia el parámetro de URL (ej. navegación desde el Sidebar)
+  useEffect(() => {
+    const cid = searchParams.get("clientId");
+    if (cid && cid !== clientFilter) {
+      setClientFilter(cid);
+    }
+  }, [searchParams, clientFilter]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const tableTopRef = React.useRef<HTMLDivElement>(null);
