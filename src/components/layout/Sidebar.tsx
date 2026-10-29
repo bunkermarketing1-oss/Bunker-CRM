@@ -35,7 +35,15 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
   const sections = navigationFor(user);
 
   const filtrableRoutes = useMemo<string[]>(
-    () => [ROUTES.DASHBOARD, ROUTES.INBOX, ROUTES.LEADS, ROUTES.CAMPAIGNS, ROUTES.PIPELINE],
+    () => [
+      ROUTES.DASHBOARD,
+      ROUTES.INBOX,
+      ROUTES.LEADS,
+      ROUTES.CAMPAIGNS,
+      ROUTES.PIPELINE,
+      ROUTES.INTEGRATIONS,
+      ROUTES.CALLS,
+    ],
     []
   );
 
@@ -59,7 +67,16 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
       if (typeof window !== "undefined") {
         localStorage.setItem("bunker_selected_client_id", urlCid);
       }
-    } else if (filtrableRoutes.includes(pathname)) {
+    } else if (pathname.startsWith(`${ROUTES.CLIENTS}/`)) {
+      const parts = pathname.split("/");
+      const pathClientId = parts[3];
+      if (pathClientId) {
+        setSelectedClientId(pathClientId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("bunker_selected_client_id", pathClientId);
+        }
+      }
+    } else if (filtrableRoutes.includes(pathname) || pathname === ROUTES.CLIENTS) {
       setSelectedClientId("all");
       if (typeof window !== "undefined") {
         localStorage.setItem("bunker_selected_client_id", "all");
@@ -72,6 +89,15 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
     setIsDropdownOpen(false);
     if (typeof window !== "undefined") {
       localStorage.setItem("bunker_selected_client_id", id);
+    }
+
+    if (pathname.startsWith(ROUTES.CLIENTS)) {
+      if (id !== "all") {
+        router.push(`${ROUTES.CLIENTS}/${id}`);
+      } else {
+        router.push(ROUTES.CLIENTS);
+      }
+      return;
     }
 
     const isFiltrable = filtrableRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -110,12 +136,24 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
     return sections.map((sec) => ({
       ...sec,
       items: sec.items.map((item) => {
+        if (item.href === ROUTES.CLIENTS) {
+          return {
+            ...item,
+            href: `${ROUTES.CLIENTS}/${selectedClientId}`,
+            label: {
+              es: selectedClient ? `Ficha de ${selectedClient.name}` : "Ficha de la Empresa",
+              en: selectedClient ? `Profile of ${selectedClient.name}` : "Company Profile",
+            },
+          };
+        }
         if (
           item.href === ROUTES.DASHBOARD ||
           item.href === ROUTES.INBOX ||
           item.href === ROUTES.LEADS ||
           item.href === ROUTES.CAMPAIGNS ||
-          item.href === ROUTES.PIPELINE
+          item.href === ROUTES.PIPELINE ||
+          item.href === ROUTES.INTEGRATIONS ||
+          item.href === ROUTES.CALLS
         ) {
           return {
             ...item,
@@ -125,7 +163,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
         return item;
       }),
     }));
-  }, [sections, isClient, selectedClientId]);
+  }, [sections, isClient, selectedClientId, selectedClient]);
 
   return (
     <>

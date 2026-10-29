@@ -96,7 +96,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   },
   {
     title: { es: "Pautas & Marketing", en: "Ads & Marketing" },
-    badge: "ADMIN",
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
       { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
@@ -104,7 +103,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   },
   {
     title: { es: "Mensajería & Telefonía", en: "Messaging & Calls" },
-    badge: "ADMIN",
     items: [
       {
         href: ROUTES.CALLS,

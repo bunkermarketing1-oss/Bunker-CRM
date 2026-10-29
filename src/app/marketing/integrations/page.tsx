@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Share2,
@@ -71,6 +72,14 @@ interface ClientItem {
 }
 
 export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando integraciones y canales...</div>}>
+      <IntegrationsPageContent />
+    </Suspense>
+  );
+}
+
+function IntegrationsPageContent() {
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [, setCredentialStatus] = useState<any>({});
   const [twilioEnv, setTwilioEnv] = useState<TwilioEnvStatus | null>(null);
@@ -79,6 +88,9 @@ export default function IntegrationsPage() {
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const clientId = searchParams.get("clientId");
+  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
 
   // Vista comercial vs canales (Buffer) vs técnica
   const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
@@ -336,7 +348,7 @@ export default function IntegrationsPage() {
         (c.companyName && c.companyName.toLowerCase().includes(q)) ||
         (c.industry && c.industry.toLowerCase().includes(q))
     );
-  }, [clients, searchFilter]);
+  }, [clients, searchFilter, clientId]);
 
   // Clientes con al menos 1 cuenta conectada
   const activeClientsCount = useMemo(() => {
@@ -386,7 +398,7 @@ export default function IntegrationsPage() {
       if (channelTypeFilter === "unassigned") return !acc.clientId;
       return true;
     });
-  }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients]);
+  }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, clientId]);
 
   const handleOpenConnectForClient = (clientId: string, provider: string = "meta") => {
     setModalClientId(clientId);
