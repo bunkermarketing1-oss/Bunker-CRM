@@ -25,8 +25,8 @@ interface GetInboxOptions {
  * Obtiene las conversaciones y estadísticas de la bandeja de entrada omnicanal
  * filtradas estrictamente por organización y cliente (multi-tenant).
  */
-// Control de auto-sincronización periódica por organización (mínimo 15s entre llamadas a Meta)
-const orgLastSyncMap = new Map<string, number>();
+// Control de auto-sincronización periódica por organización y cliente (mínimo 15s entre llamadas a Meta)
+const clientLastSyncMap = new Map<string, number>();
 const AUTO_SYNC_COOLDOWN_MS = 15000;
 
 export async function getInboxConversations(
@@ -55,13 +55,14 @@ export async function getInboxConversations(
     },
   });
 
-  // 2. Sincronizar páginas conectadas (bajo demanda o auto-sync cada 15s)
+  // 2. Sincronizar páginas conectadas (bajo demanda o auto-sync cada 15s por cliente)
   const now = Date.now();
-  const lastSync = orgLastSyncMap.get(organizationId) || 0;
-  const shouldAutoSync = triggerSync || (now - lastSync > AUTO_SYNC_COOLDOWN_MS && !cleanSearch && channel === "all");
+  const syncKey = `${organizationId}_${targetClientId || "all"}`;
+  const lastSync = clientLastSyncMap.get(syncKey) || 0;
+  const shouldAutoSync = triggerSync || (now - lastSync > AUTO_SYNC_COOLDOWN_MS && !cleanSearch);
 
   if (shouldAutoSync) {
-    orgLastSyncMap.set(organizationId, now);
+    clientLastSyncMap.set(syncKey, now);
     const pageAccounts = await prisma.connectedAccount.findMany({
       where: {
         organizationId,
@@ -85,28 +86,45 @@ export async function getInboxConversations(
   // 3. Construir filtros de mensajes con soporte de búsqueda en servidor e índices
   const messageWhere: Prisma.MessageWhereInput = {
     organizationId,
-    ...(targetClientId ? { clientId: targetClientId } : {}),
   };
+
+  const andConditions: Prisma.MessageWhereInput[] = [];
+
+  if (targetClientId) {
+    andConditions.push({
+      OR: [
+        { clientId: targetClientId },
+        { lead: { is: { clientId: targetClientId } } },
+      ],
+    });
+  }
 
   if (channel && channel !== "all") {
     if (channel === "comments") {
-      messageWhere.channel = {
-        in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT],
-      };
+      andConditions.push({
+        channel: {
+          in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT],
+        },
+      });
     } else {
-      messageWhere.channel = channel;
+      andConditions.push({ channel });
     }
   }
 
-  
   if (cleanSearch) {
-    messageWhere.OR = [
-      { recipient: { contains: cleanSearch, mode: "insensitive" } },
-      { body: { contains: cleanSearch, mode: "insensitive" } },
-      { lead: { is: { name: { contains: cleanSearch, mode: "insensitive" } } } },
-      { lead: { is: { phone: { contains: cleanSearch } } } },
-      { lead: { is: { email: { contains: cleanSearch, mode: "insensitive" } } } },
-    ];
+    andConditions.push({
+      OR: [
+        { recipient: { contains: cleanSearch, mode: "insensitive" } },
+        { body: { contains: cleanSearch, mode: "insensitive" } },
+        { lead: { is: { name: { contains: cleanSearch, mode: "insensitive" } } } },
+        { lead: { is: { phone: { contains: cleanSearch } } } },
+        { lead: { is: { email: { contains: cleanSearch, mode: "insensitive" } } } },
+      ],
+    });
+  }
+
+  if (andConditions.length > 0) {
+    messageWhere.AND = andConditions;
   }
 
   let dbMessages = await prisma.message.findMany({
@@ -330,13 +348,23 @@ export async function getConversationThread({
 }): Promise<ConversationMessage[]> {
   const where: Prisma.MessageWhereInput = {
     organizationId,
-    ...(targetClientId ? { clientId: targetClientId } : {}),
     ...(leadId
       ? {
           OR: [{ leadId }, { recipient }],
         }
       : { recipient }),
   };
+
+  if (targetClientId) {
+    where.AND = [
+      {
+        OR: [
+          { clientId: targetClientId },
+          { lead: { is: { clientId: targetClientId } } },
+        ],
+      },
+    ];
+  }
 
   const messages = await prisma.message.findMany({
     where,

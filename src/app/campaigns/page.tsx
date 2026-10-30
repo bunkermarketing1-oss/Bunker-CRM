@@ -15,6 +15,8 @@ import {
   MessageSquare,
   FileSpreadsheet,
   Globe,
+  Building2,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
@@ -224,6 +226,35 @@ function CampaignsPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleSyncCampaigns = async () => {
+    setSyncing(true);
+    setSyncFeedback(null);
+    try {
+      const res = await fetch("/api/campaigns/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: clientId !== "all" ? clientId : undefined }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSyncFeedback({
+          type: "success",
+          text: json.message || "Campañas y métricas de pauta sincronizadas con éxito.",
+        });
+        fetchData();
+        setTimeout(() => setSyncFeedback(null), 5000);
+      } else {
+        setSyncFeedback({ type: "error", text: json.error || "No se pudo sincronizar las campañas." });
+      }
+    } catch (err) {
+      setSyncFeedback({ type: "error", text: err instanceof Error ? err.message : "Error de red al sincronizar" });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   useEffect(() => {
     const param = searchParams.get("clientId") ?? "all";
@@ -280,11 +311,28 @@ function CampaignsPageContent() {
       ]
     : [];
 
+  const activeClient = clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAECF0]">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+              Pautas & Marketing
+            </span>
+            {activeClient ? (
+              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 text-amber-600" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : !isClient ? (
+              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+                Todas las Marcas
+              </span>
+            ) : null}
+          </div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
           </h1>
@@ -293,7 +341,7 @@ function CampaignsPageContent() {
           </p>
         </div>
 
-        {/* Filters: one row above the chart */}
+        {/* Filters and Actions */}
         <div className="flex flex-wrap items-center gap-2">
           {!isClient && (
             <select
@@ -323,15 +371,55 @@ function CampaignsPageContent() {
               </button>
             ))}
           </div>
+
+          <button
+            type="button"
+            onClick={handleSyncCampaigns}
+            disabled={syncing}
+            className="btn-black-gold rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+            title="Sincronizar campañas y métricas recientes de Meta Ads"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${syncing ? "animate-spin" : ""}`} />
+            <span>{syncing ? "Sincronizando..." : "Sincronizar Meta"}</span>
+          </button>
+
           <button
             onClick={fetchData}
-            aria-label="Actualizar"
+            aria-label="Actualizar datos locales"
             className="p-2 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828] hover:border-amber-400/60 transition-colors"
+            title="Actualizar vista"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-500" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
           </button>
         </div>
       </div>
+
+      {/* Sync Feedback Banner */}
+      {syncFeedback && (
+        <div
+          className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-2 ${
+            syncFeedback.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {syncFeedback.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
+            )}
+            <span>{syncFeedback.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncFeedback(null)}
+            className="text-xs font-semibold hover:opacity-75"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-2.5 shadow-sm">
@@ -505,8 +593,19 @@ function CampaignsPageContent() {
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {data.campaigns.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="px-4 py-8 text-center text-[#667085]">
-                        No hay campañas sincronizadas todavía.
+                      <td colSpan={10} className="px-4 py-10 text-center text-[#667085]">
+                        <div className="max-w-md mx-auto space-y-3">
+                          <p className="text-xs">No hay campañas sincronizadas todavía para las cuentas seleccionadas.</p>
+                          <button
+                            type="button"
+                            onClick={handleSyncCampaigns}
+                            disabled={syncing}
+                            className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 shadow-2xs"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${syncing ? "animate-spin" : ""}`} />
+                            <span>{syncing ? "Sincronizando de Meta Ads..." : "Sincronizar Campañas Ahora"}</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )}

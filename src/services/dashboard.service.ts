@@ -107,7 +107,21 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
       select: { id: true, name: true, companyName: true, email: true, phone: true, avatarUrl: true, source: true, status: true, createdAt: true },
     }),
     scope.clientId
-      ? Promise.resolve([])
+      ? prisma.connectedAccount
+          .findMany({
+            where: { organizationId: scope.organizationId, clientId: scope.clientId },
+            select: { id: true, accountName: true, accountType: true, status: true, lastSyncAt: true },
+            orderBy: { accountName: "asc" },
+          })
+          .then((accounts) =>
+            accounts.map((a) => ({
+              id: a.id,
+              provider: a.accountType,
+              name: a.accountName,
+              status: a.status,
+              lastSyncAt: a.lastSyncAt,
+            }))
+          )
       : prisma.integration.findMany({
           where: { organizationId: scope.organizationId },
           select: { id: true, provider: true, name: true, status: true, lastSyncAt: true },

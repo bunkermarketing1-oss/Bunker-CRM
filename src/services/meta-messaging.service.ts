@@ -266,6 +266,12 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
   const isInstagram = channel === "instagram";
   const accountType = isInstagram ? ACCOUNT_TYPE.INSTAGRAM_BUSINESS : ACCOUNT_TYPE.FACEBOOK_PAGE;
 
+  let effectiveClientId = targetClientId;
+  if (!effectiveClientId && leadId) {
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { clientId: true } });
+    if (lead?.clientId) effectiveClientId = lead.clientId;
+  }
+
   // Buscar la cuenta conectada activa con token
   let connectedAccount = await prisma.connectedAccount.findFirst({
     where: {
@@ -273,7 +279,7 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
       status: ACCOUNT_STATUS.ACTIVE,
       accessTokenEnc: { not: null },
       accountType,
-      ...(targetClientId ? { clientId: targetClientId } : {}),
+      ...(effectiveClientId ? { clientId: effectiveClientId } : {}),
     },
     select: { id: true, accessTokenEnc: true, clientId: true, accountName: true },
   });
@@ -367,7 +373,11 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     }
   }
 
-  const convs = await listPageConversations(targetAssetId, pageToken, 25, isInstagram ? "instagram" : undefined);
+  let convs = await listPageConversations(targetAssetId, pageToken, 25, isInstagram ? "instagram" : undefined);
+  if (isInstagram && convs.length === 0 && targetAssetId !== account.externalId) {
+    const fallbackConvs = await listPageConversations(account.externalId, pageToken, 25, "instagram");
+    if (fallbackConvs.length > 0) convs = fallbackConvs;
+  }
 
   let importedMsgs = 0;
   for (const conv of convs) {
@@ -449,7 +459,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
         updateData.avatarUrl = profilePic;
         lead.avatarUrl = profilePic;
       }
-      if (!lead.clientId && account.clientId) {
+      if (account.clientId && lead.clientId !== account.clientId) {
         updateData.clientId = account.clientId;
         lead.clientId = account.clientId;
       }
@@ -465,7 +475,14 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     for (const msg of messages) {
       if (!msg.message && !msg.id) continue;
       const existing = await prisma.message.findUnique({ where: { providerMsgId: msg.id } });
-      if (!existing) {
+      if (existing) {
+        if (!existing.clientId && account.clientId) {
+          await prisma.message.update({
+            where: { id: existing.id },
+            data: { clientId: account.clientId, leadId: lead.id },
+          });
+        }
+      } else {
         await prisma.message.create({
           data: {
             organizationId: account.organizationId,

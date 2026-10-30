@@ -156,8 +156,12 @@ function DashboardPageContent() {
                 )}
               </Panel>
 
-              {!isClient && dashboard.integrations.length > 0 && (
-                <Panel icon={Plug} title="Integraciones" action={<PanelLink href={ROUTES.INTEGRATIONS}>Gestionar</PanelLink>}>
+              {dashboard.integrations.length > 0 && (
+                <Panel
+                  icon={Plug}
+                  title={activeClient || isClient ? "Cuentas y Activos Conectados" : "Integraciones Oficiales"}
+                  action={!isClient ? <PanelLink href={ROUTES.INTEGRATIONS}>Gestionar</PanelLink> : undefined}
+                >
                   <IntegrationStatusList integrations={dashboard.integrations} />
                 </Panel>
               )}

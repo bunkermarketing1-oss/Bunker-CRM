@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Send,
   Building,
+  Building2,
   CheckCircle2,
   FileText,
   Users,
@@ -257,9 +258,9 @@ function UnifiedInboxPageContent() {
     [activeChannel, selectedClientId, debouncedSearch, isClient]
   );
 
-  // Carga inicial y sondeo periódico en segundo plano
+  // Carga inicial y sondeo periódico en segundo plano (dispara sincronización inicial al montar o cambiar de filtro)
   useEffect(() => {
-    fetchInbox();
+    fetchInbox(false, true);
     const interval = setInterval(() => {
       fetchInbox(true);
     }, 5000);
@@ -423,11 +424,28 @@ function UnifiedInboxPageContent() {
     }
   };
 
+  const activeClient = selectedClientId !== "all" ? clients.find((c) => c.id === selectedClientId) : null;
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+              Mensajería Omnicanal
+            </span>
+            {activeClient ? (
+              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 text-amber-600" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : !isClient ? (
+              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+                Todas las Marcas
+              </span>
+            ) : null}
+          </div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
             <Inbox className="w-6 h-6 text-amber-500 shrink-0" />
             <span>Bandeja de Entrada Omnicanal</span>

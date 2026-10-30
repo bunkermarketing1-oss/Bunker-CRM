@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeMetaCode, listMetaAdAccounts, listMetaPages } from "@/lib/integrations/meta";
 import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
+import { syncConnectedPageConversations } from "@/services/meta-messaging.service";
 import { subscribeMetaPagesToLeadgen } from "@/services/meta-leads.service";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS, type AccountType } from "@/lib/constants/integrations";
 
@@ -124,20 +125,27 @@ export async function GET(req: NextRequest) {
     for (const page of pages) {
       // Los tokens de página derivados de un token de larga duración no expiran.
       const pageTokenEnc = encryptSecret(page.access_token);
-      await upsertAccount(ACCOUNT_TYPE.FACEBOOK_PAGE, page.id, {
+      const savedPage = await upsertAccount(ACCOUNT_TYPE.FACEBOOK_PAGE, page.id, {
         accountName: page.name,
         accessTokenEnc: pageTokenEnc,
         tokenExpiresAt: null,
         metadataJson: null,
       });
+      syncConnectedPageConversations(savedPage.id).catch((err) =>
+        console.error(`[OAUTH_PAGE_SYNC] Error sincronizando mensajes de página ${page.name}:`, err)
+      );
+
       if (page.instagram_business_account) {
         const ig = page.instagram_business_account;
-        await upsertAccount(ACCOUNT_TYPE.INSTAGRAM_BUSINESS, ig.id, {
+        const savedIg = await upsertAccount(ACCOUNT_TYPE.INSTAGRAM_BUSINESS, ig.id, {
           accountName: ig.username ? `@${ig.username}` : `Instagram de ${page.name}`,
           accessTokenEnc: pageTokenEnc,
           tokenExpiresAt: null,
           metadataJson: JSON.stringify({ pageId: page.id }),
         });
+        syncConnectedPageConversations(savedIg.id).catch((err) =>
+          console.error(`[OAUTH_IG_SYNC] Error sincronizando mensajes de Instagram ${ig.username || page.name}:`, err)
+        );
       }
     }
 

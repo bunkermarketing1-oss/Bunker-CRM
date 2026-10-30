@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { syncMetaIntegration, type SyncSummary } from "@/lib/integrations/meta-sync";
-import { INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
+import { syncConnectedPageConversations } from "@/services/meta-messaging.service";
+import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { isCommercialLicenseActive } from "@/lib/license";
 
 export async function POST(req: NextRequest) {
@@ -38,6 +39,25 @@ export async function POST(req: NextRequest) {
     let summary: SyncSummary | null = null;
     if (integration.provider === INTEGRATION_PROVIDER.META) {
       summary = await syncMetaIntegration(integration.id);
+
+      // Sincronizar también conversaciones de páginas e Instagram conectadas
+      const pageAccounts = await prisma.connectedAccount.findMany({
+        where: {
+          integrationId: integration.id,
+          accountType: { in: [ACCOUNT_TYPE.FACEBOOK_PAGE, ACCOUNT_TYPE.INSTAGRAM_BUSINESS] },
+          status: ACCOUNT_STATUS.ACTIVE,
+          accessTokenEnc: { not: null },
+        },
+        select: { id: true },
+      });
+
+      for (const page of pageAccounts) {
+        try {
+          await syncConnectedPageConversations(page.id);
+        } catch (pageSyncErr) {
+          console.error(`[SYNC_ROUTE] Error sincronizando mensajes de página ${page.id}:`, pageSyncErr);
+        }
+      }
     }
 
     const syncError = summary && summary.errors.length > 0 ? summary.errors.join(" | ") : null;
@@ -73,8 +93,9 @@ export async function POST(req: NextRequest) {
         : `Sincronización completada exitosamente con ${integration.name}.`,
       lastSyncAt: updated.lastSyncAt,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Sync error:", error);
-    return NextResponse.json({ success: false, error: "Error durante la sincronización." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Error durante la sincronización.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
+import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
+import { syncMetaIntegration } from "@/lib/integrations/meta-sync";
+import { syncConnectedPageConversations } from "@/services/meta-messaging.service";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +50,34 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         detailsJson: JSON.stringify({ accountName: account.accountName, fromClientId: account.clientId, toClientId: clientId }),
       },
     });
+
+    // Cascada automática de sincronización de datos para la marca asignada
+    if (clientId) {
+      if (account.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT && account.integrationId) {
+        // Sincronizar campañas y métricas publicitarias
+        syncMetaIntegration(account.integrationId).catch((err) =>
+          console.error(`[SYNC_ON_ASSIGN] Error sincronizando campañas de ${account.accountName}:`, err)
+        );
+      } else if (
+        account.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE ||
+        account.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS
+      ) {
+        // Actualizar leads y mensajes existentes asociados a esta página/cuenta
+        if (account.externalId) {
+          await prisma.message.updateMany({
+            where: {
+              organizationId: user!.organizationId,
+              recipient: account.externalId,
+            },
+            data: { clientId },
+          }).catch(() => {});
+        }
+        // Disparar sincronización inmediata de conversaciones del activo
+        syncConnectedPageConversations(account.id).catch((err) =>
+          console.error(`[SYNC_ON_ASSIGN] Error sincronizando mensajes de ${account.accountName}:`, err)
+        );
+      }
+    }
 
     return NextResponse.json({
       success: true,
