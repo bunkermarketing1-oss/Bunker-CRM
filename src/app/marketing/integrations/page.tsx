@@ -351,11 +351,6 @@ function IntegrationsPageContent() {
     );
   }, [clients, searchFilter, clientId]);
 
-  // Clientes con al menos 1 cuenta conectada
-  const activeClientsCount = useMemo(() => {
-    return clients.filter((c) => (clientAccountsMap.get(c.id) || []).length > 0).length;
-  }, [clients, clientAccountsMap]);
-
   const metaIntegration = useMemo(() => {
     return integrations.find((it) => it.provider === INTEGRATION_PROVIDER.META);
   }, [integrations]);
@@ -935,50 +930,6 @@ function IntegrationsPageContent() {
       {/* ========================================================================= */}
       {activeView === "clients" && (
         <div className="space-y-6">
-          {/* Métricas Resumen para Dirección Comercial */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
-            <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-              <span className="text-[11px] font-medium text-[#716F6A] block">Clientes con Pauta Activa</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-xl font-bold text-[#1F1E1D]">
-                  {activeClientsCount} <span className="text-xs font-normal text-[#9C9890]">/ {clients.length}</span>
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">
-                  {Math.round((activeClientsCount / (clients.length || 1)) * 100)}% conectados
-                </span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-              <span className="text-[11px] font-medium text-[#716F6A] block">Cuentas Publicitarias en Clientes</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-xl font-bold text-[#1F1E1D]">
-                  {allConnectedAccounts.length - agencyAccounts.length}
-                </span>
-                <span className="text-xs text-[#9C9890]">canales activos</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-              <span className="text-[11px] font-medium text-[#716F6A] block">Recepción de Prospectos (Leads)</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  En Tiempo Real
-                </span>
-                <span className="text-[11px] text-[#9C9890]">vía Webhooks</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm">
-              <span className="text-[11px] font-medium text-[#716F6A] block">Pendientes de Asignar</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-xl font-bold text-[#1F1E1D]">{agencyAccounts.length}</span>
-                <span className="text-xs text-amber-700 font-medium">cuentas o páginas libres</span>
-              </div>
-            </div>
-          </div>
-
           {/* Banner de Cuentas Pendientes por Asignar a un Cliente */}
           {agencyAccounts.length > 0 && (
             <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
