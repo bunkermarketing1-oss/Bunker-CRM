@@ -72,7 +72,11 @@ function MetaAiOptimizerContent() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/marketing/ai-optimizer");
+      const url =
+        clientId && clientId !== "all"
+          ? `/api/marketing/ai-optimizer?clientId=${encodeURIComponent(clientId)}`
+          : "/api/marketing/ai-optimizer";
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success) {
         setCampaigns(json.campaigns || []);
@@ -85,7 +89,7 @@ function MetaAiOptimizerContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clientId]);
 
   useEffect(() => {
     fetchOptimizations();
