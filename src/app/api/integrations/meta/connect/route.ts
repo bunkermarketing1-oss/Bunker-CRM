@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const META_STATE_COOKIE = "meta_oauth_state";
 const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
+const META_CLIENT_ID_COOKIE = "meta_oauth_client_id";
 
 /** Inicia el flujo OAuth de Meta: redirige al diálogo de autorización de Facebook. */
 export async function GET(req: NextRequest) {
@@ -43,9 +44,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const { searchParams } = req.nextUrl;
+    const clientIdParam = searchParams.get("clientId");
+    const reauth = searchParams.get("reauth") === "true";
+
     const redirectUri = `${baseUrl}/api/integrations/meta/callback`;
     const state = randomBytes(24).toString("hex");
-    const authUrl = buildMetaAuthUrl(state, redirectUri);
+    const authUrl = buildMetaAuthUrl(state, redirectUri, { reauthenticate: reauth });
     const response = NextResponse.redirect(authUrl);
     const isSecure = isSecureConnection(baseUrl);
 
@@ -68,6 +73,20 @@ export async function GET(req: NextRequest) {
       maxAge: 600,
       path: "/",
     });
+
+    if (clientIdParam && clientIdParam !== "all") {
+      response.cookies.set({
+        name: META_CLIENT_ID_COOKIE,
+        value: clientIdParam,
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        maxAge: 600,
+        path: "/",
+      });
+    } else {
+      response.cookies.delete({ name: META_CLIENT_ID_COOKIE, path: "/" });
+    }
 
     return response;
   } catch (error) {

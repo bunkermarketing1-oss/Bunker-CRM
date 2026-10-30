@@ -81,7 +81,11 @@ async function graphFetchAll<T = any>(path: string, params: Record<string, strin
   return items;
 }
 
-export function buildMetaAuthUrl(state: string, redirectUriOverride?: string) {
+export function buildMetaAuthUrl(
+  state: string,
+  redirectUriOverride?: string,
+  options?: { reauthenticate?: boolean }
+) {
   const cfg = getMetaConfig();
   if (!cfg) throw new Error("Meta no está configurado (META_APP_ID, META_APP_SECRET).");
   const redirectUri = sanitizeHost(redirectUriOverride || cfg.redirectUri);
@@ -91,6 +95,9 @@ export function buildMetaAuthUrl(state: string, redirectUriOverride?: string) {
   url.searchParams.set("state", state);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", META_SCOPES.join(","));
+  if (options?.reauthenticate) {
+    url.searchParams.set("auth_type", "reauthenticate");
+  }
   return url.toString();
 }
 

@@ -1007,7 +1007,7 @@ export default function ClientProfile360Page() {
                     Cuentas Publicitarias Conectadas ({client.connectedAccounts?.length || 0})
                   </h3>
                   <Link
-                    href="/marketing/integrations"
+                    href={`/marketing/integrations?clientId=${client.id}`}
                     className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline"
                   >
                     + Vincular

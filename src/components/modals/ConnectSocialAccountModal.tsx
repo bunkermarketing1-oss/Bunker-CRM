@@ -87,6 +87,20 @@ export function ConnectSocialAccountModal({
     return clients.find((c) => c.id === targetClientId);
   }, [clients, targetClientId]);
 
+  const getMetaConnectUrl = (reauth: boolean = false) => {
+    const params = new URLSearchParams();
+    if (typeof window !== "undefined") {
+      params.set("origin", window.location.origin);
+    }
+    if (targetClientId && targetClientId !== "all") {
+      params.set("clientId", targetClientId);
+    }
+    if (reauth) {
+      params.set("reauth", "true");
+    }
+    return `/api/integrations/meta/connect?${params.toString()}`;
+  };
+
   // Cargar canales existentes e info de conexión
   const loadChannels = useCallback(async () => {
     try {
@@ -344,17 +358,17 @@ export function ConnectSocialAccountModal({
               </button>
 
               <a
-                href="/api/integrations/meta/connect"
+                href={getMetaConnectUrl(true)}
                 onClick={(e) => {
                   if (typeof window !== "undefined") {
                     e.preventDefault();
-                    window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                    window.location.href = getMetaConnectUrl(true);
                   }
                 }}
                 className="text-xs text-slate-500 hover:text-blue-600 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1"
-                title="Reconectar con otra cuenta de Facebook"
+                title="Conectar otra cuenta de Facebook / Cambiar de usuario"
               >
-                <span>Reconectar</span>
+                <span>Cambiar cuenta</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -388,11 +402,11 @@ export function ConnectSocialAccountModal({
 
                   <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <a
-                      href="/api/integrations/meta/connect"
+                      href={getMetaConnectUrl(false)}
                       onClick={(e) => {
                         if (typeof window !== "undefined") {
                           e.preventDefault();
-                          window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
+                          window.location.href = getMetaConnectUrl(false);
                         }
                       }}
                       className="px-6 py-3 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
@@ -400,7 +414,7 @@ export function ConnectSocialAccountModal({
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                       </svg>
-                      <span>Continuar con Facebook / Meta</span>
+                      <span>{activeClient ? `Vincular Facebook / Meta a ${activeClient.name}` : "Continuar con Facebook / Meta"}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </a>
                   </div>
@@ -416,6 +430,40 @@ export function ConnectSocialAccountModal({
                 </div>
               ) : (
                 <div className="space-y-3.5">
+                  {/* Conectar otra cuenta de Meta / Socio */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-blue-50/80 border border-blue-200/90 rounded-2xl">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                        f
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 truncate">
+                          {activeClient
+                            ? `¿Conectar otra cuenta de Meta para ${activeClient.name}?`
+                            : "Conectar otra cuenta de Meta o Socio"}
+                        </div>
+                        <div className="text-[11px] text-slate-600 truncate">
+                          Inicia sesión con otro usuario de Facebook para importar más páginas o activos.
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={getMetaConnectUrl(true)}
+                      onClick={(e) => {
+                        if (typeof window !== "undefined") {
+                          e.preventDefault();
+                          window.location.href = getMetaConnectUrl(true);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors"
+                      title="Permite iniciar sesión con otro usuario en Facebook"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Conectar otra cuenta</span>
+                      <ExternalLink className="w-3 h-3 opacity-80" />
+                    </a>
+                  </div>
+
                   {/* Barra de Filtros y Búsqueda */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">

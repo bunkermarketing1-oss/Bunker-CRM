@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 const META_STATE_COOKIE = "meta_oauth_state";
 const META_REDIRECT_COOKIE = "meta_oauth_redirect_uri";
+const META_CLIENT_ID_COOKIE = "meta_oauth_client_id";
 
 function backToIntegrations(req: NextRequest, params: Record<string, string>) {
   const baseUrl = resolveAppBaseUrl(req);
@@ -23,8 +24,10 @@ function backToIntegrations(req: NextRequest, params: Record<string, string>) {
   const response = NextResponse.redirect(url);
   response.cookies.delete({ name: META_STATE_COOKIE, path: "/" });
   response.cookies.delete({ name: META_REDIRECT_COOKIE, path: "/" });
+  response.cookies.delete({ name: META_CLIENT_ID_COOKIE, path: "/" });
   response.cookies.delete({ name: META_STATE_COOKIE, path: "/api/integrations/meta" });
   response.cookies.delete({ name: META_REDIRECT_COOKIE, path: "/api/integrations/meta" });
+  response.cookies.delete({ name: META_CLIENT_ID_COOKIE, path: "/api/integrations/meta" });
   return response;
 }
 
@@ -40,6 +43,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const expectedState = req.cookies.get(META_STATE_COOKIE)?.value;
   const redirectUri = req.cookies.get(META_REDIRECT_COOKIE)?.value;
+  const rawClientId = req.cookies.get(META_CLIENT_ID_COOKIE)?.value;
+
+  let targetClient: { id: string; name: string } | null = null;
+  if (rawClientId) {
+    targetClient = await prisma.client.findFirst({
+      where: { id: rawClientId, organizationId: user!.organizationId },
+      select: { id: true, name: true },
+    });
+  }
 
   if (searchParams.get("error")) {
     return backToIntegrations(req, { error: searchParams.get("error_description") || "Autorización cancelada en Meta." });
@@ -70,7 +82,13 @@ export async function GET(req: NextRequest) {
 
     const userTokenEnc = encryptSecret(accessToken);
     const scopes = grantedScopes.join(",");
-    const base = { organizationId: user!.organizationId, integrationId: integration.id, scopes, status: ACCOUNT_STATUS.ACTIVE };
+    const base = {
+      organizationId: user!.organizationId,
+      integrationId: integration.id,
+      scopes,
+      status: ACCOUNT_STATUS.ACTIVE,
+      ...(targetClient ? { clientId: targetClient.id } : {}),
+    };
 
     const upsertAccount = (
       accountType: AccountType,
@@ -80,7 +98,7 @@ export async function GET(req: NextRequest) {
       prisma.connectedAccount.upsert({
         where: { integrationId_accountType_externalId: { integrationId: integration!.id, accountType, externalId } },
         create: { ...base, accountType, externalId, ...data },
-        update: { ...base, ...data },
+        update: { ...base, ...(targetClient ? { clientId: targetClient.id } : {}), ...data },
       });
 
     for (const acc of adAccounts) {
@@ -153,7 +171,10 @@ export async function GET(req: NextRequest) {
 
     return backToIntegrations(req, {
       connected: INTEGRATION_PROVIDER.META,
-      message: `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s), ${leadgen.pages - leadgen.errors.length} página(s) recibiendo leads.`,
+      ...(targetClient ? { clientId: targetClient.id } : {}),
+      message: targetClient
+        ? `Cuentas de Meta conectadas y vinculadas exitosamente a ${targetClient.name}: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${leadgen.pages - leadgen.errors.length} página(s) recibiendo leads.`
+        : `Meta conectado: ${adAccounts.length} cuenta(s) publicitaria(s), ${pages.length} página(s), ${summary.campaigns} campaña(s) sincronizada(s), ${leadgen.pages - leadgen.errors.length} página(s) recibiendo leads.`,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";

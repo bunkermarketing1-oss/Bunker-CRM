@@ -28,6 +28,7 @@ import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAcco
 import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
+import { initialsOf } from "@/lib/greeting";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
 const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
@@ -384,6 +385,17 @@ function IntegrationsPageContent() {
   const filteredChannelsList = useMemo(() => {
     return allConnectedAccounts.filter((acc: any) => {
       if (acc.externalId === "meta_master_user") return false;
+
+      // Si hay una marca/cliente activa seleccionada en el CRM
+      if (activeClient) {
+        if (channelTypeFilter === "unassigned") {
+          return !acc.clientId;
+        }
+        if (acc.clientId !== activeClient.id) return false;
+      } else {
+        if (channelTypeFilter === "unassigned") return !acc.clientId;
+      }
+
       if (channelSearchFilter.trim()) {
         const q = channelSearchFilter.toLowerCase();
         const matchesName = acc.accountName?.toLowerCase().includes(q) ?? false;
@@ -395,10 +407,9 @@ function IntegrationsPageContent() {
       if (channelTypeFilter === "pages") return acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
       if (channelTypeFilter === "ads") return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
       if (channelTypeFilter === "instagram") return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
-      if (channelTypeFilter === "unassigned") return !acc.clientId;
       return true;
     });
-  }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, clientId]);
+  }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, activeClient]);
 
   const handleOpenConnectForClient = (clientId: string, provider: string = "meta") => {
     setModalClientId(clientId);
@@ -459,11 +470,17 @@ function IntegrationsPageContent() {
           </button>
 
           <button
-            onClick={() => handleOpenConnectGeneral("meta")}
+            onClick={() =>
+              activeClient
+                ? handleOpenConnectForClient(activeClient.id, "meta")
+                : handleOpenConnectGeneral("meta")
+            }
             className="px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Conectar Canales / Redes</span>
+            <span>
+              {activeClient ? `+ Vincular Red a ${activeClient.name}` : "+ Conectar Canales / Redes"}
+            </span>
           </button>
         </div>
       </div>
@@ -482,6 +499,50 @@ function IntegrationsPageContent() {
             <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
           )}
           <span>{feedback.message}</span>
+        </div>
+      )}
+
+      {/* Banner de Empresa / Marca Seleccionada */}
+      {activeClient && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
+              {initialsOf(activeClient.name, "CL")}
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold tracking-wider text-amber-900 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full uppercase">
+                  Marca Activa
+                </span>
+                <span className="text-xs text-amber-900/80 font-medium">
+                  {allConnectedAccounts.filter((a) => a.clientId === activeClient.id).length} activos vinculados
+                </span>
+              </div>
+              <h2 className="text-base font-bold text-slate-950 truncate">
+                Activos y Redes de {activeClient.name}
+              </h2>
+              <p className="text-xs text-amber-900/80">
+                Páginas de Facebook, Instagram Direct y cuentas publicitarias asignadas exclusivamente a esta marca.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleOpenConnectForClient(activeClient.id, "meta")}
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-400 hover:text-amber-300 text-xs font-semibold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-amber-400" />
+              <span>Vincular Fan Page / Red</span>
+            </button>
+            <Link
+              href="/marketing/integrations"
+              className="px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-amber-300 text-amber-950 text-xs font-semibold transition-colors"
+            >
+              Ver Todas las Marcas
+            </Link>
+          </div>
         </div>
       )}
 
@@ -594,7 +655,14 @@ function IntegrationsPageContent() {
                     : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
                 }`}
               >
-                Todos ({allConnectedAccounts.filter((a) => a.externalId !== "meta_master_user").length})
+                {activeClient ? `Activos de ${activeClient.name}` : "Todos"} (
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.externalId === "meta_master_user") return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
               </button>
               <button
                 onClick={() => setChannelTypeFilter("pages")}
@@ -605,7 +673,13 @@ function IntegrationsPageContent() {
                 }`}
               >
                 Páginas Facebook (
-                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.accountType !== ACCOUNT_TYPE.FACEBOOK_PAGE) return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
               </button>
               <button
                 onClick={() => setChannelTypeFilter("ads")}
@@ -616,7 +690,13 @@ function IntegrationsPageContent() {
                 }`}
               >
                 Cuentas Ads (
-                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT && a.externalId !== "meta_master_user").length})
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.accountType !== ACCOUNT_TYPE.META_AD_ACCOUNT || a.externalId === "meta_master_user") return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
               </button>
               <button
                 onClick={() => setChannelTypeFilter("instagram")}
@@ -627,7 +707,13 @@ function IntegrationsPageContent() {
                 }`}
               >
                 Instagram (
-                {allConnectedAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS) return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
               </button>
               <button
                 onClick={() => setChannelTypeFilter("unassigned")}
@@ -655,41 +741,43 @@ function IntegrationsPageContent() {
 
           {/* Grid de Canales (Estilo Buffer / Cards) */}
           {filteredChannelsList.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-white border border-dashed border-[#D1CFCA] space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#82807C] flex items-center justify-center mx-auto">
-                <Share2 className="w-6 h-6" />
+            <div className="p-12 text-center rounded-3xl bg-white border border-dashed border-[#D1CFCA] space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+                <Share2 className="w-7 h-7" />
               </div>
-              <h4 className="text-sm font-bold text-[#1F1E1D]">
-                No se encontraron canales con este filtro
-              </h4>
-              <p className="text-xs text-[#6B6966] max-w-md mx-auto">
-                {isMetaConnected
-                  ? "Puedes hacer clic en 'Sincronizar Cuentas Meta' para buscar páginas o cuentas creadas recientemente en Business Manager."
-                  : "Conecta tu cuenta de Facebook para importar automáticamente tus canales."}
-              </p>
-              <div className="pt-2 flex items-center justify-center gap-3">
-                {isMetaConnected ? (
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-[#1F1E1D]">
+                  {activeClient
+                    ? `${activeClient.name} aún no tiene activos de redes vinculados`
+                    : "No se encontraron canales con este filtro"}
+                </h4>
+                <p className="text-xs text-[#6B6966] max-w-md mx-auto">
+                  {activeClient
+                    ? `Vincula la Fan Page de Facebook, cuenta de Instagram o cuenta de anuncios de ${activeClient.name} para que sus mensajes, prospectos y campañas se carguen automáticamente al seleccionarla.`
+                    : isMetaConnected
+                    ? "Puedes hacer clic en 'Sincronizar Cuentas Meta' para buscar páginas o cuentas creadas recientemente en Business Manager."
+                    : "Conecta tu cuenta de Facebook para importar automáticamente tus canales."}
+                </p>
+              </div>
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                {activeClient && (
                   <button
-                    onClick={handleRefreshMeta}
-                    disabled={refreshingMeta}
-                    className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+                    type="button"
+                    onClick={() => handleOpenConnectForClient(activeClient.id, "meta")}
+                    className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${refreshingMeta ? "animate-spin" : ""}`} />
-                    <span>Sincronizar Cuentas Meta</span>
+                    <Plus className="w-4 h-4 text-amber-400" />
+                    <span>Vincular Red a {activeClient.name}</span>
                   </button>
-                ) : (
-                  <a
-                    href="/api/integrations/meta/connect"
-                    onClick={(e) => {
-                      if (typeof window !== "undefined") {
-                        e.preventDefault();
-                        window.location.href = `/api/integrations/meta/connect?origin=${encodeURIComponent(window.location.origin)}`;
-                      }
-                    }}
-                    className="px-4 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold shadow-sm"
+                )}
+                {agencyAccounts.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setChannelTypeFilter("unassigned")}
+                    className="px-4 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer"
                   >
-                    Conectar con Facebook
-                  </a>
+                    <span>Ver {agencyAccounts.length} activos sin asignar</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -801,6 +889,38 @@ function IntegrationsPageContent() {
                           )}
                         </div>
                       </div>
+
+                      {/* Acción Rápida con la Marca Activa */}
+                      {activeClient && (
+                        <div className="pt-1">
+                          {!acc.clientId ? (
+                            <button
+                              type="button"
+                              onClick={() => handleAssignClient(acc.id, activeClient.id)}
+                              disabled={assigningId === acc.id}
+                              className="w-full py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Vincular a {activeClient.name} con 1 Clic</span>
+                            </button>
+                          ) : acc.clientId === activeClient.id ? (
+                            <div className="flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-xl">
+                              <span className="flex items-center gap-1 font-semibold">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                Vinculado a {activeClient.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleAssignClient(acc.id, "")}
+                                disabled={assigningId === acc.id}
+                                className="text-[10px] text-slate-500 hover:text-rose-600 hover:underline cursor-pointer"
+                              >
+                                Desvincular
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
