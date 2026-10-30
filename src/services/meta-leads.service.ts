@@ -7,10 +7,11 @@ import {
   listPageLeadForms,
   subscribePageToLeadgen,
   subscribeInstagramToMessaging,
-  type MetaLead,
   type MetaLeadgenChange,
   type MetaWebhookPayload,
+  type MetaLead,
 } from "@/lib/integrations/meta";
+
 import { mapMetaLeadFields } from "@/lib/integrations/meta-lead-fields";
 import { isRecentMetaLead, resolvePageConnection } from "@/lib/integrations/meta-lead-policy";
 import {
@@ -169,7 +170,7 @@ export async function processMetaLeadEvent(eventId: string): Promise<MetaLeadEve
       await ignoreEvent(
         event.id,
         `La página ${event.pageId} está conectada en ${resolution.owners.length} organizaciones o clientes distintos. ` +
-          "Deja una sola conexión para recibir sus leads."
+        "Deja una sola conexión para recibir sus leads."
       );
       return META_LEAD_EVENT_STATUS.IGNORED;
     }
@@ -355,11 +356,19 @@ export interface MetaLeadsSyncSummary {
  * leads de las últimas `sinceHours` horas que no llegaron (o quedaron sin procesar) y
  * reintenta los eventos fallidos o abandonados en `received`.
  */
-export async function syncMetaLeads(sinceHours: number, organizationId?: string): Promise<MetaLeadsSyncSummary> {
+export async function syncMetaLeads(
+  sinceHours: number,
+  organizationId?: string,
+  clientId?: string | null
+): Promise<MetaLeadsSyncSummary> {
   const summary: MetaLeadsSyncSummary = { pages: 0, recovered: 0, retried: 0, errors: [] };
   const sinceUnix = Math.floor((Date.now() - sinceHours * 60 * 60 * 1000) / 1000);
 
-  const pageWhere: Record<string, unknown> = { ...connectedPageWhere };
+  const pageWhere: Record<string, unknown> = {
+    ...connectedPageWhere,
+    ...(organizationId ? { organizationId } : {}),
+    ...(clientId ? { clientId } : {}),
+  };
   if (organizationId) {
     pageWhere.organizationId = organizationId;
   }
@@ -477,10 +486,10 @@ export async function getPagesLeadgenStatus(
   const pageIds = pages.map((p) => p.externalId).filter((id): id is string => Boolean(id));
   const lastLeads = pageIds.length
     ? await prisma.metaLeadEvent.groupBy({
-        by: ["pageId"],
-        where: { organizationId, status: META_LEAD_EVENT_STATUS.PROCESSED, pageId: { in: pageIds } },
-        _max: { processedAt: true },
-      })
+      by: ["pageId"],
+      where: { organizationId, status: META_LEAD_EVENT_STATUS.PROCESSED, pageId: { in: pageIds } },
+      _max: { processedAt: true },
+    })
     : [];
   const lastLeadByPage = new Map(lastLeads.map((row) => [row.pageId, row._max.processedAt]));
 

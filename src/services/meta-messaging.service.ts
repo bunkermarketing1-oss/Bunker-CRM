@@ -381,9 +381,25 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
 
   let importedMsgs = 0;
   for (const conv of convs) {
-    // Determinar remitente (buscar en senders y en el primer mensaje entrante si senders está enmascarado)
-    let customerId = (conv.senders?.data || []).find((s) => s.id !== account.externalId && s.id !== targetAssetId)?.id;
-    let customerName = (conv.senders?.data || []).find((s) => s.id !== account.externalId && s.id !== targetAssetId)?.name;
+    // Determinar remitente (buscar en participants para Instagram, senders para Messenger, o en mensajes entrantes)
+    let customerId: string | undefined;
+    let customerName: string | undefined;
+
+    if (isInstagram && conv.participants?.data) {
+      const part = conv.participants.data.find((p) => p.id !== account.externalId && p.id !== targetAssetId);
+      if (part) {
+        customerId = part.id;
+        customerName = part.username ? `@${part.username}` : part.name;
+      }
+    }
+
+    if (!customerId && conv.senders?.data) {
+      const sender = conv.senders.data.find((s) => s.id !== account.externalId && s.id !== targetAssetId);
+      if (sender) {
+        customerId = sender.id;
+        customerName = sender.name;
+      }
+    }
 
     if (!customerId || customerId.startsWith("t_")) {
       const inboundMsg = (conv.messages?.data || []).find(
@@ -391,7 +407,9 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
       );
       if (inboundMsg?.from?.id) {
         customerId = inboundMsg.from.id;
-        if (inboundMsg.from.name && !customerName) customerName = inboundMsg.from.name;
+        if (!customerName) {
+          customerName = inboundMsg.from.name || (inboundMsg.from.username ? `@${inboundMsg.from.username}` : undefined);
+        }
       }
     }
 

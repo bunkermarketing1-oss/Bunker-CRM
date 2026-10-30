@@ -96,7 +96,7 @@ export function buildMetaAuthUrl(
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", META_SCOPES.join(","));
   if (options?.reauthenticate) {
-    url.searchParams.set("auth_type", "reauthenticate");
+    url.searchParams.set("auth_type", "reauthenticate,rerequest");
   }
   return url.toString();
 }
@@ -295,11 +295,17 @@ export interface MetaConversationSender {
   email?: string;
 }
 
+export interface MetaConversationParticipant {
+  id: string;
+  username?: string;
+  name?: string;
+}
+
 export interface MetaConversationMessageItem {
   id: string;
   message?: string;
   created_time: string;
-  from?: { id: string; name?: string; email?: string };
+  from?: { id: string; name?: string; username?: string; email?: string };
 }
 
 export interface MetaPageConversation {
@@ -308,28 +314,56 @@ export interface MetaPageConversation {
   snippet?: string;
   unread_count?: number;
   senders?: { data?: MetaConversationSender[] };
+  participants?: { data?: MetaConversationParticipant[] };
   messages?: { data?: MetaConversationMessageItem[] };
 }
 
-/** Obtiene las conversaciones recientes de Messenger recibidas en la página de Facebook */
-export async function listPageConversations(pageId: string, pageToken: string, limit = 25, platform?: "messenger" | "instagram") {
+/** Obtiene las conversaciones recientes de Messenger o Instagram Direct */
+export async function listPageConversations(
+  pageId: string,
+  pageToken: string,
+  limit = 25,
+  platform?: "messenger" | "instagram"
+) {
+  const isInstagram = platform === "instagram";
+  const fields = isInstagram
+    ? "id,updated_time,snippet,unread_count,participants{id,username,name},messages.limit(10){id,message,created_time,from}"
+    : "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}";
+
   try {
+    const params: Record<string, string> = {
+      access_token: pageToken,
+      fields,
+      limit: isInstagram ? "15" : String(limit),
+    };
+    if (platform) params.platform = platform;
+
     const res = await graphFetch<{ data?: MetaPageConversation[] }>(
-      graphUrl(`${pageId}/conversations`, {
-        access_token: pageToken,
-        fields:
-          platform === "instagram"
-            ? "id,updated_time,snippet,unread_count,senders,messages.limit(5){id,message,created_time,from}"
-            : "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}",
-        limit: platform === "instagram" ? "10" : String(limit),
-        ...(platform ? { platform } : {}),
-      })
+      graphUrl(`${pageId}/conversations`, params)
     );
-    return res.data || [];
+    if (res.data && res.data.length > 0) return res.data;
   } catch (err) {
-    console.error(`[META_CONVERSATIONS] Error al listar conversaciones de la página ${pageId}:`, err);
-    return [];
+    console.warn(`[META_CONVERSATIONS] Falló consulta primaria en ${pageId} (${platform || "default"}):`, err);
   }
+
+  // Fallback para Instagram: si se consultó directamente el ID de cuenta de Instagram
+  // o si Meta rechaza el parámetro platform=instagram en el nodo
+  if (isInstagram) {
+    try {
+      const fallbackRes = await graphFetch<{ data?: MetaPageConversation[] }>(
+        graphUrl(`${pageId}/conversations`, {
+          access_token: pageToken,
+          fields,
+          limit: "15",
+        })
+      );
+      if (fallbackRes.data && fallbackRes.data.length > 0) return fallbackRes.data;
+    } catch (fallbackErr) {
+      console.warn(`[META_CONVERSATIONS] Falló consulta fallback de Instagram en ${pageId}:`, fallbackErr);
+    }
+  }
+
+  return [];
 }
 
 export interface SendMetaMessageResult {
@@ -354,12 +388,15 @@ export async function sendMetaDirectMessage(pageToken: string, recipientId: stri
     );
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    if (
+    const isWindowViolation =
       errMsg.includes("(#10)") ||
       errMsg.includes("fuera del período permitido") ||
       errMsg.includes("allowed window") ||
-      errMsg.includes("outside")
-    ) {
+      errMsg.includes("outside") ||
+      (err instanceof MetaApiError && err.code === 10);
+
+    if (isWindowViolation) {
+      // 1. Intentar con etiqueta HUMAN_AGENT (permite responder hasta 7 días si la app cuenta con el permiso)
       try {
         return await graphFetch<SendMetaMessageResult>(
           graphUrl("me/messages", { access_token: pageToken }),
@@ -375,9 +412,26 @@ export async function sendMetaDirectMessage(pageToken: string, recipientId: stri
           }
         );
       } catch {
-        throw new Error(
-          "Meta bloqueó la respuesta: pasaron más de 24 horas desde el último mensaje del cliente (política oficial de Meta/Facebook). El cliente debe volver a escribirte, o puedes contactarlo por WhatsApp, llamada o SMS."
-        );
+        // 2. Intentar con etiqueta ACCOUNT_UPDATE como último recurso
+        try {
+          return await graphFetch<SendMetaMessageResult>(
+            graphUrl("me/messages", { access_token: pageToken }),
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                recipient: { id: recipientId },
+                message: { text },
+                messaging_type: "MESSAGE_TAG",
+                tag: "ACCOUNT_UPDATE",
+              }),
+            }
+          );
+        } catch {
+          throw new Error(
+            "Meta bloqueó la respuesta (#10): Han pasado más de 24 horas desde el último mensaje del cliente. Por política de privacidad de Meta, debes esperar a que el usuario escriba nuevamente, o puedes contactarlo vía WhatsApp, SMS o llamada telefónica."
+          );
+        }
       }
     }
     throw err;

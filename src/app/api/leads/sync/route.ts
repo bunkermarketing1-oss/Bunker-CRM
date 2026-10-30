@@ -14,8 +14,14 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const hours = typeof body.hours === "number" && body.hours > 0 ? body.hours : DEFAULT_SYNC_HOURS;
+    const targetClientId = user!.isClientUser
+      ? user!.clientId
+      : typeof body.clientId === "string" && body.clientId !== "all"
+        ? body.clientId
+        : null;
 
-    const summary = await syncMetaLeads(hours, user!.organizationId);
+
+    const summary = await syncMetaLeads(hours, user!.organizationId, targetClientId);
 
     return NextResponse.json({
       success: true,

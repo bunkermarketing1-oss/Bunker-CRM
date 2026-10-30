@@ -74,10 +74,14 @@ export async function POST(req: NextRequest) {
     if (errorResponse) return errorResponse;
 
     const body = await req.json().catch(() => ({}));
-    const { id, action, credentials } = body;
+    const { id, action, credentials, provider } = body;
 
     const integration = await prisma.integration.findFirst({
-      where: { id, organizationId: user!.organizationId },
+      where: id
+        ? { id, organizationId: user!.organizationId }
+        : provider
+        ? { provider, organizationId: user!.organizationId }
+        : { id: "invalid-id" },
     });
 
     if (!integration) {
@@ -86,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     if (action === "disconnect") {
       const updated = await prisma.integration.update({
-        where: { id },
+        where: { id: integration.id },
         data: {
           status: INTEGRATION_STATUS.DISCONNECTED,
           lastSyncAt: null,
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
       });
 
       await prisma.connectedAccount.deleteMany({
-        where: { integrationId: id },
+        where: { integrationId: integration.id },
       });
 
       await prisma.auditLog.create({
@@ -130,7 +134,7 @@ export async function POST(req: NextRequest) {
         const testResult = await testTwilioConnection(credentials);
         if (!testResult.connected) {
           await prisma.integration.update({
-            where: { id },
+            where: { id: integration.id },
             data: {
               status: INTEGRATION_STATUS.ERROR,
               errorMessage: testResult.error,
@@ -147,7 +151,7 @@ export async function POST(req: NextRequest) {
         }
 
         const updated = await prisma.integration.update({
-          where: { id },
+          where: { id: integration.id },
           data: {
             status: INTEGRATION_STATUS.CONNECTED,
             lastSyncAt: new Date(),
@@ -197,7 +201,7 @@ export async function POST(req: NextRequest) {
       }
 
       const updated = await prisma.integration.update({
-        where: { id },
+        where: { id: integration.id },
         data: {
           status: INTEGRATION_STATUS.CONNECTED,
           lastSyncAt: new Date(),

@@ -5,6 +5,7 @@ import { createLeadSchema, updateLeadSchema } from "@/lib/validations/lead";
 import { validateAndNormalizePhone } from "@/lib/phone";
 import { findDuplicateLeads } from "@/lib/validations/duplicate-detector";
 import { computeInitialQualification } from "@/lib/lead-scoring";
+import { clientBelongsToOrg } from "@/lib/validation-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -173,12 +174,20 @@ export async function POST(req: NextRequest) {
     const qualification = data.qualification ?? computeInitialQualification(data);
 
     // Resolve target clientId
-    let targetClientId = (rawBody as any)?.clientId || null;
+    let targetClientId = data.clientId || (rawBody as any)?.clientId || null;
     if (user!.isClientUser) {
       if (!user!.clientId) {
         return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
       }
       targetClientId = user!.clientId;
+    }
+    if (!user!.isClientUser && targetClientId) {
+      if (!(await clientBelongsToOrg(user!.organizationId, targetClientId))) {
+        return NextResponse.json(
+          { success: false, error: "La empresa o cliente especificado no pertenece a su organización." },
+          { status: 400 }
+        );
+      }
     }
 
     // 6. Create Lead in Database with Strict Organization and Client Isolation
@@ -413,6 +422,8 @@ export async function PUT(req: NextRequest) {
           utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
           utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
           aiSummary: data.aiSummary !== undefined ? data.aiSummary : undefined,
+          clientId:
+            !user!.isClientUser && data.clientId !== undefined ? data.clientId : undefined,
         },
         include: {
           owner: { select: { id: true, name: true, email: true, role: true } },

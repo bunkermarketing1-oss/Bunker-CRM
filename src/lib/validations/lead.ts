@@ -165,6 +165,13 @@ export const createLeadSchema = z
       .nullable()
       .transform((val) => (val && val.trim() !== "" ? val : null)),
 
+    clientId: z
+      .string()
+      .uuid("El ID de empresa/marca debe ser un identificador válido.")
+      .optional()
+      .nullable()
+      .transform((val) => (val && val.trim() !== "" ? val : null)),
+
     notes: optionalText(2000),
     campaign: optionalText(150),
     externalLeadId: optionalText(150),
@@ -214,6 +221,12 @@ export const updateLeadSchema = z
     ownerId: z
       .string()
       .uuid("El ID de responsable debe ser un identificador válido.")
+      .nullable()
+      .transform((val) => (val && val.trim() !== "" ? val : null))
+      .optional(),
+    clientId: z
+      .string()
+      .uuid("El ID de empresa/marca debe ser un identificador válido.")
       .nullable()
       .transform((val) => (val && val.trim() !== "" ? val : null))
       .optional(),

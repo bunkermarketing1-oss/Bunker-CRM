@@ -21,6 +21,9 @@ import {
   Loader2,
   AlertTriangle,
   X,
+  Clock,
+  PhoneCall,
+  MessageSquare,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import type {
@@ -270,6 +273,19 @@ function UnifiedInboxPageContent() {
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === selectedConvId) || conversations[0] || null;
   }, [conversations, selectedConvId]);
+
+  const lastInboundMsg = useMemo(() => {
+    if (!activeConversation?.messages || activeConversation.messages.length === 0) return null;
+    return [...activeConversation.messages].reverse().find((m) => m.direction === "inbound") || null;
+  }, [activeConversation?.messages]);
+
+  const isMetaChannel = activeConversation?.channel === "messenger" || activeConversation?.channel === "instagram";
+
+  const is24hExpired = useMemo(() => {
+    if (!isMetaChannel || !lastInboundMsg?.createdAt) return false;
+    const diffHours = (Date.now() - new Date(lastInboundMsg.createdAt).getTime()) / (1000 * 60 * 60);
+    return diffHours > 24;
+  }, [isMetaChannel, lastInboundMsg?.createdAt]);
 
   useEffect(() => {
     setErrorMessage(null);
@@ -932,21 +948,93 @@ function UnifiedInboxPageContent() {
                 </div>
               )}
 
+              {/* Aviso preventivo: Ventana 24h de Meta */}
+              {is24hExpired && !errorMessage && (
+                <div className="px-4 py-2.5 bg-amber-50/90 border-t border-amber-200 text-xs text-amber-900 flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      <strong>Ventana de 24h de Meta vencida:</strong> Las políticas de Meta exigen que el usuario vuelva a escribir primero.
+                    </span>
+                  </div>
+                  {activeConversation.leadPhone && (
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`https://wa.me/${activeConversation.leadPhone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-md transition-colors"
+                      >
+                        <SocialNetworkIcon type="whatsapp" size="xs" className="w-3.5 h-3.5" />
+                        WhatsApp
+                      </a>
+                      <Link
+                        href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-800 bg-blue-100 hover:bg-blue-200 px-2.5 py-1 rounded-md transition-colors"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        SMS
+                      </Link>
+                      <Link
+                        href={`/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-md transition-colors"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        Llamar
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Banner de Error / Ventana 24h de Meta */}
               {errorMessage && (
-                <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 text-xs text-amber-900 flex items-start justify-between gap-3 animate-in fade-in">
-                  <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                    <span className="leading-relaxed font-medium">{errorMessage}</span>
+                <div className="px-4 py-3 bg-rose-50 border-t border-rose-200 text-xs text-rose-950 flex flex-col gap-2 animate-in fade-in">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <span className="leading-relaxed font-medium">{errorMessage}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setErrorMessage(null)}
+                      className="text-rose-700 hover:text-rose-950 p-0.5 shrink-0"
+                      title="Cerrar aviso"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setErrorMessage(null)}
-                    className="text-amber-700 hover:text-amber-950 p-0.5 shrink-0"
-                    title="Cerrar aviso"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  {activeConversation.leadPhone &&
+                    (errorMessage.includes("24 horas") ||
+                      errorMessage.includes("Meta bloqueó") ||
+                      errorMessage.includes("#10")) && (
+                      <div className="flex items-center gap-2 pt-1 pl-6">
+                        <span className="text-[11px] font-semibold text-rose-800">Canales alternativos:</span>
+                        <a
+                          href={`https://wa.me/${activeConversation.leadPhone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition-colors"
+                        >
+                          <SocialNetworkIcon type="whatsapp" size="xs" className="w-3 h-3" />
+                          Abrir WhatsApp
+                        </a>
+                        <Link
+                          href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-800 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded transition-colors"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                          Enviar SMS
+                        </Link>
+                        <Link
+                          href={`/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded transition-colors"
+                        >
+                          <PhoneCall className="w-3 h-3" />
+                          Llamar
+                        </Link>
+                      </div>
+                    )}
                 </div>
               )}
 

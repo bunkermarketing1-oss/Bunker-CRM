@@ -15,6 +15,8 @@ import {
   Check,
   Plus,
   ChevronDown,
+  Trash2,
+  LogOut,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
@@ -66,6 +68,9 @@ export function ConnectSocialAccountModal({
   const [targetClientId, setTargetClientId] = useState<string>(initialClientId);
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [isMetaConnected, setIsMetaConnected] = useState<boolean>(false);
+  const [metaIntegrationId, setMetaIntegrationId] = useState<string | null>(null);
+  const [disconnectingMeta, setDisconnectingMeta] = useState<boolean>(false);
+  const [deletingChannelId, setDeletingChannelId] = useState<string | null>(null);
   const [loadingChannels, setLoadingChannels] = useState<boolean>(false);
   const [refreshingCatalog, setRefreshingCatalog] = useState<boolean>(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
@@ -112,6 +117,7 @@ export function ConnectSocialAccountModal({
           (it: { provider: string }) => it.provider === INTEGRATION_PROVIDER.META
         );
         setIsMetaConnected(metaInt?.status === "connected");
+        setMetaIntegrationId(metaInt?.id || null);
         const allAccs: ChannelItem[] = json.integrations.flatMap(
           (it: { connectedAccounts?: ChannelItem[] }) => it.connectedAccounts || []
         );
@@ -153,6 +159,72 @@ export function ConnectSocialAccountModal({
       setFeedback({ type: "error", message: "Error de red al actualizar catálogo de Meta." });
     } finally {
       setRefreshingCatalog(false);
+    }
+  };
+
+  // Desconectar integración completa de Meta para iniciar sesión desde cero con otro perfil
+  const handleDisconnectMeta = async () => {
+    const confirmed = window.confirm(
+      "¿Deseas desconectar tu cuenta de Meta del CRM?\n\nEsta acción desvinculará todas las páginas, cuentas de anuncios e Instagram conectados actualmente, permitiéndote iniciar sesión desde cero con otro perfil de Facebook o cuenta publicitaria."
+    );
+    if (!confirmed) return;
+
+    setDisconnectingMeta(true);
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/integrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: metaIntegrationId || undefined,
+          provider: !metaIntegrationId ? INTEGRATION_PROVIDER.META : undefined,
+          action: "disconnect",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({
+          type: "success",
+          message: "Cuenta de Meta desconectada. Ahora puedes iniciar sesión con otro perfil de Facebook o cuenta de anuncios.",
+        });
+        setIsMetaConnected(false);
+        setChannels([]);
+        onSuccess();
+      } else {
+        setFeedback({ type: "error", message: json.error || "No se pudo desconectar la integración de Meta." });
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Error al desconectar la cuenta de Meta." });
+    } finally {
+      setDisconnectingMeta(false);
+    }
+  };
+
+  // Eliminar un activo individual del CRM (Página, Perfil IG, Cuenta Ads)
+  const handleDeleteChannel = async (accountId: string, accountName: string) => {
+    const confirmed = window.confirm(
+      `¿Eliminar "${accountName}" del CRM?\n\nEste activo se desvinculará y se retirará del listado del CRM.`
+    );
+    if (!confirmed) return;
+
+    setDeletingChannelId(accountId);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/integrations/accounts/${accountId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFeedback({ type: "success", message: json.message || "Activo eliminado del CRM." });
+        setChannels((prev) => prev.filter((ch) => ch.id !== accountId));
+        onSuccess();
+      } else {
+        setFeedback({ type: "error", message: json.error || "No se pudo eliminar el activo." });
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Error de red al eliminar el activo." });
+    } finally {
+      setDeletingChannelId(null);
     }
   };
 
@@ -348,6 +420,17 @@ export function ConnectSocialAccountModal({
           {activeTab === "meta" && isMetaConnected && (
             <div className="flex items-center gap-2">
               <button
+                type="button"
+                onClick={handleDisconnectMeta}
+                disabled={disconnectingMeta}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 border border-rose-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Desconectar cuenta actual de Meta para conectar otro perfil o cuenta publicitaria"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{disconnectingMeta ? "Desconectando..." : "Desconectar cuenta"}</span>
+              </button>
+
+              <button
                 onClick={handleRefreshMetaCatalog}
                 disabled={refreshingCatalog}
                 className="px-2.5 py-1.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 cursor-pointer"
@@ -447,21 +530,34 @@ export function ConnectSocialAccountModal({
                         </div>
                       </div>
                     </div>
-                    <a
-                      href={getMetaConnectUrl(true)}
-                      onClick={(e) => {
-                        if (typeof window !== "undefined") {
-                          e.preventDefault();
-                          window.location.href = getMetaConnectUrl(true);
-                        }
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors"
-                      title="Permite iniciar sesión con otro usuario en Facebook"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Conectar otra cuenta</span>
-                      <ExternalLink className="w-3 h-3 opacity-80" />
-                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleDisconnectMeta}
+                        disabled={disconnectingMeta}
+                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors cursor-pointer"
+                        title="Desconectar cuenta actual de Facebook para conectar otro perfil"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>{disconnectingMeta ? "Desconectando..." : "Desconectar cuenta"}</span>
+                      </button>
+
+                      <a
+                        href={getMetaConnectUrl(true)}
+                        onClick={(e) => {
+                          if (typeof window !== "undefined") {
+                            e.preventDefault();
+                            window.location.href = getMetaConnectUrl(true);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors"
+                        title="Permite iniciar sesión con otro usuario en Facebook"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Conectar otra cuenta</span>
+                        <ExternalLink className="w-3 h-3 opacity-80" />
+                      </a>
+                    </div>
                   </div>
 
                   {/* Barra de Filtros y Búsqueda */}
@@ -659,6 +755,20 @@ export function ConnectSocialAccountModal({
                                   )}
                                 </div>
                               )}
+                              {/* Botón para eliminar activo individual del CRM */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteChannel(ch.id, ch.accountName)}
+                                disabled={deletingChannelId === ch.id}
+                                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer ml-1"
+                                title={`Eliminar "${ch.accountName}" del CRM`}
+                              >
+                                {deletingChannelId === ch.id ? (
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                                ) : (
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                )}
+                              </button>
                             </div>
                           </div>
                         );

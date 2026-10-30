@@ -134,6 +134,7 @@ function LeadsPageContent() {
     campaign: "",
     estimatedValue: "2500",
     ownerId: "",
+    clientId: "",
     notes: "",
   });
   const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string[]>>({});
@@ -154,6 +155,7 @@ function LeadsPageContent() {
     campaign: "",
     estimatedValue: "0",
     ownerId: "",
+    clientId: "",
     notes: "",
   });
   const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string[]>>({});
@@ -173,7 +175,10 @@ function LeadsPageContent() {
       const res = await fetch("/api/leads/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hours: 8760 }),
+        body: JSON.stringify({
+          hours: 8760,
+          clientId: clientFilter !== "all" ? clientFilter : undefined,
+        }),
       });
       const json = await res.json();
       if (json.success) {
@@ -277,6 +282,7 @@ function LeadsPageContent() {
         campaign: createData.campaign || null,
         estimatedValue: parseFloat(createData.estimatedValue) || 0,
         ownerId: createData.ownerId || null,
+        clientId: createData.clientId || (clientFilter !== "all" ? clientFilter : null),
         notes: createData.notes || null,
         forceDuplicate: force,
       };
@@ -317,6 +323,7 @@ function LeadsPageContent() {
         campaign: "",
         estimatedValue: "2500",
         ownerId: "",
+    clientId: "",
         notes: "",
       });
       showNotification("¡Prospecto registrado exitosamente!");
@@ -342,6 +349,7 @@ function LeadsPageContent() {
       campaign: lead.campaign || "",
       estimatedValue: (lead.estimatedValue || 0).toString(),
       ownerId: lead.ownerId || "",
+      clientId: lead.clientId || "",
       notes: lead.notes || "",
     });
     setEditFieldErrors({});
@@ -583,6 +591,10 @@ function LeadsPageContent() {
             onClick={() => {
               setDuplicateWarning(null);
               setCreateFieldErrors({});
+              setCreateData((prev) => ({
+                ...prev,
+                clientId: clientFilter !== "all" ? clientFilter : "",
+              }));
               setIsCreateOpen(true);
             }}
             className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-xs"
@@ -1612,6 +1624,32 @@ function LeadsPageContent() {
                   </select>
                 </div>
               </div>
+
+              {/* Client Selection (Admin only) */}
+              {!user?.isClientUser && (
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Empresa / Marca del Cliente
+                  </label>
+                  <select
+                    value={createData.clientId}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, clientId: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="">Sin vincular (General Bunker Agency)</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-[#667085] mt-0.5">
+                    Vincula este prospecto directamente a la marca seleccionada para aislar métricas y mensajería.
+                  </p>
+                </div>
+              )}
 
               {/* Notes */}
               <div>
