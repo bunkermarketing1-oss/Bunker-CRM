@@ -16,7 +16,6 @@ import {
   Plus,
   Users,
   Search,
-  HelpCircle,
   Sparkles,
   ChevronDown,
   Trash2,
@@ -1363,16 +1362,6 @@ function IntegrationsPageContent() {
       {/* ========================================================================= */}
       {activeView === "platforms" && (
         <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-3">
-            <HelpCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Panel Técnico de Conexión de Plataformas</p>
-              <p className="mt-0.5 text-blue-800">
-                Esta sección está pensada para administradores que necesitan vincular el Business Manager principal con OAuth, autorizar tokens de Meta Ads o revisar si las variables de Twilio para llamadas y SMS están configuradas en el servidor.
-              </p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {integrations.map((it) => {
               if (it.provider === INTEGRATION_PROVIDER.TWILIO) {
