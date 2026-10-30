@@ -1651,6 +1651,32 @@ function LeadsPageContent() {
                 </div>
               )}
 
+              {/* Client Selection (Admin only) */}
+              {!user?.isClientUser && (
+                <div>
+                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                    Empresa / Marca del Cliente
+                  </label>
+                  <select
+                    value={createData.clientId}
+                    onChange={(e) =>
+                      setCreateData({ ...createData, clientId: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="">Sin vincular (General Bunker Agency)</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-[#667085] mt-0.5">
+                    Vincula este prospecto directamente a la marca seleccionada para aislar métricas y mensajería.
+                  </p>
+                </div>
+              )}
+
               {/* Notes */}
               <div>
                 <label className="block text-xs font-semibold text-[#141414] mb-1">

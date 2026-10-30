@@ -25,8 +25,8 @@ export const ENV_VARS: EnvVarSpec[] = [
   { name: "META_GRAPH_VERSION", description: "Versión de Graph API (opcional, hay valor por defecto)", group: "integrations", required: false },
   { name: "TIKTOK_APP_ID", description: "App de TikTok for Business", group: "integrations", required: false },
   { name: "TIKTOK_APP_SECRET", description: "Secreto de la app de TikTok", group: "integrations", required: false },
-  { name: "GOOGLE_ADS_CLIENT_ID", description: "Cliente OAuth de Google Ads", group: "integrations", required: false },
-  { name: "GOOGLE_ADS_DEVELOPER_TOKEN", description: "Token de desarrollador de Google Ads", group: "integrations", required: false },
+
+
   { name: "TWILIO_ACCOUNT_SID", description: "Cuenta de Twilio para SMS", group: "messaging", required: false },
   { name: "TWILIO_AUTH_TOKEN", description: "Token de Twilio", group: "messaging", required: false },
   { name: "TWILIO_PHONE_NUMBER", description: "Número remitente de SMS y línea por defecto de llamadas", group: "messaging", required: false },

@@ -56,10 +56,9 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     ],
   },
   {
-    title: { es: "Resultados & Marketing", en: "Results & Marketing" },
+    title: { es: "Resultados & Reportes", en: "Results & Reports" },
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Mis Campañas", en: "My Campaigns" } },
-      { href: ROUTES.CONTENT_CALENDAR, icon: CalendarDays, label: { es: "Calendario Editorial", en: "Content Calendar" } },
       { href: ROUTES.REPORTS, icon: LineChart, label: { es: "Reportes", en: "Reports" } },
     ],
   },
@@ -88,7 +87,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline de Ventas", en: "Sales Pipeline" } },
       { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades y Llamadas", en: "Activities & Calls" } },
       { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas y Seguimiento", en: "Tasks & Tracking" } },
-      { href: ROUTES.AUTOMATIONS, icon: Workflow, label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" } },
       { href: ROUTES.REPORTS, icon: LineChart, label: { es: "Reportes & ROI", en: "Reports & ROI" } },
     ],
   },
@@ -96,9 +94,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     title: { es: "Pautas & Marketing", en: "Ads & Marketing" },
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
-      { href: ROUTES.AI_OPTIMIZER, icon: Sparkles, label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" } },
-      { href: ROUTES.SOCIAL_POSTS, icon: Share2, label: { es: "Publicaciones Sociales", en: "Social Posts" } },
-      { href: ROUTES.CONTENT_CALENDAR, icon: CalendarDays, label: { es: "Calendario Editorial", en: "Content Calendar" } },
       { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
     ],
   },
@@ -114,6 +109,40 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     title: { es: "Administración", en: "Agency Settings" },
     items: [
       { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración & Servidor", en: "Settings & Server" } },
+    ],
+  },
+  {
+    title: { es: "En Construcción", en: "Under Construction" },
+    badge: "PRÓXIMAMENTE",
+    items: [
+      {
+        href: ROUTES.AI_OPTIMIZER,
+        icon: Sparkles,
+        label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
+      {
+        href: ROUTES.SOCIAL_POSTS,
+        icon: Share2,
+        label: { es: "Publicaciones Sociales", en: "Social Posts" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
+      {
+        href: ROUTES.CONTENT_CALENDAR,
+        icon: CalendarDays,
+        label: { es: "Calendario Editorial", en: "Content Calendar" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
+      {
+        href: ROUTES.AUTOMATIONS,
+        icon: Workflow,
+        label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" },
+        badge: "CONSTRUCCIÓN",
+        disabled: true,
+      },
     ],
   },
 ];
