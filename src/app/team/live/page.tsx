@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { Headphones, Radio, RefreshCw, PhoneCall, Clock } from "lucide-react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Headphones, Radio, RefreshCw, PhoneCall, Clock, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTeamLive } from "@/hooks/useTeamLive";
 import { useClientOptions } from "@/hooks/useClientOptions";
@@ -11,13 +12,46 @@ import { LiveCallsPanel } from "@/components/calls/LiveCallsPanel";
 import { MonitorSessionBar } from "@/components/team/MonitorSessionBar";
 import { ADVISOR_STATUS } from "@/lib/constants/team";
 import { formatClock } from "@/lib/team-live";
+import { ROUTES } from "@/lib/constants/routes";
 
 export default function TeamLivePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-[#667085]">Cargando supervisión de equipo...</div>}>
+      <TeamLiveContent />
+    </Suspense>
+  );
+}
+
+function TeamLiveContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlClientId = searchParams.get("clientId");
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
-
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const clientOptions = useClientOptions();
+
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(
+    urlClientId && urlClientId !== "all" ? urlClientId : null
+  );
+
+  useEffect(() => {
+    if (urlClientId && urlClientId !== "all") {
+      setSelectedClientId(urlClientId);
+    } else if (urlClientId === "all" || !urlClientId) {
+      setSelectedClientId(null);
+    }
+  }, [urlClientId]);
+
+  const activeClient = selectedClientId ? clientOptions.find((c) => c.id === selectedClientId) : null;
+
+  const handleSelectClient = (id: string | null) => {
+    setSelectedClientId(id);
+    if (id) {
+      router.push(`${ROUTES.TEAM_LIVE}?clientId=${encodeURIComponent(id)}`);
+    } else {
+      router.push(ROUTES.TEAM_LIVE);
+    }
+  };
 
   const { view, loading, error, refresh } = useTeamLive(selectedClientId);
 
@@ -44,6 +78,21 @@ export default function TeamLivePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+              Supervisión en Tiempo Real
+            </span>
+            {activeClient ? (
+              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 text-amber-600" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : (
+              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+                Todos los Asesores
+              </span>
+            )}
+          </div>
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
             <Headphones className="w-6 h-6 text-amber-500 shrink-0" />
             <span>Asesores en Vivo & Supervisión</span>
@@ -55,7 +104,7 @@ export default function TeamLivePage() {
           {isAdmin && (
             <select
               value={selectedClientId ?? ""}
-              onChange={(e) => setSelectedClientId(e.target.value ? e.target.value : null)}
+              onChange={(e) => handleSelectClient(e.target.value ? e.target.value : null)}
               className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-semibold shadow-2xs"
             >
               <option value="">Todas las empresas</option>

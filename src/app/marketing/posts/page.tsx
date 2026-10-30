@@ -192,14 +192,15 @@ function PostsPageContent() {
         setMediaUrl("");
         setScheduleType("now");
         setScheduledDateTime("");
+        setError(null);
         setFeedback("¡Publicación registrada con éxito!");
         setTimeout(() => setFeedback(null), 3500);
         fetchPosts();
       } else {
-        alert(json.error || "No se pudo registrar la publicación.");
+        setError(json.error || "No se pudo registrar la publicación.");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al guardar publicación.");
+      setError(err instanceof Error ? err.message : "Error al guardar publicación.");
     } finally {
       setSubmitting(false);
     }
@@ -212,11 +213,13 @@ function PostsPageContent() {
       const json = await res.json();
       if (json.success) {
         setPosts((prev) => prev.filter((p) => p.id !== id));
+        setFeedback("Publicación eliminada correctamente.");
+        setTimeout(() => setFeedback(null), 3500);
       } else {
-        alert(json.error || "Error al eliminar.");
+        setError(json.error || "Error al eliminar la publicación.");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error de red.");
+      setError(err instanceof Error ? err.message : "Error de red al eliminar.");
     }
   };
 

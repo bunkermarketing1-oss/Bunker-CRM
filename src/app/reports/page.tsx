@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   BarChart3,
@@ -11,8 +12,8 @@ import {
   RefreshCw,
   Target,
   Users,
+  Building2,
 } from "lucide-react";
-import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import Panel from "@/components/ui/Panel";
@@ -22,41 +23,76 @@ import SourceBreakdownTable from "@/components/reports/SourceBreakdownTable";
 import PipelineStageList from "@/components/reports/PipelineStageList";
 import { useReports } from "@/hooks/useReports";
 import { useAuth } from "@/context/AuthContext";
+import { useClientOptions } from "@/hooks/useClientOptions";
 import { DEFAULT_REPORT_RANGE_DAYS, type ReportRangeDays } from "@/lib/constants/reports";
 import { formatCompactMoney, formatHours, formatMoney, formatNumber, formatPercent } from "@/lib/format";
 
 export default function ReportsPage() {
+  return (
+    <Suspense fallback={<ReportSkeleton />}>
+      <ReportsContent />
+    </Suspense>
+  );
+}
+
+function ReportsContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const clientId = searchParams.get("clientId");
+  const clients = useClientOptions();
+  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+
   const [days, setDays] = useState<ReportRangeDays>(DEFAULT_REPORT_RANGE_DAYS);
   const [showTrendTable, setShowTrendTable] = useState(false);
-  const { report, loading, error, refresh } = useReports(days);
+  const { report, loading, error, refresh } = useReports(days, clientId);
   const kpis = report?.kpis;
 
-  const scopeLabel = user?.isClientUser ? user.clientName ?? "tu empresa" : "toda la agencia";
+  const scopeLabel = user?.isClientUser
+    ? user.clientName ?? "tu empresa"
+    : activeClient
+    ? activeClient.name
+    : "toda la agencia";
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        section="Analítica"
-        title="Reportes & ROI"
-        description={`Captación, conversión, velocidad de respuesta y retorno de la pauta de ${scopeLabel}, calculados con los registros reales del CRM.`}
-        actions={
-          <>
-            <RangeSelector value={days} onChange={setDays} />
-            <button
-              type="button"
-              onClick={refresh}
-              aria-label="Actualizar reporte"
-              className="w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center text-[#6B6861] hover:text-[#141414]"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            </button>
-          </>
-        }
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+              Analítica & Retorno
+            </span>
+            {activeClient ? (
+              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 text-amber-600" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : !user?.isClientUser ? (
+              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+                Vista Global Agencia
+              </span>
+            ) : null}
+          </div>
+          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">Reportes & ROI</h1>
+          <p className="text-xs text-[#667085] mt-0.5">
+            Captación, conversión, velocidad de respuesta y retorno de la pauta de {scopeLabel}, calculados con los registros reales del CRM.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <RangeSelector value={days} onChange={setDays} />
+          <button
+            type="button"
+            onClick={refresh}
+            aria-label="Actualizar reporte"
+            className="w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center text-[#6B6861] hover:text-[#141414] shadow-2xs"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+      </div>
 
       {error && (
-        <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -65,7 +101,6 @@ export default function ReportsPage() {
       {!report && loading ? (
         <ReportSkeleton />
       ) : report && kpis ? (
-        // Al cambiar el período se conserva el reporte anterior atenuado: sin saltos de layout.
         <div className={`space-y-6 transition-opacity ${loading ? "opacity-60" : ""}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <StatCard

@@ -255,8 +255,8 @@ function IntegrationsPageContent() {
         fetchIntegrations();
         fetchClients();
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      setFeedback({ type: "error", message: "Error: " + (e instanceof Error ? e.message : "Error inesperado") });
     }
   };
 
@@ -282,10 +282,10 @@ function IntegrationsPageContent() {
         fetchIntegrations();
         fetchClients();
       } else {
-        alert(json.error);
+        setFeedback({ type: "error", message: json.error || "No se pudo conectar la cuenta." });
       }
     } catch (e) {
-      alert("Error al conectar: " + (e instanceof Error ? e.message : "Error de red"));
+      setFeedback({ type: "error", message: "Error al conectar: " + (e instanceof Error ? e.message : "Error de red") });
     } finally {
       setConnecting(false);
     }

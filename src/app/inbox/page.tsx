@@ -350,10 +350,10 @@ function UnifiedInboxPageContent() {
         setFeedback(json.message || "Asignación comercial actualizada.");
         setTimeout(() => setFeedback(null), 3500);
       } else {
-        alert(json.error || "No se pudo asignar el asesor.");
+        setErrorMessage(json.error || "No se pudo asignar el asesor.");
       }
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Error al asignar asesor.");
+      setErrorMessage(err instanceof Error ? err.message : "Error al asignar asesor.");
     } finally {
       setAssigning(false);
     }

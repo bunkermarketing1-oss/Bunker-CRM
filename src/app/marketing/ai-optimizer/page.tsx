@@ -66,6 +66,7 @@ function MetaAiOptimizerContent() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<{ [id: string]: string }>({});
+  const [actionError, setActionError] = useState<{ [id: string]: string }>({});
   const [healthFilter, setHealthFilter] = useState<"all" | "attention" | "success">("all");
 
   const fetchOptimizations = useCallback(async () => {
@@ -109,15 +110,26 @@ function MetaAiOptimizerContent() {
       });
       const json = await res.json();
       if (json.success) {
+        setActionError((prev) => {
+          const updated = { ...prev };
+          delete updated[campaign.id];
+          return updated;
+        });
         setActionSuccess((prev) => ({
           ...prev,
           [campaign.id]: json.message || "Optimización aplicada con éxito.",
         }));
       } else {
-        alert(json.error || "No se pudo aplicar la optimización.");
+        setActionError((prev) => ({
+          ...prev,
+          [campaign.id]: json.error || "No se pudo aplicar la optimización.",
+        }));
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al comunicar con la API de optimización.");
+      setActionError((prev) => ({
+        ...prev,
+        [campaign.id]: err instanceof Error ? err.message : "Error al comunicar con la API de optimización.",
+      }));
     } finally {
       setActionLoading(null);
     }
@@ -259,6 +271,7 @@ function MetaAiOptimizerContent() {
           const actionKey = `${camp.id}-${camp.algorithmInsight.actionType}`;
           const isActionBusy = actionLoading === actionKey;
           const successMsg = actionSuccess[camp.id];
+          const errorMsg = actionError[camp.id];
 
           return (
             <div
@@ -366,6 +379,22 @@ function MetaAiOptimizerContent() {
                     <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 animate-in fade-in">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>{successMsg}</span>
+                    </div>
+                  ) : errorMsg ? (
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-red-700 font-medium flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>{errorMsg}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyAction(camp)}
+                        disabled={isActionBusy}
+                        className="btn-black-gold rounded-xl px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Zap className="w-3 h-3 text-amber-400" />
+                        <span>Reintentar</span>
+                      </button>
                     </div>
                   ) : (
                     <button

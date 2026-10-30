@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ReportRangeDays } from "@/lib/constants/reports";
 import type { ReportsData, ReportsResponse } from "@/types/reports";
 
-export function useReports(days: ReportRangeDays) {
+export function useReports(days: ReportRangeDays, clientId?: string | null) {
   const [report, setReport] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,8 @@ export function useReports(days: ReportRangeDays) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/reports?days=${days}`);
+      const clientQuery = clientId && clientId !== "all" ? `&clientId=${encodeURIComponent(clientId)}` : "";
+      const res = await fetch(`/api/reports?days=${days}${clientQuery}`);
       const json = await res.json();
       if (json.success) setReport(json as ReportsResponse);
       else setError(json.error);
@@ -22,7 +23,7 @@ export function useReports(days: ReportRangeDays) {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [days, clientId]);
 
   useEffect(() => {
     refresh();

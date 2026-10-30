@@ -9,12 +9,13 @@ export interface CallableLead {
 }
 
 /** Leads del usuario que tienen teléfono (la API ya aplica el scope del cliente). */
-export function useCallableLeads() {
+export function useCallableLeads(clientId?: string | null) {
   const [leads, setLeads] = useState<CallableLead[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/leads")
+    const clientQuery = clientId && clientId !== "all" ? `?clientId=${encodeURIComponent(clientId)}` : "";
+    fetch(`/api/leads${clientQuery}`)
       .then((res) => res.json())
       .then((json: { success: boolean; leads?: { id: string; name: string; phone: string | null }[] }) => {
         if (cancelled || !json.success) return;
@@ -26,7 +27,7 @@ export function useCallableLeads() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [clientId]);
 
   return leads;
 }

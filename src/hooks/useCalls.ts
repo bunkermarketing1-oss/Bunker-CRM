@@ -6,7 +6,7 @@ import type { CallSummary } from "@/types/voice";
 // Las llamadas en curso cambian rápido; cada 5 s basta para ver quién está hablando.
 const REFRESH_MS = 5000;
 
-export function useCalls() {
+export function useCalls(clientId?: string | null) {
   const [calls, setCalls] = useState<CallSummary[]>([]);
   const [liveCalls, setLiveCalls] = useState<CallSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,8 @@ export function useCalls() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/voice/calls");
+      const clientQuery = clientId && clientId !== "all" ? `?clientId=${encodeURIComponent(clientId)}` : "";
+      const res = await fetch(`/api/voice/calls${clientQuery}`);
       const json = await res.json();
       if (json.success) {
         setCalls(json.calls);
@@ -28,7 +29,7 @@ export function useCalls() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clientId]);
 
   useEffect(() => {
     refresh();

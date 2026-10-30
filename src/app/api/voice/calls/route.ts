@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { scopeFromUser } from "@/lib/tenant";
+import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { startCallSchema } from "@/lib/validations/voice";
 import { listCalls, listLiveCalls, startOutboundCall } from "@/services/calls.service";
 import { voiceErrorResponse } from "../_errors";
@@ -10,8 +11,20 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const { user, errorResponse } = await requireAuth(req);
   if (errorResponse) return errorResponse;
-  const scope = scopeFromUser(user!);
+  let scope = scopeFromUser(user!);
   if (!scope) return NextResponse.json({ success: true, calls: [], liveCalls: [] });
+
+  const clientId = new URL(req.url).searchParams.get("clientId");
+  if (!user!.isClientUser && clientId && clientId !== "all") {
+    const belongs = await clientBelongsToOrg(user!.organizationId, clientId);
+    if (!belongs) {
+      return NextResponse.json(
+        { success: false, error: "Cliente no pertenece a su organización." },
+        { status: 404 }
+      );
+    }
+    scope = { organizationId: user!.organizationId, clientId };
+  }
 
   try {
     const [calls, liveCalls] = await Promise.all([

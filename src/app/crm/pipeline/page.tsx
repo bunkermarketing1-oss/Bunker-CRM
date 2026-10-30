@@ -30,6 +30,7 @@ function PipelineContent() {
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [dealForm, setDealForm] = useState({
     title: "",
@@ -73,14 +74,15 @@ function PipelineContent() {
       if (json.success) {
         fetchPipeline();
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      setFeedback({ type: "error", text: e instanceof Error ? e.message : "Error al actualizar la etapa" });
     }
   };
 
   const handleCreateDeal = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setFeedback(null);
     try {
       const payload: Record<string, any> = { ...dealForm };
       if (clientId && clientId !== "all") {
@@ -100,12 +102,13 @@ function PipelineContent() {
           stageId: stages[0]?.id || "",
           probability: "50",
         });
+        setFeedback({ type: "success", text: "Oportunidad creada exitosamente." });
         fetchPipeline();
       } else {
-        alert(json.error);
+        setFeedback({ type: "error", text: json.error || "No se pudo registrar la oportunidad" });
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      setFeedback({ type: "error", text: e instanceof Error ? e.message : "Error inesperado" });
     } finally {
       setSubmitting(false);
     }
@@ -148,6 +151,26 @@ function PipelineContent() {
           </button>
         </div>
       </div>
+
+      {/* Feedback Banner */}
+      {feedback && (
+        <div
+          className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-2 ${
+            feedback.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          <span>{feedback.text}</span>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-xs font-semibold hover:opacity-75"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Kanban Board Columns Grid */}
       <div className="flex gap-4 overflow-x-auto pb-4 pt-1 select-none">

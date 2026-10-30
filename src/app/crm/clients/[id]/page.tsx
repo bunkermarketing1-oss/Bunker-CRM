@@ -330,10 +330,10 @@ export default function ClientProfile360Page() {
         showFeedback("Ficha del cliente actualizada exitosamente.");
         fetchClientData();
       } else {
-        alert(json.error || "No se pudo actualizar la ficha.");
+        showFeedback(json.error || "No se pudo actualizar la ficha.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     } finally {
       setSubmittingClientEdit(false);
     }
@@ -374,10 +374,10 @@ export default function ClientProfile360Page() {
         showFeedback(isEditing ? "Contacto actualizado." : "Nuevo contacto asociado con éxito.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al guardar contacto.");
+        showFeedback(json.error || "Error al guardar contacto.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     } finally {
       setSubmittingContact(false);
     }
@@ -395,10 +395,10 @@ export default function ClientProfile360Page() {
         showFeedback("Contacto designado como principal.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al actualizar contacto principal.");
+        showFeedback(json.error || "Error al actualizar contacto principal.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     }
   };
 
@@ -411,10 +411,10 @@ export default function ClientProfile360Page() {
         showFeedback("Contacto eliminado.");
         fetchClientData();
       } else {
-        alert(json.error || "No se pudo eliminar el contacto.");
+        showFeedback(json.error || "No se pudo eliminar el contacto.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     }
   };
 
@@ -441,10 +441,10 @@ export default function ClientProfile360Page() {
         showFeedback("Actividad registrada en la cronología 360°.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al guardar actividad.");
+        showFeedback(json.error || "Error al guardar actividad.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     } finally {
       setSubmittingActivity(false);
     }
@@ -481,10 +481,10 @@ export default function ClientProfile360Page() {
         showFeedback("Oportunidad registrada y vinculada al pipeline.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al registrar oportunidad.");
+        showFeedback(json.error || "Error al registrar oportunidad.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     } finally {
       setSubmittingOpp(false);
     }
@@ -503,10 +503,10 @@ export default function ClientProfile360Page() {
         showFeedback(`Oportunidad marcada como "${nextStatus.toUpperCase()}".`);
         fetchClientData();
       } else {
-        alert(json.error || "Error al actualizar oportunidad.");
+        showFeedback(json.error || "Error al actualizar oportunidad.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     }
   };
 
@@ -534,10 +534,10 @@ export default function ClientProfile360Page() {
         showFeedback("Tarea comercial agendada.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al agendar tarea.");
+        showFeedback(json.error || "Error al agendar tarea.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     } finally {
       setSubmittingTask(false);
     }
@@ -557,10 +557,10 @@ export default function ClientProfile360Page() {
         showFeedback(nextStatus === "completed" ? "Tarea completada." : "Tarea reabierta.");
         fetchClientData();
       } else {
-        alert(json.error || "Error al actualizar tarea.");
+        showFeedback(json.error || "Error al actualizar tarea.", "error");
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      showFeedback("Error: " + (e instanceof Error ? e.message : "Error inesperado"), "error");
     }
   };
 
