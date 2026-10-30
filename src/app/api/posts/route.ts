@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireAuth } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const { user, errorResponse } = await requireAdmin(req);
+    const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
+    const requestedClientId = searchParams.get("clientId");
 
-    const where: any = {
+    const where: Prisma.SocialPostWhereInput = {
       organizationId: user!.organizationId,
     };
+
+    if (user!.isClientUser) {
+      if (!user!.clientId) {
+        return NextResponse.json({ success: true, posts: [] });
+      }
+      where.connectedAccount = { clientId: user!.clientId };
+    } else if (requestedClientId && requestedClientId !== "all") {
+      where.connectedAccount = { clientId: requestedClientId };
+    }
+
     if (status && status !== "all") {
       where.status = status;
     }
@@ -25,14 +37,15 @@ export async function GET(req: NextRequest) {
       include: {
         connectedAccount: {
           // Nunca exponer accessTokenEnc al cliente
-          select: { id: true, accountName: true, accountType: true, status: true, integration: true },
+          select: { id: true, accountName: true, accountType: true, status: true, clientId: true, integration: true },
         },
       },
     });
 
     return NextResponse.json({ success: true, posts });
-  } catch (error: any) {
-    console.error("GET /api/posts error:", error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error desconocido";
+    console.error("GET /api/posts error:", message);
     return NextResponse.json({ success: false, error: "Error al consultar publicaciones." }, { status: 500 });
   }
 }
@@ -98,8 +111,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, post }, { status: 201 });
-  } catch (error: any) {
-    console.error("POST /api/posts error:", error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error desconocido";
+    console.error("POST /api/posts error:", message);
     return NextResponse.json({ success: false, error: "Error al crear publicación." }, { status: 500 });
   }
 }
@@ -124,7 +138,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Publicación no encontrada en su organización." }, { status: 404 });
     }
 
-    const data: any = {};
+    const data: Prisma.SocialPostUpdateInput = {};
     if (content) data.content = content.trim();
     if (status) data.status = status;
     if (scheduledFor) data.scheduledFor = new Date(scheduledFor);
@@ -135,8 +149,9 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, post });
-  } catch (error: any) {
-    console.error("PUT /api/posts error:", error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error desconocido";
+    console.error("PUT /api/posts error:", message);
     return NextResponse.json({ success: false, error: "Error al actualizar publicación." }, { status: 500 });
   }
 }
@@ -166,8 +181,9 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, post });
-  } catch (error: any) {
-    console.error("DELETE /api/posts error:", error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error desconocido";
+    console.error("DELETE /api/posts error:", message);
     return NextResponse.json({ success: false, error: "Error al eliminar publicación." }, { status: 500 });
   }
 }

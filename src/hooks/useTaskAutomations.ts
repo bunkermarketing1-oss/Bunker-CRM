@@ -83,5 +83,5 @@ export function useTaskAutomations() {
     }
   }, [refresh]);
 
-  return { automations, stages, loading, error, create, update, remove, staleCheck, runStaleCheck };
+  return { automations, stages, loading, error, create, update, remove, staleCheck, runStaleCheck, refresh };
 }

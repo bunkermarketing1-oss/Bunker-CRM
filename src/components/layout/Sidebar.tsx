@@ -43,6 +43,11 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
       ROUTES.PIPELINE,
       ROUTES.INTEGRATIONS,
       ROUTES.CALLS,
+      ROUTES.SMS,
+      ROUTES.AUTOMATIONS,
+      ROUTES.AI_OPTIMIZER,
+      ROUTES.SOCIAL_POSTS,
+      ROUTES.CONTENT_CALENDAR,
     ],
     []
   );
@@ -153,7 +158,12 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
           item.href === ROUTES.CAMPAIGNS ||
           item.href === ROUTES.PIPELINE ||
           item.href === ROUTES.INTEGRATIONS ||
-          item.href === ROUTES.CALLS
+          item.href === ROUTES.CALLS ||
+          item.href === ROUTES.SMS ||
+          item.href === ROUTES.AUTOMATIONS ||
+          item.href === ROUTES.AI_OPTIMIZER ||
+          item.href === ROUTES.SOCIAL_POSTS ||
+          item.href === ROUTES.CONTENT_CALENDAR
         ) {
           return {
             ...item,

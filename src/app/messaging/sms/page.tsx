@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   MessageSquare,
   Send,
@@ -48,19 +49,39 @@ interface LeadOption {
 }
 
 export default function SmsMessagingPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando mensajería SMS...</div>}>
+      <SmsMessagingPageContent />
+    </Suspense>
+  );
+}
+
+function SmsMessagingPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const paramClientId = searchParams.get("clientId");
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
   const clients = useClientOptions();
+  const activeClient = paramClientId && paramClientId !== "all" ? clients.find((c) => c.id === paramClientId) : null;
 
   // Estado de mensajes
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterClient, setFilterClient] = useState<string>("all");
+  const [filterClient, setFilterClient] = useState<string>(paramClientId ?? "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"direct" | "bulk" | "rules">("direct");
 
   // Estado de envío manual
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>(paramClientId && paramClientId !== "all" ? paramClientId : "");
+
+  useEffect(() => {
+    if (paramClientId) {
+      setFilterClient(paramClientId);
+      if (paramClientId !== "all") {
+        setSelectedClientId(paramClientId);
+      }
+    }
+  }, [paramClientId]);
   const [leads, setLeads] = useState<LeadOption[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
   const [phone, setPhone] = useState("");
@@ -194,6 +215,11 @@ export default function SmsMessagingPage() {
           <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
             <MessageSquare className="w-6 h-6 text-[#D97757] shrink-0" />
             <span>Mensajería SMS & Campañas</span>
+            {activeClient && (
+              <span className="text-xs font-medium text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                {activeClient.name}
+              </span>
+            )}
           </h1>
           <p className="text-xs text-[#475467] mt-1">
             Envío directo a prospectos, trazabilidad de respuestas entrantes y campañas masivas mediante Twilio API.
