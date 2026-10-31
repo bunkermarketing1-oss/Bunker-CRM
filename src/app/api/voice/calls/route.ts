@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await startOutboundCall(scope, user!.id, parsed.data.leadId as string);
+    const result = await startOutboundCall(scope, user!.id, parsed.data);
     return NextResponse.json({ success: true, ...result }, { status: 201 });
   } catch (error) {
     return voiceErrorResponse(error, "POST /api/voice/calls", "Error al iniciar la llamada.");

@@ -33,9 +33,15 @@ export const updatePhoneLineSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const startCallSchema = z.object({
-  leadId: z.string().uuid("Lead inválido."),
-});
+export const startCallSchema = z
+  .object({
+    leadId: z.string().uuid("Lead inválido.").optional(),
+    phone: z.string().trim().optional(),
+    name: z.string().trim().max(80).optional(),
+  })
+  .refine((data) => Boolean(data.leadId || data.phone), {
+    message: "Debes seleccionar un lead o ingresar un número de teléfono.",
+  });
 
 export const claimCallSchema = z.object({
   // El SID termina en la base y en la API REST de Twilio: solo se acepta un CallSid real.
@@ -44,3 +50,4 @@ export const claimCallSchema = z.object({
 
 export type CreatePhoneLineInput = z.infer<typeof createPhoneLineSchema>;
 export type UpdatePhoneLineInput = z.infer<typeof updatePhoneLineSchema>;
+export type StartCallInput = z.infer<typeof startCallSchema>;

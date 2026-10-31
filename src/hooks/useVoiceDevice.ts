@@ -149,8 +149,8 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
     };
   }, [receiveIncoming]);
 
-  const callLead = useCallback(
-    async (leadId: string, label: string) => {
+  const callTarget = useCallback(
+    async (target: { leadId?: string; phone?: string; name?: string }, label: string) => {
       const device = deviceRef.current;
       if (!device || callRef.current) return;
       setError(null);
@@ -159,7 +159,7 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
         const res = await fetch("/api/voice/calls", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leadId }),
+          body: JSON.stringify(target),
         });
         const json = await res.json();
         if (!json.success) {
@@ -175,6 +175,11 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
       }
     },
     [trackCall]
+  );
+
+  const callLead = useCallback(
+    (leadId: string, label: string) => callTarget({ leadId }, label),
+    [callTarget]
   );
 
   const monitor = useCallback(
@@ -218,5 +223,5 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
     if (call) call.mute(!call.isMuted());
   }, []);
 
-  return { phase, error, active, incoming, callLead, monitor, acceptIncoming, rejectIncoming, hangup, toggleMute };
+  return { phase, error, active, incoming, callLead, callTarget, monitor, acceptIncoming, rejectIncoming, hangup, toggleMute };
 }

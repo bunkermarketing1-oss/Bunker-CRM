@@ -27,6 +27,8 @@ export const LEAD_SOURCE = {
   REFERRAL: "referral",
   FACEBOOK_MESSENGER: "facebook_messenger",
   INSTAGRAM_DIRECT: "instagram_direct",
+  MANUAL: "manual",
+  PHONE_CALL: "phone_call",
 } as const;
 
 /** Etiquetas visibles de las fuentes de lead (`Lead.source`). */
@@ -41,6 +43,7 @@ export const LEAD_SOURCE_LABEL: Record<string, string> = {
   instagram_direct: "Instagram Direct",
   website: "Sitio web",
   referral: "Referidos",
+  phone_call: "Llamada telefónica",
   sales_outreach: "Prospección comercial",
   import: "Importación",
   manual: "Registro manual",

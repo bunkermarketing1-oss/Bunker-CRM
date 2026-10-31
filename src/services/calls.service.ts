@@ -14,7 +14,8 @@ import {
 import { createVoiceAccessToken } from "@/lib/integrations/twilio-voice-token";
 import { conferenceTwiml, dialClientsTwiml, emptyTwiml, sayTwiml } from "@/lib/integrations/twilio-twiml";
 import { isAllowedCallDestination, parseAllowedCountries, statusesThatCanAdvanceTo } from "@/lib/voice-policy";
-import { ACTIVITY_TYPE } from "@/lib/constants/crm";
+import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
+import { validateAndNormalizePhone } from "@/lib/phone";
 import {
   CALL_CALLBACK_LEG,
   CALL_DIRECTION,
@@ -36,7 +37,7 @@ import {
   type CallStatus,
   type MonitorMode,
 } from "@/lib/constants/voice";
-import type { CreatePhoneLineInput, UpdatePhoneLineInput } from "@/lib/validations/voice";
+import type { CreatePhoneLineInput, UpdatePhoneLineInput, StartCallInput } from "@/lib/validations/voice";
 import type { TenantScope } from "@/types/tenant";
 import type { CallSummary, PhoneLineSummary } from "@/types/voice";
 
@@ -323,12 +324,58 @@ async function assertOutboundRateLimit(organizationId: string, userId: string, c
  * Registra una llamada saliente a un lead dentro del scope del usuario. El número sale
  * del lead, nunca del navegador. El navegador conecta después con `callId`.
  */
-export async function startOutboundCall(scope: TenantScope, userId: string, leadId: string) {
-  const lead = await prisma.lead.findFirst({
-    where: { id: leadId, isDeleted: false, ...scopeWhere(scope) },
-    select: { id: true, clientId: true, normalizedPhone: true },
-  });
-  if (!lead) throw new CallError("Lead no encontrado.", 404);
+export async function startOutboundCall(
+  scope: TenantScope,
+  userId: string,
+  target: string | StartCallInput
+) {
+  const leadId = typeof target === "string" ? target : target.leadId;
+  const targetPhone = typeof target === "object" ? target.phone : undefined;
+  const targetName = typeof target === "object" ? target.name : undefined;
+
+  let lead = leadId
+    ? await prisma.lead.findFirst({
+        where: { id: leadId, isDeleted: false, ...scopeWhere(scope) },
+        select: { id: true, clientId: true, normalizedPhone: true },
+      })
+    : null;
+
+  if (!lead && targetPhone) {
+    const phoneVal = validateAndNormalizePhone(targetPhone);
+    if (!phoneVal.isValid || !phoneVal.normalized) {
+      throw new CallError(
+        phoneVal.error || "Número telefónico inválido. Usa formato internacional (ej: +14695629878).",
+        400
+      );
+    }
+    const normalized = phoneVal.normalized;
+
+    lead = await prisma.lead.findFirst({
+      where: {
+        organizationId: scope.organizationId,
+        normalizedPhone: normalized,
+        isDeleted: false,
+        ...(scope.clientId ? { clientId: scope.clientId } : {}),
+      },
+      select: { id: true, clientId: true, normalizedPhone: true },
+    });
+
+    if (!lead) {
+      lead = await prisma.lead.create({
+        data: {
+          organizationId: scope.organizationId,
+          clientId: scope.clientId || null,
+          name: targetName?.trim() || "Contacto " + normalized,
+          phone: normalized,
+          normalizedPhone: normalized,
+          source: LEAD_SOURCE.MANUAL,
+          status: LEAD_STATUS.CONTACTED,
+        },
+        select: { id: true, clientId: true, normalizedPhone: true },
+      });
+    }
+  }
+  if (!lead) throw new CallError("Lead o número no encontrado.", 404);
   // Solo el E.164 validado: `phone` es texto libre y Twilio lo interpretaría a su manera.
   const toNumber = lead.normalizedPhone;
   if (!toNumber) {

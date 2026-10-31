@@ -89,6 +89,7 @@ function CallsContent() {
             incoming={device.incoming}
             leads={leads}
             onCall={(leadId, label) => device.callLead(leadId, label)}
+            onCallDirect={(target, label) => device.callTarget(target, label)}
             onHangup={() => device.hangup()}
             onToggleMute={() => device.toggleMute()}
             onAccept={() => device.acceptIncoming()}
