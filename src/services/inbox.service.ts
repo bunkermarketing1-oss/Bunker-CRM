@@ -27,7 +27,7 @@ interface GetInboxOptions {
  */
 // Control de auto-sincronización periódica por organización y cliente (mínimo 15s entre llamadas a Meta)
 const clientLastSyncMap = new Map<string, number>();
-const AUTO_SYNC_COOLDOWN_MS = 15000;
+const AUTO_SYNC_COOLDOWN_MS = 60000;
 
 export async function getInboxConversations(
   organizationId: string,
@@ -74,12 +74,18 @@ export async function getInboxConversations(
       select: { id: true },
     });
 
-    for (const page of pageAccounts) {
-      try {
-        await syncConnectedPageConversations(page.id);
-      } catch (syncErr) {
-        console.error(`[INBOX_SYNC] Error sincronizando página ${page.id}:`, syncErr);
-      }
+    if (pageAccounts.length > 0) {
+      // Disparar sincronización en segundo plano sin bloquear la respuesta de la base de datos
+      Promise.allSettled(
+        pageAccounts.map((page) =>
+          Promise.race([
+            syncConnectedPageConversations(page.id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4500)),
+          ]).catch((syncErr) => {
+            console.warn(`[INBOX_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
+          })
+        )
+      ).catch(() => {});
     }
   }
 

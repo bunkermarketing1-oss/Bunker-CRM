@@ -215,7 +215,7 @@ function UnifiedInboxPageContent() {
       isFetchingRef.current = true;
 
       try {
-        if (!isSilent) setLoading(true);
+        if (!isSilent && conversations.length === 0) setLoading(true);
         const params = new URLSearchParams();
         if (activeChannel !== "all") params.set("channel", activeChannel);
         if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
@@ -267,7 +267,7 @@ function UnifiedInboxPageContent() {
     fetchInbox(false, true);
     const interval = setInterval(() => {
       fetchInbox(true);
-    }, 5000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [fetchInbox]);
 
@@ -662,7 +662,7 @@ function UnifiedInboxPageContent() {
 
           {/* Lista de Conversaciones con Scroll */}
           <div className="flex-1 overflow-y-auto divide-y divide-[#EAECF0]">
-            {loading ? (
+            {loading && conversations.length === 0 ? (
               <div className="py-12 text-center text-[#9C9890] text-xs flex flex-col items-center justify-center gap-2">
                 <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
                 <span>Cargando conversaciones...</span>
