@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ROUTES, leadSearchRoute } from "@/lib/constants/routes";
 import { useAuth } from "@/context/AuthContext";
 import { useClientPortalUsers } from "@/hooks/useClientPortalUsers";
+import { emitClientsUpdated } from "@/hooks/useClientOptions";
 import { ClientPortalUsersPanel } from "@/components/clients/ClientPortalUsersPanel";
 import { useParams, useRouter } from "next/navigation";
 import { ClientAiAssistantPanel } from "@/components/clients/ClientAiAssistantPanel";
@@ -329,6 +330,7 @@ export default function ClientProfile360Page() {
         setIsEditClientOpen(false);
         showFeedback("Ficha del cliente actualizada exitosamente.");
         fetchClientData();
+        emitClientsUpdated();
       } else {
         showFeedback(json.error || "No se pudo actualizar la ficha.", "error");
       }

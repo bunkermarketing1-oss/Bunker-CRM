@@ -18,6 +18,7 @@ export interface AuthenticatedUser {
   role: UserRole;
   clientId: string | null;
   clientName: string | null;
+  clientLogoUrl?: string | null;
   isClientUser: boolean;
   /**
    * Dueño del negocio del cliente: sigue siendo usuario de portal (`isClientUser`, `clientId`
@@ -92,7 +93,7 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
         isActive: true,
       },
       include: {
-        client: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true, logoUrl: true } },
         memberships: {
           include: {
             organization: true,
@@ -111,7 +112,7 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
         where: { id: dbUser.id },
         data: { supabaseAuthId: supabaseUser.id },
         include: {
-          client: { select: { id: true, name: true } },
+          client: { select: { id: true, name: true, logoUrl: true } },
           memberships: {
             include: {
               organization: true,
@@ -158,6 +159,7 @@ export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUs
       role: isClient ? ROLES.CLIENT : ROLES.ADMIN, // Server-verified canonical role
       clientId: dbUser.clientId || null,
       clientName: dbUser.client?.name || null,
+      clientLogoUrl: dbUser.client?.logoUrl || null,
       isClientUser: isClient,
       // Sin empresa no hay a quién supervisar: un CLIENT_OWNER sin clientId queda como asesor.
       isClientOwner: isClient && isClientOwnerRole(dbUser.role) && Boolean(dbUser.clientId),

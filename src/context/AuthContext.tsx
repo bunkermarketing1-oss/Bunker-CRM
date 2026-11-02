@@ -10,6 +10,7 @@ export interface UserProfile {
   role: string; // admin, sales_rep, marketing_specialist, analyst, client_user, client_admin
   clientId?: string | null;
   clientName?: string | null;
+  clientLogoUrl?: string | null;
   isClientUser?: boolean;
   /** Dueño del negocio del cliente: además de su portal, supervisa a sus asesores. */
   isClientOwner?: boolean;

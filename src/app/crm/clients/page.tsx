@@ -32,6 +32,7 @@ import {
   Camera,
 } from "lucide-react";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
+import { emitClientsUpdated } from "@/hooks/useClientOptions";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
@@ -234,6 +235,7 @@ export default function ClientsPage() {
         setTimeout(() => setFeedback(null), 4000);
         setEditingClient(null);
         fetchClients();
+        emitClientsUpdated();
       } else {
         setErrorMsg(json.error || "No se pudo actualizar la empresa.");
       }
@@ -467,6 +469,7 @@ export default function ClientsPage() {
         setFeedback(`Cliente "${name}" eliminado correctamente.`);
         setTimeout(() => setFeedback(null), 4000);
         fetchClients();
+        emitClientsUpdated();
       } else {
         setErrorMsg(json.error || "No se pudo eliminar el cliente.");
       }
@@ -1345,6 +1348,7 @@ export default function ClientsPage() {
           onClose={() => setIsCreateOpen(false)}
           onSuccess={() => {
             fetchClients();
+            emitClientsUpdated();
             setFeedback("¡Cliente comercial instalado y configurado con éxito!");
             setTimeout(() => setFeedback(null), 5000);
           }}

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo, Suspense } from "react";
@@ -233,8 +234,22 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
 
         {isClient ? (
           <div className="bg-[#F8F9FA] rounded-xl border border-[#EAECF0] p-2.5 flex items-center gap-2.5 mb-4 shadow-2xs">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
-              {initialsOf(accountName, "CL")}
+            <div
+              className={`w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs ${
+                user?.clientLogoUrl
+                  ? "bg-white border border-[#EAECF0]"
+                  : "bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950"
+              }`}
+            >
+              {user?.clientLogoUrl ? (
+                <img
+                  src={user.clientLogoUrl}
+                  alt={accountName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                initialsOf(accountName, "CL")
+              )}
             </div>
             <div className="min-w-0">
               <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-0.5">
@@ -252,13 +267,25 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
               className="w-full text-left bg-[#F8F9FA] hover:bg-[#F2F4F7] border border-[#EAECF0] p-2.5 rounded-xl flex items-center gap-2.5 shadow-2xs transition-colors cursor-pointer group"
             >
               <div
-                className={`w-8 h-8 rounded-lg ${
-                  selectedClient
+                className={`w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs ${
+                  selectedClient?.logoUrl
+                    ? "bg-white border border-[#EAECF0]"
+                    : selectedClient
                     ? "bg-gradient-to-br from-amber-500 to-amber-700 text-white"
                     : "bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950"
-                } flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs`}
+                }`}
               >
-                {selectedClient ? initialsOf(selectedClient.name, "CL") : "BM"}
+                {selectedClient?.logoUrl ? (
+                  <img
+                    src={selectedClient.logoUrl}
+                    alt={selectedClient.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : selectedClient ? (
+                  initialsOf(selectedClient.name, "CL")
+                ) : (
+                  "BM"
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] text-[#98A2B3] font-medium leading-none mb-1 flex items-center justify-between">
@@ -318,8 +345,16 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
                         }`}
                       >
                         <span className="truncate flex items-center gap-2">
-                          <span className="w-5 h-5 rounded bg-[#EAECF0] text-[#344054] text-[9px] font-bold flex items-center justify-center shrink-0">
-                            {initialsOf(c.name, "CL")}
+                          <span className="w-5 h-5 rounded bg-[#EAECF0] text-[#344054] text-[9px] font-bold flex items-center justify-center shrink-0 overflow-hidden border border-[#EAECF0]/80">
+                            {c.logoUrl ? (
+                              <img
+                                src={c.logoUrl}
+                                alt={c.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              initialsOf(c.name, "CL")
+                            )}
                           </span>
                           <span className="truncate">{c.name}</span>
                         </span>
