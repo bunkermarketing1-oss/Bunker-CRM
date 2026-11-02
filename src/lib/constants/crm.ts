@@ -95,6 +95,11 @@ export const ACTIVITY_TYPE = {
   EMAIL: "email",
   NOTE: "note",
   SMS: "sms",
+  CHECK_IN: "check_in",
+  CHECK_OUT: "check_out",
+  WHATSAPP: "whatsapp",
+  MESSENGER: "messenger",
+  INSTAGRAM: "instagram",
 } as const;
 export type ActivityType = ValueOf<typeof ACTIVITY_TYPE>;
 

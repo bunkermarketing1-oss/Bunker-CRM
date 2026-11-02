@@ -12,7 +12,15 @@ const IDLE_MS = ADVISOR_IDLE_MINUTES * 60 * 1000;
 const STATUS_VALUES = { onCall: ADVISOR_STATUS.ON_CALL, available: ADVISOR_STATUS.AVAILABLE, idle: ADVISOR_STATUS.IDLE };
 
 // Actividades que cuentan como "contactar" a un lead; una nota interna no es contacto.
-const CONTACT_ACTIVITY_TYPES = [ACTIVITY_TYPE.CALL, ACTIVITY_TYPE.SMS, ACTIVITY_TYPE.EMAIL, ACTIVITY_TYPE.MEETING];
+const CONTACT_ACTIVITY_TYPES = [
+  ACTIVITY_TYPE.CALL,
+  ACTIVITY_TYPE.SMS,
+  ACTIVITY_TYPE.EMAIL,
+  ACTIVITY_TYPE.MEETING,
+  ACTIVITY_TYPE.WHATSAPP,
+  ACTIVITY_TYPE.MESSENGER,
+  ACTIVITY_TYPE.INSTAGRAM,
+];
 
 /** Usuarios de portal (asesores y dueños) del scope: los de un cliente o, para Bunker, todos. */
 function listAdvisors(scope: TenantScope) {
@@ -34,16 +42,28 @@ const dateMap = <T extends { userId: string | null }>(rows: T[], value: (row: T)
   new Map(rows.filter((r) => r.userId).map((r) => [r.userId as string, value(r)]));
 
 /**
- * Agregados de hoy por asesor. Una consulta `groupBy` por métrica (no una por asesor), todas
- * filtradas por los ids del scope: `Activity` y `Task` no tienen `organizationId`, así que el
- * aislamiento sale de que solo se consultan usuarios ya filtrados por organización y cliente.
+ * Agregados de hoy por asesor. Consultas `groupBy` por métrica (no una por asesor), todas
+ * filtradas por los ids del scope.
  */
 async function dayAggregates(organizationId: string, userIds: string[], dayStart: Date) {
   const byUser = { in: userIds };
   const todayCalls = { organizationId, userId: byUser, createdAt: { gte: dayStart } };
   const todayActivities = { userId: byUser, createdAt: { gte: dayStart } };
 
-  const [made, answered, talk, lastCall, sms, contacted, lastActivity, tasks] = await Promise.all([
+  const [
+    made,
+    answered,
+    talk,
+    lastCall,
+    sms,
+    whatsapp,
+    messenger,
+    instagram,
+    contacted,
+    lastActivity,
+    tasks,
+    attendanceEvents,
+  ] = await Promise.all([
     prisma.call.groupBy({ by: ["userId"], where: { ...todayCalls, direction: CALL_DIRECTION.OUTBOUND }, _count: { _all: true } }),
     prisma.call.groupBy({
       by: ["userId"],
@@ -53,6 +73,9 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
     prisma.call.groupBy({ by: ["userId"], where: todayCalls, _sum: { durationSec: true } }),
     prisma.call.groupBy({ by: ["userId"], where: todayCalls, _max: { updatedAt: true } }),
     prisma.activity.groupBy({ by: ["userId"], where: { ...todayActivities, type: ACTIVITY_TYPE.SMS }, _count: { _all: true } }),
+    prisma.activity.groupBy({ by: ["userId"], where: { ...todayActivities, type: ACTIVITY_TYPE.WHATSAPP }, _count: { _all: true } }),
+    prisma.activity.groupBy({ by: ["userId"], where: { ...todayActivities, type: ACTIVITY_TYPE.MESSENGER }, _count: { _all: true } }),
+    prisma.activity.groupBy({ by: ["userId"], where: { ...todayActivities, type: ACTIVITY_TYPE.INSTAGRAM }, _count: { _all: true } }),
     prisma.activity.groupBy({
       by: ["userId", "leadId"],
       where: { ...todayActivities, leadId: { not: null }, type: { in: CONTACT_ACTIVITY_TYPES } },
@@ -63,17 +86,45 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
       where: { userId: byUser, status: TASK_STATUS.COMPLETED, completedAt: { gte: dayStart } },
       _count: { _all: true },
     }),
+    prisma.activity.findMany({
+      where: {
+        userId: byUser,
+        type: { in: [ACTIVITY_TYPE.CHECK_IN, ACTIVITY_TYPE.CHECK_OUT] },
+        performedAt: { gte: dayStart },
+      },
+      select: { userId: true, type: true, performedAt: true },
+      orderBy: { performedAt: "asc" },
+    }),
   ]);
+
+  // Procesar asistencia por usuario
+  const attendanceByUser = new Map<string, { isCheckedIn: boolean; checkIn: Date | null; checkOut: Date | null }>();
+  for (const uid of userIds) {
+    const userEvents = attendanceEvents.filter((e) => e.userId === uid);
+    if (userEvents.length === 0) {
+      attendanceByUser.set(uid, { isCheckedIn: false, checkIn: null, checkOut: null });
+    } else {
+      const last = userEvents[userEvents.length - 1];
+      const isCheckedIn = last.type === ACTIVITY_TYPE.CHECK_IN;
+      const firstCheckIn = userEvents.find((e) => e.type === ACTIVITY_TYPE.CHECK_IN)?.performedAt ?? null;
+      const lastCheckOut = isCheckedIn ? null : last.performedAt;
+      attendanceByUser.set(uid, { isCheckedIn, checkIn: firstCheckIn, checkOut: lastCheckOut });
+    }
+  }
 
   return {
     made: sumMap(made, (r) => r._count._all),
     answered: sumMap(answered, (r) => r._count._all),
     talk: sumMap(talk, (r) => r._sum.durationSec ?? 0),
     sms: sumMap(sms, (r) => r._count._all),
+    whatsapp: sumMap(whatsapp, (r) => r._count._all),
+    messenger: sumMap(messenger, (r) => r._count._all),
+    instagram: sumMap(instagram, (r) => r._count._all),
     contacted: countByUser(contacted),
     tasks: sumMap(tasks, (r) => r._count._all),
     lastCall: dateMap(lastCall, (r) => r._max.updatedAt),
     lastActivity: dateMap(lastActivity, (r) => r._max.createdAt),
+    attendance: attendanceByUser,
   };
 }
 
@@ -129,6 +180,27 @@ export async function getTeamLiveView(scope: TenantScope, now: Date = new Date()
   const rows: AdvisorLiveRow[] = advisors.map((advisor) => {
     const lastActivityAt = latestDate(stats.lastActivity.get(advisor.id), stats.lastCall.get(advisor.id));
     const currentCall = live.get(advisor.id) ?? null;
+    const att = stats.attendance.get(advisor.id) ?? { isCheckedIn: false, checkIn: null, checkOut: null };
+
+    // Si el usuario hizo check-in y no ha salido, su estado base es AVAILABLE (Online) a menos que esté en llamada
+    let resolvedStatus = resolveAdvisorStatus({ hasLiveCall: Boolean(currentCall), lastActivityAt, now, idleMs: IDLE_MS }, STATUS_VALUES);
+    if (!currentCall && att.isCheckedIn) {
+      resolvedStatus = ADVISOR_STATUS.AVAILABLE;
+    }
+
+    const wa = stats.whatsapp.get(advisor.id) ?? 0;
+    const fb = stats.messenger.get(advisor.id) ?? 0;
+    const ig = stats.instagram.get(advisor.id) ?? 0;
+    const sm = stats.sms.get(advisor.id) ?? 0;
+    const callsTotal = stats.made.get(advisor.id) ?? 0;
+
+    const channels: string[] = [];
+    if (wa > 0) channels.push("whatsapp");
+    if (fb > 0) channels.push("messenger");
+    if (ig > 0) channels.push("instagram");
+    if (sm > 0) channels.push("sms");
+    if (callsTotal > 0) channels.push("calls");
+
     return {
       userId: advisor.id,
       name: advisor.name,
@@ -136,17 +208,25 @@ export async function getTeamLiveView(scope: TenantScope, now: Date = new Date()
       clientId: advisor.clientId as string,
       clientName: advisor.client?.name ?? null,
       isOwner: isClientOwnerRole(advisor.role),
-      status: resolveAdvisorStatus({ hasLiveCall: Boolean(currentCall), lastActivityAt, now, idleMs: IDLE_MS }, STATUS_VALUES),
+      status: resolvedStatus,
       currentCall,
       today: {
-        callsMade: stats.made.get(advisor.id) ?? 0,
+        callsMade: callsTotal,
         callsAnswered: stats.answered.get(advisor.id) ?? 0,
         talkTimeSec: stats.talk.get(advisor.id) ?? 0,
-        smsSent: stats.sms.get(advisor.id) ?? 0,
+        smsSent: sm,
+        whatsappSent: wa,
+        messengerSent: fb,
+        instagramSent: ig,
+        totalMessagesSent: wa + fb + ig + sm,
         leadsContacted: stats.contacted.get(advisor.id) ?? 0,
         tasksCompleted: stats.tasks.get(advisor.id) ?? 0,
+        channelsAttended: channels,
       },
       lastActivityAt: lastActivityAt?.toISOString() ?? null,
+      isCheckedIn: att.isCheckedIn,
+      checkedInAt: att.checkIn ? att.checkIn.toISOString() : null,
+      checkedOutAt: att.checkOut ? att.checkOut.toISOString() : null,
     };
   });
 

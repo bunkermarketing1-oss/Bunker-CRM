@@ -18,8 +18,13 @@ export interface AdvisorDayStats {
   callsAnswered: number;
   talkTimeSec: number;
   smsSent: number;
+  whatsappSent: number;
+  messengerSent: number;
+  instagramSent: number;
+  totalMessagesSent: number;
   leadsContacted: number;
   tasksCompleted: number;
+  channelsAttended: string[];
 }
 
 export interface AdvisorLiveRow {
@@ -34,6 +39,10 @@ export interface AdvisorLiveRow {
   today: AdvisorDayStats;
   /** Última actividad de hoy (ISO) o null si no ha hecho nada hoy. */
   lastActivityAt: string | null;
+  /** Asistencia y turnos */
+  isCheckedIn: boolean;
+  checkedInAt: string | null;
+  checkedOutAt: string | null;
 }
 
 export interface TeamLiveView {
@@ -48,4 +57,45 @@ export interface TeamLiveView {
 
 export interface TeamLiveResponse extends TeamLiveView {
   success: true;
+}
+
+/** Registro de asistencia y actividad de un día específico en la bitácora de 15 días */
+export interface AttendanceDayLog {
+  date: string; // YYYY-MM-DD
+  dayLabel: string; // "Lun, 2 Nov"
+  checkIn: string | null; // ISO
+  checkInTime: string | null; // "08:30 AM"
+  checkOut: string | null; // ISO
+  checkOutTime: string | null; // "05:45 PM"
+  durationMinutes: number;
+  durationFormatted: string; // "9h 15m" o "En turno"
+  status: "completed" | "in_progress" | "absent";
+  callsMade: number;
+  whatsappMessages: number;
+  messengerMessages: number;
+  instagramMessages: number;
+  smsMessages: number;
+  totalMessages: number;
+  tasksCompleted: number;
+}
+
+export interface SellerAttendanceHistoryResponse {
+  success: boolean;
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  clientName: string | null;
+  days: AttendanceDayLog[];
+  totals: {
+    daysWorked: number;
+    totalMinutesWorked: number;
+    totalHoursFormatted: string;
+    totalCalls: number;
+    totalMessages: number;
+    whatsappTotal: number;
+    messengerTotal: number;
+    instagramTotal: number;
+    smsTotal: number;
+  };
+  error?: string;
 }

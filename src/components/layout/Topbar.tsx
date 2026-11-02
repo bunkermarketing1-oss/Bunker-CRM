@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { ROUTES } from "@/lib/constants/routes";
+import { AttendanceCheckInButton } from "@/components/layout/AttendanceCheckInButton";
 import { greetingKeyFor, initialsOf, type GreetingKey } from "@/lib/greeting";
 
 interface TopbarProps {
@@ -247,6 +248,8 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           <Plus className="w-3.5 h-3.5 text-amber-400" />
           <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
         </Link>
+
+        <AttendanceCheckInButton />
 
         <div className="relative" ref={menuRef}>
           <button

@@ -10,7 +10,6 @@ import {
   MessageSquare,
   PhoneCall,
   Plug,
-  Radio,
   Settings,
   Share2,
   Sparkles,
@@ -63,13 +62,14 @@ export const CLIENT_NAVIGATION: NavSection[] = [
 ];
 
 /** Solo para el dueño del cliente: supervisión de sus asesores. Un asesor no la ve. */
+/** Solo para el dueño del cliente: supervisión de sus ejecutivos. Un vendedor (CLIENT) no la ve. */
 const OWNER_NAVIGATION_SECTION: NavSection = {
-  title: { es: "Mi Equipo", en: "My Team" },
+  title: { es: "Supervisión Comercial", en: "Sales Management" },
   items: [
     {
       href: ROUTES.TEAM_LIVE,
-      icon: Radio,
-      label: { es: "Equipo en vivo", en: "Live Team" },
+      icon: Users,
+      label: { es: "Ejecutivos de Venta", en: "Sales Executives" },
     },
   ],
 };
@@ -99,7 +99,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamadas & Líneas", en: "Calls & Lines" } },
       { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
-      { href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Asesores en vivo", en: "Live Advisors" } },
+      { href: ROUTES.TEAM_LIVE, icon: Users, label: { es: "Ejecutivos de Venta", en: "Sales Executives" } },
     ],
   },
   {

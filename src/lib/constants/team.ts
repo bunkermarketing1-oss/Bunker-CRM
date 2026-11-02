@@ -24,6 +24,13 @@ export type AdvisorStatus = ValueOf<typeof ADVISOR_STATUS>;
 
 export const ADVISOR_STATUS_LABEL: Record<AdvisorStatus, string> = {
   on_call: "En llamada",
-  available: "Disponible",
-  idle: "Inactivo",
+  available: "En línea (Online)",
+  idle: "Desconectado (Offline)",
 };
+
+export const ATTENDANCE_ACTION = {
+  CHECK_IN: "check_in",
+  CHECK_OUT: "check_out",
+  HEARTBEAT: "heartbeat",
+} as const;
+export type AttendanceAction = ValueOf<typeof ATTENDANCE_ACTION>;

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ACTIVITY_TYPE } from "@/lib/constants/crm";
 import { ACCOUNT_TYPE, ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
 import { sendMetaOutboundReply, syncConnectedPageConversations } from "@/services/meta-messaging.service";
@@ -435,6 +436,25 @@ export async function replyToConversation({
       },
     });
   }
+
+  // Registrar actividad por canal para el monitoreo de ejecutivos de venta
+  let actType: string = ACTIVITY_TYPE.NOTE;
+  if (channel.includes("whatsapp")) actType = ACTIVITY_TYPE.WHATSAPP;
+  else if (channel.includes("messenger")) actType = ACTIVITY_TYPE.MESSENGER;
+  else if (channel.includes("instagram")) actType = ACTIVITY_TYPE.INSTAGRAM;
+  else if (channel === MESSAGE_CHANNEL.SMS) actType = ACTIVITY_TYPE.SMS;
+
+  prisma.activity.create({
+    data: {
+      userId,
+      clientId: targetClientId || null,
+      leadId: leadId || null,
+      type: actType,
+      title: `Mensaje saliente vía ${channel}`,
+      description: body.slice(0, 160),
+      outcome: "completed",
+    },
+  }).catch(() => {});
 
   return {
     id: savedMessage.id,

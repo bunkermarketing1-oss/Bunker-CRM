@@ -300,6 +300,20 @@ function UnifiedInboxPageContent() {
     setErrorMessage(null);
   }, [selectedConvId]);
 
+  // Alternativa temporal: cada clic en conversación cuenta como actividad y actualiza estado del vendedor
+  const lastInboxHeartbeatRef = useRef(0);
+  useEffect(() => {
+    if (!selectedConvId) return;
+    const now = Date.now();
+    if (now - lastInboxHeartbeatRef.current < 30000) return;
+    lastInboxHeartbeatRef.current = now;
+    fetch("/api/team/attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "heartbeat" }),
+    }).catch(() => {});
+  }, [selectedConvId]);
+
   const convId = activeConversation?.id;
   const recipient = activeConversation?.recipient;
   const leadId = activeConversation?.leadId || "";
