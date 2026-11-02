@@ -225,11 +225,19 @@ const TWILIO_ERROR_MESSAGE: Record<number, string> = {
   21608: "La cuenta de prueba de Twilio solo envía SMS a números verificados en la consola.",
   21610: "El destinatario se dio de baja de los SMS de este número (respondió STOP).",
   21614: "El número del destinatario no puede recibir SMS.",
+  572002: "Tu cuenta de Twilio está en modo Prueba (Trial) y requiere que el número destino esté verificado en Twilio Console, o que hagas 'Upgrade' en tu cuenta de Twilio agregando saldo ($20 USD) para enviar a cualquier número.",
 };
 
 /** Mensaje en español para el asesor; si el código no es conocido, conserva el texto de Twilio. */
 export function humanizeTwilioError(code: number | undefined, rawMessage: string | undefined): string {
   if (code && TWILIO_ERROR_MESSAGE[code]) return TWILIO_ERROR_MESSAGE[code];
+  if (
+    rawMessage &&
+    (rawMessage.toLowerCase().includes("trial") ||
+      rawMessage.toLowerCase().includes("verified recipient"))
+  ) {
+    return "Tu cuenta de Twilio está en modo Prueba (Trial) y no permite enviar a números libres. Para enviar a cualquier número (+52, +57, etc.), debes hacer 'Upgrade' en la consola de Twilio agregando saldo ($20 USD), o registrar este número en 'Verified Caller IDs'.";
+  }
   return `Twilio no pudo procesar el envío: ${rawMessage || "error desconocido"}`;
 }
 
