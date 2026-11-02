@@ -98,10 +98,7 @@ export async function getInboxConversations(
 
   if (targetClientId) {
     andConditions.push({
-      OR: [
-        { clientId: targetClientId },
-        { lead: { is: { clientId: targetClientId } } },
-      ],
+      clientId: targetClientId,
     });
   }
 
@@ -133,7 +130,7 @@ export async function getInboxConversations(
     messageWhere.AND = andConditions;
   }
 
-  let dbMessages = await prisma.message.findMany({
+  const dbMessages = await prisma.message.findMany({
     where: messageWhere,
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -168,38 +165,18 @@ export async function getInboxConversations(
       select: { id: true },
     });
 
-    let importedAny = false;
-    for (const page of pageAccounts) {
-      try {
-        const res = await syncConnectedPageConversations(page.id);
-        if (res.messages > 0) importedAny = true;
-      } catch (syncErr) {
-        console.error(`[INBOX_AUTO_SYNC] Error en sincronización inicial:`, syncErr);
-      }
-    }
-
-    if (importedAny) {
-      dbMessages = await prisma.message.findMany({
-        where: messageWhere,
-        orderBy: { createdAt: "desc" },
-        take: limit,
-        include: {
-          client: { select: { id: true, name: true } },
-          lead: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-              email: true,
-              avatarUrl: true,
-              clientId: true,
-              client: { select: { id: true, name: true } },
-              ownerId: true,
-              owner: { select: { id: true, name: true, email: true } },
-            },
-          },
-        },
-      });
+    if (pageAccounts.length > 0) {
+      // Disparar sincronización sin bloquear indefinidamente la respuesta de la base de datos
+      Promise.allSettled(
+        pageAccounts.map((page) =>
+          Promise.race([
+            syncConnectedPageConversations(page.id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)),
+          ]).catch((syncErr) => {
+            console.warn(`[INBOX_AUTO_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
+          })
+        )
+      ).catch(() => {});
     }
   }
 
@@ -362,14 +339,7 @@ export async function getConversationThread({
   };
 
   if (targetClientId) {
-    where.AND = [
-      {
-        OR: [
-          { clientId: targetClientId },
-          { lead: { is: { clientId: targetClientId } } },
-        ],
-      },
-    ];
+    where.clientId = targetClientId;
   }
 
   const messages = await prisma.message.findMany({

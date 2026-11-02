@@ -265,9 +265,9 @@ function UnifiedInboxPageContent() {
     [activeChannel, activeClientId, debouncedSearch, isClient]
   );
 
-  // Carga inicial y sondeo periódico en segundo plano
+  // Carga inicial ultra rápida desde base de datos y sondeo periódico en segundo plano
   useEffect(() => {
-    fetchInbox(false, true);
+    fetchInbox(false, false);
     const interval = setInterval(() => {
       fetchInbox(true, false);
     }, 10000);

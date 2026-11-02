@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
   Globe,
   Building2,
   CheckCircle2,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
@@ -103,6 +104,98 @@ function getCampaignVisualInfo(name: string, objective: string | null): Campaign
     label: "Creativo / Anuncio",
     badgeCls: "bg-[#F2F4F7] text-[#344054] border-[#EAECF0]",
     icon: ImageIcon,
+  };
+}
+
+export type CampaignNetwork = "all" | "instagram" | "facebook" | "whatsapp" | "tiktok" | "google";
+
+export interface CampaignNetworkInfo {
+  network: CampaignNetwork;
+  label: string;
+  badgeCls: string;
+  dotCls: string;
+  iconProvider: string;
+}
+
+export function detectCampaignNetwork(
+  name: string,
+  platform: string,
+  objective: string | null
+): CampaignNetworkInfo {
+  const n = (name || "").toLowerCase();
+  const obj = (objective || "").toLowerCase();
+  const plat = (platform || "").toLowerCase();
+
+  // 1. TikTok
+  if (plat.includes("tiktok") || n.includes("tiktok")) {
+    return {
+      network: "tiktok",
+      label: "TikTok Ads",
+      badgeCls: "bg-slate-900 text-white border-slate-800",
+      dotCls: "bg-slate-900",
+      iconProvider: "tiktok",
+    };
+  }
+
+  // 2. Google Ads
+  if (plat.includes("google") || n.includes("google")) {
+    return {
+      network: "google",
+      label: "Google Ads",
+      badgeCls: "bg-blue-50 text-blue-700 border-blue-200",
+      dotCls: "bg-blue-600",
+      iconProvider: "google",
+    };
+  }
+
+  // 3. Instagram
+  if (
+    n.includes("instagram") ||
+    n.includes("publicación de instagram") ||
+    n.includes("publicacion de instagram") ||
+    n.includes("ig ") ||
+    n.includes("/ ig") ||
+    n.includes("ig/") ||
+    n.includes("reels") ||
+    n.includes("stories")
+  ) {
+    return {
+      network: "instagram",
+      label: "Instagram Ads",
+      badgeCls: "bg-gradient-to-r from-pink-50 to-purple-50 text-pink-700 border-pink-200",
+      dotCls: "bg-gradient-to-tr from-[#FD1D1D] via-[#E1306C] to-[#C13584]",
+      iconProvider: "instagram",
+    };
+  }
+
+  // 4. WhatsApp / Chat
+  if (
+    n.includes("whatsapp") ||
+    n.includes("what") ||
+    n.includes("wa ") ||
+    n.includes("/ wa") ||
+    n.includes("wa/") ||
+    n.includes("msj") ||
+    n.includes("mensaje") ||
+    n.includes("chat") ||
+    obj.includes("messages")
+  ) {
+    return {
+      network: "whatsapp",
+      label: "WhatsApp Ads",
+      badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      dotCls: "bg-[#25D366]",
+      iconProvider: "whatsapp",
+    };
+  }
+
+  // 5. Facebook / Meta
+  return {
+    network: "facebook",
+    label: "Facebook Ads",
+    badgeCls: "bg-blue-50 text-[#1877F2] border-blue-200",
+    dotCls: "bg-[#1877F2]",
+    iconProvider: "facebook",
   };
 }
 
@@ -221,6 +314,8 @@ function CampaignsPageContent() {
   const [days, setDays] = useState(30);
   const [clientId, setClientId] = useState(searchParams.get("clientId") ?? "all");
   const [selectedAccountId, setSelectedAccountId] = useState("all");
+  const [activeNetwork, setActiveNetwork] = useState<CampaignNetwork>("all");
+  const [campaignSearch, setCampaignSearch] = useState("");
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [metric, setMetric] = useState<Metric>("spend");
   const [data, setData] = useState<CampaignsData | null>(null);
@@ -300,6 +395,39 @@ function CampaignsPageContent() {
   const totals = data?.totals;
   const hasAccounts = Boolean(data?.accounts && data.accounts.length > 0);
   const selectedAccount = data?.accounts.find((a) => a.id === selectedAccountId);
+
+  const networkCounts = useMemo(() => {
+    const counts = { all: 0, instagram: 0, facebook: 0, whatsapp: 0, tiktok: 0, google: 0 };
+    if (!data?.campaigns) return counts;
+    counts.all = data.campaigns.length;
+    for (const c of data.campaigns) {
+      const net = detectCampaignNetwork(c.name, c.platform, c.objective).network;
+      if (counts[net] !== undefined) counts[net]++;
+    }
+    return counts;
+  }, [data?.campaigns]);
+
+  const filteredCampaigns = useMemo(() => {
+    if (!data?.campaigns) return [];
+    let list = data.campaigns;
+
+    if (activeNetwork !== "all") {
+      list = list.filter(
+        (c) => detectCampaignNetwork(c.name, c.platform, c.objective).network === activeNetwork
+      );
+    }
+
+    if (campaignSearch.trim()) {
+      const q = campaignSearch.toLowerCase().trim();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          (c.accountName && c.accountName.toLowerCase().includes(q))
+      );
+    }
+
+    return list;
+  }, [data?.campaigns, activeNetwork, campaignSearch]);
 
   const kpis = totals
     ? [
@@ -585,6 +713,135 @@ function CampaignsPageContent() {
             <DailyBars daily={data.daily} metric={metric} currency={currency} />
           </div>
 
+          {/* Pestañas de Clasificación de Red (Instagram, Facebook, WhatsApp, etc.) & Buscador */}
+          <div className="p-2 bg-white rounded-2xl border border-[#EAECF0] flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+            {/* Tabs de Red / Plataforma */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+              <button
+                type="button"
+                onClick={() => setActiveNetwork("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  activeNetwork === "all"
+                    ? "bg-[#0F172A] text-white shadow-xs"
+                    : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                }`}
+              >
+                <span>Todas</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    activeNetwork === "all" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+                  }`}
+                >
+                  {networkCounts.all}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveNetwork("instagram")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  activeNetwork === "instagram"
+                    ? "bg-gradient-to-r from-[#FD1D1D] via-[#E1306C] to-[#C13584] text-white shadow-xs"
+                    : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${activeNetwork === "instagram" ? "bg-white" : "bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600"}`} />
+                <span>Instagram</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    activeNetwork === "instagram" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+                  }`}
+                >
+                  {networkCounts.instagram}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveNetwork("facebook")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  activeNetwork === "facebook"
+                    ? "bg-[#1877F2] text-white shadow-xs"
+                    : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${activeNetwork === "facebook" ? "bg-white" : "bg-[#1877F2]"}`} />
+                <span>Facebook</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    activeNetwork === "facebook" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+                  }`}
+                >
+                  {networkCounts.facebook}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveNetwork("whatsapp")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  activeNetwork === "whatsapp"
+                    ? "bg-[#25D366] text-white shadow-xs"
+                    : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${activeNetwork === "whatsapp" ? "bg-white" : "bg-[#25D366]"}`} />
+                <span>WhatsApp</span>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    activeNetwork === "whatsapp" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+                  }`}
+                >
+                  {networkCounts.whatsapp}
+                </span>
+              </button>
+
+              {networkCounts.tiktok > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveNetwork("tiktok")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                    activeNetwork === "tiktok"
+                      ? "bg-black text-white shadow-xs"
+                      : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                  }`}
+                >
+                  <div className="w-2 h-2 rounded-full bg-black" />
+                  <span>TikTok Ads</span>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                      activeNetwork === "tiktok" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
+                    }`}
+                  >
+                    {networkCounts.tiktok}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* Buscador de campañas */}
+            <div className="relative min-w-[220px]">
+              <Search className="w-3.5 h-3.5 text-[#9C9890] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={campaignSearch}
+                onChange={(e) => setCampaignSearch(e.target.value)}
+                placeholder="Buscar campaña..."
+                className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-lg pl-8 pr-7 py-1.5 text-xs text-[#101828] placeholder-[#9C9890] focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+              />
+              {campaignSearch && (
+                <button
+                  type="button"
+                  onClick={() => setCampaignSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9C9890] hover:text-[#101828] cursor-pointer"
+                  title="Limpiar búsqueda"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Campaigns table */}
           <div className="rounded-xl bg-white border border-[#EAECF0] shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
@@ -604,27 +861,48 @@ function CampaignsPageContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0EFEA]">
-                  {data.campaigns.length === 0 && (
+                  {filteredCampaigns.length === 0 && (
                     <tr>
                       <td colSpan={10} className="px-4 py-10 text-center text-[#667085]">
                         <div className="max-w-md mx-auto space-y-3">
-                          <p className="text-xs">No hay campañas sincronizadas todavía para las cuentas seleccionadas.</p>
-                          <button
-                            type="button"
-                            onClick={handleSyncCampaigns}
-                            disabled={syncing}
-                            className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 shadow-2xs"
-                          >
-                            <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${syncing ? "animate-spin" : ""}`} />
-                            <span>{syncing ? "Sincronizando de Meta Ads..." : "Sincronizar Campañas Ahora"}</span>
-                          </button>
+                          {data.campaigns.length === 0 ? (
+                            <>
+                              <p className="text-xs">No hay campañas sincronizadas todavía para las cuentas seleccionadas.</p>
+                              <button
+                                type="button"
+                                onClick={handleSyncCampaigns}
+                                disabled={syncing}
+                                className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 shadow-2xs"
+                              >
+                                <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${syncing ? "animate-spin" : ""}`} />
+                                <span>{syncing ? "Sincronizando de Meta Ads..." : "Sincronizar Campañas Ahora"}</span>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs font-medium text-[#101828]">
+                                No se encontraron campañas en la pestaña &quot;{activeNetwork === "instagram" ? "Instagram" : activeNetwork === "facebook" ? "Facebook" : activeNetwork === "whatsapp" ? "WhatsApp" : activeNetwork}&quot;{campaignSearch ? ` con el filtro "${campaignSearch}"` : ""}.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveNetwork("all");
+                                  setCampaignSearch("");
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-medium hover:bg-slate-800 transition-colors cursor-pointer"
+                              >
+                                Ver todas las campañas ({data.campaigns.length})
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
                   )}
-                  {data.campaigns.map((c) => {
+                  {filteredCampaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
                     const visual = getCampaignVisualInfo(c.name, c.objective);
+                    const netInfo = detectCampaignNetwork(c.name, c.platform, c.objective);
                     const VisualIcon = visual.icon;
 
                     return (
@@ -643,7 +921,7 @@ function CampaignsPageContent() {
                                 <Eye className="w-3.5 h-3.5 text-amber-300" />
                               </div>
                               <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white shadow-xs ring-1 ring-black/10">
-                                <SocialNetworkIcon provider={c.platform} size="xs" />
+                                <SocialNetworkIcon provider={netInfo.iconProvider} size="xs" />
                               </div>
                             </button>
 
@@ -660,7 +938,10 @@ function CampaignsPageContent() {
                                 <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${visual.badgeCls}`}>
                                   {visual.label}
                                 </span>
-                                <span>· {PLATFORM_LABELS[c.platform] || c.platform}</span>
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${netInfo.badgeCls}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${netInfo.dotCls}`} />
+                                  {netInfo.label}
+                                </span>
                                 {c.accountName && <span className="truncate max-w-[160px]">· {c.accountName}</span>}
                               </div>
                             </div>
@@ -688,7 +969,7 @@ function CampaignsPageContent() {
                           <button
                             type="button"
                             onClick={() => setSelectedCampaignForAds(c)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-xs group whitespace-nowrap shrink-0"
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-xs group whitespace-nowrap shrink-0 cursor-pointer"
                             title="Ver imágenes, videos, textos y creativos"
                           >
                             <Eye className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-400 transition-colors shrink-0" />
@@ -709,7 +990,7 @@ function CampaignsPageContent() {
         <CampaignAdsModal
           campaignId={selectedCampaignForAds.id}
           campaignName={selectedCampaignForAds.name}
-          platform={selectedCampaignForAds.platform}
+          platform={detectCampaignNetwork(selectedCampaignForAds.name, selectedCampaignForAds.platform, selectedCampaignForAds.objective).iconProvider}
           accountName={selectedCampaignForAds.accountName}
           onClose={() => setSelectedCampaignForAds(null)}
         />
