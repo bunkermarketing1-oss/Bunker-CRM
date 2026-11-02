@@ -7,7 +7,6 @@ import {
   Inbox,
   KanbanSquare,
   LayoutDashboard,
-  LineChart,
   MessageSquare,
   PhoneCall,
   Plug,
@@ -56,10 +55,9 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     ],
   },
   {
-    title: { es: "Resultados & Reportes", en: "Results & Reports" },
+    title: { es: "Resultados & Campañas", en: "Results & Campaigns" },
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Mis Campañas", en: "My Campaigns" } },
-      { href: ROUTES.REPORTS, icon: LineChart, label: { es: "Reportes", en: "Reports" } },
     ],
   },
 ];
@@ -87,7 +85,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline de Ventas", en: "Sales Pipeline" } },
       { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades y Llamadas", en: "Activities & Calls" } },
       { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas y Seguimiento", en: "Tasks & Tracking" } },
-      { href: ROUTES.REPORTS, icon: LineChart, label: { es: "Reportes & ROI", en: "Reports & ROI" } },
     ],
   },
   {
