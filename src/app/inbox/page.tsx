@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Inbox,
@@ -159,6 +159,7 @@ export default function UnifiedInboxPage() {
 
 function UnifiedInboxPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser);
 
@@ -614,7 +615,18 @@ function UnifiedInboxPageContent() {
             <span className="text-xs text-[#667085] font-medium hidden sm:inline">Empresa:</span>
             <select
               value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedClientId(val);
+                const p = new URLSearchParams(searchParams.toString());
+                if (val === "all") {
+                  p.delete("clientId");
+                } else {
+                  p.set("clientId", val);
+                }
+                const qs = p.toString();
+                router.push(qs ? `/inbox?${qs}` : "/inbox");
+              }}
               className="bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-medium cursor-pointer"
             >
               <option value="all">Todas las empresas</option>
