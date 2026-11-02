@@ -313,6 +313,7 @@ function UnifiedInboxPageContent() {
   }, [selectedConvId]);
 
   const convId = activeConversation?.id;
+  const convChannel = activeConversation?.channel;
   const recipient = activeConversation?.recipient;
   const leadId = activeConversation?.leadId || "";
   const msgCount = activeConversation?.messages.length ?? 0;
@@ -331,6 +332,7 @@ function UnifiedInboxPageContent() {
     const params = new URLSearchParams({
       thread: "true",
       recipient,
+      ...(convChannel ? { channel: convChannel } : {}),
       ...(leadId ? { leadId } : {}),
       ...(activeClientId !== "all" ? { clientId: activeClientId } : {}),
     });
@@ -352,7 +354,7 @@ function UnifiedInboxPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, [convId, recipient, leadId, msgCount, activeClientId]);
+  }, [convId, convChannel, recipient, leadId, msgCount, activeClientId]);
 
   const handleAssignAdvisor = async (advisorId: string | null) => {
     if (!activeConversation || assigning) return;

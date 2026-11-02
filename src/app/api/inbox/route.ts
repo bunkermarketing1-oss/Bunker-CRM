@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
         targetClientId,
         recipient,
         leadId,
+        channel: channelFilter !== "all" ? channelFilter : undefined,
       });
       return NextResponse.json({ success: true, messages });
     }

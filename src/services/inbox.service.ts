@@ -114,18 +114,6 @@ export async function getInboxConversations(
     });
   }
 
-  if (channel && channel !== "all") {
-    if (channel === "comments") {
-      andConditions.push({
-        channel: {
-          in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT],
-        },
-      });
-    } else {
-      andConditions.push({ channel });
-    }
-  }
-
   if (cleanSearch) {
     andConditions.push({
       OR: [
@@ -145,7 +133,7 @@ export async function getInboxConversations(
   const dbMessages = await prisma.message.findMany({
     where: messageWhere,
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: Math.max(limit, 1000),
     include: {
       client: { select: { id: true, name: true } },
       lead: {
@@ -198,9 +186,6 @@ export async function getInboxConversations(
   const dbConvMap = new Map<string, ConversationItem>();
 
   for (const msg of chronologicalMessages) {
-    const convKey = `msg_${msg.leadId || msg.recipient}`;
-    const sender = msg.lead?.name || msg.recipient;
-
     let ch: ConversationItem["channel"] = "whatsapp";
     if (msg.channel === MESSAGE_CHANNEL.MESSENGER) ch = "messenger";
     else if (msg.channel === MESSAGE_CHANNEL.INSTAGRAM) ch = "instagram";
@@ -208,6 +193,10 @@ export async function getInboxConversations(
     else if (msg.channel === MESSAGE_CHANNEL.FACEBOOK_COMMENT) ch = "facebook_comment";
     else if (msg.channel === MESSAGE_CHANNEL.INSTAGRAM_COMMENT) ch = "instagram_comment";
     else ch = "whatsapp";
+
+    // Clave única por canal y remitente/prospecto para evitar colisiones entre canales distintos
+    const convKey = `msg_${ch}_${msg.leadId || msg.recipient}`;
+    const sender = msg.lead?.name || msg.recipient;
 
     const channelAccountLabel =
       ch === "whatsapp"
@@ -272,7 +261,7 @@ export async function getInboxConversations(
   // Ordenar conversaciones por su mensaje más reciente (más nuevo arriba)
   allConversations.sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
 
-  // Estadísticas globales / filtradas
+  // Estadísticas globales precisas por canal para las pestañas de navegación (nunca caen a 0 al filtrar por pestaña)
   const stats: InboxStats = {
     total: allConversations.length,
     unread: allConversations.filter((c) => c.unreadCount > 0).length,
@@ -284,6 +273,133 @@ export async function getInboxConversations(
       (c) => c.channel === "facebook_comment" || c.channel === "instagram_comment"
     ).length,
   };
+
+  // Filtrar el listado de conversaciones según la pestaña de canal activa
+  let filteredConversations = allConversations;
+  if (channel && channel !== "all") {
+    if (channel === "comments") {
+      filteredConversations = allConversations.filter(
+        (c) => c.channel === "facebook_comment" || c.channel === "instagram_comment"
+      );
+    } else {
+      filteredConversations = allConversations.filter((c) => c.channel === channel);
+    }
+
+    // Si en los mensajes recientes no hubo de este canal pero el usuario lo seleccionó,
+    // buscar si existen mensajes históricos para este canal y agregarlos
+    if (filteredConversations.length === 0 && !cleanSearch) {
+      const channelFilterCondition =
+        channel === "comments"
+          ? { in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT] }
+          : channel;
+
+      const olderChannelMsgs = await prisma.message.findMany({
+        where: {
+          ...messageWhere,
+          channel: channelFilterCondition,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        include: {
+          client: { select: { id: true, name: true } },
+          lead: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+              avatarUrl: true,
+              clientId: true,
+              client: { select: { id: true, name: true } },
+              ownerId: true,
+              owner: { select: { id: true, name: true, email: true } },
+            },
+          },
+        },
+      });
+
+      if (olderChannelMsgs.length > 0) {
+        const olderChronological = [...olderChannelMsgs].reverse();
+        const olderConvMap = new Map<string, ConversationItem>();
+
+        for (const msg of olderChronological) {
+          let ch: ConversationItem["channel"] = "whatsapp";
+          if (msg.channel === MESSAGE_CHANNEL.MESSENGER) ch = "messenger";
+          else if (msg.channel === MESSAGE_CHANNEL.INSTAGRAM) ch = "instagram";
+          else if (msg.channel === MESSAGE_CHANNEL.SMS) ch = "sms";
+          else if (msg.channel === MESSAGE_CHANNEL.FACEBOOK_COMMENT) ch = "facebook_comment";
+          else if (msg.channel === MESSAGE_CHANNEL.INSTAGRAM_COMMENT) ch = "instagram_comment";
+
+          const convKey = `msg_${ch}_${msg.leadId || msg.recipient}`;
+          const sender = msg.lead?.name || msg.recipient;
+
+          if (!olderConvMap.has(convKey)) {
+            olderConvMap.set(convKey, {
+              id: convKey,
+              channel: ch,
+              senderName: sender,
+              senderAvatar: msg.lead?.avatarUrl || null,
+              recipient: msg.recipient || "Línea Oficial",
+              clientId: msg.clientId || msg.lead?.clientId || null,
+              clientName: msg.client?.name || msg.lead?.client?.name || null,
+              connectedAccountId: null,
+              accountName:
+                ch === "whatsapp"
+                  ? "WhatsApp Business"
+                  : ch === "messenger"
+                  ? "Facebook Messenger"
+                  : ch === "instagram"
+                  ? "Instagram Direct"
+                  : ch === "sms"
+                  ? "Twilio SMS"
+                  : ch === "facebook_comment"
+                  ? "Comentario Facebook"
+                  : "Comentario Instagram",
+              unreadCount: 0,
+              lastMessageText: msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body,
+              lastMessageTime: msg.createdAt.toISOString(),
+              leadId: msg.lead?.id || null,
+              leadPhone: msg.lead?.phone || msg.recipient,
+              leadEmail: msg.lead?.email || null,
+              assignedAdvisorId: msg.lead?.ownerId || null,
+              assignedAdvisorName: msg.lead?.owner?.name || null,
+              messages: [],
+            });
+          }
+
+          const conv = olderConvMap.get(convKey)!;
+          conv.lastMessageText = msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body;
+          conv.lastMessageTime = msg.createdAt.toISOString();
+          if (msg.lead?.avatarUrl && !conv.senderAvatar) {
+            conv.senderAvatar = msg.lead.avatarUrl;
+          }
+          if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
+            conv.unreadCount += 1;
+          }
+          conv.messages.push({
+            id: msg.id,
+            senderName: msg.direction === MESSAGE_DIRECTION.INBOUND ? sender : "Tú (Asesor)",
+            body: msg.body,
+            createdAt: msg.createdAt.toISOString(),
+            direction: msg.direction === MESSAGE_DIRECTION.INBOUND ? "inbound" : "outbound",
+            status: msg.status,
+            channel: msg.channel,
+          });
+        }
+
+        filteredConversations = Array.from(olderConvMap.values()).sort(
+          (a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+        );
+
+        if (channel === "whatsapp") stats.whatsapp = filteredConversations.length;
+        else if (channel === "messenger") stats.messenger = filteredConversations.length;
+        else if (channel === "instagram") stats.instagram = filteredConversations.length;
+        else if (channel === "sms") stats.sms = filteredConversations.length;
+        else if (channel === "comments") stats.comments = filteredConversations.length;
+        stats.total = stats.whatsapp + stats.messenger + stats.instagram + stats.sms + stats.comments;
+      }
+    }
+  }
 
   // Clientes para selectores de admin
   const clientsList = isClientUser
@@ -316,7 +432,7 @@ export async function getInboxConversations(
   return {
     success: true,
     targetClientId,
-    conversations: allConversations,
+    conversations: filteredConversations,
     stats,
     connectedAccounts,
     clients: clientsList,
@@ -333,12 +449,14 @@ export async function getConversationThread({
   targetClientId,
   recipient,
   leadId,
+  channel,
   limit = 200,
 }: {
   organizationId: string;
   targetClientId: string | null;
   recipient: string;
   leadId?: string | null;
+  channel?: string;
   limit?: number;
 }): Promise<ConversationMessage[]> {
   const andConditions: Prisma.MessageWhereInput[] = [
@@ -356,6 +474,16 @@ export async function getConversationThread({
         { lead: { is: { clientId: targetClientId } } },
       ],
     });
+  }
+
+  if (channel && channel !== "all") {
+    if (channel === "comments") {
+      andConditions.push({
+        channel: { in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT] },
+      });
+    } else {
+      andConditions.push({ channel });
+    }
   }
 
   const where: Prisma.MessageWhereInput = {
