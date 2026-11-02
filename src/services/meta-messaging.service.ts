@@ -373,7 +373,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     }
   }
 
-  let convs = await listPageConversations(targetAssetId, pageToken, 25, isInstagram ? "instagram" : undefined);
+  let convs = await listPageConversations(targetAssetId, pageToken, 25, isInstagram ? "instagram" : "messenger");
   if (isInstagram && convs.length === 0 && targetAssetId !== account.externalId) {
     const fallbackConvs = await listPageConversations(account.externalId, pageToken, 25, "instagram");
     if (fallbackConvs.length > 0) convs = fallbackConvs;
@@ -381,6 +381,10 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
 
   let importedMsgs = 0;
   for (const conv of convs) {
+    // Si la cuenta es de Instagram pero la conversación no tiene participantes de IG y tiene senders de Messenger, omitir
+    if (isInstagram && !conv.participants?.data && conv.senders?.data) {
+      continue;
+    }
     // Determinar remitente (buscar en participants para Instagram, senders para Messenger, o en mensajes entrantes)
     let customerId: string | undefined;
     let customerName: string | undefined;

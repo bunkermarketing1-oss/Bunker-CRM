@@ -346,23 +346,6 @@ export async function listPageConversations(
     console.warn(`[META_CONVERSATIONS] Falló consulta primaria en ${pageId} (${platform || "default"}):`, err);
   }
 
-  // Fallback para Instagram: si se consultó directamente el ID de cuenta de Instagram
-  // o si Meta rechaza el parámetro platform=instagram en el nodo
-  if (isInstagram) {
-    try {
-      const fallbackRes = await graphFetch<{ data?: MetaPageConversation[] }>(
-        graphUrl(`${pageId}/conversations`, {
-          access_token: pageToken,
-          fields,
-          limit: "15",
-        })
-      );
-      if (fallbackRes.data && fallbackRes.data.length > 0) return fallbackRes.data;
-    } catch (fallbackErr) {
-      console.warn(`[META_CONVERSATIONS] Falló consulta fallback de Instagram en ${pageId}:`, fallbackErr);
-    }
-  }
-
   return [];
 }
 
