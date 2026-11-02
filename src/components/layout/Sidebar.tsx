@@ -113,11 +113,14 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
     if (isFiltrable) {
       const baseRoute =
         filtrableRoutes.find((route) => pathname === route || pathname.startsWith(`${route}/`)) || pathname;
+      const nextParams = new URLSearchParams(searchParams.toString());
       if (id !== "all") {
-        router.push(`${baseRoute}?clientId=${encodeURIComponent(id)}`);
+        nextParams.set("clientId", id);
       } else {
-        router.push(baseRoute);
+        nextParams.delete("clientId");
       }
+      const qs = nextParams.toString();
+      router.push(qs ? `${baseRoute}?${qs}` : baseRoute);
     }
   };
 

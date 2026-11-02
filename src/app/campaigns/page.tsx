@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   BarChart3,
   RefreshCw,
@@ -214,6 +214,7 @@ export default function CampaignsPage() {
 
 function CampaignsPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser || user?.role === "CLIENT");
 
@@ -347,8 +348,20 @@ function CampaignsPageContent() {
             <select
               value={clientId}
               onChange={(e) => {
-                setClientId(e.target.value);
+                const val = e.target.value;
+                setClientId(val);
                 setSelectedAccountId("all");
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("bunker_selected_client_id", val);
+                }
+                const currentParams = new URLSearchParams(searchParams.toString());
+                if (val !== "all") {
+                  currentParams.set("clientId", val);
+                } else {
+                  currentParams.delete("clientId");
+                }
+                const q = currentParams.toString();
+                router.push(q ? `/campaigns?${q}` : "/campaigns");
               }}
               className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400/50"
             >

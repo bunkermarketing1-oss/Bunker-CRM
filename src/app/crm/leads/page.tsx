@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Users,
   Plus,
@@ -90,6 +90,7 @@ export default function LeadsPage() {
 
 function LeadsPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = user?.role?.toUpperCase() === "ADMIN" && !user?.isClientUser;
 
@@ -765,7 +766,21 @@ function LeadsPageContent() {
             {isAdmin && clients.length > 0 && (
               <select
                 value={clientFilter}
-                onChange={(e) => setClientFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setClientFilter(val);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("bunker_selected_client_id", val);
+                  }
+                  const currentParams = new URLSearchParams(searchParams.toString());
+                  if (val !== "all" && val !== "unassigned") {
+                    currentParams.set("clientId", val);
+                  } else {
+                    currentParams.delete("clientId");
+                  }
+                  const q = currentParams.toString();
+                  router.push(q ? `/crm/leads?${q}` : "/crm/leads");
+                }}
                 className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
               >
                 <option value="all">Todas las Empresas</option>

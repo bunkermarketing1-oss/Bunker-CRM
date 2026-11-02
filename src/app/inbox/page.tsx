@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Inbox,
@@ -160,6 +160,7 @@ export default function UnifiedInboxPage() {
 function UnifiedInboxPageContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser);
 
@@ -182,15 +183,9 @@ function UnifiedInboxPageContent() {
 
   // Filtros
   const [activeChannel, setActiveChannel] = useState<string>("all");
-  const [selectedClientId, setSelectedClientId] = useState<string>(searchParams.get("clientId") ?? "all");
+  const activeClientId = isClient ? (user?.clientId ?? "all") : (searchParams.get("clientId") ?? "all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  // Sincronizar clientId cuando cambie el selector de empresa o la URL
-  useEffect(() => {
-    const cid = searchParams.get("clientId") ?? "all";
-    setSelectedClientId(cid);
-  }, [searchParams]);
 
   // Respuestas
   const [replyText, setReplyText] = useState("");
@@ -199,6 +194,7 @@ function UnifiedInboxPageContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const isFetchingRef = useRef(false);
 
   // Debounce del input de búsqueda para no saturar consultas en servidor
@@ -209,66 +205,78 @@ function UnifiedInboxPageContent() {
     return () => clearTimeout(handler);
   }, [search]);
 
+  // Limpiar y resetear el listado y selección al cambiar de cliente para no mostrar conversaciones de otra empresa
+  useEffect(() => {
+    setSelectedConvId(null);
+    setConversations([]);
+    setLoading(true);
+  }, [activeClientId]);
+
   const fetchInbox = useCallback(
     async (isSilent = false, triggerSync = false) => {
-      if (isFetchingRef.current) return;
+      // Si es un sondeo silencioso de fondo y ya hay una petición corriendo, no sobrecargar
+      if (isSilent && isFetchingRef.current) return;
+
+      // Si es una acción del usuario (cambio de cliente, canal o búsqueda), cancelar la anterior en curso
+      if (!isSilent && abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       isFetchingRef.current = true;
 
       try {
-        if (!isSilent && conversations.length === 0) setLoading(true);
+        if (!isSilent) setLoading(true);
         const params = new URLSearchParams();
         if (activeChannel !== "all") params.set("channel", activeChannel);
-        if (!isClient && selectedClientId !== "all") params.set("clientId", selectedClientId);
+        if (!isClient && activeClientId !== "all") params.set("clientId", activeClientId);
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (triggerSync) params.set("sync", "true");
 
-        const res = await fetch(`/api/inbox?${params.toString()}`);
+        const res = await fetch(`/api/inbox?${params.toString()}`, {
+          signal: controller.signal,
+        });
         const json = await res.json();
         if (json.success) {
           const newConvs: ConversationItem[] = json.conversations || [];
-          setConversations((prev) => {
-            // Preservar mensajes extendidos ya cargados en conversaciones activas
-            const prevMsgMap = new Map<string, ConversationMessage[]>();
-            for (const c of prev) {
-              if (c.messages.length > 0) prevMsgMap.set(c.id, c.messages);
-            }
-
-            return newConvs.map((c) => {
-              const existingMessages = prevMsgMap.get(c.id);
-              if (existingMessages && existingMessages.length > c.messages.length) {
-                return { ...c, messages: existingMessages };
-              }
-              return c;
-            });
-          });
+          setConversations(newConvs);
 
           if (json.stats) setStats(json.stats);
           if (json.clients) setClients(json.clients);
           if (json.advisors) setAdvisors(json.advisors);
 
-          // Preservar la conversación seleccionada o fijar la primera si no hay ninguna
+          // Preservar la conversación seleccionada si pertenece al nuevo lote o seleccionar la primera
           setSelectedConvId((current) => {
             if (current && newConvs.some((c) => c.id === current)) return current;
             return newConvs.length > 0 ? newConvs[0].id : null;
           });
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
         console.error("Error al cargar la bandeja de entrada:", err);
       } finally {
         isFetchingRef.current = false;
         if (!isSilent) setLoading(false);
       }
     },
-    [activeChannel, selectedClientId, debouncedSearch, isClient]
+    [activeChannel, activeClientId, debouncedSearch, isClient]
   );
 
-  // Carga inicial y sondeo periódico en segundo plano (dispara sincronización inicial al montar o cambiar de filtro)
+  // Carga inicial y sondeo periódico en segundo plano
   useEffect(() => {
     fetchInbox(false, true);
     const interval = setInterval(() => {
-      fetchInbox(true);
+      fetchInbox(true, false);
     }, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchInbox]);
 
   const activeConversation = useMemo(() => {
@@ -312,6 +320,7 @@ function UnifiedInboxPageContent() {
       thread: "true",
       recipient,
       ...(leadId ? { leadId } : {}),
+      ...(activeClientId !== "all" ? { clientId: activeClientId } : {}),
     });
 
     fetch(`/api/inbox?${params.toString()}`)
@@ -331,7 +340,7 @@ function UnifiedInboxPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, [convId, recipient, leadId, msgCount]);
+  }, [convId, recipient, leadId, msgCount, activeClientId]);
 
   const handleAssignAdvisor = async (advisorId: string | null) => {
     if (!activeConversation || assigning) return;
@@ -348,7 +357,7 @@ function UnifiedInboxPageContent() {
           senderName: activeConversation.senderName,
           senderPhone: activeConversation.leadPhone,
           senderEmail: activeConversation.leadEmail,
-          clientId: activeConversation.clientId,
+          clientId: activeConversation.clientId || (activeClientId !== "all" ? activeClientId : null),
         }),
       });
       const json = await res.json();
@@ -397,7 +406,7 @@ function UnifiedInboxPageContent() {
           channel: activeConversation.channel,
           body: replyText.trim(),
           recipient: activeConversation.recipient,
-          clientId: activeConversation.clientId,
+          clientId: activeConversation.clientId || (activeClientId !== "all" ? activeClientId : null),
           leadId: activeConversation.leadId,
           commentId: activeConversation.postContext?.commentId,
         }),
@@ -441,7 +450,7 @@ function UnifiedInboxPageContent() {
     }
   };
 
-  const activeClient = selectedClientId !== "all" ? clients.find((c) => c.id === selectedClientId) : null;
+  const activeClient = activeClientId !== "all" ? clients.find((c) => c.id === activeClientId) : null;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -614,10 +623,12 @@ function UnifiedInboxPageContent() {
           <div className="flex items-center gap-2 shrink-0 px-1">
             <span className="text-xs text-[#667085] font-medium hidden sm:inline">Empresa:</span>
             <select
-              value={selectedClientId}
+              value={activeClientId}
               onChange={(e) => {
                 const val = e.target.value;
-                setSelectedClientId(val);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("bunker_selected_client_id", val);
+                }
                 const p = new URLSearchParams(searchParams.toString());
                 if (val === "all") {
                   p.delete("clientId");
@@ -625,7 +636,7 @@ function UnifiedInboxPageContent() {
                   p.set("clientId", val);
                 }
                 const qs = p.toString();
-                router.push(qs ? `/inbox?${qs}` : "/inbox");
+                router.push(qs ? `${pathname}?${qs}` : pathname);
               }}
               className="bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-medium cursor-pointer"
             >
@@ -981,14 +992,14 @@ function UnifiedInboxPageContent() {
                         WhatsApp
                       </a>
                       <Link
-                        href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                        href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${activeClientId !== "all" ? `&clientId=${encodeURIComponent(activeClientId)}` : ""}`}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-800 bg-blue-100 hover:bg-blue-200 px-2.5 py-1 rounded-md transition-colors"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
                         SMS
                       </Link>
                       <Link
-                        href={`/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                        href={`/messaging/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${activeClientId !== "all" ? `&clientId=${encodeURIComponent(activeClientId)}` : ""}`}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-md transition-colors"
                       >
                         <PhoneCall className="w-3.5 h-3.5" />
@@ -1032,14 +1043,14 @@ function UnifiedInboxPageContent() {
                           Abrir WhatsApp
                         </a>
                         <Link
-                          href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                          href={`/messaging/sms?recipient=${encodeURIComponent(activeConversation.leadPhone)}${activeClientId !== "all" ? `&clientId=${encodeURIComponent(activeClientId)}` : ""}`}
                           className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-800 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded transition-colors"
                         >
                           <MessageSquare className="w-3 h-3" />
                           Enviar SMS
                         </Link>
                         <Link
-                          href={`/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${selectedClientId !== "all" ? `&clientId=${encodeURIComponent(selectedClientId)}` : ""}`}
+                          href={`/messaging/calls?phone=${encodeURIComponent(activeConversation.leadPhone)}${activeClientId !== "all" ? `&clientId=${encodeURIComponent(activeClientId)}` : ""}`}
                           className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded transition-colors"
                         >
                           <PhoneCall className="w-3 h-3" />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   MessageSquare,
   Send,
@@ -58,6 +58,7 @@ export default function SmsMessagingPage() {
 
 function SmsMessagingPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const paramClientId = searchParams.get("clientId");
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
@@ -432,7 +433,21 @@ function SmsMessagingPageContent() {
                 {isAdmin && (
                   <select
                     value={filterClient}
-                    onChange={(e) => setFilterClient(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFilterClient(val);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("bunker_selected_client_id", val);
+                      }
+                      const currentParams = new URLSearchParams(searchParams.toString());
+                      if (val !== "all") {
+                        currentParams.set("clientId", val);
+                      } else {
+                        currentParams.delete("clientId");
+                      }
+                      const q = currentParams.toString();
+                      router.push(q ? `/messaging/sms?${q}` : "/messaging/sms");
+                    }}
                     className="bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-2.5 py-1.5 text-xs text-[#1F1E1D]"
                   >
                     <option value="all">Todas las empresas</option>
