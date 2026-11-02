@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Inbox,
@@ -159,8 +159,6 @@ export default function UnifiedInboxPage() {
 
 function UnifiedInboxPageContent() {
   const { user } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser);
 
@@ -632,37 +630,7 @@ function UnifiedInboxPageContent() {
           </button>
         </div>
 
-        {/* Filtro por Empresa (Para Administradores) */}
-        {!isClient && (
-          <div className="flex items-center gap-2 shrink-0 px-1">
-            <span className="text-xs text-[#667085] font-medium hidden sm:inline">Empresa:</span>
-            <select
-              value={activeClientId}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (typeof window !== "undefined") {
-                  localStorage.setItem("bunker_selected_client_id", val);
-                }
-                const p = new URLSearchParams(searchParams.toString());
-                if (val === "all") {
-                  p.delete("clientId");
-                } else {
-                  p.set("clientId", val);
-                }
-                const qs = p.toString();
-                router.push(qs ? `${pathname}?${qs}` : pathname);
-              }}
-              className="bg-white border border-[#EAECF0] rounded-lg px-2.5 py-1 text-xs text-[#101828] focus:outline-none focus:border-amber-500 font-medium cursor-pointer"
-            >
-              <option value="all">Todas las empresas</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+
       </div>
 
       {/* Bandeja Dividida en 2 Columnas (Listado + Conversación Activa) */}
