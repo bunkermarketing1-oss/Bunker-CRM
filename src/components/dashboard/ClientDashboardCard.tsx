@@ -194,3 +194,4 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
     </div>
   );
 }
+
