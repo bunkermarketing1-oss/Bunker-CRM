@@ -54,6 +54,28 @@ export interface DashboardIntegration {
   lastSyncAt: string | null;
 }
 
+export interface DashboardClientCard {
+  id: string;
+  name: string;
+  companyName: string | null;
+  industry: string;
+  logoUrl: string | null;
+  status: string;
+  createdAt: string;
+  brandManagerName: string | null;
+  leadsCount: number;
+  leadsThisWeekCount: number;
+  openOpportunitiesCount: number;
+  wonRevenue: number;
+  pendingTasksCount: number;
+  connectedAccounts: {
+    id: string;
+    accountType: string | null;
+    accountName: string;
+    status: string;
+  }[];
+}
+
 export interface DashboardData {
   metrics: DashboardMetrics;
   pipeline: StageRow[];
@@ -62,6 +84,8 @@ export interface DashboardData {
   upcomingTasks: DashboardTask[];
   /** Vacío para usuarios CLIENT. */
   integrations: DashboardIntegration[];
+  /** Tarjetas por cliente con ficha técnica para el Dashboard General (cuando no hay clientId seleccionado). */
+  clientCards?: DashboardClientCard[];
 }
 
 export interface DashboardResponse extends DashboardData {

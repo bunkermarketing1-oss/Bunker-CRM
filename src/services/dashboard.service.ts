@@ -36,6 +36,74 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
   const opportunityWhere = { organizationId: scope.organizationId, isDeleted: false, ...clientFilter };
   const pendingTaskWhere = { status: TASK_STATUS.PENDING, ...relatedToTenant(scope) };
 
+  const clientCardsPromise = !scope.clientId
+    ? Promise.all([
+        prisma.client.findMany({
+          where: { organizationId: scope.organizationId, isDeleted: false },
+          select: {
+            id: true,
+            name: true,
+            companyName: true,
+            industry: true,
+            logoUrl: true,
+            status: true,
+            revenue: true,
+            createdAt: true,
+            owner: { select: { id: true, name: true, email: true } },
+            _count: {
+              select: {
+                leads: true,
+                opportunities: true,
+                tasks: true,
+                connectedAccounts: true,
+              },
+            },
+            connectedAccounts: {
+              select: {
+                id: true,
+                accountType: true,
+                accountName: true,
+                status: true,
+              },
+              orderBy: { accountName: "asc" },
+            },
+          },
+          orderBy: { name: "asc" },
+        }),
+        prisma.lead.groupBy({
+          by: ["clientId"],
+          where: {
+            organizationId: scope.organizationId,
+            isDeleted: false,
+            createdAt: { gte: new Date(now.getTime() - 7 * DAY_MS) },
+            clientId: { not: null },
+          },
+          _count: { _all: true },
+        }),
+      ]).then(([rawClients, leads7dGroup]) => {
+        const leads7dMap = new Map<string, number>();
+        for (const row of leads7dGroup) {
+          if (row.clientId) leads7dMap.set(row.clientId, row._count._all);
+        }
+        return rawClients.map((c) => ({
+          id: c.id,
+          name: c.name,
+          companyName: c.companyName,
+          industry: c.industry || "General",
+          logoUrl: c.logoUrl,
+          status: c.status || "active",
+          createdAt: c.createdAt.toISOString(),
+          brandManagerName: c.owner?.name ?? null,
+          leadsCount: c._count.leads,
+          leadsThisWeekCount: leads7dMap.get(c.id) || 0,
+          openOpportunitiesCount: c._count.opportunities,
+          wonRevenue: c.revenue || 0,
+          pendingTasksCount: c._count.tasks,
+          connectedAccounts: c.connectedAccounts,
+        }));
+      })
+    : Promise.resolve(undefined);
+
   const [
     totalLeads,
     leadsThisWeek,
@@ -49,6 +117,7 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
     recentActivities,
     recentLeads,
     integrations,
+    clientCards,
   ] = await Promise.all([
     prisma.lead.count({ where: leadWhere }),
     prisma.lead.count({ where: { ...leadWhere, createdAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } } }),
@@ -116,10 +185,10 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
           .then((accounts) =>
             accounts.map((a) => ({
               id: a.id,
-              provider: a.accountType,
+              provider: a.accountType || "cuenta",
               name: a.accountName,
               status: a.status,
-              lastSyncAt: a.lastSyncAt,
+              lastSyncAt: a.lastSyncAt?.toISOString() ?? null,
             }))
           )
       : prisma.integration.findMany({
@@ -127,6 +196,7 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
           select: { id: true, provider: true, name: true, status: true, lastSyncAt: true },
           orderBy: { name: "asc" },
         }),
+    clientCardsPromise,
   ]);
 
   const byStatus = (status: string) => dealsByStatus.find((row) => row.status === status);
@@ -167,7 +237,8 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
     })),
     integrations: integrations.map((integration) => ({
       ...integration,
-      lastSyncAt: integration.lastSyncAt?.toISOString() ?? null,
+      lastSyncAt: integration.lastSyncAt ? new Date(integration.lastSyncAt).toISOString() : null,
     })),
+    clientCards,
   };
 }
