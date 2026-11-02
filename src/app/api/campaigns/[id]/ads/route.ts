@@ -139,13 +139,72 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const metaJson = await metaRes.json().catch(() => ({}));
     const rawAds: MetaAdNode[] = Array.isArray(metaJson?.data) ? metaJson.data : [];
 
+    // Consultar información y URLs de reproducción para creativos de video
+    const videoIdMap = new Map<string, { videoUrl: string | null; videoEmbedUrl: string | null }>();
+    const uniqueVideoIds = Array.from(
+      new Set(
+        rawAds
+          .map((ad) => ad.creative?.video_id || ad.creative?.object_story_spec?.video_data?.video_id)
+          .filter((v): v is string => Boolean(v))
+      )
+    );
+
+    if (uniqueVideoIds.length > 0) {
+      await Promise.allSettled(
+        uniqueVideoIds.map(async (vidId) => {
+          try {
+            const vidRes = await fetch(
+              `https://graph.facebook.com/${META_GRAPH_VERSION}/${vidId}?fields=id,source,embed_html&access_token=${token}`,
+              { cache: "no-store", signal: AbortSignal.timeout(5000) }
+            );
+            const vidJson = await vidRes.json();
+            const source: string | null = vidJson?.source || null;
+            let embedUrl: string | null = null;
+
+            if (vidJson?.embed_html) {
+              const srcMatch = (vidJson.embed_html as string).match(/src="([^"]+)"/);
+              if (srcMatch && srcMatch[1]) {
+                let u = srcMatch[1].replace(/&amp;/g, "&");
+                if (!u.includes("autoplay=")) u += "&autoplay=1";
+                if (!u.includes("show_text=")) u += "&show_text=0";
+                embedUrl = u;
+              }
+            }
+
+            if (!embedUrl) {
+              embedUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+                `https://www.facebook.com/video.php?v=${vidId}`
+              )}&show_text=0&autoplay=1`;
+            }
+
+            videoIdMap.set(vidId, { videoUrl: source, videoEmbedUrl: embedUrl });
+          } catch {
+            const fallbackEmbed = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+              `https://www.facebook.com/video.php?v=${vidId}`
+            )}&show_text=0&autoplay=1`;
+            videoIdMap.set(vidId, { videoUrl: null, videoEmbedUrl: fallbackEmbed });
+          }
+        })
+      );
+    }
+
     const ads = rawAds.map((ad) => {
       const cr = ad.creative || {};
       const oss = cr.object_story_spec || {};
       const videoData = oss.video_data || {};
       const linkData = oss.link_data || {};
 
-      const isVideo = Boolean(cr.video_id || videoData.video_id);
+      const vidId = cr.video_id || videoData.video_id || null;
+      const isVideo = Boolean(vidId);
+      const vidInfo = vidId ? videoIdMap.get(vidId) : null;
+      const videoUrl = vidInfo?.videoUrl || null;
+      const videoEmbedUrl =
+        vidInfo?.videoEmbedUrl ||
+        (vidId
+          ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+              `https://www.facebook.com/video.php?v=${vidId}`
+            )}&show_text=0&autoplay=1`
+          : null);
       const imageUrl =
         videoData.image_url ||
         linkData.image_url ||
@@ -198,6 +257,9 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         imageUrl,
         thumbnailUrl,
         isVideo,
+        videoId: vidId,
+        videoUrl,
+        videoEmbedUrl,
         callToAction: cta,
         linkUrl,
         creativeId: cr.id || null,

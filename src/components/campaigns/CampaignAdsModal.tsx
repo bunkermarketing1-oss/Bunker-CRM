@@ -48,6 +48,7 @@ export default function CampaignAdsModal({
   const [error, setError] = useState<string | null>(null);
   const [ads, setAds] = useState<CampaignAdCreative[]>([]);
   const [expandedBodies, setExpandedBodies] = useState<Record<string, boolean>>({});
+  const [playingAdId, setPlayingAdId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -211,45 +212,117 @@ export default function CampaignAdsModal({
                           >
                             {isActive ? "Activo" : ad.status.toUpperCase()}
                           </span>
-                          <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F8F9FA] text-[#475467] border border-[#EAECF0]">
-                            {ad.isVideo ? (
-                              <>
-                                <Play className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                Video
-                              </>
-                            ) : (
-                              <>
-                                <ImageIcon className="w-2.5 h-2.5 text-amber-600" />
-                                Imagen
-                              </>
-                            )}
-                          </span>
+                          {ad.isVideo ? (
+                            <button
+                              type="button"
+                              onClick={() => setPlayingAdId(playingAdId === ad.id ? null : ad.id)}
+                              className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                                playingAdId === ad.id
+                                  ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+                              }`}
+                              title={playingAdId === ad.id ? "Detener reproducción" : "Reproducir video"}
+                            >
+                              {playingAdId === ad.id ? (
+                                <>
+                                  <X className="w-2.5 h-2.5" />
+                                  Detener
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-2.5 h-2.5 text-amber-600 fill-amber-600" />
+                                  Reproducir Video
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F8F9FA] text-[#475467] border border-[#EAECF0]">
+                              <ImageIcon className="w-2.5 h-2.5 text-amber-600" />
+                              Imagen
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* Visual Media Showcase */}
                       <div className="relative aspect-video bg-[#101828] flex items-center justify-center overflow-hidden group">
-                        {ad.thumbnailUrl || ad.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={ad.thumbnailUrl || ad.imageUrl || ""}
-                            alt={ad.headline || ad.name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1.5 text-zinc-500 text-xs">
-                            <ImageIcon className="w-8 h-8 opacity-40" />
-                            <span>Sin vista previa multimedia disponible</span>
-                          </div>
-                        )}
+                        {ad.isVideo && playingAdId === ad.id ? (
+                          <div className="relative w-full h-full bg-black flex items-center justify-center">
+                            {ad.videoUrl ? (
+                              <video
+                                src={ad.videoUrl}
+                                controls
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-contain"
+                              />
+                            ) : ad.videoEmbedUrl ? (
+                              <iframe
+                                src={ad.videoEmbedUrl}
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
+                                allowFullScreen
+                                className="w-full h-full border-0"
+                                title={`Reproductor de video: ${ad.name}`}
+                              />
+                            ) : (
+                              <div className="text-center text-zinc-400 text-xs p-4 space-y-2">
+                                <p>No se pudo cargar la fuente del video.</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setPlayingAdId(null)}
+                                  className="px-2.5 py-1 rounded bg-zinc-800 text-white text-[11px] hover:bg-zinc-700 cursor-pointer"
+                                >
+                                  Cerrar
+                                </button>
+                              </div>
+                            )}
 
-                        {ad.isVideo && (
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
-                            <div className="w-12 h-12 rounded-full bg-white/90 text-[#101828] shadow-lg flex items-center justify-center transition-transform group-hover:scale-110">
-                              <Play className="w-5 h-5 ml-0.5 fill-[#101828]" />
-                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPlayingAdId(null);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-black/75 hover:bg-black text-white transition-colors z-20 cursor-pointer shadow-md"
+                              title="Cerrar video"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
+                        ) : (
+                          <>
+                            {ad.thumbnailUrl || ad.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={ad.thumbnailUrl || ad.imageUrl || ""}
+                                alt={ad.headline || ad.name}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center gap-1.5 text-zinc-500 text-xs">
+                                <ImageIcon className="w-8 h-8 opacity-40" />
+                                <span>Sin vista previa multimedia disponible</span>
+                              </div>
+                            )}
+
+                            {ad.isVideo && (
+                              <button
+                                type="button"
+                                onClick={() => setPlayingAdId(ad.id)}
+                                className="absolute inset-0 bg-black/35 hover:bg-black/50 transition-colors flex items-center justify-center cursor-pointer group/btn"
+                                aria-label="Reproducir video de este anuncio"
+                              >
+                                <div className="w-14 h-14 rounded-full bg-white/95 text-[#101828] shadow-2xl flex items-center justify-center transition-all group-hover/btn:scale-115 group-hover/btn:bg-amber-400 ring-4 ring-black/20">
+                                  <Play className="w-6 h-6 ml-0.5 fill-[#101828]" />
+                                </div>
+                                <span className="absolute bottom-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-xs text-white text-[11px] font-semibold tracking-wide flex items-center gap-1.5 group-hover/btn:bg-amber-500 transition-colors shadow-sm">
+                                  <Play className="w-3 h-3 fill-current" />
+                                  Haz clic para reproducir
+                                </span>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
 

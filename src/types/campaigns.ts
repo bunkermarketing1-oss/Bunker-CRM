@@ -7,6 +7,9 @@ export interface CampaignAdCreative {
   imageUrl: string | null;
   thumbnailUrl: string | null;
   isVideo: boolean;
+  videoId?: string | null;
+  videoUrl?: string | null;
+  videoEmbedUrl?: string | null;
   callToAction: string | null;
   linkUrl: string | null;
   creativeId: string | null;
