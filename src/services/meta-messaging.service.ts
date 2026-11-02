@@ -520,5 +520,14 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     }
   }
 
+  try {
+    await prisma.connectedAccount.update({
+      where: { id: connectedAccountId },
+      data: { lastSyncAt: new Date() },
+    });
+  } catch {
+    // Non-fatal
+  }
+
   return { synced: convs.length, messages: importedMsgs };
 }

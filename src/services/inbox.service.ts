@@ -59,6 +59,9 @@ export async function getInboxConversations(
   // 2. Sincronizar páginas conectadas (bajo demanda o auto-sync cada 15s por cliente)
   const now = Date.now();
   const syncKey = `${organizationId}_${targetClientId || "all"}`;
+  if (triggerSync) {
+    clientLastSyncMap.delete(syncKey);
+  }
   const lastSync = clientLastSyncMap.get(syncKey) || 0;
   const shouldAutoSync = triggerSync || (now - lastSync > AUTO_SYNC_COOLDOWN_MS && !cleanSearch);
 
@@ -76,17 +79,22 @@ export async function getInboxConversations(
     });
 
     if (pageAccounts.length > 0) {
-      // Disparar sincronización en segundo plano sin bloquear la respuesta de la base de datos
-      Promise.allSettled(
-        pageAccounts.map((page) =>
-          Promise.race([
-            syncConnectedPageConversations(page.id),
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4500)),
-          ]).catch((syncErr) => {
-            console.warn(`[INBOX_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
-          })
-        )
-      ).catch(() => {});
+      const syncTasks = pageAccounts.map((page) =>
+        Promise.race([
+          syncConnectedPageConversations(page.id),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 12000)),
+        ]).catch((syncErr) => {
+          console.warn(`[INBOX_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
+        })
+      );
+
+      // Si fue solicitado explícitamente (?sync=true), esperar la sincronización para responder con los mensajes más recientes
+      if (triggerSync) {
+        await Promise.allSettled(syncTasks);
+      } else {
+        // En sondeos silenciosos, ejecutar en segundo plano
+        Promise.allSettled(syncTasks).catch(() => {});
+      }
     }
   }
 
@@ -99,7 +107,10 @@ export async function getInboxConversations(
 
   if (targetClientId) {
     andConditions.push({
-      clientId: targetClientId,
+      OR: [
+        { clientId: targetClientId },
+        { lead: { is: { clientId: targetClientId } } },
+      ],
     });
   }
 
@@ -330,18 +341,27 @@ export async function getConversationThread({
   leadId?: string | null;
   limit?: number;
 }): Promise<ConversationMessage[]> {
-  const where: Prisma.MessageWhereInput = {
-    organizationId,
-    ...(leadId
+  const andConditions: Prisma.MessageWhereInput[] = [
+    leadId
       ? {
           OR: [{ leadId }, { recipient }],
         }
-      : { recipient }),
-  };
+      : { recipient },
+  ];
 
   if (targetClientId) {
-    where.clientId = targetClientId;
+    andConditions.push({
+      OR: [
+        { clientId: targetClientId },
+        { lead: { is: { clientId: targetClientId } } },
+      ],
+    });
   }
+
+  const where: Prisma.MessageWhereInput = {
+    organizationId,
+    AND: andConditions,
+  };
 
   const messages = await prisma.message.findMany({
     where,
