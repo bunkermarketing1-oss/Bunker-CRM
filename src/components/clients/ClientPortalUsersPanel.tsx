@@ -14,6 +14,8 @@ import {
   X,
   ShieldCheck,
   Sparkles,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { ROLES, isClientOwnerRole, type StoredUserRole } from "@/lib/roles";
 import type {
@@ -21,6 +23,7 @@ import type {
   CreatePortalUserInput,
   CreatePortalUserResult,
   ResetLinkResult,
+  DeleteUserResult,
 } from "@/hooks/useClientPortalUsers";
 
 interface ClientPortalUsersPanelProps {
@@ -32,11 +35,12 @@ interface ClientPortalUsersPanelProps {
   onSetRole: (userId: string, role: StoredUserRole) => void;
   onCreateUser?: (payload: CreatePortalUserInput) => Promise<CreatePortalUserResult>;
   onGenerateResetLink?: (userId: string) => Promise<ResetLinkResult>;
+  onDeleteUser?: (userId: string) => Promise<DeleteUserResult>;
 }
 
 /**
  * Panel de usuarios del portal del cliente (solo Bunker). Permite crear nuevos usuarios con
- * rol Asesor o Dueño, generar enlaces de acceso directo y cambiar roles.
+ * rol Asesor o Dueño, generar enlaces de acceso directo, cambiar roles y eliminar usuarios de forma segura.
  */
 export function ClientPortalUsersPanel({
   clientId: _clientId,
@@ -47,6 +51,7 @@ export function ClientPortalUsersPanel({
   onSetRole,
   onCreateUser,
   onGenerateResetLink,
+  onDeleteUser,
 }: ClientPortalUsersPanelProps) {
   // Modal de Crear Usuario
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -75,6 +80,11 @@ export function ClientPortalUsersPanel({
   } | null>(null);
   const [generatingResetId, setGeneratingResetId] = useState<string | null>(null);
   const [copiedResetUrl, setCopiedResetUrl] = useState(false);
+
+  // Modal / Estado de Confirmación de Eliminación
+  const [userToDelete, setUserToDelete] = useState<PortalUser | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const generateRandomPassword = () => {
     const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%";
@@ -152,6 +162,19 @@ export function ClientPortalUsersPanel({
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!userToDelete || !onDeleteUser) return;
+    setIsDeletingUser(true);
+    setDeleteError(null);
+    const res = await onDeleteUser(userToDelete.id);
+    setIsDeletingUser(false);
+    if (res.success) {
+      setUserToDelete(null);
+    } else {
+      setDeleteError(res.error || "No se pudo eliminar el usuario.");
+    }
+  };
+
   const copyToClipboard = async (text: string, onSuccess: () => void) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -194,7 +217,7 @@ export function ClientPortalUsersPanel({
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] hover:bg-[#2A2826] font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all self-start sm:self-auto flex-shrink-0"
+            className="px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] hover:bg-[#2A2826] font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all self-start sm:self-auto flex-shrink-0 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
             <span>Crear Usuario</span>
@@ -221,7 +244,7 @@ export function ClientPortalUsersPanel({
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] text-xs font-semibold shadow-xs hover:bg-[#2A2826] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] text-xs font-semibold shadow-xs hover:bg-[#2A2826] transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Crear Primer Usuario</span>
@@ -268,7 +291,7 @@ export function ClientPortalUsersPanel({
                       disabled={generatingResetId === portalUser.id}
                       onClick={() => handleGenerateReset(portalUser)}
                       title="Generar enlace de acceso / restablecer contraseña"
-                      className="p-1.5 rounded-lg border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#716F6A] hover:text-[#1F1E1D] transition-colors text-xs flex items-center gap-1"
+                      className="p-1.5 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#716F6A] hover:text-[#1F1E1D] transition-colors text-xs flex items-center gap-1 cursor-pointer"
                     >
                       {generatingResetId === portalUser.id ? (
                         <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
@@ -285,11 +308,28 @@ export function ClientPortalUsersPanel({
                     value={isOwner ? ROLES.CLIENT_OWNER : ROLES.CLIENT}
                     disabled={savingId === portalUser.id}
                     onChange={(e) => onSetRole(portalUser.id, e.target.value as StoredUserRole)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] text-[11px] font-medium text-[#1F1E1D] disabled:opacity-50 transition-colors shadow-xs"
+                    className="px-2.5 py-1.5 rounded-xl bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] text-[11px] font-medium text-[#1F1E1D] disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
                   >
                     <option value={ROLES.CLIENT}>Asesor</option>
                     <option value={ROLES.CLIENT_OWNER}>Dueño</option>
                   </select>
+
+                  {/* Botón para Eliminar Usuario */}
+                  {onDeleteUser && (
+                    <button
+                      type="button"
+                      disabled={savingId === portalUser.id || isDeletingUser}
+                      onClick={() => {
+                        setDeleteError(null);
+                        setUserToDelete(portalUser);
+                      }}
+                      title={`Eliminar ${portalUser.name}`}
+                      className="p-1.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span className="text-[11px] hidden lg:inline">Eliminar</span>
+                    </button>
+                  )}
                 </div>
               </li>
             );
@@ -319,7 +359,7 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-neutral-200/60 text-[#716F6A] transition-colors"
+                className="p-1.5 rounded-xl hover:bg-neutral-200/60 text-[#716F6A] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -373,7 +413,7 @@ export function ClientPortalUsersPanel({
                         const msg = `¡Hola ${createdCredentials.name}! 👋\n\nTienes acceso al Portal de Clientes de Bunker CRM para ${clientName || "tu empresa"}.\n\n🔗 Enlace de acceso: ${getLoginUrl()}\n👤 Usuario: ${createdCredentials.email}\n🔑 Contraseña: ${createdCredentials.password}\n\nIngresa desde tu navegador para gestionar tus prospectos.`;
                         copyToClipboard(msg, () => setCopiedMessage(true));
                       }}
-                      className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#2A2826] transition-colors shadow-sm"
+                      className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#2A2826] transition-colors shadow-sm cursor-pointer"
                     >
                       {copiedMessage ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                       <span>{copiedMessage ? "¡Copiado al portapapeles!" : "Copiar Datos para WhatsApp / Email"}</span>
@@ -382,7 +422,7 @@ export function ClientPortalUsersPanel({
                     <button
                       type="button"
                       onClick={() => setIsCreateOpen(false)}
-                      className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#1F1E1D] transition-colors"
+                      className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#1F1E1D] transition-colors cursor-pointer"
                     >
                       Cerrar
                     </button>
@@ -433,7 +473,7 @@ export function ClientPortalUsersPanel({
                       <button
                         type="button"
                         onClick={() => setCreateRole(ROLES.CLIENT)}
-                        className={`p-3 rounded-xl text-left border transition-all ${
+                        className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                           createRole === ROLES.CLIENT
                             ? "border-[#1F1E1D] bg-[#1F1E1D] text-white shadow-xs"
                             : "border-[#E8E6DF] bg-white text-[#716F6A] hover:bg-[#FAF9F5]"
@@ -448,7 +488,7 @@ export function ClientPortalUsersPanel({
                       <button
                         type="button"
                         onClick={() => setCreateRole(ROLES.CLIENT_OWNER)}
-                        className={`p-3 rounded-xl text-left border transition-all ${
+                        className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                           createRole === ROLES.CLIENT_OWNER
                             ? "border-amber-600 bg-amber-50 text-amber-900 shadow-xs"
                             : "border-[#E8E6DF] bg-white text-[#716F6A] hover:bg-[#FAF9F5]"
@@ -472,7 +512,7 @@ export function ClientPortalUsersPanel({
                       <button
                         type="button"
                         onClick={() => setCreatePassword(generateRandomPassword())}
-                        className="text-[11px] text-[#D97757] hover:underline font-medium flex items-center gap-1"
+                        className="text-[11px] text-[#D97757] hover:underline font-medium flex items-center gap-1 cursor-pointer"
                       >
                         <Sparkles className="w-3 h-3" />
                         <span>Generar aleatoria</span>
@@ -489,7 +529,7 @@ export function ClientPortalUsersPanel({
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-2.5 text-[#9C9890] hover:text-[#1F1E1D]"
+                        className="absolute right-3 top-2.5 text-[#9C9890] hover:text-[#1F1E1D] cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
@@ -504,14 +544,14 @@ export function ClientPortalUsersPanel({
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => setIsCreateOpen(false)}
-                      className="px-4 py-2 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#716F6A]"
+                      className="px-4 py-2 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#716F6A] cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-black-gold px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+                      className="btn-black-gold px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       {isSubmitting ? (
                         <>
@@ -550,7 +590,7 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => setResetModalData(null)}
-                className="p-1 rounded-lg hover:bg-neutral-100 text-[#716F6A]"
+                className="p-1 rounded-lg hover:bg-neutral-100 text-[#716F6A] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -568,7 +608,7 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => copyToClipboard(resetModalData.recoveryUrl, () => setCopiedResetUrl(true))}
-                className="flex-1 py-2 px-3 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#2A2826]"
+                className="flex-1 py-2 px-3 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#2A2826] cursor-pointer"
               >
                 {copiedResetUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedResetUrl ? "¡Enlace copiado!" : "Copiar Enlace"}</span>
@@ -576,9 +616,85 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => setResetModalData(null)}
-                className="px-3 py-2 rounded-xl border border-[#E8E6DF] text-xs font-semibold text-[#1F1E1D] hover:bg-[#FAF9F5]"
+                className="px-3 py-2 rounded-xl border border-[#E8E6DF] text-xs font-semibold text-[#1F1E1D] hover:bg-[#FAF9F5] cursor-pointer"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Confirmación de Eliminación de Usuario */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-red-200 shadow-2xl max-w-md w-full overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#F0EEE8]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-[#1F1E1D]">Eliminar Usuario</h4>
+                  <p className="text-[11px] text-[#716F6A]">Acción permanente e irreversible</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeletingUser}
+                className="p-1 rounded-lg hover:bg-neutral-100 text-[#716F6A] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                {deleteError}
+              </div>
+            )}
+
+            <p className="text-xs text-[#6B6966] leading-relaxed">
+              ¿Estás seguro de que deseas eliminar permanentemente a{" "}
+              <strong className="text-[#1F1E1D]">{userToDelete.name}</strong> ({userToDelete.email})?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[11px] text-[#716F6A] space-y-1">
+              <p className="font-medium text-[#1F1E1D]">Se aplicará lo siguiente:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Se desvinculará de los prospectos, actividades y llamadas asociadas.</li>
+                <li>Se eliminará su cuenta de acceso en Supabase Auth de forma inmediata.</li>
+                <li>Se guardará un registro de auditoría de esta eliminación.</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F0EEE8]">
+              <button
+                type="button"
+                disabled={isDeletingUser}
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#716F6A] cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingUser}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingUser ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar Definitivamente</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

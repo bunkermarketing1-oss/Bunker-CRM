@@ -1,5 +1,5 @@
 import React from "react";
-import { Crown, Users, Calendar } from "lucide-react";
+import { Crown, Users, Calendar, Trash2 } from "lucide-react";
 import { ADVISOR_STATUS, ADVISOR_STATUS_LABEL, type AdvisorStatus } from "@/lib/constants/team";
 import { formatClock } from "@/lib/team-live";
 import type { AdvisorLiveRow } from "@/types/team";
@@ -10,6 +10,7 @@ interface AdvisorLiveTableProps {
   /** Bunker ve varios clientes a la vez: se muestra la columna de empresa. */
   showClient: boolean;
   onOpenAttendanceModal?: (sellerId: string, sellerName: string) => void;
+  onDeleteAdvisor?: (sellerId: string, sellerName: string) => void;
 }
 
 const STATUS_STYLE: Record<AdvisorStatus, string> = {
@@ -56,7 +57,13 @@ function StatusCell({ advisor }: { advisor: AdvisorLiveRow }) {
 }
 
 /** Estado, canales atendidos y contadores de hoy por asesor. */
-export function AdvisorLiveTable({ advisors, loading, showClient, onOpenAttendanceModal }: AdvisorLiveTableProps) {
+export function AdvisorLiveTable({
+  advisors,
+  loading,
+  showClient,
+  onOpenAttendanceModal,
+  onDeleteAdvisor,
+}: AdvisorLiveTableProps) {
   return (
     <section className="rounded-2xl bg-white border border-[#E8E6DF] shadow-sm overflow-hidden">
       <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-[#F0EEE8]">
@@ -89,6 +96,7 @@ export function AdvisorLiveTable({ advisors, loading, showClient, onOpenAttendan
                 <th className="text-right font-medium px-3 py-2.5">Tiempo Hablado</th>
                 <th className="text-right font-medium px-3 py-2.5">Última Actividad</th>
                 <th className="text-center font-medium px-4 py-2.5">Bitácora</th>
+                {onDeleteAdvisor && <th className="text-center font-medium px-3 py-2.5">Acción</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F0EEE8]">
@@ -178,6 +186,20 @@ export function AdvisorLiveTable({ advisors, loading, showClient, onOpenAttendan
                       <span>15 días</span>
                     </button>
                   </td>
+
+                  {/* Botón Eliminar para Administrador */}
+                  {onDeleteAdvisor && (
+                    <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteAdvisor(advisor.userId, advisor.name)}
+                        className="inline-flex items-center justify-center p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors shadow-xs cursor-pointer"
+                        title={`Eliminar asesor ${advisor.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -3,9 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { ROLES, isClientRole, isRoleAllowedForUser } from "@/lib/roles";
 import { createUserRoleSchema, updateUserSchema, USER_ACTION } from "@/lib/validations/users";
-import { updateUserAccess, UserAccessError } from "@/services/users.service";
+import { deleteUser, updateUserAccess, UserAccessError } from "@/services/users.service";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     const clientId = searchParams.get("clientId");
     const scope = searchParams.get("scope"); // "client" | "bunker" | "all"
 
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       memberships: {
         some: {
           organizationId: user!.organizationId,
@@ -74,7 +75,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, users });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/users error:", error);
     return NextResponse.json(
       { success: false, error: "Error al consultar usuarios." },
@@ -314,5 +315,38 @@ export async function PUT(req: NextRequest) {
       { success: false, error: "Error al actualizar usuario." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { user, errorResponse } = await requireAdmin(req);
+    if (errorResponse) return errorResponse;
+
+    const { searchParams } = new URL(req.url);
+    const idFromQuery = searchParams.get("id");
+    const body = await req.json().catch(() => ({}));
+    const id = idFromQuery || body?.id;
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        { success: false, error: "ID de usuario requerido para eliminar." },
+        { status: 400 }
+      );
+    }
+
+    const result = await deleteUser(user!.organizationId, user!.id, id);
+    return NextResponse.json({
+      success: true,
+      message: `Usuario ${result.deletedEmail} eliminado exitosamente.`,
+      ...result,
+    });
+  } catch (error) {
+    if (error instanceof UserAccessError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
+    console.error("DELETE /api/users error:", error);
+    const message = error instanceof Error ? error.message : "Error al eliminar usuario.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { isRoleAllowedForUser, toStoredRole, type StoredUserRole } from "@/lib/roles";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 /** Error de negocio con el status HTTP que debe responder la ruta. */
 export class UserAccessError extends Error {
-  constructor(message: string, public status: 400 | 404) {
+  status: 400 | 404;
+  constructor(message: string, status: 400 | 404) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -73,4 +76,78 @@ export async function updateUserAccess(organizationId: string, actorId: string, 
 
     return updated;
   });
+}
+
+/**
+ * Elimina permanentemente a un usuario de la organización, desvinculando de forma segura sus
+ * leads, tareas, actividades y llamadas, y eliminando sus credenciales de Supabase Auth.
+ */
+export async function deleteUser(organizationId: string, actorId: string, userId: string) {
+  if (actorId === userId) {
+    throw new UserAccessError("No puedes eliminar tu propia cuenta de usuario.", 400);
+  }
+
+  const target = await prisma.user.findFirst({
+    where: { id: userId, memberships: { some: { organizationId } } },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      clientId: true,
+      supabaseAuthId: true,
+    },
+  });
+
+  if (!target) {
+    throw new UserAccessError("Usuario no encontrado en su organización.", 404);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Desvincular de clientes donde sea dueño o asesor asignado
+    await tx.client.updateMany({ where: { ownerId: target.id }, data: { ownerId: null } });
+
+    // Desvincular de leads
+    await tx.lead.updateMany({ where: { ownerId: target.id }, data: { ownerId: null } });
+
+    // Desvincular de tareas y actividades
+    await tx.task.updateMany({ where: { userId: target.id }, data: { userId: null } });
+    await tx.activity.updateMany({ where: { userId: target.id }, data: { userId: null } });
+    await tx.call.updateMany({ where: { userId: target.id }, data: { userId: null } });
+
+    // Eliminar membresías de organización
+    await tx.organizationMember.deleteMany({ where: { userId: target.id } });
+
+    // Eliminar el registro del usuario en la base de datos
+    await tx.user.delete({ where: { id: target.id } });
+
+    // Registrar en AuditLog
+    await tx.auditLog.create({
+      data: {
+        organizationId,
+        userId: actorId,
+        action: "user_deleted",
+        entityType: "User",
+        entityId: target.id,
+        detailsJson: JSON.stringify({
+          email: target.email,
+          name: target.name,
+          role: target.role,
+          clientId: target.clientId,
+        }),
+      },
+    });
+  });
+
+  // Eliminar de Supabase Auth si existe
+  if (target.supabaseAuthId) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.auth.admin.deleteUser(target.supabaseAuthId);
+    } catch (authErr) {
+      console.warn("Advertencia al eliminar usuario de Supabase Auth:", authErr);
+    }
+  }
+
+  return { success: true, deletedId: target.id, deletedEmail: target.email };
 }

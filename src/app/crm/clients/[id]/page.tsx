@@ -867,6 +867,7 @@ export default function ClientProfile360Page() {
                 onSetRole={portalUsers.setRole}
                 onCreateUser={portalUsers.createUser}
                 onGenerateResetLink={portalUsers.generateResetLink}
+                onDeleteUser={portalUsers.deleteUser}
               />
             </div>
           )}

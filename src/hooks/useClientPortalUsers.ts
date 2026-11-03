@@ -32,6 +32,11 @@ export interface ResetLinkResult {
   error?: string;
 }
 
+export interface DeleteUserResult {
+  success: boolean;
+  error?: string;
+}
+
 /**
  * Usuarios del portal de un cliente y cambio de rol asesor ↔ dueño (solo Bunker: la API
  * responde 403 a cualquier otro). `enabled = false` no consulta nada.
@@ -129,5 +134,31 @@ export function useClientPortalUsers(clientId: string, enabled: boolean) {
     }
   }, []);
 
-  return { users, error, savingId, setRole, createUser, generateResetLink, refresh };
+  const deleteUser = useCallback(
+    async (userId: string): Promise<DeleteUserResult> => {
+      setSavingId(userId);
+      setError(null);
+      try {
+        const res = await fetch(`/api/users?id=${encodeURIComponent(userId)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!json.success) {
+          setError(json.error || "No se pudo eliminar el usuario.");
+          return { success: false, error: json.error || "No se pudo eliminar el usuario." };
+        }
+        await refresh();
+        return { success: true };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error de red";
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setSavingId(null);
+      }
+    },
+    [refresh]
+  );
+
+  return { users, error, savingId, setRole, createUser, generateResetLink, deleteUser, refresh };
 }

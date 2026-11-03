@@ -10,6 +10,9 @@ import {
   Building2,
   MessageSquare,
   ShieldAlert,
+  Trash2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTeamLive } from "@/hooks/useTeamLive";
@@ -44,6 +47,11 @@ function TeamLiveContent() {
   );
   const [selectedSellerForModal, setSelectedSellerForModal] = useState<{ id: string; name: string } | null>(null);
 
+  // Estado de eliminación de asesor
+  const [advisorToDelete, setAdvisorToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeletingAdvisor, setIsDeletingAdvisor] = useState(false);
+  const [deleteAdvisorError, setDeleteAdvisorError] = useState<string | null>(null);
+
   useEffect(() => {
     if (urlClientId && urlClientId !== "all") {
       setSelectedClientId(urlClientId);
@@ -71,6 +79,28 @@ function TeamLiveContent() {
     },
     receiveIncoming: false,
   });
+
+  const handleDeleteAdvisor = async () => {
+    if (!advisorToDelete) return;
+    setIsDeletingAdvisor(true);
+    setDeleteAdvisorError(null);
+    try {
+      const res = await fetch(`/api/users?id=${encodeURIComponent(advisorToDelete.id)}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setDeleteAdvisorError(json.error || "No se pudo eliminar el asesor.");
+      } else {
+        setAdvisorToDelete(null);
+        refresh();
+      }
+    } catch (err) {
+      setDeleteAdvisorError(err instanceof Error ? err.message : "Error al eliminar asesor.");
+    } finally {
+      setIsDeletingAdvisor(false);
+    }
+  };
 
   const advisors = view?.advisors ?? [];
   const liveCalls = view?.liveCalls ?? [];
@@ -149,44 +179,62 @@ function TeamLiveContent() {
         phase={device.phase}
         error={device.error}
         active={device.active}
-        onHangup={device.hangup}
-        onToggleMute={device.toggleMute}
+        onHangup={() => device.hangup()}
+        onToggleMute={() => device.toggleMute()}
       />
 
-      {/* KPI Cards de Supervisión */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
-            <span>En Turno (Online)</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>En Llamada</span>
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           </div>
-          <div className="text-2xl font-bold text-[#101828]">
-            {availableCount} <span className="text-xs font-normal text-[#667085]">/ {advisors.length} vendedores</span>
-          </div>
-          <p className="text-[11px] text-[#667085] mt-1">{checkedInCount} con check-in registrado hoy</p>
+          <div className="text-2xl font-bold text-[#101828] font-mono">{onCallCount}</div>
+          <p className="text-[11px] text-[#667085] mt-1">hablando ahora</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
-            <span>En Llamada Ahora</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span>Disponibles</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{onCallCount}</div>
-          <p className="text-[11px] text-[#667085] mt-1">{liveCalls.length} llamada(s) en vivo</p>
+          <div className="text-2xl font-bold text-[#101828] font-mono">{availableCount}</div>
+          <p className="text-[11px] text-[#667085] mt-1">en línea</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
-            <span>Llamadas Realizadas Hoy</span>
-            <PhoneCall className="w-4 h-4 text-blue-500" />
+            <span>Asistencia Hoy</span>
+            <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">check-in</span>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{totalCallsToday}</div>
-          <p className="text-[11px] text-[#667085] mt-1">{formatClock(totalTalkSec)} conversación</p>
+          <div className="text-2xl font-bold text-[#101828] font-mono">
+            {checkedInCount} <span className="text-xs text-[#667085] font-normal">/ {advisors.length}</span>
+          </div>
+          <p className="text-[11px] text-[#667085] mt-1">registraron entrada</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
-            <span>Mensajes Enviados Hoy</span>
+            <span>Llamadas Hoy</span>
+            <PhoneCall className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="text-2xl font-bold text-[#101828] font-mono">{totalCallsToday}</div>
+          <p className="text-[11px] text-[#667085] mt-1">realizadas por el equipo</p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
+          <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
+            <span>Tiempo Hablado</span>
+            <span className="text-[10px] text-amber-600 font-mono">total</span>
+          </div>
+          <div className="text-2xl font-bold text-[#101828] font-mono">{formatClock(totalTalkSec)}</div>
+          <p className="text-[11px] text-[#667085] mt-1">en llamadas hoy</p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs">
+          <div className="flex items-center justify-between text-xs text-[#667085] mb-1">
+            <span>Mensajes Hoy</span>
             <MessageSquare className="w-4 h-4 text-purple-500" />
           </div>
           <div className="text-2xl font-bold text-[#101828] font-mono">{totalMessagesToday}</div>
@@ -209,6 +257,10 @@ function TeamLiveContent() {
             loading={loading}
             showClient={isAdmin && !selectedClientId}
             onOpenAttendanceModal={(id, name) => setSelectedSellerForModal({ id, name })}
+            onDeleteAdvisor={isAdmin ? (id, name) => {
+              setDeleteAdvisorError(null);
+              setAdvisorToDelete({ id, name });
+            } : undefined}
           />
         </div>
 
@@ -251,6 +303,82 @@ function TeamLiveContent() {
           sellerName={selectedSellerForModal.name}
           onClose={() => setSelectedSellerForModal(null)}
         />
+      )}
+
+      {/* Modal de Confirmación de Eliminación de Asesor */}
+      {advisorToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-red-200 shadow-2xl max-w-md w-full overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#F0EEE8]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-[#101828]">Eliminar Asesor</h4>
+                  <p className="text-[11px] text-[#667085]">Acción permanente</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdvisorToDelete(null)}
+                disabled={isDeletingAdvisor}
+                className="p-1 rounded-lg hover:bg-neutral-100 text-[#667085] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {deleteAdvisorError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                {deleteAdvisorError}
+              </div>
+            )}
+
+            <p className="text-xs text-[#475467] leading-relaxed">
+              ¿Estás seguro de que deseas eliminar permanentemente al asesor{" "}
+              <strong className="text-[#101828]">{advisorToDelete.name}</strong>?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EAECF0] text-[11px] text-[#667085] space-y-1">
+              <p className="font-medium text-[#101828]">Consecuencias de la eliminación:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Se desvinculará de sus prospectos, tareas y llamadas registradas.</li>
+                <li>Se revocará su acceso a la plataforma de forma inmediata.</li>
+                <li>Se registrará esta acción en la bitácora de auditoría.</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EAECF0]">
+              <button
+                type="button"
+                disabled={isDeletingAdvisor}
+                onClick={() => setAdvisorToDelete(null)}
+                className="px-4 py-2 rounded-xl border border-[#D0D5DD] hover:bg-[#FAF9F5] text-xs font-semibold text-[#344054] cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingAdvisor}
+                onClick={handleDeleteAdvisor}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingAdvisor ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar Asesor</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
