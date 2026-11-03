@@ -237,6 +237,8 @@ function UnifiedInboxPageContent() {
           signal: controller.signal,
         });
         const json = await res.json();
+        // Si mientras tanto el usuario cambió de pestaña o cliente, esta respuesta ya es vieja: se descarta.
+        if (abortControllerRef.current !== controller) return;
         if (json.success) {
           const newConvs: ConversationItem[] = json.conversations || [];
           setConversations(newConvs);
@@ -257,8 +259,11 @@ function UnifiedInboxPageContent() {
         }
         console.error("Error al cargar la bandeja de entrada:", err);
       } finally {
-        isFetchingRef.current = false;
-        if (!isSilent) setLoading(false);
+        // Una petición cancelada por otra más nueva no debe apagar el spinner ni liberar el candado de la nueva.
+        if (abortControllerRef.current === controller) {
+          isFetchingRef.current = false;
+          if (!isSilent) setLoading(false);
+        }
       }
     },
     [activeChannel, activeClientId, debouncedSearch, isClient]
@@ -516,7 +521,14 @@ function UnifiedInboxPageContent() {
           ariaLabel="Filtrar conversaciones por canal"
           className="pb-1 lg:pb-0"
           value={activeChannel}
-          onChange={setActiveChannel}
+          onChange={(channel) => {
+            if (channel === activeChannel) return;
+            // Se vacía la lista para no mostrar conversaciones de otro canal bajo la pestaña nueva mientras carga.
+            setConversations([]);
+            setSelectedConvId(null);
+            setLoading(true);
+            setActiveChannel(channel);
+          }}
           options={[
             { value: "all", label: "Todos", count: stats.total },
             { value: "whatsapp", label: "WhatsApp", count: stats.whatsapp, dotClassName: "bg-emerald-500" },
