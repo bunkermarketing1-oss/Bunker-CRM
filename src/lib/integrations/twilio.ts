@@ -1,5 +1,5 @@
 /**
- * Cliente mínimo de Twilio Messaging (REST, sin SDK).
+ * Cliente mínimo de Twilio Messaging y Voice (REST, sin SDK).
  * Docs: https://www.twilio.com/docs/messaging/api/message-resource
  */
 
@@ -15,6 +15,13 @@ export interface TwilioSendResult {
   errorMessage: string | null;
   /** Sin credenciales no se envía nada: el mensaje queda marcado como demo. */
   isDemo: boolean;
+}
+
+export interface ProvisionedTwilioVoiceConfig {
+  fromPhone: string | null;
+  apiKeySid: string;
+  apiKeySecret: string;
+  twimlAppSid: string;
 }
 
 export function getTwilioConfig() {
@@ -46,6 +53,120 @@ export function getTwilioWebhookUrls(fallbackHost?: string): TwilioWebhookUrls {
     voiceInboundUrl: `${cleanBase}/api/integrations/twilio/voice/inbound`,
     voiceStatusUrl: `${cleanBase}/api/integrations/twilio/voice/status`,
   };
+}
+
+/**
+ * Descubre o aprovisiona automáticamente en Twilio REST API la TwiML App y una API Key
+ * para WebRTC Voice usando únicamente Account SID y Auth Token.
+ */
+export async function provisionTwilioVoiceCredentials(
+  accountSid: string,
+  authToken: string,
+  existingFromPhone?: string | null
+): Promise<ProvisionedTwilioVoiceConfig | null> {
+  const authHeader = "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+  const webhooks = getTwilioWebhookUrls();
+
+  try {
+    let fromPhone = existingFromPhone || process.env.TWILIO_PHONE_NUMBER || null;
+    if (!fromPhone) {
+      const numRes = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/IncomingPhoneNumbers.json?PageSize=1`,
+        {
+          method: "GET",
+          headers: { Authorization: authHeader, Accept: "application/json" },
+          signal: AbortSignal.timeout(TWILIO_REQUEST_TIMEOUT_MS),
+        }
+      );
+      if (numRes.ok) {
+        const numData: { incoming_phone_numbers?: Array<{ phone_number?: string }> } =
+          await numRes.json().catch(() => ({}));
+        fromPhone = numData.incoming_phone_numbers?.[0]?.phone_number ?? null;
+      }
+    }
+
+    // 1. Buscar o crear TwiML App para Voz WebRTC
+    let twimlAppSid = process.env.TWILIO_TWIML_APP_SID || null;
+    if (!twimlAppSid) {
+      const appsRes = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Applications.json?PageSize=50`,
+        {
+          method: "GET",
+          headers: { Authorization: authHeader, Accept: "application/json" },
+          signal: AbortSignal.timeout(TWILIO_REQUEST_TIMEOUT_MS),
+        }
+      );
+      if (appsRes.ok) {
+        const appsData: {
+          applications?: Array<{ sid?: string; friendly_name?: string; voice_url?: string }>;
+        } = await appsRes.json().catch(() => ({}));
+        const existingApp = (appsData.applications || []).find(
+          (app) =>
+            app.friendly_name === "Bunker CRM Voice App" ||
+            Boolean(app.voice_url && app.voice_url.includes("/api/integrations/twilio/voice"))
+        );
+        if (existingApp?.sid) {
+          twimlAppSid = existingApp.sid;
+        }
+      }
+    }
+
+    if (!twimlAppSid) {
+      const createAppBody = new URLSearchParams({
+        FriendlyName: "Bunker CRM Voice App",
+        VoiceUrl: webhooks.voiceAppUrl,
+        VoiceMethod: "POST",
+      });
+      const createAppRes = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Applications.json`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: authHeader,
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+          },
+          body: createAppBody.toString(),
+          signal: AbortSignal.timeout(TWILIO_REQUEST_TIMEOUT_MS),
+        }
+      );
+      if (!createAppRes.ok) return null;
+      const createdApp: { sid?: string } = await createAppRes.json().catch(() => ({}));
+      if (!createdApp.sid) return null;
+      twimlAppSid = createdApp.sid;
+    }
+
+    // 2. Crear API Key estándar para firmar Access Tokens de WebRTC
+    const createKeyBody = new URLSearchParams({
+      FriendlyName: "Bunker CRM WebRTC Voice Key",
+    });
+    const createKeyRes = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Keys.json`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: authHeader,
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
+        body: createKeyBody.toString(),
+        signal: AbortSignal.timeout(TWILIO_REQUEST_TIMEOUT_MS),
+      }
+    );
+    if (!createKeyRes.ok) return null;
+    const createdKey: { sid?: string; secret?: string } = await createKeyRes.json().catch(() => ({}));
+    if (!createdKey.sid || !createdKey.secret) return null;
+
+    return {
+      fromPhone,
+      apiKeySid: createdKey.sid,
+      apiKeySecret: createdKey.secret,
+      twimlAppSid,
+    };
+  } catch (error) {
+    console.warn("Error al auto-aprovisionar credenciales de voz de Twilio:", error);
+    return null;
+  }
 }
 
 /**

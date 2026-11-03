@@ -92,6 +92,7 @@ function CallsContent() {
             onCallDirect={(target, label) => device.callTarget(target, label)}
             onHangup={() => device.hangup()}
             onToggleMute={() => device.toggleMute()}
+            onSendDigits={(digits) => device.sendDigits(digits)}
             onAccept={() => device.acceptIncoming()}
             onReject={() => device.rejectIncoming()}
           />

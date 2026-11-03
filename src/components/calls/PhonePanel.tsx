@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Mic, MicOff, Phone, PhoneIncoming, PhoneOff, User, Hash, Delete } from "lucide-react";
 import { MONITOR_MODE } from "@/lib/constants/voice";
+import { playBackspaceTone, playDtmfTone } from "@/lib/dtmf";
 import type { ActiveCallInfo, IncomingCallInfo, VoicePhase } from "@/hooks/useVoiceDevice";
 import type { CallableLead } from "@/hooks/useCallableLeads";
 import { useElapsed } from "@/hooks/useElapsed";
@@ -15,6 +16,7 @@ interface PhonePanelProps {
   leads: CallableLead[];
   onCall: (leadId: string, label: string) => void;
   onCallDirect?: (target: { phone: string; name?: string }, label: string) => void;
+  onSendDigits?: (digits: string) => void;
   onHangup: () => void;
   onToggleMute: () => void;
   onAccept: () => void;
@@ -53,16 +55,44 @@ export function PhonePanel(props: PhonePanelProps) {
   const [leadId, setLeadId] = useState("");
   const [customPhone, setCustomPhone] = useState("+1");
   const [customName, setCustomName] = useState("");
+  const [showInCallKeypad, setShowInCallKeypad] = useState(false);
+  const [inCallDigits, setInCallDigits] = useState("");
 
   const elapsed = useElapsed(active?.startedAt ?? null);
   const selectedLead = leads.find((l) => l.id === leadId);
 
   const handleKeypadPress = (digit: string) => {
+    playDtmfTone(digit);
     setCustomPhone((prev) => prev + digit);
   };
 
   const handleBackspace = () => {
-    setCustomPhone((prev) => (prev.length > 0 ? prev.slice(0, -1) : ""));
+    if (customPhone.length > 0) {
+      playBackspaceTone();
+      setCustomPhone((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const handlePhoneInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (/^[0-9*#+]$/.test(e.key)) {
+      playDtmfTone(e.key);
+    } else if (e.key === "Backspace" && customPhone.length > 0) {
+      playBackspaceTone();
+    } else if (e.key === "Enter" && phase === "ready" && customPhone.trim().length >= 6) {
+      e.preventDefault();
+      handleDirectCall();
+    }
+  };
+
+  const handlePrefixSelect = (prefix: string, toneDigit: string) => {
+    playDtmfTone(toneDigit);
+    setCustomPhone(prefix);
+  };
+
+  const handleInCallDigitPress = (digit: string) => {
+    playDtmfTone(digit);
+    setInCallDigits((prev) => prev + digit);
+    props.onSendDigits?.(digit);
   };
 
   const handleDirectCall = () => {
@@ -146,24 +176,65 @@ export function PhonePanel(props: PhonePanelProps) {
             </span>
           </div>
 
+          {showInCallKeypad && active.monitorMode !== MONITOR_MODE.LISTEN && (
+            <div className="space-y-2 pt-1">
+              {inCallDigits && (
+                <div className="px-3 py-1.5 rounded-xl bg-white border border-[#E8E6DF] text-center font-mono text-xs font-bold text-[#1F1E1D] tracking-widest">
+                  {inCallDigits}
+                </div>
+              )}
+              <div className="grid grid-cols-3 gap-1.5">
+                {DIAL_KEYS.map((k) => (
+                  <button
+                    key={k.digit}
+                    type="button"
+                    onClick={() => handleInCallDigitPress(k.digit)}
+                    className="py-2 bg-white hover:bg-[#F4F3EE] active:bg-[#ECEAE2] active:scale-95 border border-[#E8E6DF] rounded-xl flex flex-col items-center justify-center transition-all select-none shadow-2xs"
+                  >
+                    <span className="text-xs font-bold text-[#1F1E1D] leading-none">{k.digit}</span>
+                    {k.sub && <span className="text-[7px] font-semibold text-[#9C9890] tracking-wider mt-0.5">{k.sub}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-center items-center gap-4 pt-2">
             {active.monitorMode !== MONITOR_MODE.LISTEN && (
-              <button
-                type="button"
-                onClick={props.onToggleMute}
-                aria-label={active.muted ? "Activar micrófono" : "Silenciar micrófono"}
-                aria-pressed={active.muted}
-                className={`${roundButton} border border-[#E8E6DF] ${
-                  active.muted ? "bg-red-50 text-red-600 border-red-300" : "bg-white text-[#1F1E1D] hover:bg-[#F4F3EE]"
-                }`}
-                title={active.muted ? "Micrófono Silenciado" : "Silenciar"}
-              >
-                {active.muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={props.onToggleMute}
+                  aria-label={active.muted ? "Activar micrófono" : "Silenciar micrófono"}
+                  aria-pressed={active.muted}
+                  className={`${roundButton} border border-[#E8E6DF] ${
+                    active.muted ? "bg-red-50 text-red-600 border-red-300" : "bg-white text-[#1F1E1D] hover:bg-[#F4F3EE]"
+                  }`}
+                  title={active.muted ? "Micrófono Silenciado" : "Silenciar"}
+                >
+                  {active.muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInCallKeypad((prev) => !prev)}
+                  aria-label="Teclado en llamada"
+                  aria-pressed={showInCallKeypad}
+                  className={`${roundButton} border border-[#E8E6DF] ${
+                    showInCallKeypad ? "bg-amber-50 text-amber-700 border-amber-300" : "bg-white text-[#1F1E1D] hover:bg-[#F4F3EE]"
+                  }`}
+                  title="Teclado numérico (tonos DTMF)"
+                >
+                  <Hash className="w-4 h-4" />
+                </button>
+              </>
             )}
             <button
               type="button"
-              onClick={props.onHangup}
+              onClick={() => {
+                setShowInCallKeypad(false);
+                setInCallDigits("");
+                props.onHangup();
+              }}
               aria-label="Colgar llamada"
               className={`${roundButton} bg-red-600 text-white hover:bg-red-700 shadow-md`}
               title="Colgar"
@@ -221,7 +292,7 @@ export function PhonePanel(props: PhonePanelProps) {
                 type="button"
                 disabled={phase !== "ready" || !selectedLead}
                 onClick={() => selectedLead && props.onCall(selectedLead.id, selectedLead.name)}
-                className="w-full py-2.5 rounded-xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                className="w-full py-2.5 rounded-xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm cursor-pointer"
               >
                 <Phone className="w-3.5 h-3.5 text-[#E5C158]" />
                 <span>{selectedLead ? `Llamar a ${selectedLead.name}` : "Llamar Lead"}</span>
@@ -237,6 +308,7 @@ export function PhonePanel(props: PhonePanelProps) {
                     type="tel"
                     value={customPhone}
                     onChange={(e) => setCustomPhone(e.target.value)}
+                    onKeyDown={handlePhoneInputKeyDown}
                     placeholder="+1 469 123 4567"
                     className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-sm font-mono font-bold text-[#1F1E1D] focus:outline-none focus:border-[#D97757] pr-10"
                   />
@@ -244,7 +316,7 @@ export function PhonePanel(props: PhonePanelProps) {
                     <button
                       type="button"
                       onClick={handleBackspace}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#82807C] hover:text-[#1F1E1D] p-1"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#82807C] hover:text-[#1F1E1D] p-1 active:scale-90 transition-transform"
                       title="Borrar dígito"
                     >
                       <Delete className="w-4 h-4" />
@@ -265,22 +337,22 @@ export function PhonePanel(props: PhonePanelProps) {
               <div className="flex gap-1.5 text-[10px]">
                 <button
                   type="button"
-                  onClick={() => setCustomPhone("+1")}
-                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] rounded-lg border border-[#E8E6DF] text-[#4D4C48]"
+                  onClick={() => handlePrefixSelect("+1", "1")}
+                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] active:scale-95 rounded-lg border border-[#E8E6DF] text-[#4D4C48] transition-all"
                 >
                   🇺🇸 +1 (US)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCustomPhone("+52")}
-                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] rounded-lg border border-[#E8E6DF] text-[#4D4C48]"
+                  onClick={() => handlePrefixSelect("+52", "5")}
+                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] active:scale-95 rounded-lg border border-[#E8E6DF] text-[#4D4C48] transition-all"
                 >
                   🇲🇽 +52 (MX)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCustomPhone("+57")}
-                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] rounded-lg border border-[#E8E6DF] text-[#4D4C48]"
+                  onClick={() => handlePrefixSelect("+57", "7")}
+                  className="px-2 py-1 bg-[#FAF9F5] hover:bg-[#F4F3EE] active:scale-95 rounded-lg border border-[#E8E6DF] text-[#4D4C48] transition-all"
                 >
                   🇨🇴 +57 (CO)
                 </button>
@@ -293,7 +365,7 @@ export function PhonePanel(props: PhonePanelProps) {
                     key={k.digit}
                     type="button"
                     onClick={() => handleKeypadPress(k.digit)}
-                    className="py-2.5 bg-white hover:bg-[#F4F3EE] active:bg-[#ECEAE2] border border-[#E8E6DF] rounded-xl flex flex-col items-center justify-center transition-colors"
+                    className="py-2.5 bg-white hover:bg-[#F4F3EE] active:bg-[#ECEAE2] active:scale-95 border border-[#E8E6DF] rounded-xl flex flex-col items-center justify-center transition-all select-none shadow-2xs cursor-pointer"
                   >
                     <span className="text-sm font-bold text-[#1F1E1D] leading-none">{k.digit}</span>
                     {k.sub && <span className="text-[8px] font-semibold text-[#9C9890] tracking-wider mt-0.5">{k.sub}</span>}
@@ -305,7 +377,7 @@ export function PhonePanel(props: PhonePanelProps) {
                 type="button"
                 disabled={phase !== "ready" || customPhone.trim().length < 6}
                 onClick={handleDirectCall}
-                className="w-full py-2.5 rounded-xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                className="w-full py-2.5 rounded-xl btn-black-gold font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm cursor-pointer"
               >
                 <Phone className="w-3.5 h-3.5 text-[#E5C158]" />
                 <span>Marcar Número Directo</span>

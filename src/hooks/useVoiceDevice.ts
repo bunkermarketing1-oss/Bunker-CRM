@@ -223,5 +223,12 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
     if (call) call.mute(!call.isMuted());
   }, []);
 
-  return { phase, error, active, incoming, callLead, callTarget, monitor, acceptIncoming, rejectIncoming, hangup, toggleMute };
+  const sendDigits = useCallback((digits: string) => {
+    const call = callRef.current;
+    if (call && typeof call.sendDigits === "function") {
+      call.sendDigits(digits);
+    }
+  }, []);
+
+  return { phase, error, active, incoming, callLead, callTarget, monitor, acceptIncoming, rejectIncoming, hangup, toggleMute, sendDigits };
 }

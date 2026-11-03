@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       .filter((acc) => acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE);
     const leadgenByPage = await getPagesLeadgenStatus(user!.organizationId, pages);
 
-    const integrationsWithLeadgen = integrations.map((it) => ({
+    const integrationsWithLeadgen = integrations.map(({ configJson: _configJson, ...it }) => ({
       ...it,
       connectedAccounts: it.connectedAccounts.map(({ metadataJson: _metadataJson, ...acc }) => ({
         ...acc,
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       credentialStatus,
       twilioEnv: getTwilioEnvStatus(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/integrations error:", error);
     return NextResponse.json({ success: false, error: "Error al consultar integraciones." }, { status: 500 });
   }
@@ -113,10 +113,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      const { configJson: _cfg, ...safeUpdated } = updated;
       return NextResponse.json({
         success: true,
         message: `${integration.name} ha sido desconectada.`,
-        integration: updated,
+        integration: safeUpdated,
       });
     }
 
@@ -176,10 +177,11 @@ export async function POST(req: NextRequest) {
           },
         });
 
+        const { configJson: _cfg, ...safeUpdated } = updated;
         return NextResponse.json({
           success: true,
           message: `Conexión autorizada exitosamente con Twilio (${testResult.accountName || "Cuenta activa"}).`,
-          integration: updated,
+          integration: safeUpdated,
           testResult,
         });
       }
@@ -230,15 +232,16 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      const { configJson: _cfg, ...safeUpdated } = updated;
       return NextResponse.json({
         success: true,
         message: `Conexión autorizada exitosamente con ${integration.name}`,
-        integration: updated,
+        integration: safeUpdated,
       });
     }
 
     return NextResponse.json({ success: false, error: "Acción no reconocida." }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("POST /api/integrations error:", error);
     return NextResponse.json({ success: false, error: "Error al actualizar integración." }, { status: 500 });
   }

@@ -13,6 +13,7 @@ import {
 } from "@/lib/integrations/twilio";
 import { createVoiceAccessToken } from "@/lib/integrations/twilio-voice-token";
 import { conferenceTwiml, dialClientsTwiml, emptyTwiml, sayTwiml } from "@/lib/integrations/twilio-twiml";
+import { ensureTwilioRuntimeConfig } from "@/services/integrations.service";
 import { isAllowedCallDestination, parseAllowedCountries, statusesThatCanAdvanceTo } from "@/lib/voice-policy";
 import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
 import { validateAndNormalizePhone } from "@/lib/phone";
@@ -70,7 +71,8 @@ function userIdFromCaller(caller: string | undefined) {
   return identity.startsWith(VOICE_IDENTITY_PREFIX) ? identity.slice(VOICE_IDENTITY_PREFIX.length) : null;
 }
 
-export function issueVoiceToken(userId: string) {
+export async function issueVoiceToken(userId: string) {
+  await ensureTwilioRuntimeConfig();
   const cfg = getTwilioVoiceConfig();
   if (!cfg) {
     throw new CallError("Las llamadas no están configuradas (TWILIO_API_KEY_SID, TWILIO_API_KEY_SECRET, TWILIO_TWIML_APP_SID).", 503);
@@ -329,6 +331,8 @@ export async function startOutboundCall(
   userId: string,
   target: string | StartCallInput
 ) {
+  await ensureTwilioRuntimeConfig();
+
   const leadId = typeof target === "string" ? target : target.leadId;
   const targetPhone = typeof target === "object" ? target.phone : undefined;
   const targetName = typeof target === "object" ? target.name : undefined;
@@ -422,6 +426,7 @@ export async function handleVoiceAppRequest(params: Record<string, string>) {
 }
 
 async function connectAgent(userId: string, callId: string, agentCallSid: string) {
+  await ensureTwilioRuntimeConfig();
   // Un callId solo sirve una vez y solo para quien lo creó. El `updateMany` condicionado es
   // el candado: si Twilio reintenta o llegan dos connect a la vez, solo uno le marca al lead.
   const { count } = await prisma.call.updateMany({

@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json({ success: true, ...issueVoiceToken(user!.id) });
+    const tokenData = await issueVoiceToken(user!.id);
+    return NextResponse.json({ success: true, ...tokenData });
   } catch (error) {
     return voiceErrorResponse(error, "GET /api/voice/token", "Error al generar el acceso a llamadas.");
   }

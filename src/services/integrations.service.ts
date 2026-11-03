@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { listMetaAdAccounts, listMetaPages } from "@/lib/integrations/meta";
+import { provisionTwilioVoiceCredentials } from "@/lib/integrations/twilio";
 import { subscribeMetaPagesToLeadgen } from "@/services/meta-leads.service";
 import { ENV_VARS, TWILIO_SMS_ENV_VARS, TWILIO_VOICE_ENV_VARS } from "@/lib/constants/environment";
 import {
@@ -24,6 +25,112 @@ export class ConnectedAccountError extends Error {
 export interface Actor {
   organizationId: string;
   userId: string;
+}
+
+export interface StoredTwilioVoiceConfig {
+  fromPhone?: string | null;
+  apiKeySid?: string;
+  apiKeySecret?: string;
+  twimlAppSid?: string;
+}
+
+let twilioRuntimePromise: Promise<void> | null = null;
+
+function hasAllTwilioRuntimeVars(): boolean {
+  return Boolean(
+    process.env.TWILIO_PHONE_NUMBER &&
+      process.env.TWILIO_API_KEY_SID &&
+      process.env.TWILIO_API_KEY_SECRET &&
+      process.env.TWILIO_TWIML_APP_SID
+  );
+}
+
+async function loadTwilioRuntimeConfig(): Promise<void> {
+  if (hasAllTwilioRuntimeVars()) return;
+
+  try {
+    const integration = await prisma.integration.findFirst({
+      where: { provider: INTEGRATION_PROVIDER.TWILIO },
+      select: { id: true, configJson: true },
+    });
+
+    if (integration?.configJson) {
+      try {
+        const raw = decryptSecret(integration.configJson);
+        const parsed = JSON.parse(raw) as StoredTwilioVoiceConfig;
+        if (!process.env.TWILIO_PHONE_NUMBER && parsed.fromPhone) {
+          process.env.TWILIO_PHONE_NUMBER = parsed.fromPhone;
+        }
+        if (!process.env.TWILIO_API_KEY_SID && parsed.apiKeySid) {
+          process.env.TWILIO_API_KEY_SID = parsed.apiKeySid;
+        }
+        if (!process.env.TWILIO_API_KEY_SECRET && parsed.apiKeySecret) {
+          process.env.TWILIO_API_KEY_SECRET = parsed.apiKeySecret;
+        }
+        if (!process.env.TWILIO_TWIML_APP_SID && parsed.twimlAppSid) {
+          process.env.TWILIO_TWIML_APP_SID = parsed.twimlAppSid;
+        }
+      } catch {
+        // Si configJson fue cifrado con otra clave o no es válido, continúa al auto-aprovisionamiento
+      }
+    }
+
+    if (
+      (!process.env.TWILIO_API_KEY_SID ||
+        !process.env.TWILIO_API_KEY_SECRET ||
+        !process.env.TWILIO_TWIML_APP_SID) &&
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN
+    ) {
+      const provisioned = await provisionTwilioVoiceCredentials(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN,
+        process.env.TWILIO_PHONE_NUMBER
+      );
+      if (provisioned) {
+        if (!process.env.TWILIO_PHONE_NUMBER && provisioned.fromPhone) {
+          process.env.TWILIO_PHONE_NUMBER = provisioned.fromPhone;
+        }
+        process.env.TWILIO_API_KEY_SID = provisioned.apiKeySid;
+        process.env.TWILIO_API_KEY_SECRET = provisioned.apiKeySecret;
+        process.env.TWILIO_TWIML_APP_SID = provisioned.twimlAppSid;
+
+        if (integration) {
+          try {
+            const encrypted = encryptSecret(JSON.stringify(provisioned));
+            await prisma.integration.update({
+              where: { id: integration.id },
+              data: {
+                configJson: encrypted,
+                status: INTEGRATION_STATUS.CONNECTED,
+                lastSyncAt: new Date(),
+                errorMessage: null,
+              },
+            });
+          } catch {
+            // No bloquear si el cifrado local no está disponible
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("Advertencia al sincronizar configuración de voz de Twilio:", error);
+  }
+}
+
+/**
+ * Garantiza que las variables de voz de Twilio (`TWILIO_API_KEY_SID`, `TWILIO_API_KEY_SECRET`,
+ * `TWILIO_TWIML_APP_SID`, `TWILIO_PHONE_NUMBER`) estén cargadas en memoria desde la base de datos
+ * o auto-aprovisionadas desde Twilio REST API si solo se definieron `TWILIO_ACCOUNT_SID` y `TWILIO_AUTH_TOKEN`.
+ */
+export async function ensureTwilioRuntimeConfig(): Promise<void> {
+  if (hasAllTwilioRuntimeVars()) return;
+  if (!twilioRuntimePromise) {
+    twilioRuntimePromise = loadTwilioRuntimeConfig().finally(() => {
+      twilioRuntimePromise = null;
+    });
+  }
+  await twilioRuntimePromise;
 }
 
 /** Nunca incluye `accessTokenEnc`: esta forma es la que viaja al navegador. */
