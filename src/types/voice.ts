@@ -8,6 +8,7 @@ export interface CallSummary {
   toNumber: string;
   durationSec: number | null;
   hasRecording: boolean;
+  recordingUrl?: string | null;
   leadId: string | null;
   leadName: string | null;
   userId: string | null;

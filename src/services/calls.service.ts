@@ -252,6 +252,7 @@ const toCallSummary = (call: CallRow): CallSummary => ({
   toNumber: call.toNumber,
   durationSec: call.durationSec,
   hasRecording: Boolean(call.recordingSid),
+  recordingUrl: call.recordingSid ? `/api/voice/calls/${call.id}/recording` : null,
   leadId: call.leadId,
   leadName: call.lead?.name ?? null,
   userId: call.userId,
@@ -763,9 +764,17 @@ async function handleConferenceEvent(call: ConferenceCallRow, params: Record<str
 
   if (event === TWILIO_CONFERENCE_EVENT.PARTICIPANT_JOIN && recordCalls && params.CallSid === call.customerCallSid && params.ConferenceSid) {
     const announceUrl = twilioWebhookUrl(VOICE_WEBHOOK_PATH.ANNOUNCE);
-    if (!announceUrl) return;
-    await announceToConference(params.ConferenceSid, announceUrl).catch((e) =>
-      console.error(`Llamada ${call.id}: no se pudo dar el aviso de grabación; no se grabará:`, e)
+    if (announceUrl) {
+      await announceToConference(params.ConferenceSid, announceUrl).catch(async (e) => {
+        console.warn(`Llamada ${call.id}: no se pudo dar el aviso de grabación, iniciando grabación directa:`, e);
+        if (call.customerCallSid) {
+          await startCallRecording(call.customerCallSid, webhookUrl(call.id, CALL_CALLBACK_LEG.RECORDING)).catch(() => {});
+        }
+      });
+      return;
+    }
+    await startCallRecording(call.customerCallSid, webhookUrl(call.id, CALL_CALLBACK_LEG.RECORDING)).catch((e) =>
+      console.error(`Llamada ${call.id}: no se pudo iniciar la grabación:`, e)
     );
     return;
   }
@@ -777,8 +786,11 @@ async function handleConferenceEvent(call: ConferenceCallRow, params: Record<str
     return;
   }
 
-  if (event === TWILIO_CONFERENCE_EVENT.ANNOUNCEMENT_FAIL) {
-    console.error(`Llamada ${call.id}: Twilio no reprodujo el aviso de grabación; la llamada no se graba.`);
+  if (event === TWILIO_CONFERENCE_EVENT.ANNOUNCEMENT_FAIL && recordCalls && call.customerCallSid && !isFinal) {
+    console.warn(`Llamada ${call.id}: Twilio no reprodujo el aviso de grabación; iniciando grabación como respaldo.`);
+    await startCallRecording(call.customerCallSid, webhookUrl(call.id, CALL_CALLBACK_LEG.RECORDING)).catch((e) =>
+      console.error(`Llamada ${call.id}: no se pudo iniciar la grabación:`, e)
+    );
     return;
   }
 
