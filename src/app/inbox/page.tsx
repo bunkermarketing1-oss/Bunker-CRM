@@ -26,6 +26,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
+import SlidingTabs from "@/components/ui/SlidingTabs";
 import type {
   ConversationItem,
   ConversationMessage,
@@ -511,126 +512,20 @@ function UnifiedInboxPageContent() {
       {/* Barra de Filtros de Canales & Selector de Clientes */}
       <div className="p-1.5 bg-white rounded-xl border border-[#EAECF0] flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 shadow-2xs">
         {/* Tabs de Canales */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
-          <button
-            type="button"
-            onClick={() => setActiveChannel("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "all"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <span>Todos</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "all" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.total}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveChannel("whatsapp")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "whatsapp"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>WhatsApp</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "whatsapp" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.whatsapp}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveChannel("messenger")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "messenger"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span>Messenger</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "messenger" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.messenger}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveChannel("instagram")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "instagram"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full bg-pink-500" />
-            <span>Instagram Direct</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "instagram" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.instagram}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveChannel("sms")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "sms"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-            <span>SMS</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "sms" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.sms}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveChannel("comments")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
-              activeChannel === "comments"
-                ? "bg-[#0F172A] text-white shadow-xs"
-                : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA]"
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Comentarios</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                activeChannel === "comments" ? "bg-white/20 text-white font-medium" : "bg-[#F2F4F7] text-[#475467]"
-              }`}
-            >
-              {stats.comments}
-            </span>
-          </button>
-        </div>
+        <SlidingTabs
+          ariaLabel="Filtrar conversaciones por canal"
+          className="pb-1 lg:pb-0"
+          value={activeChannel}
+          onChange={setActiveChannel}
+          options={[
+            { value: "all", label: "Todos", count: stats.total },
+            { value: "whatsapp", label: "WhatsApp", count: stats.whatsapp, dotClassName: "bg-emerald-500" },
+            { value: "messenger", label: "Messenger", count: stats.messenger, dotClassName: "bg-blue-500" },
+            { value: "instagram", label: "Instagram Direct", count: stats.instagram, dotClassName: "bg-pink-500" },
+            { value: "sms", label: "SMS", count: stats.sms, dotClassName: "bg-purple-500" },
+            { value: "comments", label: "Comentarios", count: stats.comments, dotClassName: "bg-amber-500" },
+          ]}
+        />
 
 
       </div>
