@@ -36,6 +36,7 @@ async function fetchToken(): Promise<{ token: string } | { error: string }> {
  * llamadas, y renueva el token antes de que expire. El SDK se carga solo en el cliente.
  */
 export interface UseVoiceDeviceOptions {
+  onCallStarted?: () => void;
   onCallEnded?: () => void;
   /**
    * false = solo para salir (p. ej. escuchar desde la vista del equipo): no registra el
@@ -44,10 +45,12 @@ export interface UseVoiceDeviceOptions {
   receiveIncoming?: boolean;
 }
 
-export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoiceDeviceOptions = {}) {
+export function useVoiceDevice({ onCallStarted, onCallEnded, receiveIncoming = true }: UseVoiceDeviceOptions = {}) {
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
   const incomingRef = useRef<Call | null>(null);
+  const onStartedRef = useRef(onCallStarted);
+  onStartedRef.current = onCallStarted;
   const onEndedRef = useRef(onCallEnded);
   onEndedRef.current = onCallEnded;
 
@@ -68,9 +71,12 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
       callRef.current = call;
       setActive({ ...info, startedAt: null, muted: false });
       setPhase("connecting");
+      onStartedRef.current?.();
+
       call.on("accept", () => {
         setActive((a) => (a ? { ...a, startedAt: Date.now() } : a));
         setPhase("in_call");
+        onStartedRef.current?.();
       });
       call.on("mute", (muted: boolean) => setActive((a) => (a ? { ...a, muted } : a)));
       call.on("disconnect", clearCall);
@@ -150,7 +156,7 @@ export function useVoiceDevice({ onCallEnded, receiveIncoming = true }: UseVoice
   }, [receiveIncoming]);
 
   const callTarget = useCallback(
-    async (target: { leadId?: string; phone?: string; name?: string }, label: string) => {
+    async (target: { leadId?: string; phone?: string; name?: string; clientId?: string | null }, label: string) => {
       const device = deviceRef.current;
       if (!device || callRef.current) return;
       setError(null);

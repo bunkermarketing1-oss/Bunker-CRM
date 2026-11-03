@@ -42,12 +42,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { user, errorResponse } = await requireAuth(req);
   if (errorResponse) return errorResponse;
-  const scope = scopeFromUser(user!);
+  let scope = scopeFromUser(user!);
   if (!scope) return NextResponse.json({ success: false, error: "Usuario cliente no tiene empresa asociada." }, { status: 403 });
 
   const parsed = startCallSchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || "Datos inválidos." }, { status: 400 });
+  }
+
+  if (!user!.isClientUser && parsed.data.clientId) {
+    const belongs = await clientBelongsToOrg(user!.organizationId, parsed.data.clientId);
+    if (belongs) {
+      scope = { organizationId: user!.organizationId, clientId: parsed.data.clientId };
+    }
   }
 
   try {

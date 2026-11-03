@@ -1,8 +1,8 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Phone, RefreshCw, Building2 } from "lucide-react";
+import { Phone, RefreshCw, Building2, Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCalls } from "@/hooks/useCalls";
 import { useCallableLeads } from "@/hooks/useCallableLeads";
@@ -26,56 +26,100 @@ function CallsContent() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
   const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const urlClientId = searchParams.get("clientId");
+
+  // Si en la URL viene clientId, se inicializa con ese o con "all"
+  const [selectedClientId, setSelectedClientId] = useState<string>(urlClientId || "all");
   const clientOptions = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clientOptions.find((c) => c.id === clientId) : null;
 
-  const { calls, liveCalls, loading: callsLoading, refresh: refreshCalls } = useCalls(clientId);
-  const leads = useCallableLeads(clientId);
-  const { lines, create: createLine, update: updateLine } = usePhoneLines(isAdmin);
+  useEffect(() => {
+    if (urlClientId) {
+      setSelectedClientId(urlClientId);
+    }
+  }, [urlClientId]);
 
+  const activeClient = selectedClientId && selectedClientId !== "all" ? clientOptions.find((c) => c.id === selectedClientId) : null;
+
+  // Teléfono del navegador
   const device = useVoiceDevice({
+    onCallStarted: () => {
+      refreshCalls();
+    },
     onCallEnded: () => {
       refreshCalls();
+      // Refrescos desfasados para atrapar el webhook de duración y grabación de Twilio
+      setTimeout(refreshCalls, 1500);
+      setTimeout(refreshCalls, 3500);
     },
     receiveIncoming: true,
   });
+
+  const { calls, liveCalls, loading: callsLoading, refresh: refreshCalls } = useCalls(
+    selectedClientId,
+    Boolean(device.active)
+  );
+  const leads = useCallableLeads(selectedClientId);
+  const { lines, create: createLine, update: updateLine } = usePhoneLines(isAdmin);
 
   const canJoin = device.phase === "ready" && !device.active;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAECF0]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
               Telefonía VoIP
             </span>
             {activeClient ? (
               <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 text-amber-600" />
-                Marca: <strong>{activeClient.name}</strong>
+                <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                Filtrando por: <strong>{activeClient.name}</strong>
               </span>
             ) : (
-              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
-                Todas las Llamadas
+              <span className="text-[11px] font-semibold text-[#344054] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-blue-600" />
+                Todas las Llamadas (Global)
               </span>
             )}
           </div>
-          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold text-[#101828] tracking-tight flex items-center gap-2.5">
             <Phone className="w-6 h-6 text-amber-500 shrink-0" />
             <span>Central Telefónica & Marcación</span>
           </h1>
         </div>
 
-        <button
-          onClick={refreshCalls}
-          className="p-2.5 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors self-start sm:self-auto shadow-2xs"
-          title="Actualizar llamadas"
-        >
-          <RefreshCw className={`w-4 h-4 ${callsLoading ? "animate-spin text-amber-500" : ""}`} />
-        </button>
+        {/* Controles del encabezado: Selector de Marca + Botón de Actualizar */}
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          {isAdmin && (
+            <div className="flex items-center gap-1.5 bg-white border border-[#EAECF0] rounded-xl px-3 py-2 shadow-2xs">
+              <Building2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="text-xs font-semibold text-[#101828] bg-transparent border-none focus:outline-none cursor-pointer"
+                title="Filtrar llamadas por marca"
+              >
+                <option value="all">Todas las marcas (Global)</option>
+                {clientOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button
+            onClick={refreshCalls}
+            className="px-3 py-2 rounded-xl bg-white border border-[#EAECF0] text-[#344054] hover:text-[#101828] hover:border-[#D0D5DD] text-xs font-semibold transition-colors shadow-2xs flex items-center gap-2 cursor-pointer active:scale-95"
+            title="Actualizar llamadas en tiempo real"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${callsLoading ? "animate-spin text-amber-500" : "text-[#667085]"}`} />
+            <span>Actualizar</span>
+          </button>
+        </div>
       </div>
 
       {/* Grid Principal: Marcador + Supervisión en vivo + Historial + Líneas */}
@@ -89,7 +133,15 @@ function CallsContent() {
             incoming={device.incoming}
             leads={leads}
             onCall={(leadId, label) => device.callLead(leadId, label)}
-            onCallDirect={(target, label) => device.callTarget(target, label)}
+            onCallDirect={(target, label) =>
+              device.callTarget(
+                {
+                  ...target,
+                  clientId: selectedClientId !== "all" ? selectedClientId : undefined,
+                },
+                label
+              )
+            }
             onHangup={() => device.hangup()}
             onToggleMute={() => device.toggleMute()}
             onSendDigits={(digits) => device.sendDigits(digits)}
