@@ -56,8 +56,10 @@ function getJwtPayload(token: string): any {
 
 const STANDALONE_PUBLIC_PATHS = [
   "/privacy",
+  "/terms",
   "/data-deletion",
   "/politica-de-privacidad",
+  "/terminos-y-condiciones",
   "/eliminacion-de-datos",
   "/api/integrations/meta/webhook",
   "/api/integrations/meta/data-deletion",

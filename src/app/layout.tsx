@@ -19,8 +19,10 @@ export default function RootLayout({
   const isStandalonePage =
     pathname === ROUTES.LOGIN ||
     pathname === ROUTES.PRIVACY ||
+    pathname === ROUTES.TERMS ||
     pathname === ROUTES.DATA_DELETION ||
     pathname === "/politica-de-privacidad" ||
+    pathname === "/terminos-y-condiciones" ||
     pathname === "/eliminacion-de-datos";
 
   return (

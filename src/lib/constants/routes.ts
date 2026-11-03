@@ -20,6 +20,7 @@ export const ROUTES = {
   AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
   PRIVACY: "/privacy",
+  TERMS: "/terms",
   DATA_DELETION: "/data-deletion",
 } as const;
 
