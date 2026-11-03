@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type { CallSummary } from "@/types/voice";
 
-// Las llamadas en curso cambian rápido; cada 5 s basta para ver quién está hablando.
-const REFRESH_MS = 5000;
+const REFRESH_IDLE_MS = 4000;
+const REFRESH_LIVE_MS = 2000;
 
-export function useCalls(clientId?: string | null) {
+export function useCalls(clientId?: string | null, hasActiveCall = false) {
   const [calls, setCalls] = useState<CallSummary[]>([]);
   const [liveCalls, setLiveCalls] = useState<CallSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export function useCalls(clientId?: string | null) {
   const refresh = useCallback(async () => {
     try {
       const clientQuery = clientId && clientId !== "all" ? `?clientId=${encodeURIComponent(clientId)}` : "";
-      const res = await fetch(`/api/voice/calls${clientQuery}`);
+      const res = await fetch(`/api/voice/calls${clientQuery}`, { cache: "no-store" });
       const json = await res.json();
       if (json.success) {
         setCalls(json.calls);
@@ -33,9 +33,10 @@ export function useCalls(clientId?: string | null) {
 
   useEffect(() => {
     refresh();
-    const timer = setInterval(refresh, REFRESH_MS);
+    const interval = (hasActiveCall || liveCalls.length > 0) ? REFRESH_LIVE_MS : REFRESH_IDLE_MS;
+    const timer = setInterval(refresh, interval);
     return () => clearInterval(timer);
-  }, [refresh]);
+  }, [refresh, hasActiveCall, liveCalls.length]);
 
   return { calls, liveCalls, loading, error, refresh };
 }

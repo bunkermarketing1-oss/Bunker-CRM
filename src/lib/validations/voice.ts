@@ -38,6 +38,7 @@ export const startCallSchema = z
     leadId: z.string().uuid("Lead inválido.").optional(),
     phone: z.string().trim().optional(),
     name: z.string().trim().max(80).optional(),
+    clientId: z.string().uuid("Cliente inválido.").optional().nullable(),
   })
   .refine((data) => Boolean(data.leadId || data.phone), {
     message: "Debes seleccionar un lead o ingresar un número de teléfono.",
