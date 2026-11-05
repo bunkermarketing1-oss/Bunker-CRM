@@ -45,13 +45,13 @@ export default function GeneralDashboardGrid({
         <StatCard
           emphasis
           icon={Building2}
-          label="Empresas y marcas"
+          label="Empresas registradas"
           value={formatNumber(clientCards.length || metrics.activeClients || 0)}
-          hint="Marcas activas registradas"
+          hint="Empresas y marcas activas"
         />
         <StatCard
           icon={Users}
-          label="Leads totales"
+          label="Prospectos totales"
           value={formatNumber(metrics.totalLeads)}
           hint={
             metrics.leadsThisWeek > 0
@@ -61,13 +61,13 @@ export default function GeneralDashboardGrid({
         />
         <StatCard
           icon={KanbanSquare}
-          label="Pipeline abierto"
+          label="Ventas en curso"
           value={formatCompactMoney(metrics.openPipelineValue)}
           hint={`${formatNumber(metrics.openDealsCount)} negocios en curso`}
         />
         <StatCard
           icon={Plug}
-          label="Canales conectados"
+          label="Conexiones activas"
           value={formatNumber(totalConnectedAccounts)}
           hint="Meta Ads, Instagram, Messenger y SMS"
         />

@@ -80,7 +80,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           <div className="p-2.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0]/60">
             <div className="flex items-center gap-1.5 text-xs text-[#667085]">
               <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>Leads</span>
+              <span>Prospectos</span>
             </div>
             <div className="text-base font-bold text-[#101828] mt-1">
               {formatNumber(client.leadsCount)}
@@ -93,13 +93,13 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           <div className="p-2.5 rounded-xl bg-[#F8F9FA] border border-[#EAECF0]/60">
             <div className="flex items-center gap-1.5 text-xs text-[#667085]">
               <KanbanSquare className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span>Deals</span>
+              <span>Ventas</span>
             </div>
             <div className="text-base font-bold text-[#101828] mt-1">
               {formatNumber(client.openOpportunitiesCount)}
             </div>
             <div className="text-[10px] text-[#98A2B3] truncate">
-              {client.wonRevenue > 0 ? formatCompactMoney(client.wonRevenue) : "En pipeline"}
+              {client.wonRevenue > 0 ? formatCompactMoney(client.wonRevenue) : "En proceso"}
             </div>
           </div>
 
@@ -132,7 +132,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           <div className="flex items-center justify-between text-[#475467]">
             <span className="flex items-center gap-1.5 text-[#667085]">
               <Plug className="w-3.5 h-3.5 text-slate-400" />
-              Canales activos:
+              Conexiones:
             </span>
             <div className="flex items-center gap-1">
               {client.connectedAccounts.length > 0 ? (
@@ -145,7 +145,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
                   />
                 ))
               ) : (
-                <span className="text-[11px] text-[#98A2B3]">Sin canales</span>
+                <span className="text-[11px] text-[#98A2B3]">Sin conexiones</span>
               )}
               {client.connectedAccounts.length > 4 && (
                 <span className="text-[10px] text-[#667085] font-medium ml-0.5">
@@ -163,7 +163,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           href={`/dashboard?clientId=${client.id}`}
           className="w-full h-10 px-4 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors group-hover:bg-[#0F172A]"
         >
-          <span>Abrir Panel Individual</span>
+          <span>Ver Empresa</span>
           <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
         </Link>
 
@@ -180,7 +180,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
             className="hover:text-[#101828] flex items-center gap-1 transition-colors"
           >
             <FileText className="w-3 h-3 text-slate-400" />
-            <span>Ficha 360°</span>
+            <span>Ficha</span>
           </Link>
           <Link
             href={`/campaigns?clientId=${client.id}`}

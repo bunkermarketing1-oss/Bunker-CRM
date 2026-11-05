@@ -45,22 +45,22 @@ function DashboardPageContent() {
             <span>Volver a todas las marcas</span>
           </Link>
           <PageHeader
-            section={`Marca: ${activeClient.name}`}
+            section={`Empresa: ${activeClient.name}`}
             title={`Panel de ${activeClient.name}`}
-            description={`${formattedToday} · Métricas y fichas técnicas en tiempo real`}
+            description={`${formattedToday} · Métricas e información en tiempo real`}
             actions={
               <>
                 <Link
                   href={`/inbox?clientId=${activeClient.id}`}
                   className="h-9 px-3.5 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] flex items-center gap-1.5 hover:bg-[#F8F9FA]"
                 >
-                  Bandeja omnicanal
+                  Bandeja de Entrada
                 </Link>
                 <Link
                   href={`/crm/clients/${activeClient.id}`}
                   className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5"
                 >
-                  Ficha comercial 360°
+                  Ficha de la Empresa
                 </Link>
               </>
             }
@@ -68,12 +68,12 @@ function DashboardPageContent() {
         </div>
       ) : (
         <PageHeader
-          section={isClient ? "Portal" : "Directorio de Marcas"}
-          title={isClient ? `Resumen de ${user?.clientName ?? "tu empresa"}` : "Dashboard General de Empresas"}
+          section={isClient ? "Portal" : "Directorio"}
+          title={isClient ? `Resumen de ${user?.clientName ?? "tu empresa"}` : "Panel General de Empresas"}
           description={
             isClient
               ? `${formattedToday} · Estado de tu cuenta y prospectos`
-              : `${formattedToday} · Selecciona cualquier marca para abrir su panel individual de control`
+              : `${formattedToday} · Selecciona cualquier empresa para abrir su panel de control`
           }
           actions={
             !isClient ? (
@@ -83,14 +83,14 @@ function DashboardPageContent() {
                   className="h-9 px-3.5 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] flex items-center gap-1.5 hover:bg-[#F8F9FA]"
                 >
                   <Building2 className="w-3.5 h-3.5 text-[#667085]" />
-                  Gestionar clientes
+                  Empresas
                 </Link>
                 <Link
                   href={ROUTES.REPORTS}
                   className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5"
                 >
                   <LineChart className="w-3.5 h-3.5 text-amber-400" />
-                  Ver reportes
+                  Reportes
                 </Link>
               </>
             ) : null

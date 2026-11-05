@@ -44,32 +44,31 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Inicio", en: "Home" } },
       { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Inbox" } },
-      { href: ROUTES.LEADS, icon: Users, label: { es: "Mis Leads", en: "My Leads" } },
-      { href: ROUTES.CLIENTS, icon: Building2, label: { es: "Mi Empresa & Contactos", en: "My Company & Contacts" } },
-      { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline Comercial", en: "Sales Pipeline" } },
-      { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades & Llamadas", en: "Activities & Calls" } },
-      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamar", en: "Calls" } },
-      { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
-      { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas Pendientes", en: "Pending Tasks" } },
+      { href: ROUTES.LEADS, icon: Users, label: { es: "Prospectos", en: "Prospects" } },
+      { href: ROUTES.CLIENTS, icon: Building2, label: { es: "Mi Empresa", en: "My Company" } },
+      { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline", en: "Pipeline" } },
+      { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades", en: "Activities" } },
+      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Central Telefónica", en: "Phone System" } },
+      { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajes SMS", en: "SMS" } },
+      { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas", en: "Tasks" } },
     ],
   },
   {
-    title: { es: "Resultados & Campañas", en: "Results & Campaigns" },
+    title: { es: "Resultados", en: "Results" },
     items: [
       { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Mis Campañas", en: "My Campaigns" } },
     ],
   },
 ];
 
-/** Solo para el dueño del cliente: supervisión de sus asesores. Un asesor no la ve. */
-/** Solo para el dueño del cliente: supervisión de sus ejecutivos. Un vendedor (CLIENT) no la ve. */
+/** Solo para el dueño del cliente: supervisión de su equipo de ventas. Un vendedor no la ve. */
 const OWNER_NAVIGATION_SECTION: NavSection = {
-  title: { es: "Supervisión Comercial", en: "Sales Management" },
+  title: { es: "Supervisión", en: "Management" },
   items: [
     {
       href: ROUTES.TEAM_LIVE,
       icon: Users,
-      label: { es: "Ejecutivos de Venta", en: "Sales Executives" },
+      label: { es: "Equipo de Ventas", en: "Sales Team" },
     },
   ],
 };
@@ -78,68 +77,34 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   {
     title: { es: "Operaciones & CRM", en: "Operations & CRM" },
     items: [
-      { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Dashboard General", en: "Main Dashboard" } },
-      { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Unified Inbox" } },
-      { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Empresas & Cuentas", en: "Companies & Accounts" } },
-      { href: ROUTES.LEADS, icon: Users, label: { es: "Leads y Prospectos", en: "Leads & Prospects" } },
-      { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline de Ventas", en: "Sales Pipeline" } },
-      { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades y Llamadas", en: "Activities & Calls" } },
-      { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas y Seguimiento", en: "Tasks & Tracking" } },
+      { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Inicio", en: "Home" } },
+      { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Inbox" } },
+      { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Empresas", en: "Companies" } },
+      { href: ROUTES.LEADS, icon: Users, label: { es: "Prospectos", en: "Prospects" } },
+      { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline", en: "Pipeline" } },
+      { href: ROUTES.ACTIVITIES, icon: Activity, label: { es: "Actividades", en: "Activities" } },
+      { href: ROUTES.TASKS, icon: CheckSquare, label: { es: "Tareas", en: "Tasks" } },
     ],
   },
   {
-    title: { es: "Pautas & Marketing", en: "Ads & Marketing" },
+    title: { es: "Marketing", en: "Marketing" },
     items: [
-      { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas & Inversión", en: "Campaigns & Spend" } },
-      { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Integraciones Oficiales", en: "Integrations Hub" } },
+      { href: ROUTES.CAMPAIGNS, icon: BarChart3, label: { es: "Campañas", en: "Campaigns" } },
+      { href: ROUTES.INTEGRATIONS, icon: Plug, label: { es: "Conexiones", en: "Connections" } },
     ],
   },
   {
-    title: { es: "Mensajería & Telefonía", en: "Messaging & Calls" },
+    title: { es: "Comunicaciones", en: "Communications" },
     items: [
-      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Llamadas & Líneas", en: "Calls & Lines" } },
-      { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajería SMS", en: "SMS Messaging" } },
-      { href: ROUTES.TEAM_LIVE, icon: Users, label: { es: "Ejecutivos de Venta", en: "Sales Executives" } },
+      { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Central Telefónica", en: "Phone System" } },
+      { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajes SMS", en: "SMS" } },
+      { href: ROUTES.TEAM_LIVE, icon: Users, label: { es: "Equipo de Ventas", en: "Sales Team" } },
     ],
   },
   {
-    title: { es: "Administración", en: "Agency Settings" },
+    title: { es: "Administración", en: "Settings" },
     items: [
-      { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración & Servidor", en: "Settings & Server" } },
-    ],
-  },
-  {
-    title: { es: "En Construcción", en: "Under Construction" },
-    badge: "PRÓXIMAMENTE",
-    items: [
-      {
-        href: ROUTES.AI_OPTIMIZER,
-        icon: Sparkles,
-        label: { es: "Optimizador de Pautas (IA)", en: "Ads Optimizer (AI)" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
-      {
-        href: ROUTES.SOCIAL_POSTS,
-        icon: Share2,
-        label: { es: "Publicaciones Sociales", en: "Social Posts" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
-      {
-        href: ROUTES.CONTENT_CALENDAR,
-        icon: CalendarDays,
-        label: { es: "Calendario Editorial", en: "Content Calendar" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
-      {
-        href: ROUTES.AUTOMATIONS,
-        icon: Workflow,
-        label: { es: "Automatizaciones & Flujos", en: "Automations & Flows" },
-        badge: "CONSTRUCCIÓN",
-        disabled: true,
-      },
+      { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración", en: "Settings" } },
     ],
   },
 ];

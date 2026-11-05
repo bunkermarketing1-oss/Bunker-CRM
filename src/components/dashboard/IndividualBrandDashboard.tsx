@@ -53,13 +53,13 @@ export default function IndividualBrandDashboard({
         />
         <StatCard
           icon={KanbanSquare}
-          label="Pipeline abierto"
+          label="Ventas en curso"
           value={formatCompactMoney(metrics.openPipelineValue)}
           hint={`${formatNumber(metrics.openDealsCount)} negocios en curso`}
         />
         <StatCard
           icon={Users}
-          label="Leads"
+          label="Prospectos"
           value={formatNumber(metrics.totalLeads)}
           hint={
             metrics.leadsThisWeek > 0
@@ -83,7 +83,7 @@ export default function IndividualBrandDashboard({
         <div className="xl:col-span-2 space-y-6">
           <Panel
             icon={Users}
-            title="Leads recientes"
+            title="Prospectos recientes"
             action={<PanelLink href={leadsLink}>Ver todos</PanelLink>}
           >
             {dashboard.recentLeads.length ? (
@@ -138,8 +138,8 @@ export default function IndividualBrandDashboard({
           {dashboard.integrations.length > 0 && (
             <Panel
               icon={Plug}
-              title={activeClientId || isClient ? "Cuentas y Activos Conectados" : "Integraciones Oficiales"}
-              action={!isClient ? <PanelLink href={ROUTES.INTEGRATIONS}>Gestionar</PanelLink> : undefined}
+              title="Conexiones activas"
+              action={!isClient ? <PanelLink href={ROUTES.INTEGRATIONS}>Administrar</PanelLink> : undefined}
             >
               <IntegrationStatusList integrations={dashboard.integrations} />
             </Panel>

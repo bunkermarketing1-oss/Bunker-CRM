@@ -23,72 +23,84 @@ function getBreadcrumbs(pathname: string) {
       { label: "Bandeja de Entrada", href: null },
     ];
   }
+  if (pathname.startsWith("/messaging/calls")) {
+    return [
+      { label: "Comunicaciones", href: "/messaging/calls" },
+      { label: "Central Telefónica", href: null },
+    ];
+  }
+  if (pathname.startsWith("/messaging/sms")) {
+    return [
+      { label: "Comunicaciones", href: "/messaging/sms" },
+      { label: "Mensajes SMS", href: null },
+    ];
+  }
+  if (pathname.startsWith("/team/live")) {
+    return [
+      { label: "Comunicaciones", href: "/team/live" },
+      { label: "Equipo de Ventas", href: null },
+    ];
+  }
   if (pathname.startsWith("/crm/clients")) {
     if (pathname !== "/crm/clients") {
       return [
-        { label: "CRM Comercial", href: "/crm/clients" },
-        { label: "Clientes & Cuentas", href: "/crm/clients" },
-        { label: "Ficha 360°", href: null },
+        { label: "Operaciones", href: "/crm/clients" },
+        { label: "Empresas", href: "/crm/clients" },
+        { label: "Ficha de Empresa", href: null },
       ];
     }
     return [
-      { label: "CRM Comercial", href: "/crm/clients" },
-      { label: "Clientes & Cuentas", href: null },
+      { label: "Operaciones", href: "/crm/clients" },
+      { label: "Empresas", href: null },
     ];
   }
   if (pathname.startsWith("/crm/leads")) {
     if (pathname !== "/crm/leads") {
       return [
-        { label: "CRM Comercial", href: "/crm/leads" },
+        { label: "Operaciones", href: "/crm/leads" },
         { label: "Prospectos", href: "/crm/leads" },
-        { label: "Expediente", href: null },
+        { label: "Detalle", href: null },
       ];
     }
     return [
-      { label: "CRM Comercial", href: "/crm/leads" },
+      { label: "Operaciones", href: "/crm/leads" },
       { label: "Prospectos", href: null },
     ];
   }
   if (pathname.startsWith("/crm/pipeline")) {
     return [
-      { label: "CRM Comercial", href: "/crm/pipeline" },
+      { label: "Operaciones", href: "/crm/pipeline" },
       { label: "Pipeline", href: null },
     ];
   }
   if (pathname.startsWith("/crm/activities")) {
     return [
-      { label: "CRM Comercial", href: "/crm/activities" },
+      { label: "Operaciones", href: "/crm/activities" },
       { label: "Actividades", href: null },
     ];
   }
   if (pathname.startsWith("/crm/tasks")) {
     return [
-      { label: "CRM Comercial", href: "/crm/tasks" },
+      { label: "Operaciones", href: "/crm/tasks" },
       { label: "Tareas", href: null },
     ];
   }
   if (pathname.startsWith("/campaigns")) {
     return [
       { label: "Marketing", href: "/campaigns" },
-      { label: "Campañas & Anuncios", href: null },
+      { label: "Campañas", href: null },
     ];
   }
   if (pathname.startsWith("/marketing/integrations")) {
     return [
       { label: "Marketing", href: "/marketing/integrations" },
-      { label: "Integraciones Oficiales", href: null },
-    ];
-  }
-  if (pathname.startsWith("/marketing/posts")) {
-    return [
-      { label: "Marketing", href: "/marketing/posts" },
-      { label: "Publicaciones Sociales", href: null },
+      { label: "Conexiones", href: null },
     ];
   }
   if (pathname.startsWith("/reports")) {
     return [
-      { label: "Resultados", href: "/reports" },
-      { label: "Reportes & ROI", href: null },
+      { label: "Marketing", href: "/reports" },
+      { label: "Reportes", href: null },
     ];
   }
   if (pathname.startsWith("/settings")) {
@@ -99,12 +111,12 @@ function getBreadcrumbs(pathname: string) {
   }
   if (pathname.startsWith("/dashboard")) {
     return [
-      { label: "Bunker CRM", href: "/dashboard" },
-      { label: "Dashboard", href: null },
+      { label: "Bunker Agency", href: "/dashboard" },
+      { label: "Inicio", href: null },
     ];
   }
   return [
-    { label: "Bunker CRM", href: "/dashboard" },
+    { label: "Bunker Agency", href: "/dashboard" },
     { label: "Inicio", href: null },
   ];
 }

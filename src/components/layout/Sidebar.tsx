@@ -49,10 +49,6 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
       ROUTES.CALLS,
       ROUTES.SMS,
       ROUTES.TEAM_LIVE,
-      ROUTES.AUTOMATIONS,
-      ROUTES.AI_OPTIMIZER,
-      ROUTES.SOCIAL_POSTS,
-      ROUTES.CONTENT_CALENDAR,
     ],
     []
   );
@@ -171,11 +167,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
           item.href === ROUTES.INTEGRATIONS ||
           item.href === ROUTES.CALLS ||
           item.href === ROUTES.SMS ||
-          item.href === ROUTES.TEAM_LIVE ||
-          item.href === ROUTES.AUTOMATIONS ||
-          item.href === ROUTES.AI_OPTIMIZER ||
-          item.href === ROUTES.SOCIAL_POSTS ||
-          item.href === ROUTES.CONTENT_CALENDAR
+          item.href === ROUTES.TEAM_LIVE
         ) {
           return {
             ...item,
