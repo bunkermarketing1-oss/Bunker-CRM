@@ -188,7 +188,7 @@ async function handleSingleMessagingItem(
         }),
       },
     });
-  } else if (lead && !isEcho && (isGenericLeadName(lead.name) || !lead.avatarUrl)) {
+  } else if (lead && !isEcho && isGenericLeadName(lead.name)) {
     try {
       const pageToken = decryptSecret(connectedAccount.accessTokenEnc);
       const profile = await getMetaSenderProfile(pageToken, leadExternalId, isInstagram);
@@ -431,7 +431,9 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     let realName = customer.name;
     let profilePic: string | null = null;
 
-    if (!lead || isGenericLeadName(lead.name) || !lead.avatarUrl) {
+    // Solo consultar el perfil a la API si el nombre es genérico para no ralentizar el bucle con 25 llamadas HTTP
+    const shouldFetchProfile = isGenericLeadName(realName) || (lead && isGenericLeadName(lead.name));
+    if (shouldFetchProfile) {
       try {
         const profile = await getMetaSenderProfile(pageToken, customer.id, isInstagram);
         if (profile) {

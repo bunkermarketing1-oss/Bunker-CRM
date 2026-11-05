@@ -28,7 +28,7 @@ interface GetInboxOptions {
  */
 // Control de auto-sincronización periódica por organización y cliente (mínimo 15s entre llamadas a Meta)
 const clientLastSyncMap = new Map<string, number>();
-const AUTO_SYNC_COOLDOWN_MS = 60000;
+const AUTO_SYNC_COOLDOWN_MS = 20000;
 
 export async function getInboxConversations(
   organizationId: string,
@@ -67,7 +67,10 @@ export async function getInboxConversations(
 
   if (shouldAutoSync) {
     clientLastSyncMap.set(syncKey, now);
-    const pageAccounts = await prisma.connectedAccount.findMany({
+
+    // Si se especifica un cliente, buscar cuentas asignadas a ese cliente;
+    // de lo contrario, rotar por fecha de última sincronización (lastSyncAt asc)
+    let pageAccounts = await prisma.connectedAccount.findMany({
       where: {
         organizationId,
         ...(targetClientId ? { clientId: targetClientId } : {}),
@@ -76,14 +79,39 @@ export async function getInboxConversations(
         accessTokenEnc: { not: null },
       },
       select: { id: true },
-      take: targetClientId ? 6 : 4,
+      orderBy: { lastSyncAt: "asc" },
+      take: triggerSync ? (targetClientId ? 8 : 10) : (targetClientId ? 6 : 5),
     });
 
+    // Fallback: si se filtró por marca y no hay cuentas directamente vinculadas por clientId,
+    // buscar páginas activas cuyo nombre coincida con el nombre del cliente
+    if (targetClientId && pageAccounts.length === 0) {
+      const client = await prisma.client.findUnique({
+        where: { id: targetClientId },
+        select: { name: true },
+      });
+      if (client?.name) {
+        const firstWord = client.name.split(" ")[0];
+        pageAccounts = await prisma.connectedAccount.findMany({
+          where: {
+            organizationId,
+            accountType: { in: [ACCOUNT_TYPE.FACEBOOK_PAGE, ACCOUNT_TYPE.INSTAGRAM_BUSINESS] },
+            status: ACCOUNT_STATUS.ACTIVE,
+            accessTokenEnc: { not: null },
+            accountName: { contains: firstWord, mode: "insensitive" },
+          },
+          select: { id: true },
+          take: 4,
+        });
+      }
+    }
+
     if (pageAccounts.length > 0) {
+      const timeoutMs = triggerSync ? 12000 : 6000;
       const syncTasks = pageAccounts.map((page) =>
         Promise.race([
           syncConnectedPageConversations(page.id),
-          new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000)),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeoutMs)),
         ]).catch((syncErr) => {
           console.warn(`[INBOX_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
         })
