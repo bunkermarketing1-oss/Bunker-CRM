@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
 import { validateAndNormalizePhone } from "@/lib/phone";
-import { mapTwilioStatus, sendTwilioSms } from "@/lib/integrations/twilio";
+import { humanizeTwilioError, mapTwilioStatus, sendTwilioSms } from "@/lib/integrations/twilio";
 import { isOptInMessage, isOptOutMessage, normalizeSmsKeyword } from "@/lib/integrations/twilio-webhook";
 import { firstNameOf, renderSmsTemplate } from "@/lib/automations/sms-template";
 import { replyOutOfHoursWithAi, type AiReplyOutcome } from "@/services/ai-reply.service";
@@ -314,7 +314,13 @@ export async function applyTwilioStatus(messageSid: string, twilioStatus: string
       status,
       deliveredAt: status === MESSAGE_STATUS.DELIVERED ? new Date() : undefined,
       // Códigos: https://www.twilio.com/docs/api/errors (p. ej. 30003 = teléfono apagado).
-      errorMessage: status === MESSAGE_STATUS.FAILED ? `Twilio reportó "${twilioStatus}"${errorCode ? ` (código ${errorCode})` : ""}.` : undefined,
+      errorMessage:
+        status === MESSAGE_STATUS.FAILED
+          ? humanizeTwilioError(
+              errorCode ? parseInt(errorCode, 10) : undefined,
+              `Twilio reportó "${twilioStatus}"${errorCode ? ` (código ${errorCode})` : ""}`
+            )
+          : undefined,
     },
   });
   return count > 0;

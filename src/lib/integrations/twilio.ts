@@ -346,6 +346,11 @@ const TWILIO_ERROR_MESSAGE: Record<number, string> = {
   21608: "La cuenta de prueba de Twilio solo envía SMS a números verificados en la consola.",
   21610: "El destinatario se dio de baja de los SMS de este número (respondió STOP).",
   21614: "El número del destinatario no puede recibir SMS.",
+  30007: "Mensaje filtrado por las operadoras móviles como spam.",
+  30008: "Error desconocido de la operadora móvil al entregar el SMS.",
+  30034: "El número remitente (+1) fue bloqueado por las operadoras de EE.UU. (error 30034: A2P 10DLC). Se requiere que la campaña A2P 10DLC esté aprobada en Twilio Console para enviar SMS a números de EE.UU.",
+  30893: "La campaña A2P 10DLC fue rechazada en Twilio por formato inválido en los mensajes de ejemplo (deben incluir nombre de marca y 'Reply STOP to unsubscribe').",
+  30910: "La campaña A2P 10DLC fue rechazada en Twilio porque la descripción no está en inglés (las operadoras de EE.UU. exigen inglés).",
   572002: "Tu cuenta de Twilio está en modo Prueba (Trial) y requiere que el número destino esté verificado en Twilio Console, o que hagas 'Upgrade' en tu cuenta de Twilio agregando saldo ($20 USD) para enviar a cualquier número.",
 };
 
