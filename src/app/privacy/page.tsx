@@ -178,7 +178,10 @@ export default function PrivacyPolicyPage() {
                     <strong>Transmisión Segura:</strong> Todo el tráfico entre tu navegador, Meta y nuestros servidores se efectúa mediante protocolo HTTPS/TLS con certificados de última generación.
                   </li>
                   <li>
-                    <strong>No Comercialización:</strong> Bunker Agency nunca vende, arrienda ni comercializa datos personales de usuarios o prospectos a terceros bajo ninguna circunstancia.
+                    <strong>No Comercialización ni Venta de Datos:</strong> Bunker Agency nunca vende, arrienda ni comercializa datos personales de usuarios o prospectos a terceros bajo ninguna circunstancia.
+                  </li>
+                  <li>
+                    <strong>Protección de Datos Móviles (SMS / CTIA):</strong> No se compartirá información de telefonía móvil ni datos de consentimiento de suscripción (opt-in) con terceros ni afiliados para fines de marketing o promocionales. Todos los datos de consentimiento de mensajería de texto se mantienen en estricta confidencialidad y están excluidos de cualquier intercambio con terceros.
                   </li>
                 </ul>
               </section>
@@ -318,6 +321,9 @@ export default function PrivacyPolicyPage() {
                   </li>
                   <li>
                     <strong>Data Protection Guarantee:</strong> We do not sell, rent, trade, or distribute your personal data or your leads&rsquo; data to any third party.
+                  </li>
+                  <li>
+                    <strong>Mobile Messaging Data Privacy (CTIA / A2P 10DLC):</strong> No mobile information will be shared with third parties/affiliates for marketing/promotional purposes. All other categories exclude text messaging originator opt-in data and consent; this information will not be shared with any third parties.
                   </li>
                 </ul>
               </section>

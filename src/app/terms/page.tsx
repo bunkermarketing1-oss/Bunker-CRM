@@ -57,11 +57,19 @@ const TERMS_CONTENT: Record<Language, TermsSection[]> = {
       ],
     },
     {
-      title: "5. Integraciones y comunicaciones con terceros",
+      title: "5. Integraciones y comunicaciones con terceros (SMS y Telefonía)",
       paragraphs: [
         "La plataforma se conecta con servicios de terceros (Meta, Twilio, entre otros). Al conectarlos autorizas a Bunker CRM a actuar en tu nombre dentro de los permisos que otorgues, y aceptas cumplir los términos y políticas de cada proveedor, incluidos los Términos de la Plataforma de Meta y las políticas de mensajería de Twilio.",
-        "Eres responsable de obtener el consentimiento de los destinatarios antes de enviarles SMS o llamarles, y de cumplir la normativa aplicable (por ejemplo, TCPA y reglas de A2P 10DLC en Estados Unidos). Los mensajes de baja (STOP, BAJA) se respetan automáticamente y no debes intentar eludirlos.",
-        "No controlamos la disponibilidad, los límites ni las decisiones de estos proveedores; pueden restringir o suspender funciones sin que seamos responsables por ello.",
+        "Comunicaciones SMS y cumplimiento CTIA / A2P 10DLC: Al utilizar las funciones de mensajería SMS de Bunker Agency, aceptas las siguientes condiciones del servicio:",
+      ],
+      bullets: [
+        "Propósito del programa: Los mensajes SMS se envían para confirmación de citas, notificaciones de prospectos, servicio al cliente y seguimiento comercial.",
+        "Frecuencia de mensajes: La frecuencia de los mensajes varía según la interacción y el consentimiento del usuario final.",
+        "Tarifas: Pueden aplicarse cargos estándar por mensajes y datos según tu plan de telefonía móvil (Msg & data rates may apply).",
+        "Instrucciones de baja (Opt-out): Puedes cancelar el servicio de mensajes de texto en cualquier momento enviando un SMS con la palabra STOP a cualquiera de nuestros mensajes. Tras enviar STOP, recibirás una confirmación y no se enviarán más mensajes.",
+        "Ayuda y Soporte: Si necesitas asistencia, envía un SMS con la palabra HELP o comunícate con nosotros a soporte@bunkeragency.com o llamando al +1 (469) 778-3339.",
+        "Responsabilidad de los operadores: Las empresas de telecomunicaciones (incluyendo AT&T, T-Mobile, Verizon) no son responsables por mensajes retrasados o no entregados.",
+        "Privacidad de datos móviles: Los datos de telefonía móvil y el consentimiento de suscripción a mensajes de texto nunca se venden, comparten ni transfieren a terceros para fines de marketing o promocionales.",
       ],
     },
     {
@@ -140,11 +148,19 @@ const TERMS_CONTENT: Record<Language, TermsSection[]> = {
       ],
     },
     {
-      title: "5. Third-party integrations and communications",
+      title: "5. Third-party integrations and communications (SMS & Telephony)",
       paragraphs: [
         "The platform connects to third-party services (Meta, Twilio, among others). By connecting them you authorize Bunker CRM to act on your behalf within the permissions you grant, and you agree to comply with each provider’s terms and policies, including the Meta Platform Terms and Twilio’s messaging policies.",
-        "You are responsible for obtaining recipients’ consent before texting or calling them, and for complying with applicable regulations (for example, TCPA and A2P 10DLC rules in the United States). Opt-out messages (STOP) are honored automatically and you must not try to bypass them.",
-        "We do not control the availability, limits or decisions of these providers; they may restrict or suspend features and we are not liable for it.",
+        "SMS Communications & CTIA / A2P 10DLC Compliance: By using Bunker Agency's SMS messaging features, you agree to the following terms:",
+      ],
+      bullets: [
+        "Program Description: SMS messages are sent for appointment confirmations, lead notifications, customer service, and commercial follow-ups.",
+        "Message Frequency: Message frequency varies depending on user engagement and inquiry activity.",
+        "Rates: Message and data rates may apply according to your wireless carrier plan (Msg & data rates may apply).",
+        "Opt-out Instructions: You can cancel the SMS service at any time by texting STOP to any message received. Upon sending STOP, you will receive a confirmation message and no further text messages will be sent.",
+        "Help & Support: If you need assistance, text HELP to any message or contact our support team at support@bunkeragency.com or call +1 (469) 778-3339.",
+        "Carrier Liability: Wireless carriers (including AT&T, T-Mobile, Verizon) are not liable for delayed or undelivered messages.",
+        "Mobile Data Protection: Mobile information and text messaging originator opt-in data will not be shared, rented, or sold to third parties for marketing purposes.",
       ],
     },
     {
