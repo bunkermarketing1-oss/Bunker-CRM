@@ -96,7 +96,7 @@ function SmsMessagingPageContent() {
     const fetchLeads = async () => {
       try {
         const targetClient = user?.isClientUser ? user.clientId : selectedClientId;
-        const url = targetClient ? `/api/leads?clientId=${targetClient}` : "/api/leads";
+        const url = targetClient ? `/api/leads?hasPhone=true&clientId=${targetClient}` : "/api/leads?hasPhone=true";
         const res = await fetch(url);
         const data = await res.json();
         if (data.success && Array.isArray(data.leads)) {

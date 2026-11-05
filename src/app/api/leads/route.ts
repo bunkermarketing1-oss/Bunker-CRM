@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
     const source = searchParams.get("source");
     const ownerId = searchParams.get("ownerId");
     const clientId = searchParams.get("clientId");
+    const hasPhone = searchParams.get("hasPhone");
 
     const where: any = {
       organizationId: user!.organizationId,
@@ -54,6 +55,11 @@ export async function GET(req: NextRequest) {
       } else {
         where.ownerId = ownerId;
       }
+    }
+
+    if (hasPhone === "true") {
+      where.phone = { not: null };
+      where.NOT = { phone: "" };
     }
 
     if (search.trim()) {

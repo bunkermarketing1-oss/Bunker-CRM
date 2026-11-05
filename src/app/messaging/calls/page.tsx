@@ -27,6 +27,9 @@ function CallsContent() {
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
   const searchParams = useSearchParams();
   const urlClientId = searchParams.get("clientId");
+  const urlPhone = searchParams.get("phone");
+  const urlLeadId = searchParams.get("leadId");
+  const urlName = searchParams.get("name");
 
   // Si en la URL viene clientId, se inicializa con ese o con "all"
   const [selectedClientId, setSelectedClientId] = useState<string>(urlClientId || "all");
@@ -132,6 +135,9 @@ function CallsContent() {
             active={device.active}
             incoming={device.incoming}
             leads={leads}
+            initialPhone={urlPhone}
+            initialLeadId={urlLeadId}
+            initialName={urlName}
             onCall={(leadId, label) => device.callLead(leadId, label)}
             onCallDirect={(target, label) =>
               device.callTarget(
