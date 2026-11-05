@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { isClientOwnerRole } from "@/lib/roles";
 import { ACTIVITY_TYPE, TASK_STATUS } from "@/lib/constants/crm";
-import { CALL_DIRECTION, LIVE_CALL_STATUSES } from "@/lib/constants/voice";
+import { CALL_DIRECTION, CALL_STATUS, LIVE_CALL_STATUSES } from "@/lib/constants/voice";
 import { ADVISOR_IDLE_MINUTES, ADVISOR_STATUS, DEFAULT_TEAM_TIME_ZONE } from "@/lib/constants/team";
 import { countByUser, elapsedSeconds, latestDate, resolveAdvisorStatus, startOfDayInTimeZone } from "@/lib/team-live";
 import { listLiveCalls } from "@/services/calls.service";
@@ -130,8 +130,19 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
 
 /** Llamada en curso de cada asesor (entrante o saliente); si tiene dos, la más reciente. */
 async function currentCalls(organizationId: string, userIds: string[], now: Date) {
+  const ringingTimeout = new Date(now.getTime() - 2 * 60 * 1000);
+  const inProgressTimeout = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
   const calls = await prisma.call.findMany({
-    where: { organizationId, userId: { in: userIds }, status: { in: LIVE_CALL_STATUSES } },
+    where: {
+      organizationId,
+      userId: { in: userIds },
+      status: { in: LIVE_CALL_STATUSES },
+      OR: [
+        { status: CALL_STATUS.RINGING, createdAt: { gte: ringingTimeout } },
+        { status: CALL_STATUS.IN_PROGRESS, createdAt: { gte: inProgressTimeout } },
+      ],
+    },
     select: {
       id: true,
       userId: true,

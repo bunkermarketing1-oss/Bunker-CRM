@@ -278,12 +278,45 @@ export async function listCalls(scope: TenantScope) {
  * Bunker, solo su empresa para el dueño de un cliente (scope forzado por la ruta).
  */
 export async function listLiveCalls(scope: TenantScope) {
+  const now = Date.now();
+  const ringingTimeout = new Date(now - 2 * 60 * 1000); // 2 minutos máximo timbrando
+  const inProgressTimeout = new Date(now - 2 * 60 * 60 * 1000); // 2 horas máximo en curso
+
+  // Auto-limpieza preventiva de llamadas zombi (timbrando > 2 min o en curso > 2 h)
+  await prisma.call.updateMany({
+    where: {
+      ...scopeWhere(scope),
+      status: CALL_STATUS.RINGING,
+      createdAt: { lt: ringingTimeout },
+    },
+    data: {
+      status: CALL_STATUS.NO_ANSWER,
+      endedAt: new Date(),
+    },
+  }).catch(() => {});
+
+  await prisma.call.updateMany({
+    where: {
+      ...scopeWhere(scope),
+      status: CALL_STATUS.IN_PROGRESS,
+      createdAt: { lt: inProgressTimeout },
+    },
+    data: {
+      status: CALL_STATUS.COMPLETED,
+      endedAt: new Date(),
+    },
+  }).catch(() => {});
+
   const calls = await prisma.call.findMany({
     where: {
       ...scopeWhere(scope),
       direction: CALL_DIRECTION.OUTBOUND,
       status: { in: LIVE_CALL_STATUSES },
       agentCallSid: { not: null },
+      OR: [
+        { status: CALL_STATUS.RINGING, createdAt: { gte: ringingTimeout } },
+        { status: CALL_STATUS.IN_PROGRESS, createdAt: { gte: inProgressTimeout } },
+      ],
     },
     select: callSelect,
     orderBy: { createdAt: "desc" },
