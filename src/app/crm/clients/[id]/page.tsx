@@ -98,8 +98,8 @@ export default function ClientProfile360Page() {
   const params = useParams();
   const clientId = params?.id as string;
   const { user } = useAuth();
-  const isBunkerUser = isBunkerRole(user?.role);
-  const isAdmin = user?.role === "admin";
+  const isBunkerUser = isBunkerRole(user?.role) && !user?.isClientUser;
+  const isAdmin = isBunkerUser;
 
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);

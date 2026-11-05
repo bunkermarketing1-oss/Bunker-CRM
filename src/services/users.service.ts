@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { isRoleAllowedForUser, toStoredRole, type StoredUserRole } from "@/lib/roles";
+import { isRoleAllowedForUser, toStoredRole, isBunkerRole, type StoredUserRole } from "@/lib/roles";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 /** Error de negocio con el status HTTP que debe responder la ruta. */
 export class UserAccessError extends Error {
-  status: 400 | 404;
-  constructor(message: string, status: 400 | 404) {
+  status: 400 | 403 | 404;
+  constructor(message: string, status: 400 | 403 | 404) {
     super(message);
     this.status = status;
   }
@@ -81,10 +81,25 @@ export async function updateUserAccess(organizationId: string, actorId: string, 
 /**
  * Elimina permanentemente a un usuario de la organización, desvinculando de forma segura sus
  * leads, tareas, actividades y llamadas, y eliminando sus credenciales de Supabase Auth.
+ * Solo puede ser invocado por administradores internos de Bunker Agency. Los equipos de ventas
+ * y usuarios de portal no tienen acceso a esta operación bajo ningún concepto.
  */
 export async function deleteUser(organizationId: string, actorId: string, userId: string) {
   if (actorId === userId) {
     throw new UserAccessError("No puedes eliminar tu propia cuenta de usuario.", 400);
+  }
+
+  // Defensa en profundidad: verificar que el actor sea administrador interno de Bunker
+  const actor = await prisma.user.findFirst({
+    where: { id: actorId, memberships: { some: { organizationId } } },
+    select: { id: true, role: true, clientId: true },
+  });
+
+  if (!actor || actor.clientId || !isBunkerRole(actor.role)) {
+    throw new UserAccessError(
+      "Acceso denegado. Los equipos de ventas y usuarios de portal no tienen permisos para eliminar usuarios.",
+      403
+    );
   }
 
   const target = await prisma.user.findFirst({
