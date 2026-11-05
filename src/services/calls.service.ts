@@ -279,10 +279,10 @@ export async function listCalls(scope: TenantScope) {
  */
 export async function listLiveCalls(scope: TenantScope) {
   const now = Date.now();
-  const ringingTimeout = new Date(now - 2 * 60 * 1000); // 2 minutos máximo timbrando
+  const ringingTimeout = new Date(now - 45 * 1000); // 45 segundos máximo timbrando (las operadoras cortan a los 30-45s)
   const inProgressTimeout = new Date(now - 2 * 60 * 60 * 1000); // 2 horas máximo en curso
 
-  // Auto-limpieza preventiva de llamadas zombi (timbrando > 2 min o en curso > 2 h)
+  // Auto-limpieza preventiva de llamadas zombi (timbrando > 45s o en curso > 2 h)
   await prisma.call.updateMany({
     where: {
       ...scopeWhere(scope),
@@ -555,6 +555,10 @@ export async function hangupCall(scope: TenantScope, callId: string) {
   for (const sid of [call.customerCallSid, call.agentCallSid]) {
     if (sid) await completeTwilioCall(sid).catch((error) => console.error(`No se pudo colgar ${sid}:`, error));
   }
+
+  // Cierra de inmediato en base de datos para no dejar llamadas zombi en supervisión en vivo
+  const finalStatus = call.answeredAt ? CALL_STATUS.COMPLETED : CALL_STATUS.CANCELED;
+  await finishCall(call.id, finalStatus, durationSince(call.answeredAt));
 }
 
 // ---------------------------------------------------------------------------

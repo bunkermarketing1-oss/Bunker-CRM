@@ -73,18 +73,25 @@ export function useVoiceDevice({ onCallStarted, onCallEnded, receiveIncoming = t
       setPhase("connecting");
       onStartedRef.current?.();
 
+      const handleTermination = () => {
+        if (info.callId) {
+          fetch(`/api/voice/calls/${info.callId}/hangup`, { method: "POST" }).catch(() => {});
+        }
+        clearCall();
+      };
+
       call.on("accept", () => {
         setActive((a) => (a ? { ...a, startedAt: Date.now() } : a));
         setPhase("in_call");
         onStartedRef.current?.();
       });
       call.on("mute", (muted: boolean) => setActive((a) => (a ? { ...a, muted } : a)));
-      call.on("disconnect", clearCall);
-      call.on("cancel", clearCall);
-      call.on("reject", clearCall);
+      call.on("disconnect", handleTermination);
+      call.on("cancel", handleTermination);
+      call.on("reject", handleTermination);
       call.on("error", (err: { message?: string }) => {
         setError(err.message || "Error en la llamada.");
-        clearCall();
+        handleTermination();
       });
     },
     [clearCall]
@@ -223,7 +230,13 @@ export function useVoiceDevice({ onCallStarted, onCallEnded, receiveIncoming = t
   }, [trackCall]);
 
   const rejectIncoming = useCallback(() => incomingRef.current?.reject(), []);
-  const hangup = useCallback(() => callRef.current?.disconnect(), []);
+  const hangup = useCallback(() => {
+    const activeCallId = active?.callId;
+    callRef.current?.disconnect();
+    if (activeCallId) {
+      fetch(`/api/voice/calls/${activeCallId}/hangup`, { method: "POST" }).catch(() => {});
+    }
+  }, [active?.callId]);
   const toggleMute = useCallback(() => {
     const call = callRef.current;
     if (call) call.mute(!call.isMuted());
