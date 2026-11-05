@@ -272,8 +272,8 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
     if (lead?.clientId) effectiveClientId = lead.clientId;
   }
 
-  // Buscar la cuenta conectada activa con token
-  let connectedAccount = await prisma.connectedAccount.findFirst({
+  // Buscar todas las cuentas activas del canal (Facebook Page o Instagram) asociadas a la empresa
+  let candidateAccounts = await prisma.connectedAccount.findMany({
     where: {
       organizationId,
       status: ACCOUNT_STATUS.ACTIVE,
@@ -281,23 +281,23 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
       accountType,
       ...(effectiveClientId ? { clientId: effectiveClientId } : {}),
     },
-    select: { id: true, accessTokenEnc: true, clientId: true, accountName: true },
+    select: { id: true, accessTokenEnc: true, clientId: true, accountName: true, externalId: true },
   });
 
-  // Si no se encontró filtrada por targetClientId, intentar cualquier cuenta activa del canal en la organización
-  if (!connectedAccount) {
-    connectedAccount = await prisma.connectedAccount.findFirst({
+  // Si no se encontró filtrada por effectiveClientId, intentar cualquier cuenta activa del canal en la organización
+  if (candidateAccounts.length === 0) {
+    candidateAccounts = await prisma.connectedAccount.findMany({
       where: {
         organizationId,
         status: ACCOUNT_STATUS.ACTIVE,
         accessTokenEnc: { not: null },
         accountType,
       },
-      select: { id: true, accessTokenEnc: true, clientId: true, accountName: true },
+      select: { id: true, accessTokenEnc: true, clientId: true, accountName: true, externalId: true },
     });
   }
 
-  if (!connectedAccount || !connectedAccount.accessTokenEnc) {
+  if (candidateAccounts.length === 0) {
     throw new Error(
       `No se encontró una ${
         isInstagram ? "cuenta de Instagram" : "página de Facebook"
@@ -305,13 +305,72 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
     );
   }
 
-  const token = decryptSecret(connectedAccount.accessTokenEnc);
-  const sendResult = await sendMetaDirectMessage(token, recipient, body);
+  // Si hay más de una cuenta candidata, priorizar la que mejor coincida con el nombre de la empresa
+  if (candidateAccounts.length > 1 && effectiveClientId) {
+    const client = await prisma.client.findUnique({
+      where: { id: effectiveClientId },
+      select: { name: true },
+    });
+    if (client?.name) {
+      const targetName = client.name.toLowerCase().trim();
+      candidateAccounts.sort((a, b) => {
+        const nameA = (a.accountName || "").toLowerCase().trim();
+        const nameB = (b.accountName || "").toLowerCase().trim();
+        const matchA = nameA === targetName ? 2 : (nameA.includes(targetName) || targetName.includes(nameA)) ? 1 : 0;
+        const matchB = nameB === targetName ? 2 : (nameB.includes(targetName) || targetName.includes(nameB)) ? 1 : 0;
+        return matchB - matchA;
+      });
+    }
+  }
+
+  // Enviar a través de la cuenta seleccionada con reintento automático si el PSID pertenece a otra página.
+  // En Meta, cada página de Facebook tiene identificadores de usuario (PSID) propios. Si una empresa
+  // tiene varias páginas y la primera falla con (#100 No matching user), intentamos automáticamente con la siguiente.
+  let sendResult: { message_id: string; recipient_id: string } | null = null;
+  let successfulAccount = candidateAccounts[0];
+  let lastError: unknown = null;
+
+  for (const account of candidateAccounts) {
+    if (!account.accessTokenEnc) continue;
+    try {
+      const token = decryptSecret(account.accessTokenEnc);
+      sendResult = await sendMetaDirectMessage(token, recipient, body);
+      successfulAccount = account;
+      break;
+    } catch (err) {
+      lastError = err;
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const isUserNotFound =
+        errMsg.includes("(#100)") ||
+        errMsg.includes("No se encontró al usuario") ||
+        errMsg.includes("No matching user") ||
+        errMsg.includes("2018001");
+
+      if (isUserNotFound && candidateAccounts.length > 1) {
+        console.warn(
+          `[META_REPLY] El destinatario ${recipient} no corresponde a la página "${account.accountName}". Probando siguiente página conectada...`
+        );
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (!sendResult) {
+    throw (
+      lastError ||
+      new Error(
+        `No se pudo enviar el mensaje por ${
+          isInstagram ? "Instagram" : "Facebook Messenger"
+        }. Verifique que el usuario mantenga una conversación activa.`
+      )
+    );
+  }
 
   const savedMessage = await prisma.message.create({
     data: {
       organizationId,
-      clientId: targetClientId || connectedAccount.clientId || null,
+      clientId: targetClientId || successfulAccount.clientId || null,
       leadId: leadId || null,
       channel: isInstagram ? MESSAGE_CHANNEL.INSTAGRAM : MESSAGE_CHANNEL.MESSENGER,
       direction: MESSAGE_DIRECTION.OUTBOUND,
