@@ -76,13 +76,14 @@ export async function getInboxConversations(
         accessTokenEnc: { not: null },
       },
       select: { id: true },
+      take: targetClientId ? 6 : 4,
     });
 
     if (pageAccounts.length > 0) {
       const syncTasks = pageAccounts.map((page) =>
         Promise.race([
           syncConnectedPageConversations(page.id),
-          new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 12000)),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000)),
         ]).catch((syncErr) => {
           console.warn(`[INBOX_SYNC] Página ${page.id}:`, syncErr instanceof Error ? syncErr.message : syncErr);
         })

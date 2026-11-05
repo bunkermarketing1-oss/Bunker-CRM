@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Inbox,
@@ -160,6 +160,7 @@ export default function UnifiedInboxPage() {
 
 function UnifiedInboxPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const isClient = Boolean(user?.isClientUser);
 
@@ -260,8 +261,8 @@ function UnifiedInboxPageContent() {
         console.error("Error al cargar la bandeja de entrada:", err);
       } finally {
         // Una petición cancelada por otra más nueva no debe apagar el spinner ni liberar el candado de la nueva.
+        isFetchingRef.current = false;
         if (abortControllerRef.current === controller) {
-          isFetchingRef.current = false;
           if (!isSilent) setLoading(false);
         }
       }
@@ -538,6 +539,32 @@ function UnifiedInboxPageContent() {
             { value: "comments", label: "Comentarios", count: stats.comments, dotClassName: "bg-amber-500" },
           ]}
         />
+
+        {/* Selector de Marca (solo para administradores) */}
+        {!isClient && clients.length > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F9FAFB] rounded-xl border border-[#EAECF0] self-end lg:self-auto shrink-0 shadow-2xs">
+            <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <select
+              value={activeClientId}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "all") {
+                  router.push("/inbox");
+                } else {
+                  router.push(`/inbox?clientId=${encodeURIComponent(val)}`);
+                }
+              }}
+              className="bg-transparent text-xs text-[#101828] font-medium focus:outline-none cursor-pointer"
+            >
+              <option value="all">Todas las Marcas</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
 
       </div>
