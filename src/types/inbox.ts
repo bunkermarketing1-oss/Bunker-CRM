@@ -31,6 +31,8 @@ export interface ConversationItem {
   unreadCount: number;
   lastMessageText: string;
   lastMessageTime: string;
+  waitingForReply?: boolean;
+  lastInboundTime?: string | null;
   postContext?: {
     postId: string;
     postTitle: string;

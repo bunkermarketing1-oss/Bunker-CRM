@@ -254,6 +254,8 @@ export async function getInboxConversations(
         connectedAccountId: null,
         accountName: channelAccountLabel,
         unreadCount: 0,
+        waitingForReply: false,
+        lastInboundTime: null,
         lastMessageText: msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body,
         lastMessageTime: msg.createdAt.toISOString(),
         leadId: msg.lead?.id || null,
@@ -271,8 +273,14 @@ export async function getInboxConversations(
     if (msg.lead?.avatarUrl && !conv.senderAvatar) {
       conv.senderAvatar = msg.lead.avatarUrl;
     }
-    if (msg.direction === MESSAGE_DIRECTION.INBOUND && msg.status !== MESSAGE_STATUS.READ) {
-      conv.unreadCount += 1;
+    if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
+      conv.waitingForReply = true;
+      conv.lastInboundTime = msg.createdAt.toISOString();
+      if (msg.status !== MESSAGE_STATUS.READ) {
+        conv.unreadCount += 1;
+      }
+    } else {
+      conv.waitingForReply = false;
     }
     conv.messages.push({
       id: msg.id,
@@ -385,6 +393,8 @@ export async function getInboxConversations(
                   ? "Comentario Facebook"
                   : "Comentario Instagram",
               unreadCount: 0,
+              waitingForReply: false,
+              lastInboundTime: null,
               lastMessageText: msg.direction === MESSAGE_DIRECTION.OUTBOUND ? `Tú: ${msg.body}` : msg.body,
               lastMessageTime: msg.createdAt.toISOString(),
               leadId: msg.lead?.id || null,
@@ -402,8 +412,14 @@ export async function getInboxConversations(
           if (msg.lead?.avatarUrl && !conv.senderAvatar) {
             conv.senderAvatar = msg.lead.avatarUrl;
           }
-          if (msg.direction === MESSAGE_DIRECTION.INBOUND && msg.status !== MESSAGE_STATUS.READ) {
-            conv.unreadCount += 1;
+          if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
+            conv.waitingForReply = true;
+            conv.lastInboundTime = msg.createdAt.toISOString();
+            if (msg.status !== MESSAGE_STATUS.READ) {
+              conv.unreadCount += 1;
+            }
+          } else {
+            conv.waitingForReply = false;
           }
           conv.messages.push({
             id: msg.id,
@@ -701,12 +717,43 @@ export async function replyToConversation({
     });
   }
 
-  // Registrar actividad por canal para el monitoreo de ejecutivos de venta
+  // Buscar el último mensaje entrante del prospecto para calcular el Tiempo de Respuesta (SLA)
+  let responseTimeSec: number | null = null;
+  try {
+    const lastInbound = await prisma.message.findFirst({
+      where: {
+        organizationId,
+        direction: MESSAGE_DIRECTION.INBOUND,
+        ...(recipient && recipient !== "Usuario Social" ? { recipient } : {}),
+        ...(leadId ? { leadId } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+
+    if (lastInbound) {
+      responseTimeSec = Math.max(0, Math.round((Date.now() - new Date(lastInbound.createdAt).getTime()) / 1000));
+    }
+  } catch {
+    // Silencioso
+  }
+
+  // Registrar actividad por canal para el monitoreo de ejecutivos de venta y métricas de SLA
   let actType: string = ACTIVITY_TYPE.NOTE;
   if (channel.includes("whatsapp")) actType = ACTIVITY_TYPE.WHATSAPP;
   else if (channel.includes("messenger")) actType = ACTIVITY_TYPE.MESSENGER;
   else if (channel.includes("instagram")) actType = ACTIVITY_TYPE.INSTAGRAM;
   else if (channel === MESSAGE_CHANNEL.SMS) actType = ACTIVITY_TYPE.SMS;
+
+  let outcome = "completed";
+  let title = `Mensaje saliente vía ${channel}`;
+  if (responseTimeSec !== null) {
+    const minutes = Math.floor(responseTimeSec / 60);
+    const seconds = responseTimeSec % 60;
+    const formatted = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+    title = `Respuesta enviada (${formatted})`;
+    outcome = responseTimeSec <= 300 ? "sla_ok" : responseTimeSec <= 900 ? "sla_warning" : "sla_breached";
+  }
 
   prisma.activity.create({
     data: {
@@ -714,9 +761,11 @@ export async function replyToConversation({
       clientId: targetClientId || null,
       leadId: leadId || null,
       type: actType,
-      title: `Mensaje saliente vía ${channel}`,
-      description: body.slice(0, 160),
-      outcome: "completed",
+      title,
+      description: responseTimeSec !== null
+        ? `Tiempo de respuesta del asesor: ${Math.round(responseTimeSec / 60)} min. ${body.slice(0, 100)}`
+        : body.slice(0, 160),
+      outcome,
     },
   }).catch(() => {});
 
@@ -727,6 +776,7 @@ export async function replyToConversation({
     channel,
     direction: "outbound" as const,
     createdAt: savedMessage.createdAt.toISOString(),
+    responseTimeSec,
   };
 }
 

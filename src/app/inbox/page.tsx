@@ -26,6 +26,10 @@ import {
   MessageSquare,
   Paperclip,
   ExternalLink,
+  Timer,
+  Volume2,
+  VolumeX,
+  Bell,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import SlidingTabs from "@/components/ui/SlidingTabs";
@@ -253,6 +257,83 @@ function renderMessageContent(body: string, isOutbound: boolean) {
   );
 }
 
+function playNotificationSound() {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const nowTime = ctx.currentTime;
+
+    // Nota 1 (Re5 - 587.33 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(587.33, nowTime);
+    gain1.gain.setValueAtTime(0.18, nowTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, nowTime + 0.3);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(nowTime);
+    osc1.stop(nowTime + 0.3);
+
+    // Nota 2 (La5 - 880 Hz)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(880, nowTime + 0.1);
+    gain2.gain.setValueAtTime(0.2, nowTime + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.001, nowTime + 0.45);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(nowTime + 0.1);
+    osc2.stop(nowTime + 0.45);
+  } catch {
+    // Silencioso si el navegador bloquea audio antes de la primera interacción
+  }
+}
+
+function formatSlaTimer(isoDate: string, currentNow: number) {
+  const diffSec = Math.max(0, Math.floor((currentNow - new Date(isoDate).getTime()) / 1000));
+  const mins = Math.floor(diffSec / 60);
+  const secs = diffSec % 60;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const timeStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${pad(mins)}:${pad(secs)}`;
+
+  if (diffSec < 300) {
+    // Menos de 5 minutos: Óptimo (Verde)
+    return {
+      timeStr,
+      seconds: diffSec,
+      level: "optimal" as const,
+      label: "Óptimo",
+      badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      dotCls: "bg-emerald-500",
+    };
+  } else if (diffSec < 900) {
+    // De 5 a 15 minutos: Atención prioritaria (Amarillo)
+    return {
+      timeStr,
+      seconds: diffSec,
+      level: "warning" as const,
+      label: "Prioritario",
+      badgeCls: "bg-amber-50 text-amber-800 border-amber-200",
+      dotCls: "bg-amber-500",
+    };
+  } else {
+    // Más de 15 minutos: Urgente / SLA vencido (Rojo parpadeante)
+    return {
+      timeStr,
+      seconds: diffSec,
+      level: "danger" as const,
+      label: "Urgente",
+      badgeCls: "bg-rose-50 text-rose-700 border-rose-200 animate-pulse",
+      dotCls: "bg-rose-500 animate-ping",
+    };
+  }
+}
+
 export default function UnifiedInboxPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando bandeja de entrada...</div>}>
@@ -297,6 +378,71 @@ function UnifiedInboxPageContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cronómetro en vivo (tick de 1 segundo)
+  const [now, setNow] = useState<number>(Date.now());
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [hasNotificationPermission, setHasNotificationPermission] = useState<boolean>(false);
+  const prevWaitingCountRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setHasNotificationPermission(Notification.permission === "granted");
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Alerta sonora y actualización dinámica del título de pestaña al llegar mensajes nuevos
+  useEffect(() => {
+    const waitingList = conversations.filter((c) => c.waitingForReply);
+    const waitingCount = waitingList.length;
+
+    if (prevWaitingCountRef.current !== null && waitingCount > prevWaitingCountRef.current) {
+      if (soundEnabled) {
+        playNotificationSound();
+      }
+
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        const newest = waitingList[0];
+        if (newest) {
+          try {
+            new Notification(`🚨 Nuevo mensaje en ${newest.accountName || "Bunker CRM"}`, {
+              body: `${newest.senderName}: ${newest.lastMessageText}`,
+              icon: newest.senderAvatar || undefined,
+            });
+          } catch {
+            // Silencioso
+          }
+        }
+      }
+    }
+
+    prevWaitingCountRef.current = waitingCount;
+
+    if (waitingCount > 0) {
+      document.title = `(${waitingCount}) ⏱️ ¡Mensajes pendientes! • Bunker CRM`;
+    } else {
+      document.title = "Bandeja de Entrada • Bunker CRM";
+    }
+  }, [conversations, soundEnabled]);
+
+  const handleRequestNotificationPermission = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      try {
+        const perm = await Notification.requestPermission();
+        setHasNotificationPermission(perm === "granted");
+        if (perm === "granted" && soundEnabled) {
+          playNotificationSound();
+        }
+      } catch {
+        // Silencioso
+      }
+    }
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -675,6 +821,8 @@ function UnifiedInboxPageContent() {
             c.id === activeConversation.id
               ? {
                   ...c,
+                  waitingForReply: false,
+                  unreadCount: 0,
                   lastMessageText: messageBody,
                   lastMessageTime: new Date().toISOString(),
                   messages: [...c.messages, newMsg],
@@ -685,8 +833,17 @@ function UnifiedInboxPageContent() {
 
         setReplyText("");
         removeAttachedFile();
-        setFeedback("¡Respuesta enviada correctamente!");
-        setTimeout(() => setFeedback(null), 3000);
+
+        const respSec = json.reply?.responseTimeSec;
+        let successMsg = "¡Respuesta enviada correctamente!";
+        if (typeof respSec === "number") {
+          const mins = Math.floor(respSec / 60);
+          const secs = respSec % 60;
+          const timeText = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+          successMsg = `¡Respuesta enviada en ${timeText}! ⚡`;
+        }
+        setFeedback(successMsg);
+        setTimeout(() => setFeedback(null), 3500);
       } else {
         setErrorMessage(json.error || "No se pudo enviar la respuesta.");
       }
@@ -730,6 +887,42 @@ function UnifiedInboxPageContent() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Botón de Alertas Sonoras */}
+          <button
+            type="button"
+            onClick={() => setSoundEnabled((prev) => !prev)}
+            className={`px-3 py-1.5 rounded-xl border text-xs transition-colors shadow-2xs flex items-center gap-1.5 font-medium cursor-pointer ${
+              soundEnabled
+                ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+            }`}
+            title={
+              soundEnabled
+                ? "Alertas sonoras activas al llegar mensajes (clic para silenciar)"
+                : "Silenciado (clic para activar sonido)"
+            }
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+            )}
+            <span className="hidden sm:inline">{soundEnabled ? "Sonido Activo" : "Silenciado"}</span>
+          </button>
+
+          {/* Botón para solicitar Notificaciones de Escritorio */}
+          {!hasNotificationPermission && (
+            <button
+              type="button"
+              onClick={handleRequestNotificationPermission}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-semibold shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Recibir notificaciones de escritorio cuando lleguen mensajes nuevos"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Activar Notificaciones</span>
+            </button>
+          )}
+
           <button
             onClick={() => fetchInbox(false, true)}
             disabled={loading}
@@ -914,6 +1107,33 @@ function UnifiedInboxPageContent() {
                       <p className="text-[11px] text-[#475467] line-clamp-1 leading-normal mt-0.5">
                         {conv.lastMessageText}
                       </p>
+
+                      {/* Cronómetro en vivo SLA si está esperando respuesta del asesor */}
+                      {conv.waitingForReply && conv.lastInboundTime ? (
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          {(() => {
+                            const sla = formatSlaTimer(conv.lastInboundTime, now);
+                            return (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold border ${sla.badgeCls}`}
+                                title={`Tiempo de espera del cliente: ${sla.timeStr} (${sla.label})`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${sla.dotCls}`} />
+                                <Timer className="w-2.5 h-2.5 shrink-0" />
+                                <span>{sla.timeStr}</span>
+                                <span className="text-[8px] font-sans opacity-75 uppercase tracking-wider ml-0.5">
+                                  {sla.label}
+                                </span>
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 pt-0.5 text-[9px] text-emerald-700 font-medium">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                          <span>Respondido</span>
+                        </div>
+                      )}
                     </div>
 
                     {conv.unreadCount > 0 && (
@@ -1075,6 +1295,47 @@ function UnifiedInboxPageContent() {
                   <span className="text-[10px] bg-white px-2 py-0.5 rounded border border-amber-300 font-mono shrink-0 ml-2">
                     ID: {activeConversation.postContext.postId}
                   </span>
+                </div>
+              )}
+
+              {/* Barra de Cronómetro y SLA en Vivo */}
+              {activeConversation.waitingForReply && activeConversation.lastInboundTime ? (
+                (() => {
+                  const sla = formatSlaTimer(activeConversation.lastInboundTime, now);
+                  return (
+                    <div
+                      className={`px-4 py-2 border-b flex items-center justify-between gap-3 text-xs transition-colors ${
+                        sla.level === "optimal"
+                          ? "bg-emerald-50/90 border-emerald-200 text-emerald-950"
+                          : sla.level === "warning"
+                          ? "bg-amber-50/95 border-amber-200 text-amber-950"
+                          : "bg-rose-50 border-rose-200 text-rose-950"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-2 h-2 rounded-full ${sla.dotCls}`} />
+                        <Timer className="w-4 h-4 text-slate-700 shrink-0" />
+                        <span>
+                          <strong>Cronómetro de Atención:</strong> Prospecto esperando respuesta hace{" "}
+                          <span className="font-mono font-bold text-xs bg-white/90 px-1.5 py-0.5 rounded border border-black/10">
+                            {sla.timeStr}
+                          </span>{" "}
+                          <span className="font-semibold text-[11px] opacity-90">({sla.label})</span>
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 hidden sm:inline font-medium">
+                        Meta Speed-to-Lead: &lt; 5 minutos
+                      </span>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="px-4 py-1.5 bg-slate-50 border-b border-[#EAECF0] flex items-center justify-between text-[11px] text-[#475467]">
+                  <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Conversación al día (última respuesta tuya enviada)</span>
+                  </div>
+                  <span className="text-[10px] text-[#9C9890] hidden sm:inline">Esperando nuevo mensaje del prospecto</span>
                 </div>
               )}
 
