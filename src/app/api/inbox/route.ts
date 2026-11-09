@@ -8,6 +8,7 @@ import {
   getConversationThread,
   replyToConversation,
   assignConversation,
+  markConversationAsRead,
 } from "@/services/inbox.service";
 
 export const dynamic = "force-dynamic";
@@ -36,16 +37,26 @@ const replySchema = z
     message: "Debes escribir un mensaje o adjuntar un archivo.",
   });
 
-const assignSchema = z.object({
-  action: z.literal("assign"),
-  conversationId: z.string().min(1, "ID de conversación requerido"),
-  advisorId: z.string().uuid("ID de asesor inválido").nullable(),
-  leadId: z.string().uuid().optional().nullable(),
-  senderName: z.string().optional(),
-  senderPhone: z.string().optional().nullable(),
-  senderEmail: z.string().optional().nullable(),
-  clientId: z.string().uuid().optional().nullable(),
-});
+const patchSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("assign"),
+    conversationId: z.string().min(1, "ID de conversación requerido"),
+    advisorId: z.string().uuid("ID de asesor inválido").nullable(),
+    leadId: z.string().uuid().optional().nullable(),
+    senderName: z.string().optional(),
+    senderPhone: z.string().optional().nullable(),
+    senderEmail: z.string().optional().nullable(),
+    clientId: z.string().uuid().optional().nullable(),
+  }),
+  z.object({
+    action: z.literal("mark_read"),
+    conversationId: z.string().optional(),
+    recipient: z.string().optional(),
+    leadId: z.string().uuid().optional().nullable(),
+    channel: z.string().optional(),
+    clientId: z.string().uuid().optional().nullable(),
+  }),
+]);
 
 /**
  * GET /api/inbox
@@ -187,7 +198,7 @@ export async function POST(req: NextRequest) {
 
 /**
  * PATCH /api/inbox
- * Asigna o reasigna un vendedor/asesor comercial a una conversación o prospecto (Lead).
+ * Asigna asesor comercial o marca mensajes de una conversación como leídos.
  */
 export async function PATCH(req: NextRequest) {
   try {
@@ -195,12 +206,30 @@ export async function PATCH(req: NextRequest) {
     if (errorResponse) return errorResponse;
 
     const body = await req.json().catch(() => ({}));
-    const parsed = assignSchema.safeParse(body);
+    const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.issues[0]?.message || "Datos de asignación inválidos." },
+        { success: false, error: parsed.error.issues[0]?.message || "Datos inválidos." },
         { status: 400 }
       );
+    }
+
+    if (parsed.data.action === "mark_read") {
+      const { recipient, leadId, channel, clientId } = parsed.data;
+      let targetClientId = clientId;
+      if (user!.isClientUser) {
+        targetClientId = user!.clientId;
+      }
+
+      await markConversationAsRead({
+        organizationId: user!.organizationId,
+        targetClientId: targetClientId || null,
+        recipient,
+        leadId,
+        channel,
+      });
+
+      return NextResponse.json({ success: true, message: "Conversación marcada como leída." });
     }
 
     const { conversationId, advisorId, leadId, senderName, senderPhone, senderEmail, clientId } = parsed.data;
@@ -228,7 +257,7 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (error) {
     console.error("PATCH /api/inbox error:", error);
-    const message = error instanceof Error ? error.message : "Error al asignar la conversación.";
+    const message = error instanceof Error ? error.message : "Error al procesar la solicitud.";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

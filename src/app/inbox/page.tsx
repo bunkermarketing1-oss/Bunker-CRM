@@ -430,6 +430,40 @@ function UnifiedInboxPageContent() {
   const leadId = activeConversation?.leadId || "";
   const msgCount = activeConversation?.messages.length ?? 0;
 
+  const markAsRead = useCallback((conv: ConversationItem) => {
+    if (conv.unreadCount > 0) {
+      // 1. Quitar el punto en estado local de inmediato para respuesta visual instantánea
+      setConversations((prev) =>
+        prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
+      );
+      setStats((prev) => ({
+        ...prev,
+        unread: Math.max(0, prev.unread - 1),
+      }));
+
+      // 2. Persistir en base de datos en segundo plano
+      fetch("/api/inbox", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "mark_read",
+          conversationId: conv.id,
+          recipient: conv.recipient,
+          leadId: conv.leadId || undefined,
+          channel: conv.channel,
+          clientId: conv.clientId || undefined,
+        }),
+      }).catch(() => {});
+    }
+  }, []);
+
+  // Al abrir o cambiar de conversación activa, remover el punto de pendiente si no está leída
+  useEffect(() => {
+    if (activeConversation && activeConversation.unreadCount > 0) {
+      markAsRead(activeConversation);
+    }
+  }, [activeConversation, markAsRead]);
+
   // Cargar el historial cronológico completo del hilo cuando se selecciona una conversación
   useEffect(() => {
     if (!convId || !recipient) return;
@@ -454,7 +488,7 @@ function UnifiedInboxPageContent() {
       .then((json) => {
         if (!isCancelled && json.success && Array.isArray(json.messages) && json.messages.length > 0) {
           setConversations((prev) =>
-            prev.map((c) => (c.id === convId ? { ...c, messages: json.messages } : c))
+            prev.map((c) => (c.id === convId ? { ...c, messages: json.messages, unreadCount: 0 } : c))
           );
         }
       })
@@ -828,7 +862,12 @@ function UnifiedInboxPageContent() {
                   <button
                     key={conv.id}
                     type="button"
-                    onClick={() => setSelectedConvId(conv.id)}
+                    onClick={() => {
+                      setSelectedConvId(conv.id);
+                      if (conv.unreadCount > 0) {
+                        markAsRead(conv);
+                      }
+                    }}
                     className={`w-full p-3.5 text-left transition-colors flex items-start gap-3 relative ${
                       isSelected ? "bg-[#F8F9FA] border-l-2 border-l-amber-500" : "hover:bg-[#F8F9FA]/70"
                     }`}

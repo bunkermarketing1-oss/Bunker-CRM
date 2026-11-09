@@ -271,7 +271,7 @@ export async function getInboxConversations(
     if (msg.lead?.avatarUrl && !conv.senderAvatar) {
       conv.senderAvatar = msg.lead.avatarUrl;
     }
-    if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
+    if (msg.direction === MESSAGE_DIRECTION.INBOUND && msg.status !== MESSAGE_STATUS.READ) {
       conv.unreadCount += 1;
     }
     conv.messages.push({
@@ -402,7 +402,7 @@ export async function getInboxConversations(
           if (msg.lead?.avatarUrl && !conv.senderAvatar) {
             conv.senderAvatar = msg.lead.avatarUrl;
           }
-          if (msg.direction === MESSAGE_DIRECTION.INBOUND) {
+          if (msg.direction === MESSAGE_DIRECTION.INBOUND && msg.status !== MESSAGE_STATUS.READ) {
             conv.unreadCount += 1;
           }
           conv.messages.push({
@@ -529,6 +529,21 @@ export async function getConversationThread({
     },
   });
 
+  // Marcar automáticamente como leídos los mensajes entrantes al abrir el hilo
+  prisma.message.updateMany({
+    where: {
+      organizationId,
+      AND: [
+        ...andConditions,
+        { direction: MESSAGE_DIRECTION.INBOUND },
+        { status: { not: MESSAGE_STATUS.READ } },
+      ],
+    },
+    data: {
+      status: MESSAGE_STATUS.READ,
+    },
+  }).catch(() => {});
+
   return messages.map((m) => ({
     id: m.id,
     senderName: m.direction === MESSAGE_DIRECTION.INBOUND ? (m.lead?.name || m.recipient) : "Tú (Asesor)",
@@ -538,6 +553,65 @@ export async function getConversationThread({
     status: m.status,
     channel: m.channel,
   }));
+}
+
+/**
+ * Marca como leídos todos los mensajes entrantes de una conversación o prospecto.
+ */
+export async function markConversationAsRead({
+  organizationId,
+  targetClientId,
+  recipient,
+  leadId,
+  channel,
+}: {
+  organizationId: string;
+  targetClientId?: string | null;
+  recipient?: string;
+  leadId?: string | null;
+  channel?: string;
+}) {
+  const andConditions: Prisma.MessageWhereInput[] = [
+    { direction: MESSAGE_DIRECTION.INBOUND },
+    { status: { not: MESSAGE_STATUS.READ } },
+  ];
+
+  if (leadId && recipient) {
+    andConditions.push({ OR: [{ leadId }, { recipient }] });
+  } else if (leadId) {
+    andConditions.push({ leadId });
+  } else if (recipient) {
+    andConditions.push({ recipient });
+  }
+
+  if (targetClientId) {
+    andConditions.push({
+      OR: [
+        { clientId: targetClientId },
+        { lead: { is: { clientId: targetClientId } } },
+      ],
+    });
+  }
+
+  if (channel && channel !== "all") {
+    if (channel === "comments") {
+      andConditions.push({
+        channel: { in: [MESSAGE_CHANNEL.FACEBOOK_COMMENT, MESSAGE_CHANNEL.INSTAGRAM_COMMENT] },
+      });
+    } else {
+      andConditions.push({ channel });
+    }
+  }
+
+  return prisma.message.updateMany({
+    where: {
+      organizationId,
+      AND: andConditions,
+    },
+    data: {
+      status: MESSAGE_STATUS.READ,
+    },
+  });
 }
 
 interface SendReplyParams {

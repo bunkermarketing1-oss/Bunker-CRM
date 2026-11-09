@@ -23,6 +23,7 @@ export const MESSAGE_STATUS = {
   PENDING: "pending",
   SENT: "sent",
   DELIVERED: "delivered",
+  READ: "read",
   FAILED: "failed",
   UNKNOWN: "unknown",
 } as const;
@@ -48,6 +49,7 @@ export const MESSAGE_STATUS_RANK: Record<string, number> = {
   [MESSAGE_STATUS.UNKNOWN]: 0,
   [MESSAGE_STATUS.SENT]: 1,
   [MESSAGE_STATUS.DELIVERED]: 2,
+  [MESSAGE_STATUS.READ]: 3,
   [MESSAGE_STATUS.FAILED]: 2,
 };
 
