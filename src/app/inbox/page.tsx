@@ -24,6 +24,8 @@ import {
   Clock,
   PhoneCall,
   MessageSquare,
+  Paperclip,
+  ExternalLink,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import SlidingTabs from "@/components/ui/SlidingTabs";
@@ -150,6 +152,107 @@ function formatTimeAgo(isoString: string): string {
   return `hace ${diffDays} d`;
 }
 
+interface AttachedFile {
+  file: File;
+  previewUrl?: string;
+  isImage: boolean;
+  uploading: boolean;
+  uploadedUrl?: string;
+  fileName: string;
+  fileSize: number;
+  error?: string;
+}
+
+function isImageUrl(url: string): boolean {
+  const clean = url.split("?")[0].toLowerCase();
+  return /\.(jpe?g|png|webp|gif|svg)$/i.test(clean);
+}
+
+function getFilenameFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const segments = pathname.split("/");
+    const last = segments[segments.length - 1];
+    return decodeURIComponent(last) || "Archivo adjunto";
+  } catch {
+    return "Archivo adjunto";
+  }
+}
+
+function renderMessageContent(body: string, isOutbound: boolean) {
+  if (!body) return null;
+
+  // Detectar URLs en el cuerpo del mensaje
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = body.split(urlRegex);
+
+  return (
+    <div className="space-y-2">
+      {parts.map((part, idx) => {
+        if (/^https?:\/\/[^\s]+$/i.test(part)) {
+          const isImg = isImageUrl(part);
+          if (isImg) {
+            return (
+              <div key={idx} className="relative group/img my-1">
+                <img
+                  src={part}
+                  alt="Fotografía adjunta"
+                  className="rounded-lg max-h-72 w-auto max-w-full object-cover border border-black/10 cursor-pointer hover:opacity-95 transition-opacity shadow-xs"
+                  onClick={() => window.open(part, "_blank")}
+                  loading="lazy"
+                />
+                <button
+                  type="button"
+                  onClick={() => window.open(part, "_blank")}
+                  className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 text-white rounded-md px-2 py-1 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center gap-1 text-[10px]"
+                  title="Ver imagen en tamaño completo"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Ampliar</span>
+                </button>
+              </div>
+            );
+          }
+
+          // Es un documento u otro archivo
+          const fileName = getFilenameFromUrl(part);
+          return (
+            <a
+              key={idx}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-medium transition my-1 max-w-full overflow-hidden ${
+                isOutbound
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-[#F8F9FA] hover:bg-[#F2F4F7] text-[#101828] border-[#EAECF0]"
+              }`}
+            >
+              <div className="w-8 h-8 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-semibold text-[11px]">{fileName}</p>
+                <p className="text-[10px] opacity-70">Clic para abrir o descargar</p>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" />
+            </a>
+          );
+        }
+
+        // Texto regular (si no está vacío)
+        const trimmed = part.trim();
+        if (!trimmed) return null;
+        return (
+          <p key={idx} className="whitespace-pre-wrap leading-relaxed">
+            {part}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function UnifiedInboxPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando bandeja de entrada...</div>}>
@@ -192,6 +295,8 @@ function UnifiedInboxPageContent() {
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -411,9 +516,89 @@ function UnifiedInboxPageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConversation?.messages]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isImg = file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif)$/i.test(file.name);
+    let localPreview: string | undefined;
+    if (isImg) {
+      localPreview = URL.createObjectURL(file);
+    }
+
+    setAttachedFile({
+      file,
+      previewUrl: localPreview,
+      isImage: isImg,
+      uploading: true,
+      fileName: file.name,
+      fileSize: file.size,
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/inbox/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setAttachedFile((prev) =>
+          prev
+            ? {
+                ...prev,
+                uploading: false,
+                uploadedUrl: data.url,
+                fileName: data.fileName || prev.fileName,
+                isImage: data.isImage ?? prev.isImage,
+              }
+            : null
+        );
+      } else {
+        setAttachedFile((prev) =>
+          prev
+            ? {
+                ...prev,
+                uploading: false,
+                error: data.error || "No se pudo subir el archivo.",
+              }
+            : null
+        );
+      }
+    } catch {
+      setAttachedFile((prev) =>
+        prev
+          ? {
+              ...prev,
+              uploading: false,
+              error: "Error de conexión al subir el archivo.",
+            }
+          : null
+      );
+    }
+  };
+
+  const removeAttachedFile = () => {
+    if (attachedFile?.previewUrl) {
+      URL.revokeObjectURL(attachedFile.previewUrl);
+    }
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSendReply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!replyText.trim() || !activeConversation || sending) return;
+    if (
+      (!replyText.trim() && !attachedFile?.uploadedUrl) ||
+      !activeConversation ||
+      sending ||
+      attachedFile?.uploading
+    ) {
+      return;
+    }
 
     setSending(true);
     setFeedback(null);
@@ -426,6 +611,9 @@ function UnifiedInboxPageContent() {
           conversationId: activeConversation.id,
           channel: activeConversation.channel,
           body: replyText.trim(),
+          imageUrl: attachedFile?.uploadedUrl || null,
+          mediaUrl: attachedFile?.uploadedUrl || null,
+          fileName: attachedFile?.fileName || null,
           recipient: activeConversation.recipient,
           clientId: activeConversation.clientId || (activeClientId !== "all" ? activeClientId : null),
           leadId: activeConversation.leadId,
@@ -434,10 +622,14 @@ function UnifiedInboxPageContent() {
       });
       const json = await res.json();
       if (json.success) {
+        const messageBody = replyText.trim() && attachedFile?.uploadedUrl
+          ? `${replyText.trim()}\n${attachedFile.uploadedUrl}`
+          : (attachedFile?.uploadedUrl || replyText.trim());
+
         const newMsg: ConversationMessage = {
           id: json.reply?.id || `sent_${Date.now()}`,
           senderName: "Tú (Asesor)",
-          body: replyText.trim(),
+          body: messageBody,
           createdAt: new Date().toISOString(),
           direction: "outbound",
           status: "sent",
@@ -449,7 +641,7 @@ function UnifiedInboxPageContent() {
             c.id === activeConversation.id
               ? {
                   ...c,
-                  lastMessageText: replyText.trim(),
+                  lastMessageText: messageBody,
                   lastMessageTime: new Date().toISOString(),
                   messages: [...c.messages, newMsg],
                 }
@@ -458,6 +650,7 @@ function UnifiedInboxPageContent() {
         );
 
         setReplyText("");
+        removeAttachedFile();
         setFeedback("¡Respuesta enviada correctamente!");
         setTimeout(() => setFeedback(null), 3000);
       } else {
@@ -866,13 +1059,13 @@ function UnifiedInboxPageContent() {
                           {m.senderName} • {formatTimeAgo(m.createdAt)}
                         </div>
                         <div
-                          className={`max-w-md sm:max-w-lg p-3 rounded-xl text-xs leading-relaxed shadow-2xs whitespace-pre-wrap ${
+                          className={`max-w-md sm:max-w-lg p-3 rounded-xl text-xs leading-relaxed shadow-2xs ${
                             isOutbound
                               ? "bg-[#0F172A] text-white rounded-br-xs"
                               : "bg-white text-[#101828] border border-[#EAECF0] rounded-bl-xs"
                           }`}
                         >
-                          {m.body}
+                          {renderMessageContent(m.body, isOutbound)}
                         </div>
                       </div>
                     );
@@ -981,6 +1174,51 @@ function UnifiedInboxPageContent() {
 
               {/* Composer: Cuadro de Respuesta */}
               <form onSubmit={handleSendReply} className="p-3 border-t border-[#EAECF0] bg-white">
+                {/* Previsualización del archivo adjunto */}
+                {attachedFile && (
+                  <div className="mb-2 p-2 rounded-lg bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-between gap-3 animate-in fade-in">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {attachedFile.isImage && attachedFile.previewUrl ? (
+                        <img
+                          src={attachedFile.previewUrl}
+                          alt="Vista previa"
+                          className="w-10 h-10 rounded-md object-cover border border-[#EAECF0] shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-md bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-amber-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[#101828] truncate max-w-[240px]">
+                          {attachedFile.fileName}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[10px]">
+                          {attachedFile.uploading ? (
+                            <span className="text-amber-600 flex items-center gap-1 font-medium">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Subiendo archivo...
+                            </span>
+                          ) : attachedFile.error ? (
+                            <span className="text-rose-600 font-medium">{attachedFile.error}</span>
+                          ) : (
+                            <span className="text-emerald-600 flex items-center gap-1 font-medium">
+                              <CheckCircle2 className="w-3 h-3" /> Listo para enviar ({Math.max(1, Math.round(attachedFile.fileSize / 1024))} KB)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeAttachedFile}
+                      className="p-1.5 rounded-md text-[#9C9890] hover:text-[#101828] hover:bg-[#EAECF0] transition-colors shrink-0"
+                      title="Quitar archivo adjunto"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="text-[11px] text-[#667085] mb-1.5 flex items-center justify-between">
                   <span>
                     Respondiendo como <strong>{activeConversation.accountName || "Bunker Agency"}</strong> vía{" "}
@@ -990,6 +1228,23 @@ function UnifiedInboxPageContent() {
                 </div>
 
                 <div className="flex items-end gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending || attachedFile?.uploading}
+                    className="p-2.5 rounded-lg border border-[#EAECF0] bg-[#F8F9FA] hover:bg-[#EAECF0] text-[#667085] hover:text-[#101828] transition-colors h-[40px] shrink-0 flex items-center justify-center disabled:opacity-50"
+                    title="Adjuntar fotografía o documento (PDF, Word, Excel, imagen)"
+                  >
+                    <Paperclip className="w-4 h-4 text-[#475467]" />
+                  </button>
+
                   <textarea
                     rows={2}
                     value={replyText}
@@ -1006,7 +1261,11 @@ function UnifiedInboxPageContent() {
 
                   <button
                     type="submit"
-                    disabled={sending || !replyText.trim()}
+                    disabled={
+                      sending ||
+                      attachedFile?.uploading ||
+                      (!replyText.trim() && !attachedFile?.uploadedUrl)
+                    }
                     className="btn-black-gold rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 transition-all h-[40px] shrink-0"
                   >
                     <Send className={`w-3.5 h-3.5 text-amber-400 ${sending ? "animate-pulse" : ""}`} />

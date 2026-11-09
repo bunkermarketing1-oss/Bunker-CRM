@@ -547,6 +547,9 @@ interface SendReplyParams {
   conversationId: string;
   channel: string;
   body: string;
+  imageUrl?: string | null;
+  mediaUrl?: string | null;
+  fileName?: string | null;
   recipient?: string;
   leadId?: string | null;
   scope?: TenantScope | null;
@@ -562,10 +565,14 @@ export async function replyToConversation({
   conversationId,
   channel,
   body,
+  imageUrl,
+  mediaUrl,
+  fileName,
   recipient,
   leadId,
   scope,
 }: SendReplyParams) {
+  const attachmentUrl = mediaUrl || imageUrl || null;
   let savedMessage: { id: string; createdAt: Date };
 
   if (
@@ -581,6 +588,7 @@ export async function replyToConversation({
       recipient,
       channel: channel as "messenger" | "instagram",
       body,
+      imageUrl: attachmentUrl,
     });
   } else if (channel === MESSAGE_CHANNEL.SMS && recipient && recipient !== "Usuario Social") {
     if (!scope) {
@@ -589,7 +597,8 @@ export async function replyToConversation({
 
     const smsResult = await sendManualSms(scope, userId, {
       recipient,
-      message: body,
+      message: body || (fileName ? `Archivo adjunto: ${fileName}` : "Archivo adjunto"),
+      mediaUrl: attachmentUrl || undefined,
       leadId: leadId || undefined,
       clientId: targetClientId || undefined,
     });
@@ -600,6 +609,10 @@ export async function replyToConversation({
     savedMessage = smsResult.message;
   } else {
     // Canal WhatsApp u otros: registrar en base de datos
+    const finalBody = body && attachmentUrl
+      ? `${body}\n${attachmentUrl}`
+      : (attachmentUrl || body || (fileName ? `[Archivo: ${fileName}]` : "[Archivo adjunto]"));
+
     savedMessage = await prisma.message.create({
       data: {
         organizationId,
@@ -608,8 +621,8 @@ export async function replyToConversation({
         channel: channel.includes("whatsapp") ? MESSAGE_CHANNEL.WHATSAPP : channel,
         direction: MESSAGE_DIRECTION.OUTBOUND,
         recipient: recipient || "Usuario Social",
-        body,
-        status: MESSAGE_STATUS.SENT,
+        body: finalBody,
+        status: MESSAGE_STATUS.DELIVERED,
       },
     });
   }

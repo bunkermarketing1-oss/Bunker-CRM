@@ -125,7 +125,10 @@ async function handleSingleMessagingItem(
 
   // Contenido del mensaje de texto o indicación de archivo adjunto
   let bodyText = (item.message?.text || item.postback?.title || item.postback?.payload || "").trim();
-  if (!bodyText && item.message?.attachments && item.message.attachments.length > 0) {
+  const attachmentUrl = item.message?.attachments?.[0]?.payload?.url;
+  if (attachmentUrl) {
+    bodyText = bodyText ? `${bodyText}\n${attachmentUrl}` : attachmentUrl;
+  } else if (!bodyText && item.message?.attachments && item.message.attachments.length > 0) {
     const firstType = item.message.attachments[0]?.type || "archivo";
     bodyText = `[${firstType.toUpperCase()}]`;
   }
@@ -253,7 +256,8 @@ export interface SendOutboundParams {
   leadId?: string | null;
   recipient: string;
   channel: "messenger" | "instagram";
-  body: string;
+  body?: string;
+  imageUrl?: string | null;
 }
 
 /**
@@ -261,7 +265,7 @@ export interface SendOutboundParams {
  * a través de la Graph API oficial y la guarda en la base de datos.
  */
 export async function sendMetaOutboundReply(params: SendOutboundParams) {
-  const { organizationId, targetClientId, leadId, recipient, channel, body } = params;
+  const { organizationId, targetClientId, leadId, recipient, channel, body, imageUrl } = params;
 
   const isInstagram = channel === "instagram";
   const accountType = isInstagram ? ACCOUNT_TYPE.INSTAGRAM_BUSINESS : ACCOUNT_TYPE.FACEBOOK_PAGE;
@@ -334,7 +338,7 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
     if (!account.accessTokenEnc) continue;
     try {
       const token = decryptSecret(account.accessTokenEnc);
-      sendResult = await sendMetaDirectMessage(token, recipient, body);
+      sendResult = await sendMetaDirectMessage(token, recipient, body, imageUrl || undefined);
       successfulAccount = account;
       break;
     } catch (err) {
@@ -367,6 +371,10 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
     );
   }
 
+  const messageBody = body && imageUrl
+    ? `${body}\n${imageUrl}`
+    : (imageUrl || body || "[Archivo adjunto]");
+
   const savedMessage = await prisma.message.create({
     data: {
       organizationId,
@@ -375,7 +383,7 @@ export async function sendMetaOutboundReply(params: SendOutboundParams) {
       channel: isInstagram ? MESSAGE_CHANNEL.INSTAGRAM : MESSAGE_CHANNEL.MESSENGER,
       direction: MESSAGE_DIRECTION.OUTBOUND,
       recipient,
-      body,
+      body: messageBody,
       providerMsgId: sendResult.message_id,
       status: MESSAGE_STATUS.SENT,
     },
@@ -566,6 +574,11 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
           });
         }
       } else {
+        const attachmentUrl = msg.attachments?.data?.[0]?.image_data?.url || msg.attachments?.data?.[0]?.file_url;
+        const inboundBody = msg.message
+          ? (attachmentUrl ? `${msg.message}\n${attachmentUrl}` : msg.message)
+          : (attachmentUrl || "[Mensaje multimedia]");
+
         await prisma.message.create({
           data: {
             organizationId: account.organizationId,
@@ -574,7 +587,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
             channel: isInstagram ? MESSAGE_CHANNEL.INSTAGRAM : MESSAGE_CHANNEL.MESSENGER,
             direction: (msg.from?.id === account.externalId || (Boolean(msg.from?.name && account.accountName) && msg.from!.name!.toLowerCase() === account.accountName!.toLowerCase())) ? MESSAGE_DIRECTION.OUTBOUND : MESSAGE_DIRECTION.INBOUND,
             recipient: customer.id,
-            body: msg.message || "[Mensaje multimedia]",
+            body: inboundBody,
             providerMsgId: msg.id,
             status: MESSAGE_STATUS.DELIVERED,
             createdAt: new Date(msg.created_time),

@@ -617,7 +617,8 @@ export async function sendManualSms(scope: TenantScope, userId: string, input: M
   const phone = validateAndNormalizePhone(target.recipient).normalized;
   if (!phone) throw new SmsTargetError("El formato del número telefónico no es válido (ej. +525549123011).", 400);
 
-  const body = input.message;
+  const mediaUrl = input.mediaUrl || null;
+  const body = input.message && mediaUrl ? `${input.message}\n${mediaUrl}` : (mediaUrl || input.message);
   const duplicate = await prisma.message.findFirst({
     where: {
       organizationId: scope.organizationId,
@@ -656,7 +657,7 @@ export async function sendManualSms(scope: TenantScope, userId: string, input: M
     },
     select: { id: true },
   });
-  const result = await sendTwilioSms(phone, body);
+  const result = await sendTwilioSms(phone, input.message, mediaUrl);
   const message = await prisma.message.update({
     where: { id: pending.id },
     data: { status: result.status, providerMsgId: result.providerMsgId, errorMessage: result.errorMessage, isDemo: result.isDemo },

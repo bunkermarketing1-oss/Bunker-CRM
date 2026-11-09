@@ -12,22 +12,29 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const replySchema = z.object({
-  conversationId: z.string().min(1, "ID de conversación requerido"),
-  channel: z.enum([
-    "whatsapp",
-    "messenger",
-    "instagram",
-    "facebook_comment",
-    "instagram_comment",
-    "sms",
-  ]),
-  body: z.string().trim().min(1, "El mensaje no puede estar vacío").max(2000, "Máximo 2000 caracteres"),
-  recipient: z.string().optional(),
-  leadId: z.string().uuid().optional().nullable(),
-  clientId: z.string().uuid().optional().nullable(),
-  commentId: z.string().optional().nullable(),
-});
+const replySchema = z
+  .object({
+    conversationId: z.string().min(1, "ID de conversación requerido"),
+    channel: z.enum([
+      "whatsapp",
+      "messenger",
+      "instagram",
+      "facebook_comment",
+      "instagram_comment",
+      "sms",
+    ]),
+    body: z.string().trim().max(2000, "Máximo 2000 caracteres").optional().default(""),
+    imageUrl: z.string().url("URL de archivo inválida").optional().nullable(),
+    mediaUrl: z.string().url("URL de archivo inválida").optional().nullable(),
+    fileName: z.string().optional().nullable(),
+    recipient: z.string().optional(),
+    leadId: z.string().uuid().optional().nullable(),
+    clientId: z.string().uuid().optional().nullable(),
+    commentId: z.string().optional().nullable(),
+  })
+  .refine((data) => data.body.length > 0 || Boolean(data.imageUrl || data.mediaUrl), {
+    message: "Debes escribir un mensaje o adjuntar un archivo.",
+  });
 
 const assignSchema = z.object({
   action: z.literal("assign"),
@@ -131,7 +138,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { conversationId, channel, body: messageBody, recipient, leadId, clientId } = parsed.data;
+    const {
+      conversationId,
+      channel,
+      body: messageBody,
+      imageUrl,
+      mediaUrl,
+      fileName,
+      recipient,
+      leadId,
+      clientId,
+    } = parsed.data;
 
     let targetClientId = clientId;
     if (user!.isClientUser) {
@@ -139,6 +156,7 @@ export async function POST(req: NextRequest) {
     }
 
     const scope = scopeFromUser(user!);
+    const effectiveMediaUrl = mediaUrl || imageUrl || null;
 
     const reply = await replyToConversation({
       organizationId: user!.organizationId,
@@ -147,6 +165,9 @@ export async function POST(req: NextRequest) {
       conversationId,
       channel,
       body: messageBody,
+      imageUrl: effectiveMediaUrl,
+      mediaUrl: effectiveMediaUrl,
+      fileName,
       recipient,
       leadId,
       scope,

@@ -53,6 +53,7 @@ export const manualSmsSchema = z.object({
     .trim()
     .min(1, "El cuerpo del mensaje no puede estar vacío.")
     .max(SMS_MAX_LENGTH, `El mensaje supera el límite máximo de caracteres para SMS (${SMS_MAX_LENGTH}).`),
+  mediaUrl: z.string().url("URL de imagen inválida").optional().nullable(),
   leadId: optionalId("Lead inválido."),
   clientId: optionalId("Cliente inválido."),
   contactId: optionalId("Contacto inválido."),

@@ -306,6 +306,13 @@ export interface MetaConversationMessageItem {
   message?: string;
   created_time: string;
   from?: { id: string; name?: string; username?: string; email?: string };
+  attachments?: {
+    data?: Array<{
+      mime_type?: string;
+      image_data?: { url?: string };
+      file_url?: string;
+    }>;
+  };
 }
 
 export interface MetaPageConversation {
@@ -327,8 +334,8 @@ export async function listPageConversations(
 ) {
   const isInstagram = platform === "instagram";
   const fields = isInstagram
-    ? "id,updated_time,snippet,unread_count,participants{id,username,name},messages.limit(10){id,message,created_time,from}"
-    : "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from}";
+    ? "id,updated_time,snippet,unread_count,participants{id,username,name},messages.limit(15){id,message,created_time,from,attachments{image_data,file_url,mime_type}}"
+    : "id,updated_time,snippet,unread_count,senders,messages.limit(25){id,message,created_time,from,attachments{image_data,file_url,mime_type}}";
 
   try {
     const params: Record<string, string> = {
@@ -354,21 +361,73 @@ export interface SendMetaMessageResult {
   message_id: string;
 }
 
-/** Envía un mensaje de texto oficial a un prospecto por Facebook Messenger o Instagram Direct. */
-export async function sendMetaDirectMessage(pageToken: string, recipientId: string, text: string) {
-  try {
-    return await graphFetch<SendMetaMessageResult>(
+function getMetaAttachmentType(url: string): "image" | "file" | "video" | "audio" {
+  const clean = url.split("?")[0].toLowerCase();
+  if (/\.(jpe?g|png|webp|gif|bmp|svg)$/.test(clean)) return "image";
+  if (/\.(mp4|mov|webm)$/.test(clean)) return "video";
+  if (/\.(mp3|wav|ogg|m4a)$/.test(clean)) return "audio";
+  return "file";
+}
+
+/** Envía un mensaje de texto, imagen o archivo oficial a un prospecto por Facebook Messenger o Instagram Direct. */
+export async function sendMetaDirectMessage(
+  pageToken: string,
+  recipientId: string,
+  text?: string,
+  imageUrl?: string
+) {
+  const buildBody = (extraMeta?: { messaging_type?: string; tag?: string }) => {
+    const msgObj: Record<string, unknown> = {};
+    if (imageUrl) {
+      const attachType = getMetaAttachmentType(imageUrl);
+      msgObj.attachment = {
+        type: attachType,
+        payload: {
+          url: imageUrl,
+          is_reusable: true,
+        },
+      };
+    } else {
+      msgObj.text = text || "";
+    }
+
+    return {
+      recipient: { id: recipientId },
+      message: msgObj,
+      messaging_type: extraMeta?.messaging_type || "RESPONSE",
+      ...(extraMeta?.tag ? { tag: extraMeta.tag } : {}),
+    };
+  };
+
+  const postMsg = async (bodyPayload: Record<string, unknown>) => {
+    return graphFetch<SendMetaMessageResult>(
       graphUrl("me/messages", { access_token: pageToken }),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient: { id: recipientId },
-          message: { text },
-          messaging_type: "RESPONSE",
-        }),
+        body: JSON.stringify(bodyPayload),
       }
     );
+  };
+
+  try {
+    let result = await postMsg(buildBody());
+
+    // Si se enviaron tanto imagen como texto de acompañamiento, enviar el texto como segundo mensaje
+    if (imageUrl && text && text.trim().length > 0) {
+      try {
+        const textResult = await postMsg({
+          recipient: { id: recipientId },
+          message: { text: text.trim() },
+          messaging_type: "RESPONSE",
+        });
+        result = textResult;
+      } catch (textErr) {
+        console.warn("[META_SEND_TEXT_AFTER_IMAGE] No se pudo enviar el texto adicional:", textErr);
+      }
+    }
+
+    return result;
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
     const isWindowViolation =
@@ -381,35 +440,11 @@ export async function sendMetaDirectMessage(pageToken: string, recipientId: stri
     if (isWindowViolation) {
       // 1. Intentar con etiqueta HUMAN_AGENT (permite responder hasta 7 días si la app cuenta con el permiso)
       try {
-        return await graphFetch<SendMetaMessageResult>(
-          graphUrl("me/messages", { access_token: pageToken }),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              recipient: { id: recipientId },
-              message: { text },
-              messaging_type: "MESSAGE_TAG",
-              tag: "HUMAN_AGENT",
-            }),
-          }
-        );
+        return await postMsg(buildBody({ messaging_type: "MESSAGE_TAG", tag: "HUMAN_AGENT" }));
       } catch {
         // 2. Intentar con etiqueta ACCOUNT_UPDATE como último recurso
         try {
-          return await graphFetch<SendMetaMessageResult>(
-            graphUrl("me/messages", { access_token: pageToken }),
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                recipient: { id: recipientId },
-                message: { text },
-                messaging_type: "MESSAGE_TAG",
-                tag: "ACCOUNT_UPDATE",
-              }),
-            }
-          );
+          return await postMsg(buildBody({ messaging_type: "MESSAGE_TAG", tag: "ACCOUNT_UPDATE" }));
         } catch {
           throw new Error(
             "Meta bloqueó la respuesta (#10): Han pasado más de 24 horas desde el último mensaje del cliente. Por política de privacidad de Meta, debes esperar a que el usuario escriba nuevamente, o puedes contactarlo vía WhatsApp, SMS o llamada telefónica."

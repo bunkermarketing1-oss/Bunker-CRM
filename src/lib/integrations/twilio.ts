@@ -367,8 +367,8 @@ export function humanizeTwilioError(code: number | undefined, rawMessage: string
   return `Twilio no pudo procesar el envío: ${rawMessage || "error desconocido"}`;
 }
 
-/** Envía un SMS. Nunca lanza: los errores vuelven en `errorMessage` para guardarlos en `Message`. */
-export async function sendTwilioSms(to: string, body: string): Promise<TwilioSendResult> {
+/** Envía un SMS o MMS (con imagen). Nunca lanza: los errores vuelven en `errorMessage` para guardarlos en `Message`. */
+export async function sendTwilioSms(to: string, body: string, mediaUrl?: string | null): Promise<TwilioSendResult> {
   const cfg = getTwilioConfig();
   if (!cfg) {
     return {
@@ -381,6 +381,9 @@ export async function sendTwilioSms(to: string, body: string): Promise<TwilioSen
 
   try {
     const params = new URLSearchParams({ To: to, From: cfg.fromPhone, Body: body });
+    if (mediaUrl) {
+      params.set("MediaUrl", mediaUrl);
+    }
     // Twilio solo puede avisar la entrega a una URL pública; en local (http) se omite.
     const statusCallback = twilioWebhookUrl(TWILIO_STATUS_WEBHOOK_PATH);
     if (statusCallback?.startsWith("https://")) params.set("StatusCallback", statusCallback);
