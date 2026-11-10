@@ -63,6 +63,7 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
     lastActivity,
     tasks,
     attendanceEvents,
+    slaEvents,
   ] = await Promise.all([
     prisma.call.groupBy({ by: ["userId"], where: { ...todayCalls, direction: CALL_DIRECTION.OUTBOUND }, _count: { _all: true } }),
     prisma.call.groupBy({
@@ -95,6 +96,13 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
       select: { userId: true, type: true, performedAt: true },
       orderBy: { performedAt: "asc" },
     }),
+    prisma.activity.findMany({
+      where: {
+        ...todayActivities,
+        outcome: { in: ["sla_ok", "sla_warning", "sla_breached"] },
+      },
+      select: { userId: true, outcome: true },
+    }),
   ]);
 
   // Procesar asistencia por usuario
@@ -112,6 +120,22 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
     }
   }
 
+  // Procesar métricas de SLA y velocidad de respuesta por asesor
+  const slaByUser = new Map<string, { ok: number; warning: number; breached: number; total: number; rate: number | null }>();
+  for (const uid of userIds) {
+    const userSla = (slaEvents || []).filter((e) => e.userId === uid);
+    if (userSla.length === 0) {
+      slaByUser.set(uid, { ok: 0, warning: 0, breached: 0, total: 0, rate: null });
+    } else {
+      const ok = userSla.filter((e) => e.outcome === "sla_ok").length;
+      const warning = userSla.filter((e) => e.outcome === "sla_warning").length;
+      const breached = userSla.filter((e) => e.outcome === "sla_breached").length;
+      const total = userSla.length;
+      const rate = total > 0 ? Math.round(((ok + warning * 0.5) / total) * 100) : null;
+      slaByUser.set(uid, { ok, warning, breached, total, rate });
+    }
+  }
+
   return {
     made: sumMap(made, (r) => r._count._all),
     answered: sumMap(answered, (r) => r._count._all),
@@ -125,6 +149,7 @@ async function dayAggregates(organizationId: string, userIds: string[], dayStart
     lastCall: dateMap(lastCall, (r) => r._max.updatedAt),
     lastActivity: dateMap(lastActivity, (r) => r._max.createdAt),
     attendance: attendanceByUser,
+    sla: slaByUser,
   };
 }
 
@@ -233,6 +258,10 @@ export async function getTeamLiveView(scope: TenantScope, now: Date = new Date()
         leadsContacted: stats.contacted.get(advisor.id) ?? 0,
         tasksCompleted: stats.tasks.get(advisor.id) ?? 0,
         channelsAttended: channels,
+        slaOkCount: stats.sla.get(advisor.id)?.ok ?? 0,
+        slaWarningCount: stats.sla.get(advisor.id)?.warning ?? 0,
+        slaBreachedCount: stats.sla.get(advisor.id)?.breached ?? 0,
+        slaResponseRate: stats.sla.get(advisor.id)?.rate ?? null,
       },
       lastActivityAt: lastActivityAt?.toISOString() ?? null,
       isCheckedIn: att.isCheckedIn,

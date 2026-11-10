@@ -1,5 +1,5 @@
 import React from "react";
-import { Crown, Users, Calendar, Trash2 } from "lucide-react";
+import { Crown, Users, Calendar, Trash2, Timer } from "lucide-react";
 import { ADVISOR_STATUS, ADVISOR_STATUS_LABEL, type AdvisorStatus } from "@/lib/constants/team";
 import { formatClock } from "@/lib/team-live";
 import type { AdvisorLiveRow } from "@/types/team";
@@ -93,6 +93,7 @@ export function AdvisorLiveTable({
                 <th className="text-center font-medium px-3 py-2.5">Canales Atendidos Hoy</th>
                 <th className="text-right font-medium px-3 py-2.5">Llamadas</th>
                 <th className="text-right font-medium px-3 py-2.5">Mensajes Enviados</th>
+                <th className="text-center font-medium px-3 py-2.5">SLA / Velocidad</th>
                 <th className="text-right font-medium px-3 py-2.5">Tiempo Hablado</th>
                 <th className="text-right font-medium px-3 py-2.5">Última Actividad</th>
                 <th className="text-center font-medium px-4 py-2.5">Bitácora</th>
@@ -165,6 +166,32 @@ export function AdvisorLiveTable({
                       <span className="text-[10px] text-[#82807C] block">
                         (WA: {advisor.today.whatsappSent} · FB: {advisor.today.messengerSent} · IG: {advisor.today.instagramSent} · SMS: {advisor.today.smsSent})
                       </span>
+                    )}
+                  </td>
+
+                  {/* Velocidad de Respuesta y SLA */}
+                  <td className="px-3 py-3 text-center">
+                    {advisor.today.slaResponseRate !== null && advisor.today.slaResponseRate !== undefined ? (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            advisor.today.slaResponseRate >= 80
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : advisor.today.slaResponseRate >= 50
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-rose-50 text-rose-800 border-rose-200"
+                          }`}
+                          title={`${advisor.today.slaResponseRate}% de respuestas dentro del tiempo estipulado`}
+                        >
+                          <Timer className="w-2.5 h-2.5 shrink-0" />
+                          <span>{advisor.today.slaResponseRate}% a tiempo</span>
+                        </span>
+                        <span className="text-[9px] text-[#82807C] font-mono">
+                          {advisor.today.slaOkCount ?? 0} rápidas • {advisor.today.slaBreachedCount ?? 0} lentas
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-zinc-400">Sin respuestas hoy</span>
                     )}
                   </td>
 

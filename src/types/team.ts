@@ -25,6 +25,10 @@ export interface AdvisorDayStats {
   leadsContacted: number;
   tasksCompleted: number;
   channelsAttended: string[];
+  slaOkCount?: number;
+  slaWarningCount?: number;
+  slaBreachedCount?: number;
+  slaResponseRate?: number | null;
 }
 
 export interface AdvisorLiveRow {
