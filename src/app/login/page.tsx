@@ -2,13 +2,12 @@
 
 import React, { useState, Suspense } from "react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight, Loader2, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawCallbackUrl = searchParams.get("callbackUrl");
 
@@ -29,15 +28,15 @@ function LoginForm() {
     setErrorMessage("");
 
     if (!email.trim()) {
-      setErrorMessage("Por favor ingrese su correo electrónico institucional.");
+      setErrorMessage("Por favor ingresa tu correo electrónico corporativo.");
       return;
     }
     if (!password) {
-      setErrorMessage("Por favor ingrese su contraseña.");
+      setErrorMessage("Por favor ingresa tu contraseña.");
       return;
     }
 
-    // Never leave the form spinning forever if the server/Supabase does not answer.
+    // Abort controller para evitar esperas infinitas
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
 
@@ -60,13 +59,14 @@ function LoginForm() {
         return;
       }
 
-      // Successful login -> Immediate full page navigation with newly set cookie
+      // Inicio exitoso -> Redirección inmediata a callbackUrl
       window.location.href = callbackUrl;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const isAbort = err instanceof Error && err.name === "AbortError";
       setErrorMessage(
-        err?.name === "AbortError"
-          ? "El servidor tardó demasiado en responder. Intente nuevamente."
-          : "Error de conexión con el servidor. Intente nuevamente."
+        isAbort
+          ? "El servidor tardó demasiado en responder. Intenta nuevamente."
+          : "Error de conexión con el servidor. Intenta nuevamente."
       );
       setIsLoading(false);
     } finally {
@@ -75,43 +75,43 @@ function LoginForm() {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-[#ECEAE3] p-7 sm:p-9 shadow-xl shadow-stone-200/50 backdrop-blur-sm">
+    <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-[#E2E5EB] dark:border-[#1F242D] p-7 sm:p-9 shadow-orvion transition-all duration-300">
       {errorMessage && (
-        <div className="mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-200/80 text-red-700 text-xs flex items-start gap-2.5">
-          <span className="text-sm font-bold">⚠️</span>
-          <p className="leading-relaxed font-medium">{errorMessage}</p>
+        <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs flex items-start gap-2.5 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+          <p className="leading-relaxed font-semibold">{errorMessage}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Email Field */}
-        <div>
-          <label className="block text-xs font-semibold text-[#3D3A34] mb-1.5">
+        {/* Campo Correo Electrónico */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-bold text-[#121417] dark:text-white pl-1">
             Correo Electrónico
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-[#8C887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-[#8C929D] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ejemplo@bunkermarketing.io"
+              placeholder="tu.nombre@bunkermarketing.io"
               disabled={isLoading}
               autoComplete="email"
-              className="w-full bg-[#FAF9F5] border border-[#ECEAE3] rounded-2xl pl-10 pr-4 py-2.5 text-xs text-[#141414] placeholder-[#8C887E] focus:outline-none focus:border-[#D4AF37] focus:bg-white transition-all shadow-inner"
+              className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-11 pr-4 py-3 text-xs text-[#121417] dark:text-white placeholder:text-[#8C929D] focus:outline-hidden focus:border-[#121417] dark:focus:border-white focus:bg-white dark:focus:bg-[#121417] transition-all shadow-2xs"
             />
           </div>
         </div>
 
-        {/* Password Field */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-semibold text-[#3D3A34]">
+        {/* Campo Contraseña */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between pl-1">
+            <label className="block text-xs font-bold text-[#121417] dark:text-white">
               Contraseña
             </label>
           </div>
           <div className="relative">
-            <Lock className="w-4 h-4 text-[#8C887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-[#8C929D] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -119,12 +119,12 @@ function LoginForm() {
               placeholder="••••••••••••"
               disabled={isLoading}
               autoComplete="current-password"
-              className="w-full bg-[#FAF9F5] border border-[#ECEAE3] rounded-2xl pl-10 pr-10 py-2.5 text-xs text-[#141414] placeholder-[#8C887E] focus:outline-none focus:border-[#D4AF37] focus:bg-white transition-all shadow-inner"
+              className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-11 pr-11 py-3 text-xs text-[#121417] dark:text-white placeholder:text-[#8C929D] focus:outline-hidden focus:border-[#121417] dark:focus:border-white focus:bg-white dark:focus:bg-[#121417] transition-all shadow-2xs"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C887E] hover:text-[#141414] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8C929D] hover:text-[#121417] dark:hover:text-white transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -135,30 +135,32 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Botón Principal de Acceso Estilo Cápsula Orvion */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full btn-black-gold rounded-2xl py-3 text-xs font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+          className="w-full rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] py-3.5 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed mt-3 cursor-pointer"
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin text-[#E5C158]" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#D4F933] dark:text-[#121417]" />
               <span>Validando credenciales...</span>
             </>
           ) : (
             <>
-              <span>Iniciar Sesión en Bunker CRM</span>
-              <ArrowRight className="w-4 h-4 text-[#E5C158]" />
+              <span>Iniciar Sesión en Bunker</span>
+              <ArrowRight className="w-4 h-4 text-[#D4F933] dark:text-[#121417]" />
             </>
           )}
         </button>
       </form>
 
-      {/* Security Assurance Notice */}
-      <div className="mt-6 pt-5 border-t border-[#ECEAE3] flex items-center justify-center gap-2 text-[11px] text-[#8C887E]">
-        <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
-        <span>Sesión encriptada con verificación en servidor</span>
+      {/* Verificación de Seguridad y Cifrado */}
+      <div className="mt-6 pt-5 border-t border-[#F2F4F7] dark:border-[#1F242D] flex items-center justify-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB]/60 dark:border-[#242A35] text-[11px] font-medium text-[#8C929D]">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933]" />
+          <span>Acceso seguro cifrado con verificación en servidor</span>
+        </div>
       </div>
     </div>
   );
@@ -166,46 +168,60 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[#F6F5F2] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 selection:bg-[#E5C158] selection:text-[#141414]">
-      {/* Background Subtle Gradient Accents */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-[#D4AF37]/10 via-[#F3E6C4]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Fondo con Sutiles Luces Ambientales Minimalistas */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-white via-white/50 to-transparent dark:from-white/5 dark:via-transparent dark:to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo and Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-white rounded-3xl border border-[#ECEAE3] shadow-sm mb-4">
-            <Image
-              src="/bunker-logo.png"
-              alt="Bunker Agency Logo"
-              width={140}
-              height={40}
-              priority
-              className="h-9 w-auto object-contain"
-            />
+      <div className="w-full max-w-md relative z-10 space-y-6">
+        {/* Cabecera y Marca Bunker */}
+        <div className="text-center space-y-3">
+          {/* Píldora de Plataforma */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
+            <Sparkles className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933]" />
+            <span className="text-[11px] font-bold text-[#121417] dark:text-white tracking-wide">
+              Bunker CRM Platform
+            </span>
+            <span className="orvion-badge-lime text-[9px] py-0.5 px-2">v2.0</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#141414]">
-            Acceso Corporativo
-          </h1>
-          <p className="text-xs text-[#8C887E] mt-1.5 font-medium">
-            Plataforma SaaS Comercial & Automatización de Pauta
-          </p>
+
+          <div className="flex justify-center pt-1 pb-1">
+            <div className="p-3 bg-white dark:bg-[#121417] rounded-2xl border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion inline-flex items-center justify-center">
+              <Image
+                src="/bunker-logo.png"
+                alt="Bunker Agency Logo"
+                width={130}
+                height={36}
+                priority
+                className="h-8 w-auto object-contain"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#121417] dark:text-white">
+              Acceso Corporativo
+            </h1>
+            <p className="text-xs text-[#8C929D] mt-1 font-medium">
+              Gestión comercial multicanal, pipeline y pauta digital
+            </p>
+          </div>
         </div>
 
-        {/* Suspense Boundary for useSearchParams */}
+        {/* Suspense Boundary con Skeleton Cápsula */}
         <Suspense
           fallback={
-            <div className="bg-white rounded-3xl border border-[#ECEAE3] p-12 text-center shadow-xl">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#D4AF37] mb-2" />
-              <p className="text-xs text-[#8C887E]">Cargando módulo de acceso...</p>
+            <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-[#E2E5EB] dark:border-[#1F242D] p-10 text-center shadow-orvion">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#121417] dark:text-[#D4F933] mb-2" />
+              <p className="text-xs text-[#8C929D] font-medium">Cargando módulo de acceso...</p>
             </div>
           }
         >
           <LoginForm />
         </Suspense>
 
-        {/* Footer info */}
-        <div className="text-center mt-6 text-[11px] text-[#8C887E]">
-          © {new Date().getFullYear()} Bunker Agency CRM. Todos los derechos reservados.
+        {/* Footer Minimalista */}
+        <div className="text-center text-[11px] text-[#8C929D] font-medium">
+          © {new Date().getFullYear()} Bunker Marketing Agency · Todos los derechos reservados.
         </div>
       </div>
     </div>
