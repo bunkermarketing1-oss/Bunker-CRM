@@ -43,39 +43,52 @@ export default function IndividualBrandDashboard({
 
   return (
     <div className="space-y-6">
+      {/* 4 Tarjetas de Rendimiento Cápsula Orvion */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           emphasis
           icon={DollarSign}
           label="Ingresos ganados"
+          subPeriod="Cierre comercial"
           value={formatCompactMoney(metrics.wonRevenue)}
           hint={`${formatNumber(metrics.wonDealsCount)} negocios · ${formatPercent(metrics.winRate)} tasa de cierre`}
+          badgeText={formatPercent(metrics.winRate)}
+          badgeVariant="lime"
         />
         <StatCard
           icon={KanbanSquare}
           label="Ventas en curso"
+          subPeriod="Pipeline abierto"
           value={formatCompactMoney(metrics.openPipelineValue)}
           hint={`${formatNumber(metrics.openDealsCount)} negocios en curso`}
+          badgeText="En curso"
+          badgeVariant="dark"
         />
         <StatCard
           icon={Users}
           label="Prospectos"
+          subPeriod="Captación 7 días"
           value={formatNumber(metrics.totalLeads)}
           hint={
             metrics.leadsThisWeek > 0
               ? `+${formatNumber(metrics.leadsThisWeek)} en los últimos 7 días`
               : "Ninguno nuevo esta semana"
           }
+          badgeText={metrics.leadsThisWeek > 0 ? `+${metrics.leadsThisWeek}` : "Activo"}
+          badgeVariant="lime"
         />
         <StatCard
           icon={CheckSquare}
-          label="Tareas pendientes"
+          label="Tareas operativas"
+          subPeriod="Gestión de equipo"
           value={formatNumber(metrics.pendingTasks)}
           hint={
             metrics.overdueTasks > 0
               ? `${formatNumber(metrics.overdueTasks)} vencidas, revísalas primero`
-              : "Nada vencido"
+              : "Todo al día"
           }
+          badgeText={metrics.overdueTasks > 0 ? `${metrics.overdueTasks} alertas` : "Al día"}
+          badgeVariant={metrics.overdueTasks > 0 ? "dark" : "lime"}
         />
       </div>
 
@@ -149,4 +162,3 @@ export default function IndividualBrandDashboard({
     </div>
   );
 }
-

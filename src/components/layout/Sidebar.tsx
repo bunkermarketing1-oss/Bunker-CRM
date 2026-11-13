@@ -191,7 +191,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`w-64 bg-white border-r border-[#EAECF0] flex flex-col h-screen fixed left-0 top-0 z-40 select-none p-4 transition-transform duration-200 lg:translate-x-0 ${
+        className={`w-64 bg-white dark:bg-[#121417] border-r border-[#E2E5EB] dark:border-[#1F242D] flex flex-col h-screen fixed left-0 top-0 z-40 select-none p-4 transition-transform duration-200 lg:translate-x-0 ${
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
@@ -412,19 +412,25 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
-      className={`relative flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-colors ${
+      className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs transition-all ${
         isActive
-          ? "bg-[#0F172A] text-white font-medium shadow-2xs"
-          : "text-[#475467] hover:text-[#101828] hover:bg-[#F8F9FA] font-normal border border-transparent"
+          ? "bg-[#121417] dark:bg-white text-white dark:text-[#121417] font-bold shadow-xs"
+          : "text-[#475467] hover:text-[#121417] dark:text-[#94A3B8] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] font-medium"
       }`}
     >
-      {isActive && (
-        <span className="absolute left-0 top-2 bottom-2 w-[2.5px] rounded-r-full bg-amber-400" />
-      )}
-      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-amber-400" : "text-[#667085]"}`} />
+      <Icon
+        className={`w-4 h-4 flex-shrink-0 transition-colors ${
+          isActive
+            ? "text-[#D4F933] dark:text-[#121417]"
+            : "text-[#8C929D] group-hover:text-[#121417]"
+        }`}
+      />
       <span className="truncate">{label}</span>
-      {item.badge && (
-        <span className="ml-auto text-[9px] font-mono font-medium bg-amber-50 text-amber-800 border border-amber-200 px-1.5 rounded">
+      {isActive && (
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#D4F933] dark:bg-[#121417] shrink-0" />
+      )}
+      {item.badge && !isActive && (
+        <span className="ml-auto text-[9px] font-bold bg-[#D4F933] text-[#121417] px-2 py-0.5 rounded-full shadow-2xs">
           {item.badge}
         </span>
       )}

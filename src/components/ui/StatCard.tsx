@@ -1,36 +1,98 @@
 import React from "react";
 import type { LucideIcon } from "lucide-react";
 
-interface StatCardProps {
+export interface StatCardProps {
   label: string;
   value: string;
   icon: LucideIcon;
   /** Línea de contexto bajo la cifra (comparación, desglose o aclaración). */
   hint?: string;
   emphasis?: boolean;
+  /** Badge opcional estilo cápsula Orvion (ej: "+12.4%", "Activo", "En meta") */
+  badgeText?: string;
+  badgeVariant?: "lime" | "dark" | "pill";
+  /** Etiqueta de periodo o subtítulo (ej: "Esta semana", "Total histórico") */
+  subPeriod?: string;
+  /** Indicador visual decorativo estilo Orvion */
+  showMiniChart?: boolean;
 }
 
-export default function StatCard({ label, value, icon: Icon, hint, emphasis = false }: StatCardProps) {
+export default function StatCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+  emphasis = false,
+  badgeText,
+  badgeVariant = "lime",
+  subPeriod,
+  showMiniChart = true,
+}: StatCardProps) {
   return (
     <div
-      className={`p-5 rounded-3xl border flex flex-col gap-3 ${
-        emphasis ? "bg-[#141414] border-[#D4AF37]/40 text-[#FAF8F3] shadow-[0_4px_20px_-6px_rgba(212,175,55,0.25)]" : "bg-white border-[#ECEAE3]"
+      className={`relative overflow-hidden p-5 rounded-[28px] border transition-all duration-300 flex flex-col justify-between group ${
+        emphasis
+          ? "bg-white dark:bg-[#121417] border-[#121417] dark:border-white/20 shadow-orvion hover:shadow-lg"
+          : "bg-white dark:bg-[#121417] border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion hover:shadow-lg hover:-translate-y-0.5"
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className={`text-[11px] font-semibold uppercase tracking-wider ${emphasis ? "text-[#C5C2BA]" : "text-[#8C887E]"}`}>
-          {label}
-        </span>
-        <span
-          className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-            emphasis ? "bg-[#D4AF37]/15" : "bg-[#FBF7ED] dark:bg-[#2A2415] border border-[#F2E5C4] dark:border-[#473a1e]"
-          }`}
-        >
-          <Icon className={`w-4 h-4 ${emphasis ? "text-[#E5C158]" : "text-[#9A7320] dark:text-[#E5C158]"}`} />
-        </span>
+      {/* Cabecera de la tarjeta: Título y píldora con icono */}
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C929D]">
+            {label}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-8 h-8 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] flex items-center justify-center text-[#121417] dark:text-white transition-colors group-hover:scale-105">
+              <Icon className="w-4 h-4 text-[#121417] dark:text-[#D4F933]" />
+            </span>
+          </div>
+        </div>
+
+        {subPeriod && (
+          <p className="text-[11px] font-medium text-[#8C929D] mt-1">
+            {subPeriod}
+          </p>
+        )}
+
+        {/* Cifra grande y píldora de crecimiento / estado */}
+        <div className="flex items-baseline justify-between gap-2 mt-3">
+          <div className="text-3xl font-black tracking-tight text-[#121417] dark:text-white leading-none">
+            {value}
+          </div>
+          {badgeText && (
+            <span
+              className={
+                badgeVariant === "dark"
+                  ? "orvion-badge-dark"
+                  : "orvion-badge-lime"
+              }
+            >
+              {badgeText}
+            </span>
+          )}
+        </div>
       </div>
-      <div className={`text-3xl tracking-tight leading-none ${emphasis ? "text-[#FAF8F3]" : "text-[#141414]"}`}>{value}</div>
-      {hint && <div className={`text-[11px] leading-snug ${emphasis ? "text-[#A09B90]" : "text-[#6B6861]"}`}>{hint}</div>}
+
+      {/* Micro-gráfica decorativa estilo Orvion y texto de soporte */}
+      <div className="mt-4 pt-2 border-t border-[#F2F4F7] dark:border-[#1F242D]/50">
+        {showMiniChart && (
+          <div className="flex items-end gap-1 h-3 mb-2 opacity-60 group-hover:opacity-100 transition-opacity">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#E2E5EB] dark:bg-[#2A2E37]" />
+            <div className="w-1.5 h-2 rounded-full bg-[#E2E5EB] dark:bg-[#2A2E37]" />
+            <div className="w-1.5 h-2.5 rounded-full bg-[#E2E5EB] dark:bg-[#2A2E37]" />
+            <div className="w-1.5 h-2 rounded-full bg-[#E2E5EB] dark:bg-[#2A2E37]" />
+            <div className="w-1.5 h-3 rounded-full bg-[#D4F933]" />
+            <div className="w-1.5 h-2 rounded-full bg-[#D4F933]/60" />
+            <div className="w-1.5 h-2.5 rounded-full bg-[#D4F933]" />
+          </div>
+        )}
+        {hint && (
+          <div className="text-xs text-[#8C929D] font-medium leading-snug">
+            {hint}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

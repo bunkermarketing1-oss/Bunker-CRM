@@ -8,9 +8,14 @@ import {
   AlertCircle,
   ArrowLeft,
   Building2,
+  Calendar,
+  ChevronRight,
+  Inbox,
+  LayoutGrid,
   LineChart,
+  Plus,
+  Users,
 } from "lucide-react";
-import PageHeader from "@/components/ui/PageHeader";
 import GeneralDashboardGrid from "@/components/dashboard/GeneralDashboardGrid";
 import IndividualBrandDashboard from "@/components/dashboard/IndividualBrandDashboard";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -29,77 +34,125 @@ function DashboardPageContent() {
   const isClient = Boolean(user?.isClientUser);
   const metrics = dashboard?.metrics;
 
-  const today = new Intl.DateTimeFormat("es-CO", { weekday: "long", day: "numeric", month: "long" }).format(now);
+  const today = new Intl.DateTimeFormat("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(now);
   const formattedToday = `${today.charAt(0).toUpperCase()}${today.slice(1)}`;
 
   return (
     <div className="space-y-6">
-      {/* Cabecera dinámica: Panel individual de marca vs Dashboard General de empresas */}
-      {activeClient && !isClient ? (
-        <div className="space-y-3">
+      {/* 1. Barra Flotante Superior Estilo Cápsula Orvion */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Píldoras de Navegación Rápida */}
+        <div className="bg-white dark:bg-[#121417] p-1.5 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion inline-flex items-center gap-1 overflow-x-auto">
           <Link
             href={ROUTES.DASHBOARD}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-xs font-semibold text-[#344054] shadow-2xs transition-colors"
+            className="px-4 py-2 rounded-full text-xs font-bold bg-[#121417] dark:bg-white text-white dark:text-[#121417] shadow-xs flex items-center gap-1.5 transition-all"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#667085]" />
-            <span>Volver a todas las marcas</span>
+            <LayoutGrid className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
+            <span>Dashboard</span>
           </Link>
-          <PageHeader
-            section={`Empresa: ${activeClient.name}`}
-            title={`Panel de ${activeClient.name}`}
-            description={`${formattedToday} · Métricas e información en tiempo real`}
-            actions={
-              <>
-                <Link
-                  href={`/inbox?clientId=${activeClient.id}`}
-                  className="h-9 px-3.5 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] flex items-center gap-1.5 hover:bg-[#F8F9FA]"
-                >
-                  Bandeja de Entrada
-                </Link>
-                <Link
-                  href={`/crm/clients/${activeClient.id}`}
-                  className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5"
-                >
-                  Ficha de la Empresa
-                </Link>
-              </>
-            }
-          />
+          <Link
+            href={ROUTES.REPORTS}
+            className="px-4 py-2 rounded-full text-xs font-semibold text-[#667085] hover:text-[#121417] dark:text-[#94A3B8] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] flex items-center gap-1.5 transition-all"
+          >
+            <LineChart className="w-3.5 h-3.5" />
+            <span>Métricas</span>
+          </Link>
+          <Link
+            href={ROUTES.INBOX}
+            className="px-4 py-2 rounded-full text-xs font-semibold text-[#667085] hover:text-[#121417] dark:text-[#94A3B8] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] flex items-center gap-1.5 transition-all"
+          >
+            <Inbox className="w-3.5 h-3.5" />
+            <span>Bandeja</span>
+          </Link>
+          <Link
+            href={ROUTES.LEADS}
+            className="px-4 py-2 rounded-full text-xs font-semibold text-[#667085] hover:text-[#121417] dark:text-[#94A3B8] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] flex items-center gap-1.5 transition-all"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Prospectos</span>
+          </Link>
         </div>
-      ) : (
-        <PageHeader
-          section={isClient ? "Portal" : "Directorio"}
-          title={isClient ? `Resumen de ${user?.clientName ?? "tu empresa"}` : "Panel General de Empresas"}
-          description={
-            isClient
-              ? `${formattedToday} · Estado de tu cuenta y prospectos`
-              : `${formattedToday} · Selecciona cualquier empresa para abrir su panel de control`
-          }
-          actions={
-            !isClient ? (
-              <>
-                <Link
-                  href={ROUTES.CLIENTS}
-                  className="h-9 px-3.5 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] flex items-center gap-1.5 hover:bg-[#F8F9FA]"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-[#667085]" />
-                  Empresas
-                </Link>
-                <Link
-                  href={ROUTES.REPORTS}
-                  className="btn-black-gold h-9 px-3.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5"
-                >
-                  <LineChart className="w-3.5 h-3.5 text-amber-400" />
-                  Reportes
-                </Link>
-              </>
-            ) : null
-          }
-        />
-      )}
+
+        {/* Cápsula de Fecha y Botón de Acción Rápida */}
+        <div className="flex items-center gap-2">
+          <div className="bg-white dark:bg-[#121417] px-3.5 py-2 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-2 text-xs font-semibold text-[#121417] dark:text-white">
+            <Calendar className="w-3.5 h-3.5 text-[#8C929D]" />
+            <span>{formattedToday}</span>
+          </div>
+
+          {!isClient && (
+            <Link
+              href={ROUTES.CLIENTS}
+              className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
+              <span>Nueva Empresa</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Banner de Título Heroico Estilo Orvion */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-1.5 text-xs text-[#8C929D] font-medium">
+            <span>Bunker CRM</span>
+            <ChevronRight className="w-3 h-3" />
+            <span className="font-semibold text-[#121417] dark:text-white">
+              {activeClient ? activeClient.name : isClient ? user?.clientName ?? "Tu Empresa" : "Directorio General"}
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight">
+            {activeClient
+              ? `Panel de ${activeClient.name}`
+              : isClient
+              ? `Resumen de ${user?.clientName ?? "tu empresa"}`
+              : "Rendimiento General de Empresas"}
+          </h1>
+
+          <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#D4F933] shadow-xs animate-pulse" />
+            <span>
+              {activeClient
+                ? "Métricas en tiempo real, canales integrados y estado de captación"
+                : isClient
+                ? "Estado operativo, canales conectados y prospectos recientes"
+                : "Monitoreo centralizado multimarca, volumen comercial y conexiones activas"}
+            </span>
+          </p>
+        </div>
+
+        {/* Acciones en cápsulas secundarias */}
+        {activeClient && !isClient && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href={ROUTES.DASHBOARD}
+              className="px-4 py-2 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] text-xs font-semibold text-[#121417] dark:text-white shadow-orvion flex items-center gap-1.5 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#8C929D]" />
+              <span>Volver a todas</span>
+            </Link>
+            <Link
+              href={`/inbox?clientId=${activeClient.id}`}
+              className="px-4 py-2 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] text-xs font-semibold text-[#121417] dark:text-white shadow-orvion flex items-center gap-1.5 transition-all"
+            >
+              <Inbox className="w-3.5 h-3.5 text-[#8C929D]" />
+              <span>Bandeja</span>
+            </Link>
+            <Link
+              href={`/crm/clients/${activeClient.id}`}
+              className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#D4F933]" />
+              <span>Ficha CRM</span>
+            </Link>
+          </div>
+        )}
+      </div>
 
       {error && (
-        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+        <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-400 flex items-center gap-2.5 shadow-orvion">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -144,12 +197,13 @@ function DashboardSkeleton() {
     <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Cargando panel">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-36 rounded-3xl bg-white border border-[#EAECF0]" />
+          <div key={i} className="h-40 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
         ))}
       </div>
+      <div className="h-14 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-72 rounded-3xl bg-white border border-[#EAECF0]" />
+          <div key={i} className="h-80 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
         ))}
       </div>
     </div>

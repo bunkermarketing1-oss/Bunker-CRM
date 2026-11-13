@@ -161,13 +161,13 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
   const breadcrumbs = getBreadcrumbs(pathname || "/");
 
   return (
-    <header className="h-16 bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-md border-b border-[#EAECF0] dark:border-slate-800 fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
+    <header className="h-16 bg-white/95 dark:bg-[#121417]/95 backdrop-blur-md border-b border-[#E2E5EB] dark:border-[#1F242D] fixed top-0 right-0 left-0 lg:left-64 z-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Abrir menú"
-          className="lg:hidden w-9 h-9 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-center text-[#101828] dark:text-slate-100 flex-shrink-0"
+          className="lg:hidden w-9 h-9 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center text-[#121417] dark:text-white flex-shrink-0"
         >
           <Menu className="w-4 h-4" />
         </button>
@@ -179,12 +179,12 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
             return (
               <React.Fragment key={crumb.label + idx}>
                 {idx > 0 && (
-                  <span className="text-[#98A2B3] dark:text-slate-600 font-light select-none">/</span>
+                  <span className="text-[#8C929D] dark:text-[#64748B] font-light select-none">/</span>
                 )}
                 {crumb.href && !isLast ? (
                   <Link
                     href={crumb.href}
-                    className="text-[#667085] dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 font-normal transition-colors truncate max-w-[150px]"
+                    className="text-[#8C929D] hover:text-[#121417] dark:hover:text-white font-medium transition-colors truncate max-w-[150px]"
                   >
                     {crumb.label}
                   </Link>
@@ -192,8 +192,8 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
                   <span
                     className={`truncate max-w-[180px] ${
                       isLast
-                        ? "font-semibold text-[#101828] dark:text-amber-400"
-                        : "text-[#667085] dark:text-slate-400 font-normal"
+                        ? "font-bold text-[#121417] dark:text-white"
+                        : "text-[#8C929D] font-medium"
                     }`}
                   >
                     {crumb.label}
@@ -205,7 +205,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
         </nav>
 
         {isClient && user?.clientName && (
-          <span className="hidden xl:inline text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+          <span className="hidden xl:inline orvion-badge-lime text-[11px]">
             {user.clientName}
           </span>
         )}
@@ -214,11 +214,11 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-3.5 pr-2 py-1.5 text-xs text-[#98A2B3] hover:border-amber-400 hover:shadow-[0_0_10px_rgba(245,158,11,0.15)] transition-all"
+        className="hidden md:flex items-center gap-2.5 w-72 lg:w-96 bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-4 pr-2 py-1.5 text-xs text-[#8C929D] hover:border-[#121417] dark:hover:border-white transition-all shadow-2xs"
       >
-        <Search className="w-3.5 h-3.5 text-[#98A2B3]" />
+        <Search className="w-3.5 h-3.5 text-[#8C929D]" />
         <span className="flex-1 text-left truncate">{t("topbar.search_placeholder", "Buscar prospectos, empresas, teléfonos...")}</span>
-        <kbd className="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded border border-[#EAECF0] text-[#475467]">{isMac ? "⌘K" : "Ctrl K"}</kbd>
+        <kbd className="text-[10px] font-mono bg-white dark:bg-[#121417] px-2 py-0.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] text-[#475467] dark:text-[#94A3B8]">{isMac ? "⌘K" : "Ctrl K"}</kbd>
       </button>
 
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -226,7 +226,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           type="button"
           onClick={onOpenSearch}
           aria-label="Buscar"
-          className="md:hidden w-9 h-9 rounded-2xl bg-white border border-[#EAECF0] flex items-center justify-center text-[#101828]"
+          className="md:hidden w-9 h-9 rounded-full bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center text-[#121417] dark:text-white"
         >
           <Search className="w-4 h-4" />
         </button>
@@ -236,9 +236,9 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           onClick={toggleTheme}
           title={theme === "dark" ? t("topbar.light_mode", "Modo Claro") : t("topbar.dark_mode", "Modo Oscuro")}
           aria-label="Cambiar tema"
-          className="w-9 h-9 rounded-2xl bg-white border border-[#EAECF0] flex items-center justify-center hover:bg-[#F8F9FA] transition-colors"
+          className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center hover:bg-[#F8F9FA] dark:hover:bg-[#202530] transition-colors"
         >
-          {theme === "dark" ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-[#667085]" />}
+          {theme === "dark" ? <Sun className="w-4 h-4 text-[#D4F933]" /> : <Moon className="w-4 h-4 text-[#667085]" />}
         </button>
 
         <button
@@ -246,18 +246,18 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           onClick={toggleLanguage}
           title={language === "es" ? "Switch to English" : "Cambiar a Español"}
           aria-label="Cambiar idioma"
-          className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-2xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#101828] hover:bg-[#F8F9FA] transition-colors"
+          className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] text-xs font-semibold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#202530] transition-colors"
         >
-          <Globe className="w-3.5 h-3.5 text-[#667085]" />
+          <Globe className="w-3.5 h-3.5 text-[#8C929D]" />
           <span className="uppercase">{language}</span>
         </button>
 
         <Link
           href={ROUTES.LEADS}
-          className="btn-black-gold rounded-2xl h-9 px-3 sm:px-4 text-xs font-semibold flex items-center gap-1.5"
+          className="rounded-full h-9 px-4 bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
           aria-label={t("topbar.register_lead", "+ Registrar Lead")}
         >
-          <Plus className="w-3.5 h-3.5 text-amber-400" />
+          <Plus className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
           <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
         </Link>
 
@@ -269,54 +269,54 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
             onClick={() => setShowUserMenu((open) => !open)}
             aria-expanded={showUserMenu}
             aria-label="Menú de usuario"
-            className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-2xl bg-white border border-[#EAECF0] text-xs font-medium text-[#101828] hover:bg-[#F8F9FA]"
+            className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-full bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] text-xs font-medium text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#202530] transition-colors"
           >
-            <span className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 text-[10px] font-bold flex items-center justify-center shadow-xs">
+            <span className="w-7 h-7 rounded-full bg-[#121417] dark:bg-white text-white dark:text-[#121417] text-[10px] font-black flex items-center justify-center shadow-xs">
               {initialsOf(user?.name, isClient ? "CL" : "BA")}
             </span>
             <span className="hidden xl:flex flex-col text-left leading-tight">
-              <span className="font-semibold text-xs text-[#101828]">{user?.name || "Cargando..."}</span>
-              <span className="text-[10px] text-[#667085]">{roleBadge.label}</span>
+              <span className="font-bold text-xs text-[#121417] dark:text-white">{user?.name || "Cargando..."}</span>
+              <span className="text-[10px] text-[#8C929D] font-medium">{roleBadge.label}</span>
             </span>
-            <ChevronDown className="hidden sm:block w-3 h-3 text-[#667085]" />
+            <ChevronDown className="hidden sm:block w-3 h-3 text-[#8C929D]" />
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 top-11 w-64 bg-white border border-[#EAECF0] rounded-3xl p-3 shadow-2xl z-50">
-              <div className="p-2.5 bg-[#F8F9FA] rounded-2xl border border-[#EAECF0] mb-2">
-                <p className="text-xs font-bold text-[#101828] truncate">{user?.name}</p>
-                <p className="text-[11px] text-[#667085] truncate">{user?.email}</p>
-                <div className="mt-2 pt-2 border-t border-[#EAECF0] flex items-center justify-between gap-2 text-[10px]">
-                  <span className="flex items-center gap-1 text-[#475467] min-w-0">
-                    <Building2 className="w-3 h-3 text-[#667085] flex-shrink-0" />
+            <div className="absolute right-0 top-11 w-64 bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[24px] p-3 shadow-orvion z-50">
+              <div className="p-3 bg-[#F8F9FA] dark:bg-[#1A1D24] rounded-2xl border border-[#E2E5EB] dark:border-[#2A2E37] mb-2">
+                <p className="text-xs font-extrabold text-[#121417] dark:text-white truncate">{user?.name}</p>
+                <p className="text-[11px] text-[#8C929D] truncate font-medium">{user?.email}</p>
+                <div className="mt-2 pt-2 border-t border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between gap-2 text-[10px]">
+                  <span className="flex items-center gap-1 text-[#475467] dark:text-[#94A3B8] min-w-0">
+                    <Building2 className="w-3 h-3 text-[#8C929D] flex-shrink-0" />
                     <span className="truncate">{accountName}</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full font-semibold border whitespace-nowrap ${roleBadge.color}`}>{roleBadge.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full font-bold border whitespace-nowrap ${roleBadge.color}`}>{roleBadge.label}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={toggleLanguage}
-                className="sm:hidden w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-[#101828] hover:bg-[#F8F9FA] flex items-center gap-2"
+                className="sm:hidden w-full text-left px-3 py-2 rounded-full text-xs font-semibold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1E2229] flex items-center gap-2"
               >
-                <Globe className="w-3.5 h-3.5 text-[#667085]" />
+                <Globe className="w-3.5 h-3.5 text-[#8C929D]" />
                 {language === "es" ? "Switch to English" : "Cambiar a Español"}
               </button>
 
-              <div className="px-3 py-1.5 text-[10px] text-[#667085] flex items-center gap-1.5">
+              <div className="px-3 py-1.5 text-[10px] text-[#8C929D] font-medium flex items-center gap-1.5">
                 <Shield className="w-3 h-3 text-emerald-600" />
                 <span>{t("topbar.verified_perms", "Permisos verificados por servidor")}</span>
               </div>
 
-              <div className="mt-1 pt-2 border-t border-[#EAECF0]">
+              <div className="mt-1 pt-2 border-t border-[#E2E5EB] dark:border-[#1F242D]">
                 <button
                   type="button"
                   onClick={() => {
                     setShowUserMenu(false);
                     logout();
                   }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-3.5 py-2 rounded-full text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>{t("topbar.logout", "Cerrar Sesión")}</span>

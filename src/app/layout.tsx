@@ -35,7 +35,7 @@ export default function RootLayout({
         />
         <link rel="icon" href="/bunker-logo.png" />
       </head>
-      <body className="bg-[#F8F9FA] text-[#101828] min-h-screen">
+      <body className="bg-[#ECEEF2] text-[#121417] min-h-screen">
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
