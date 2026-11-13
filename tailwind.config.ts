@@ -41,6 +41,18 @@ const config: Config = {
           hover: "#1E293B",
           card: "#FFFFFF",
         },
+        orvion: {
+          bg: "#ECEEF2",
+          surface: "#FFFFFF",
+          dark: "#121417",
+          darkHover: "#1E2229",
+          lime: "#D4F933",
+          limeHover: "#C4EA22",
+          limeLight: "rgba(212, 249, 51, 0.2)",
+          pill: "#F3F4F7",
+          border: "#E2E5EB",
+          muted: "#8C929D",
+        },
         bunker: {
           50: "#FFFBEB",
           100: "#FEF3C7",
@@ -72,6 +84,14 @@ const config: Config = {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
+      },
+      borderRadius: {
+        "orvion-card": "28px",
+        "orvion-pill": "9999px",
+      },
+      boxShadow: {
+        "orvion-card": "0 10px 30px -4px rgba(18, 20, 23, 0.04), 0 2px 8px -2px rgba(18, 20, 23, 0.02)",
+        "orvion-glow": "0 0 25px -2px rgba(212, 249, 51, 0.4)",
       },
       fontFamily: {
         sans: [
