@@ -15,22 +15,22 @@ interface LiveCallsPanelProps {
 /** Llamadas en curso de los asesores; el supervisor puede escuchar o susurrar. */
 export function LiveCallsPanel({ calls, canJoin, onMonitor }: LiveCallsPanelProps) {
   return (
-    <section className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-[#F2F4F7]">
-        <h2 className="text-sm font-bold text-[#101828] flex items-center gap-2">
+    <section className="p-5 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-[#F2F4F7] dark:border-[#1F242D]">
+        <h2 className="text-sm font-black text-[#121417] dark:text-white flex items-center gap-2 tracking-tight">
           <div className="relative flex items-center justify-center">
             {calls.length > 0 && (
-              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-rose-400 opacity-75" />
             )}
-            <Radio className={`w-4 h-4 ${calls.length > 0 ? "text-red-600" : "text-[#98A2B3]"}`} />
+            <Radio className={`w-4 h-4 ${calls.length > 0 ? "text-rose-600" : "text-[#8C929D]"}`} />
           </div>
           <span>Supervisión en Vivo</span>
         </h2>
         <span
-          className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-semibold ${
+          className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full border font-bold ${
             calls.length > 0
-              ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
-              : "bg-[#F8F9FA] text-[#667085] border-[#EAECF0]"
+              ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 animate-pulse"
+              : "bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#8C929D] border-[#E2E5EB] dark:border-[#242A35]"
           }`}
         >
           {calls.length} en curso
@@ -38,29 +38,29 @@ export function LiveCallsPanel({ calls, canJoin, onMonitor }: LiveCallsPanelProp
       </div>
 
       {calls.length === 0 ? (
-        <div className="py-6 px-4 text-center rounded-xl bg-[#F9FAFB] border border-[#EAECF0]/60 space-y-1">
-          <p className="text-xs font-medium text-[#475467]">Ninguna llamada activa en este momento</p>
-          <p className="text-[11px] text-[#98A2B3]">
+        <div className="py-7 px-4 text-center rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-dashed border-[#E2E5EB] dark:border-[#242A35] space-y-1">
+          <p className="text-xs font-bold text-[#121417] dark:text-white">Ninguna llamada activa en este momento</p>
+          <p className="text-[11px] text-[#8C929D] font-medium max-w-xs mx-auto">
             Cuando un asesor o cliente esté en llamada, aparecerá aquí para escuchar o asistir en tiempo real.
           </p>
         </div>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="space-y-3">
           {calls.map((call) => {
             const label = `${call.userName ?? "Asesor"} → ${call.leadName ?? call.toNumber}`;
             return (
               <li
                 key={call.id}
-                className="p-3.5 rounded-xl bg-gradient-to-r from-red-50/40 via-white to-red-50/20 border border-red-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-rose-200/80 dark:border-rose-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
               >
                 <div className="min-w-0 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-red-100/70 border border-red-200 flex items-center justify-center text-red-700 flex-shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center text-rose-600 dark:text-rose-400 flex-shrink-0">
                     <User className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#101828] truncate">{label}</p>
-                    <p className="text-[11px] text-[#667085] flex items-center gap-1.5 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                    <p className="text-xs font-bold text-[#121417] dark:text-white truncate">{label}</p>
+                    <p className="text-[11px] text-[#8C929D] flex items-center gap-1.5 mt-0.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
                       <span>{call.answeredAt ? `En llamada desde ${new Date(call.answeredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : "Timbrando al destinatario…"}</span>
                     </p>
                   </div>
@@ -71,20 +71,20 @@ export function LiveCallsPanel({ calls, canJoin, onMonitor }: LiveCallsPanelProp
                     type="button"
                     disabled={!canJoin}
                     onClick={() => onMonitor(call.id, MONITOR_MODE.LISTEN, label)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white border border-[#D0D5DD] hover:border-amber-400 hover:bg-amber-50 text-[11px] font-semibold text-[#344054] flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#242A35] hover:border-amber-400 text-[11px] font-bold text-[#121417] dark:text-white flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-2xs cursor-pointer"
                     title="Escuchar la llamada en modo silencioso (nadie te oye)"
                   >
-                    <Ear className="w-3.5 h-3.5 text-amber-600" />
+                    <Ear className="w-3.5 h-3.5 text-amber-500" />
                     <span>Escuchar</span>
                   </button>
                   <button
                     type="button"
                     disabled={!canJoin}
                     onClick={() => onMonitor(call.id, MONITOR_MODE.WHISPER, label)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white border border-[#D0D5DD] hover:border-blue-400 hover:bg-blue-50 text-[11px] font-semibold text-[#344054] flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#242A35] hover:border-blue-400 text-[11px] font-bold text-[#121417] dark:text-white flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-2xs cursor-pointer"
                     title="Hablar únicamente con el asesor (el lead no te escucha)"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
                     <span>Susurrar</span>
                   </button>
                 </div>

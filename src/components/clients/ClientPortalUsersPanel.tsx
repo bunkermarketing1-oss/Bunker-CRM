@@ -193,22 +193,22 @@ export function ClientPortalUsersPanel({
   };
 
   return (
-    <section className="p-5 rounded-2xl bg-white border border-[#E8E6DF] shadow-sm space-y-4">
+    <section className="p-6 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-5 transition-all">
       {/* Cabecera del Panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#F0EEE8]">
-        <div className="space-y-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F2F4F7] dark:border-[#1F242D]">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm text-[#1F1E1D] flex items-center gap-2">
-              <UserCog className="w-4 h-4 text-[#D97757]" />
+            <h3 className="font-black text-sm text-[#121417] dark:text-white flex items-center gap-2 tracking-tight">
+              <UserCog className="w-4 h-4 text-amber-500" />
               Usuarios del portal
             </h3>
             {users.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-[#1F1E1D] border border-neutral-200">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#242A35]">
                 {users.length} {users.length === 1 ? "usuario" : "usuarios"}
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[#82807C] leading-relaxed">
+          <p className="text-[11px] text-[#8C929D] font-medium leading-relaxed">
             Estructura del cliente: Cuenta del Dueño (supervisa vendedores y llamadas) y Vendedores comerciales (atienden leads e inbox). Ambos ven métricas de campañas publicitarias en modo de solo lectura.
           </p>
         </div>
@@ -217,69 +217,69 @@ export function ClientPortalUsersPanel({
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] hover:bg-[#2A2826] font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all self-start sm:self-auto flex-shrink-0 cursor-pointer"
+            className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] font-bold text-xs flex items-center gap-1.5 shadow-orvion transition-all hover:scale-[1.01] active:scale-[0.99] self-start sm:self-auto flex-shrink-0 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
+            <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
             <span>Crear Usuario</span>
           </button>
         )}
       </div>
 
       {error && (
-        <div role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+        <div role="alert" className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400">
           {error}
         </div>
       )}
 
       {/* Lista de Usuarios o Estado Vacío */}
       {users.length === 0 ? (
-        <div className="p-5 rounded-xl bg-[#FAF9F5] border border-dashed border-[#E8E6DF] text-center space-y-2.5">
-          <p className="text-xs font-medium text-[#1F1E1D]">
+        <div className="p-8 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-dashed border-[#E2E5EB] dark:border-[#242A35] text-center space-y-3">
+          <p className="text-xs font-bold text-[#121417] dark:text-white">
             Esta empresa todavía no tiene usuarios en el portal.
           </p>
-          <p className="text-[11px] text-[#82807C] max-w-md mx-auto">
+          <p className="text-[11px] text-[#8C929D] font-medium max-w-md mx-auto">
             Crea las credenciales de acceso para que el dueño o sus asesores comerciales ingresen a gestionar sus prospectos en su portal de cliente.
           </p>
           {onCreateUser && (
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F1E1D] text-[#E5C158] text-xs font-semibold shadow-xs hover:bg-[#2A2826] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-orvion transition-all cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
               <span>Crear Primer Usuario</span>
             </button>
           )}
         </div>
       ) : (
-        <ul className="divide-y divide-[#F0EEE8]">
+        <ul className="divide-y divide-[#F2F4F7] dark:divide-[#1F242D]">
           {users.map((portalUser) => {
             const isOwner = isClientOwnerRole(portalUser.role);
             return (
-              <li key={portalUser.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <li key={portalUser.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[#1F1E1D] flex items-center justify-center font-bold text-xs flex-shrink-0">
+                  <div className="w-9 h-9 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] text-[#121417] dark:text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
                     {portalUser.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#1F1E1D] flex items-center gap-1.5 truncate">
+                    <p className="text-xs font-bold text-[#121417] dark:text-white flex items-center gap-1.5 truncate">
                       {portalUser.name}
                       {isOwner ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                           <Crown className="w-3 h-3 text-amber-500" /> Dueño
                         </span>
                       ) : (
-                        <span className="text-[10px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
+                        <span className="text-[10px] font-bold text-[#667085] dark:text-[#8C929D] bg-[#F8F9FA] dark:bg-[#1A1D24] px-2 py-0.5 rounded-full border border-[#E2E5EB] dark:border-[#242A35]">
                           Asesor
                         </span>
                       )}
                       {!portalUser.isActive && (
-                        <span className="text-[10px] font-normal text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50">
                           (inactivo)
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-[#82807C] truncate mt-0.5">{portalUser.email}</p>
+                    <p className="text-[11px] text-[#8C929D] font-medium truncate mt-0.5">{portalUser.email}</p>
                   </div>
                 </div>
 
@@ -291,14 +291,14 @@ export function ClientPortalUsersPanel({
                       disabled={generatingResetId === portalUser.id}
                       onClick={() => handleGenerateReset(portalUser)}
                       title="Generar enlace de acceso / restablecer contraseña"
-                      className="p-1.5 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#716F6A] hover:text-[#1F1E1D] transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                      className="p-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-[#8C929D] hover:text-[#121417] dark:hover:text-white transition-colors text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                       {generatingResetId === portalUser.id ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D97757]" />
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
                       ) : (
-                        <KeyRound className="w-3.5 h-3.5 text-[#D97757]" />
+                        <KeyRound className="w-3.5 h-3.5 text-amber-500" />
                       )}
-                      <span className="text-[11px] hidden md:inline">Enlace Acceso</span>
+                      <span className="text-[11px] font-bold hidden md:inline">Enlace Acceso</span>
                     </button>
                   )}
 
@@ -308,7 +308,7 @@ export function ClientPortalUsersPanel({
                     value={isOwner ? ROLES.CLIENT_OWNER : ROLES.CLIENT}
                     disabled={savingId === portalUser.id}
                     onChange={(e) => onSetRole(portalUser.id, e.target.value as StoredUserRole)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white border border-[#E8E6DF] hover:border-[#1F1E1D] text-[11px] font-medium text-[#1F1E1D] disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                    className="px-3 py-1.5 rounded-full bg-white dark:bg-[#181B22] border border-[#E2E5EB] dark:border-[#242A35] hover:border-amber-400 text-[11px] font-bold text-[#121417] dark:text-white disabled:opacity-50 transition-colors shadow-2xs cursor-pointer focus:outline-hidden"
                   >
                     <option value={ROLES.CLIENT}>Asesor</option>
                     <option value={ROLES.CLIENT_OWNER}>Dueño</option>
@@ -324,10 +324,10 @@ export function ClientPortalUsersPanel({
                         setUserToDelete(portalUser);
                       }}
                       title={`Eliminar ${portalUser.name}`}
-                      className="p-1.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                      className="p-2 rounded-full border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 transition-colors text-xs flex items-center gap-1 shadow-2xs cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span className="text-[11px] hidden lg:inline">Eliminar</span>
+                      <span className="text-[11px] font-bold hidden lg:inline">Eliminar</span>
                     </button>
                   )}
                 </div>
@@ -339,19 +339,19 @@ export function ClientPortalUsersPanel({
 
       {/* Modal: Crear Nuevo Usuario para el Cliente */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl border border-[#E8E6DF] shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion max-w-lg w-full overflow-hidden">
             {/* Cabecera del Modal */}
-            <div className="p-5 border-b border-[#F0EEE8] flex items-center justify-between bg-[#FAF9F5]">
+            <div className="p-5 border-b border-[#F2F4F7] dark:border-[#1F242D] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#181B22]">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-[#1F1E1D] text-[#E5C158] flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                   <UserCog className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-[#1F1E1D]">
+                  <h4 className="font-black text-sm text-[#121417] dark:text-white tracking-tight">
                     Crear Usuario del Portal
                   </h4>
-                  <p className="text-[11px] text-[#716F6A]">
+                  <p className="text-[11px] text-[#8C929D] font-medium">
                     {clientName ? `Para ${clientName}` : "Para esta empresa"}
                   </p>
                 </div>
@@ -359,7 +359,7 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-neutral-200/60 text-[#716F6A] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white dark:bg-[#242A35] border border-[#E2E5EB] dark:border-[#2A2E37] text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -370,36 +370,36 @@ export function ClientPortalUsersPanel({
               {createdCredentials ? (
                 /* Pantalla de Éxito con Credenciales Copiables */
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-start gap-3">
+                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-xs text-emerald-900 dark:text-emerald-300 flex items-start gap-3">
                     <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div className="space-y-1">
                       <p className="font-bold">¡Usuario creado y activado exitosamente!</p>
-                      <p className="text-[11px] text-emerald-800">
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-400">
                         Copia las credenciales a continuación para enviarlas al cliente por WhatsApp o correo.
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-2.5 text-xs font-mono">
-                    <div className="flex justify-between items-center text-[#716F6A] border-b border-[#E8E6DF] pb-2 text-[11px] font-sans">
+                  <div className="p-4 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-[#E2E5EB] dark:border-[#242A35] space-y-2.5 text-xs font-mono">
+                    <div className="flex justify-between items-center text-[#8C929D] border-b border-[#E2E5EB] dark:border-[#242A35] pb-2 text-[11px] font-sans">
                       <span>Credenciales de Acceso</span>
-                      <span className="font-semibold text-neutral-900">
+                      <span className="font-bold text-[#121417] dark:text-white">
                         Rol: {createdCredentials.role === ROLES.CLIENT_OWNER ? "Dueño" : "Asesor"}
                       </span>
                     </div>
 
                     <div className="space-y-1.5 text-[11px]">
                       <div>
-                        <span className="text-[#8C887E]">Enlace de Login: </span>
-                        <span className="text-[#1F1E1D] font-bold">{getLoginUrl()}</span>
+                        <span className="text-[#8C929D]">Enlace de Login: </span>
+                        <span className="text-[#121417] dark:text-white font-bold">{getLoginUrl()}</span>
                       </div>
                       <div>
-                        <span className="text-[#8C887E]">Usuario (Correo): </span>
-                        <span className="text-[#1F1E1D] font-bold">{createdCredentials.email}</span>
+                        <span className="text-[#8C929D]">Usuario (Correo): </span>
+                        <span className="text-[#121417] dark:text-white font-bold">{createdCredentials.email}</span>
                       </div>
                       <div>
-                        <span className="text-[#8C887E]">Contraseña: </span>
-                        <span className="text-amber-800 font-bold bg-amber-100/70 px-2 py-0.5 rounded">
+                        <span className="text-[#8C929D]">Contraseña: </span>
+                        <span className="text-amber-800 dark:text-amber-300 font-bold bg-amber-100/70 dark:bg-amber-950/50 px-2 py-0.5 rounded-md">
                           {createdCredentials.password}
                         </span>
                       </div>
@@ -413,7 +413,7 @@ export function ClientPortalUsersPanel({
                         const msg = `¡Hola ${createdCredentials.name}! 👋\n\nTienes acceso al Portal de Clientes de Bunker CRM para ${clientName || "tu empresa"}.\n\n🔗 Enlace de acceso: ${getLoginUrl()}\n👤 Usuario: ${createdCredentials.email}\n🔑 Contraseña: ${createdCredentials.password}\n\nIngresa desde tu navegador para gestionar tus prospectos.`;
                         copyToClipboard(msg, () => setCopiedMessage(true));
                       }}
-                      className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#2A2826] transition-colors shadow-sm cursor-pointer"
+                      className="w-full sm:flex-1 py-2.5 px-4 rounded-full bg-[#121417] text-white hover:bg-[#1E2229] dark:bg-white dark:text-[#121417] font-bold text-xs flex items-center justify-center gap-2 shadow-orvion transition-all cursor-pointer"
                     >
                       {copiedMessage ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                       <span>{copiedMessage ? "¡Copiado al portapapeles!" : "Copiar Datos para WhatsApp / Email"}</span>
@@ -422,7 +422,7 @@ export function ClientPortalUsersPanel({
                     <button
                       type="button"
                       onClick={() => setIsCreateOpen(false)}
-                      className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#1F1E1D] transition-colors cursor-pointer"
+                      className="w-full sm:w-auto py-2.5 px-4 rounded-full border border-[#E2E5EB] dark:border-[#242A35] hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-bold text-[#121417] dark:text-white transition-colors cursor-pointer"
                     >
                       Cerrar
                     </button>
@@ -432,14 +432,14 @@ export function ClientPortalUsersPanel({
                 /* Formulario de Creación */
                 <form onSubmit={handleCreateSubmit} className="space-y-4">
                   {createError && (
-                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                    <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400">
                       {createError}
                     </div>
                   )}
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#1F1E1D]">
-                      Nombre Completo <span className="text-red-500">*</span>
+                    <label className="text-xs font-bold text-[#121417] dark:text-white pl-1">
+                      Nombre Completo <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -447,13 +447,13 @@ export function ClientPortalUsersPanel({
                       placeholder="Ej: Carlos Gómez"
                       value={createName}
                       onChange={(e) => setCreateName(e.target.value)}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#1F1E1D]">
-                      Correo Electrónico (Login) <span className="text-red-500">*</span>
+                    <label className="text-xs font-bold text-[#121417] dark:text-white pl-1">
+                      Correo Electrónico (Login) <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -461,58 +461,58 @@ export function ClientPortalUsersPanel({
                       placeholder="carlos@empresa.com"
                       value={createEmail}
                       onChange={(e) => setCreateEmail(e.target.value)}
-                      className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#1F1E1D]">
+                    <label className="text-xs font-bold text-[#121417] dark:text-white pl-1">
                       Rol en el Portal de la Empresa
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setCreateRole(ROLES.CLIENT)}
-                        className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                        className={`p-3 rounded-2xl text-left border transition-all cursor-pointer ${
                           createRole === ROLES.CLIENT
-                            ? "border-[#1F1E1D] bg-[#1F1E1D] text-white shadow-xs"
-                            : "border-[#E8E6DF] bg-white text-[#716F6A] hover:bg-[#FAF9F5]"
+                            ? "border-[#121417] bg-[#121417] text-white dark:border-white dark:bg-white dark:text-[#121417] shadow-xs"
+                            : "border-[#E2E5EB] dark:border-[#242A35] bg-white dark:bg-[#1A1D24] text-[#8C929D] hover:bg-[#F8F9FA]"
                         }`}
                       >
-                        <span className="block font-semibold text-xs">Vendedor Comercial</span>
+                        <span className="block font-bold text-xs">Vendedor Comercial</span>
                         <span className="block text-[10px] mt-0.5 opacity-80">
-                          Vendedor 1, 2... Atiende leads, llamadas e inbox.
+                          Atiende prospectos, llamadas e inbox multicanal.
                         </span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setCreateRole(ROLES.CLIENT_OWNER)}
-                        className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                        className={`p-3 rounded-2xl text-left border transition-all cursor-pointer ${
                           createRole === ROLES.CLIENT_OWNER
-                            ? "border-amber-600 bg-amber-50 text-amber-900 shadow-xs"
-                            : "border-[#E8E6DF] bg-white text-[#716F6A] hover:bg-[#FAF9F5]"
+                            ? "border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-300 shadow-xs"
+                            : "border-[#E2E5EB] dark:border-[#242A35] bg-white dark:bg-[#1A1D24] text-[#8C929D] hover:bg-[#F8F9FA]"
                         }`}
                       >
-                        <span className="block font-semibold text-xs flex items-center gap-1">
-                          <Crown className="w-3 h-3 text-amber-500" /> Dueño / Admin Cliente
+                        <span className="block font-bold text-xs flex items-center gap-1">
+                          <Crown className="w-3 h-3 text-amber-500" /> Dueño / Director
                         </span>
                         <span className="block text-[10px] mt-0.5 opacity-80">
-                          Supervisa en vivo y escucha llamadas.
+                          Supervisa en vivo, escucha llamadas y audita SLA.
                         </span>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-[#1F1E1D]">
+                    <div className="flex items-center justify-between pl-1">
+                      <label className="text-xs font-bold text-[#121417] dark:text-white">
                         Contraseña Inicial
                       </label>
                       <button
                         type="button"
                         onClick={() => setCreatePassword(generateRandomPassword())}
-                        className="text-[11px] text-[#D97757] hover:underline font-medium flex items-center gap-1 cursor-pointer"
+                        className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Sparkles className="w-3 h-3" />
                         <span>Generar aleatoria</span>
@@ -524,34 +524,34 @@ export function ClientPortalUsersPanel({
                         value={createPassword}
                         onChange={(e) => setCreatePassword(e.target.value)}
                         placeholder="Mínimo 6 caracteres"
-                        className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl pl-3 pr-10 py-2 text-xs font-mono text-[#1F1E1D] focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] rounded-full pl-4 pr-11 py-2.5 text-xs font-mono text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-2.5 text-[#9C9890] hover:text-[#1F1E1D] cursor-pointer"
+                        className="absolute right-3.5 top-2.5 text-[#8C929D] hover:text-[#121417] dark:hover:text-white cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <p className="text-[10px] text-[#8C887E]">
-                      Se le enviará a este usuario para que inicie sesión por primera vez.
+                    <p className="text-[10px] text-[#8C929D] pl-1 font-medium">
+                      Se le entregará a este usuario para su primer inicio de sesión.
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0EEE8]">
+                  <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#F2F4F7] dark:border-[#1F242D]">
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => setIsCreateOpen(false)}
-                      className="px-4 py-2 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#716F6A] cursor-pointer"
+                      className="px-4 py-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-bold text-[#8C929D] hover:text-[#121417] dark:hover:text-white cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-black-gold px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      className="px-5 py-2 rounded-full bg-[#121417] text-white hover:bg-[#1E2229] dark:bg-white dark:text-[#121417] text-xs font-bold flex items-center gap-1.5 shadow-orvion cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
@@ -560,7 +560,7 @@ export function ClientPortalUsersPanel({
                         </>
                       ) : (
                         <>
-                          <Plus className="w-3.5 h-3.5 text-[#E5C158]" />
+                          <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
                           <span>Crear Usuario</span>
                         </>
                       )}
@@ -575,40 +575,40 @@ export function ClientPortalUsersPanel({
 
       {/* Modal: Enlace de Acceso / Restablecimiento */}
       {resetModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl border border-[#E8E6DF] shadow-2xl max-w-md w-full overflow-hidden p-6 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F0EEE8]">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion max-w-md w-full overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F2F4F7] dark:border-[#1F242D]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                   <KeyRound className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-xs text-[#1F1E1D]">Enlace de Acceso / Reset</h4>
-                  <p className="text-[10px] text-[#716F6A]">{resetModalData.userName} ({resetModalData.userEmail})</p>
+                  <h4 className="font-bold text-xs text-[#121417] dark:text-white">Enlace de Acceso Seguro</h4>
+                  <p className="text-[10px] text-[#8C929D] font-medium">{resetModalData.userName} ({resetModalData.userEmail})</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setResetModalData(null)}
-                className="p-1 rounded-lg hover:bg-neutral-100 text-[#716F6A] cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-[#6B6966]">
+            <p className="text-xs text-[#8C929D] leading-relaxed">
               Este enlace permite al usuario acceder o restablecer su contraseña directamente en Supabase sin necesidad de recordar la anterior:
             </p>
 
-            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[11px] font-mono break-all text-[#1F1E1D]">
+            <div className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-[#E2E5EB] dark:border-[#242A35] text-[11px] font-mono break-all text-[#121417] dark:text-white">
               {resetModalData.recoveryUrl}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => copyToClipboard(resetModalData.recoveryUrl, () => setCopiedResetUrl(true))}
-                className="flex-1 py-2 px-3 rounded-xl bg-[#1F1E1D] text-[#E5C158] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:bg-[#2A2826] cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:text-[#121417] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-orvion cursor-pointer"
               >
                 {copiedResetUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedResetUrl ? "¡Enlace copiado!" : "Copiar Enlace"}</span>
@@ -616,7 +616,7 @@ export function ClientPortalUsersPanel({
               <button
                 type="button"
                 onClick={() => setResetModalData(null)}
-                className="px-3 py-2 rounded-xl border border-[#E8E6DF] text-xs font-semibold text-[#1F1E1D] hover:bg-[#FAF9F5] cursor-pointer"
+                className="px-4 py-2.5 rounded-full border border-[#E2E5EB] dark:border-[#242A35] text-xs font-bold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] cursor-pointer"
               >
                 Cerrar
               </button>
@@ -627,41 +627,41 @@ export function ClientPortalUsersPanel({
 
       {/* Modal: Confirmación de Eliminación de Usuario */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl border border-red-200 shadow-2xl max-w-md w-full overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F0EEE8]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-rose-200 dark:border-rose-900/60 shadow-orvion max-w-md w-full overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F2F4F7] dark:border-[#1F242D]">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-[#1F1E1D]">Eliminar Usuario</h4>
-                  <p className="text-[11px] text-[#716F6A]">Acción permanente e irreversible</p>
+                  <h4 className="font-bold text-sm text-[#121417] dark:text-white">Eliminar Usuario</h4>
+                  <p className="text-[11px] text-[#8C929D]">Acción permanente e irreversible</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setUserToDelete(null)}
                 disabled={isDeletingUser}
-                className="p-1 rounded-lg hover:bg-neutral-100 text-[#716F6A] cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {deleteError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400">
                 {deleteError}
               </div>
             )}
 
-            <p className="text-xs text-[#6B6966] leading-relaxed">
+            <p className="text-xs text-[#8C929D] leading-relaxed">
               ¿Estás seguro de que deseas eliminar permanentemente a{" "}
-              <strong className="text-[#1F1E1D]">{userToDelete.name}</strong> ({userToDelete.email})?
+              <strong className="text-[#121417] dark:text-white font-bold">{userToDelete.name}</strong> ({userToDelete.email})?
             </p>
 
-            <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-[11px] text-[#716F6A] space-y-1">
-              <p className="font-medium text-[#1F1E1D]">Se aplicará lo siguiente:</p>
+            <div className="p-4 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] text-[11px] text-[#8C929D] space-y-1.5">
+              <p className="font-bold text-[#121417] dark:text-white">Se aplicará lo siguiente:</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>Se desvinculará de los prospectos, actividades y llamadas asociadas.</li>
                 <li>Se eliminará su cuenta de acceso en Supabase Auth de forma inmediata.</li>
@@ -669,12 +669,12 @@ export function ClientPortalUsersPanel({
               </ul>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F0EEE8]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#F2F4F7] dark:border-[#1F242D]">
               <button
                 type="button"
                 disabled={isDeletingUser}
                 onClick={() => setUserToDelete(null)}
-                className="px-4 py-2 rounded-xl border border-[#E8E6DF] hover:bg-[#FAF9F5] text-xs font-semibold text-[#716F6A] cursor-pointer"
+                className="px-4 py-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-bold text-[#8C929D] hover:text-[#121417] dark:hover:text-white cursor-pointer"
               >
                 Cancelar
               </button>
@@ -682,7 +682,7 @@ export function ClientPortalUsersPanel({
                 type="button"
                 disabled={isDeletingUser}
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 {isDeletingUser ? (
                   <>
