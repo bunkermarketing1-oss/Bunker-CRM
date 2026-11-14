@@ -142,7 +142,7 @@ function DashboardPageContent() {
             </Link>
             <Link
               href={`/crm/clients/${activeClient.id}`}
-              className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
+              className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
             >
               <Building2 className="w-3.5 h-3.5 text-amber-400" />
               <span>Ficha CRM</span>

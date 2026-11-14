@@ -20,33 +20,33 @@ export default function UnderConstruction({
     <div className="space-y-6 animate-in fade-in duration-300">
       <PageHeader section={section} title={title} description={description} />
 
-      <div className="rounded-3xl bg-white border border-[#ECEAE3] p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm">
-        <div className="w-16 h-16 rounded-2xl bg-[#FAF0D7] dark:bg-[#2e2615] border border-[#F2E5C4] dark:border-[#473a1e] flex items-center justify-center mx-auto mb-4 text-[#9A7320] dark:text-[#E5C158]">
+      <div className="rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-orvion">
+        <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 flex items-center justify-center mx-auto mb-4 text-amber-500 shadow-orvion">
           <Construction className="w-8 h-8" />
         </div>
 
-        <span className="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-[#FAF0D7] dark:bg-[#2e2615] text-[#9A7320] dark:text-[#E5C158] border border-[#F2E5C4] dark:border-[#473a1e] mb-3">
+        <span className="orvion-badge-gold text-[10px] mb-3">
           Módulo en Construcción
         </span>
 
-        <h2 className="text-xl sm:text-2xl font-bold text-[#141414] tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[#121417] dark:text-white tracking-tight">
           Próximamente en Bunker CRM
         </h2>
 
-        <p className="text-xs sm:text-sm text-[#6B6861] mt-2 max-w-md mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#8C929D] font-medium mt-2 max-w-md mx-auto leading-relaxed">
           Estamos afinando este módulo para ofrecerte una experiencia potente, estable y conectada con tus datos en tiempo real.
         </p>
 
         {upcomingFeatures && upcomingFeatures.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-[#ECEAE3] text-left">
-            <p className="text-[11px] font-bold text-[#8C887E] uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <div className="mt-6 pt-6 border-t border-[#E2E5EB] dark:border-[#1F242D] text-left">
+            <p className="text-[11px] font-bold text-[#8C929D] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               Lo que incluirá esta funcionalidad:
             </p>
             <ul className="space-y-2">
               {upcomingFeatures.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-[#4D4C48]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 flex-shrink-0" />
+                <li key={i} className="flex items-start gap-2 text-xs text-[#121417] dark:text-slate-300 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
                   <span>{f}</span>
                 </li>
               ))}
@@ -57,7 +57,7 @@ export default function UnderConstruction({
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/dashboard"
-            className="btn-black-gold inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold"
+            className="btn-black-gold inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold shadow-orvion"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Volver al Inicio</span>

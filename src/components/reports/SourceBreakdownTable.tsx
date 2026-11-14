@@ -11,45 +11,45 @@ export default function SourceBreakdownTable({ rows }: SourceBreakdownTableProps
   const maxLeads = Math.max(1, ...rows.map((row) => row.leads));
 
   return (
-    <div className="-mx-1">
+    <div className="-mx-1 overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-[11px] text-[#8C887E] border-b border-[#ECEAE3]">
-            <th className="text-left font-semibold py-2.5 px-1">Fuente</th>
-            <th className="text-left font-semibold py-2.5 px-1 sm:w-[40%]">Leads</th>
-            <th className="text-right font-semibold py-2.5 px-1">Conversión</th>
-            <th className="hidden sm:table-cell text-right font-semibold py-2.5 px-1">Valor estimado</th>
+          <tr className="text-[11px] text-[#8C929D] border-b border-[#E2E5EB] dark:border-[#2A2E37]">
+            <th className="text-left font-bold py-2.5 px-2">Canal / Fuente</th>
+            <th className="text-left font-bold py-2.5 px-2 sm:w-[40%]">Volumen de Leads</th>
+            <th className="text-right font-bold py-2.5 px-2">Conversión</th>
+            <th className="hidden sm:table-cell text-right font-bold py-2.5 px-2">Valor Estimado</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-[#E2E5EB] dark:divide-[#1F242D]">
           {rows.map((row) => (
-            <tr key={row.source} className="border-b border-[#F4F3EE] dark:border-[#2E2E34] last:border-0">
-              <td className="py-3 px-1">
+            <tr key={row.source} className="hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] transition-colors">
+              <td className="py-3 px-2">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-semibold text-[#141414]">{row.label}</span>
+                  <span className="font-bold text-[#121417] dark:text-white">{row.label}</span>
                   {row.isPaid && (
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-[#9A7320] dark:text-[#E5C158] bg-[#FBF7ED] dark:bg-[#2A2415] border border-[#F2E5C4] dark:border-[#473a1e] px-1.5 rounded">
+                    <span className="orvion-badge-gold text-[9px] px-2 py-0.5">
                       Pauta
                     </span>
                   )}
                 </div>
               </td>
-              <td className="py-3 px-1">
-                <div className="flex items-center gap-2.5">
-                  <div className="hidden sm:block flex-1 h-2 rounded-full bg-[#F4F3EE] dark:bg-[#26262B] overflow-hidden">
+              <td className="py-3 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:block flex-1 h-2 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-[#A27B22] dark:bg-[#AD8828]"
+                      className="h-full rounded-full bg-amber-500 dark:bg-amber-400 shadow-2xs"
                       style={{ width: `${(row.leads / maxLeads) * 100}%` }}
                     />
                   </div>
-                  <span className="sm:w-10 text-right font-mono text-[#141414]">{formatNumber(row.leads)}</span>
+                  <span className="sm:w-10 text-right font-mono font-bold text-[#121417] dark:text-white">{formatNumber(row.leads)}</span>
                 </div>
               </td>
-              <td className="py-3 px-1 text-right">
-                <span className="font-mono text-[#141414]">{formatPercent(row.conversionRate)}</span>
-                <span className="block text-[10px] text-[#9C988F]">{formatNumber(row.converted)} conv.</span>
+              <td className="py-3 px-2 text-right">
+                <span className="font-mono font-bold text-[#121417] dark:text-white">{formatPercent(row.conversionRate)}</span>
+                <span className="block text-[10px] text-[#8C929D] font-medium">{formatNumber(row.converted)} conv.</span>
               </td>
-              <td className="hidden sm:table-cell py-3 px-1 text-right font-mono text-[#6B6861]">{formatCompactMoney(row.estimatedValue)}</td>
+              <td className="hidden sm:table-cell py-3 px-2 text-right font-mono font-bold text-[#64748B] dark:text-[#94A3B8]">{formatCompactMoney(row.estimatedValue)}</td>
             </tr>
           ))}
         </tbody>

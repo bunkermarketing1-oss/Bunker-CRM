@@ -22,18 +22,18 @@ export default function UpcomingTasks({ tasks, now }: { tasks: DashboardTask[]; 
         const priority = priorityOf(task.priority);
         const isOverdue = task.dueDate !== null && new Date(task.dueDate) < now;
         return (
-          <li key={task.id} className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#ECEAE3] flex items-start justify-between gap-3">
+          <li key={task.id} className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-start justify-between gap-3 shadow-2xs transition-colors">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-[#141414] leading-snug">{task.title}</p>
-              <p className="text-[11px] text-[#8C887E] flex items-center gap-1 mt-0.5 min-w-0">
-                <CalendarClock className={`w-3 h-3 flex-shrink-0 ${isOverdue ? "text-red-600" : ""}`} />
-                <span className={`whitespace-nowrap flex-shrink-0 ${isOverdue ? "text-red-600 dark:text-red-400 font-semibold" : ""}`}>
+              <p className="text-xs font-bold text-[#121417] dark:text-white leading-snug">{task.title}</p>
+              <p className="text-[11px] text-[#8C929D] flex items-center gap-1.5 mt-1 min-w-0 font-medium">
+                <CalendarClock className={`w-3.5 h-3.5 flex-shrink-0 ${isOverdue ? "text-red-500" : "text-[#8C929D]"}`} />
+                <span className={`whitespace-nowrap flex-shrink-0 ${isOverdue ? "text-red-600 dark:text-red-400 font-bold" : ""}`}>
                   {task.dueDate ? `${isOverdue ? "Venció" : "Vence"} ${formatShortDate(task.dueDate)}` : "Sin fecha"}
                 </span>
-                {task.relatedName && <span className="truncate min-w-0">· {task.relatedName}</span>}
+                {task.relatedName && <span className="truncate min-w-0 text-[#64748B] dark:text-[#94A3B8]">· {task.relatedName}</span>}
               </p>
             </div>
-            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border flex-shrink-0 ${PRIORITY_STYLE[priority]}`}>
+            <span className={`text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-full border flex-shrink-0 ${PRIORITY_STYLE[priority]}`}>
               {TASK_PRIORITY_LABEL[priority]}
             </span>
           </li>
