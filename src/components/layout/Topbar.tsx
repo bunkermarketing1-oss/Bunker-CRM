@@ -205,7 +205,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
         </nav>
 
         {isClient && user?.clientName && (
-          <span className="hidden xl:inline orvion-badge-lime text-[11px]">
+          <span className="hidden xl:inline orvion-badge-gold text-[11px]">
             {user.clientName}
           </span>
         )}
@@ -238,7 +238,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           aria-label="Cambiar tema"
           className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center hover:bg-[#F8F9FA] dark:hover:bg-[#202530] transition-colors"
         >
-          {theme === "dark" ? <Sun className="w-4 h-4 text-[#D4F933]" /> : <Moon className="w-4 h-4 text-[#667085]" />}
+          {theme === "dark" ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-[#667085]" />}
         </button>
 
         <button
@@ -257,7 +257,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           className="rounded-full h-9 px-4 bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
           aria-label={t("topbar.register_lead", "+ Registrar Lead")}
         >
-          <Plus className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
+          <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
           <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
         </Link>
 

@@ -16,7 +16,7 @@ export default function Panel({ icon: Icon, title, action, className = "", child
     <section className={`p-6 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion transition-all duration-300 ${className}`}>
       <div className="flex items-center justify-between gap-3 mb-5 pb-3 border-b border-[#F2F4F7] dark:border-[#1F242D]">
         <h2 className="text-sm font-bold text-[#121417] dark:text-white flex items-center gap-2.5">
-          <span className="w-7 h-7 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] flex items-center justify-center text-[#121417] dark:text-[#D4F933]">
+          <span className="w-7 h-7 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] flex items-center justify-center text-[#121417] dark:text-amber-400">
             <Icon className="w-3.5 h-3.5" />
           </span>
           <span>{title}</span>

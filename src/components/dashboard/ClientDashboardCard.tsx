@@ -53,7 +53,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
                 >
                   {client.name}
                 </Link>
-                <span className="orvion-badge-lime text-[10px]">
+                <span className="orvion-badge-gold text-[10px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#121417] animate-pulse" />
                   Activo
                 </span>
@@ -69,7 +69,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           <Link
             href={`/dashboard?clientId=${client.id}`}
             title={`Abrir panel individual de ${client.name}`}
-            className="w-9 h-9 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] hover:bg-[#121417] dark:hover:bg-white text-[#121417] hover:text-[#D4F933] dark:text-white dark:hover:text-[#121417] flex items-center justify-center shrink-0 transition-all shadow-2xs group-hover:scale-105"
+            className="w-9 h-9 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] hover:bg-[#121417] dark:hover:bg-white text-[#121417] hover:text-amber-500 dark:text-white dark:hover:text-[#121417] flex items-center justify-center shrink-0 transition-all shadow-2xs group-hover:scale-105"
           >
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
@@ -79,7 +79,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
         <div className="grid grid-cols-3 gap-2.5 py-4 border-b border-[#F2F4F7] dark:border-[#1F242D]">
           <div className="p-3 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-[#E2E5EB]/60 dark:border-[#242A35]">
             <div className="flex items-center gap-1.5 text-xs text-[#8C929D]">
-              <Users className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933] shrink-0" />
+              <Users className="w-3.5 h-3.5 text-[#121417] dark:text-amber-400 shrink-0" />
               <span>Prospectos</span>
             </div>
             <div className="text-base font-extrabold text-[#121417] dark:text-white mt-1">
@@ -92,7 +92,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
 
           <div className="p-3 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-[#E2E5EB]/60 dark:border-[#242A35]">
             <div className="flex items-center gap-1.5 text-xs text-[#8C929D]">
-              <KanbanSquare className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933] shrink-0" />
+              <KanbanSquare className="w-3.5 h-3.5 text-[#121417] dark:text-amber-400 shrink-0" />
               <span>Ventas</span>
             </div>
             <div className="text-base font-extrabold text-[#121417] dark:text-white mt-1">
@@ -105,7 +105,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
 
           <div className="p-3 rounded-2xl bg-[#F8F9FA] dark:bg-[#181B22] border border-[#E2E5EB]/60 dark:border-[#242A35]">
             <div className="flex items-center gap-1.5 text-xs text-[#8C929D]">
-              <CheckSquare className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933] shrink-0" />
+              <CheckSquare className="w-3.5 h-3.5 text-[#121417] dark:text-amber-400 shrink-0" />
               <span>Tareas</span>
             </div>
             <div className="text-base font-extrabold text-[#121417] dark:text-white mt-1">
@@ -164,7 +164,7 @@ export default function ClientDashboardCard({ client }: ClientDashboardCardProps
           className="w-full h-11 px-5 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all group-hover:scale-[1.01]"
         >
           <span>Abrir Panel de Control</span>
-          <ArrowRight className="w-4 h-4 text-[#D4F933] dark:text-[#121417] group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
         </Link>
 
         <div className="flex items-center justify-between pt-0.5">

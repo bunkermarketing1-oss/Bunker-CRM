@@ -38,15 +38,15 @@ export function AttendanceCheckInButton() {
           className="flex items-center gap-2 h-9 px-3.5 rounded-full bg-white dark:bg-[#1A1D24] hover:bg-[#F3F4F7] dark:hover:bg-[#202530] border border-[#E2E5EB] dark:border-[#2A2E37] text-xs font-semibold text-[#121417] dark:text-white transition-all shadow-xs cursor-pointer group"
           title="Iniciar turno comercial de atención"
         >
-          <span className="w-2 h-2 rounded-full bg-[#8C929D] group-hover:bg-[#D4F933] transition-colors" />
-          <LogIn className="w-3.5 h-3.5 text-[#8C929D] group-hover:text-[#121417] dark:group-hover:text-white transition-colors" />
+          <span className="w-2 h-2 rounded-full bg-[#8C929D] group-hover:bg-amber-400 transition-colors" />
+          <LogIn className="w-3.5 h-3.5 text-[#8C929D] group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors" />
           <span className="text-[11px] font-semibold hidden sm:inline">Iniciar Turno</span>
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setShowConfirm((prev) => !prev)}
-          className="flex items-center gap-2 h-9 px-3.5 rounded-full bg-[#D4F933] hover:bg-[#C4EA22] text-xs font-extrabold text-[#121417] transition-all shadow-orvion cursor-pointer"
+          className="flex items-center gap-2 h-9 px-3.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-xs font-black text-[#121417] transition-all shadow-orvion cursor-pointer"
           title="Estás en turno activo. Clic para registrar salida."
         >
           <span className="relative flex h-2 w-2">
@@ -65,7 +65,7 @@ export function AttendanceCheckInButton() {
         <div className="absolute right-0 top-11 z-50 w-64 p-4 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-3 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4 text-[#121417] dark:text-[#D4F933]" />
+              <Clock className="w-4 h-4 text-[#121417] dark:text-amber-400" />
             </div>
             <div>
               <h4 className="text-xs font-extrabold text-[#121417] dark:text-white">Turno Activo</h4>

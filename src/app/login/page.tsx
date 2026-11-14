@@ -143,13 +143,13 @@ function LoginForm() {
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin text-[#D4F933] dark:text-[#121417]" />
+              <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
               <span>Validando credenciales...</span>
             </>
           ) : (
             <>
               <span>Iniciar Sesión en Bunker</span>
-              <ArrowRight className="w-4 h-4 text-[#D4F933] dark:text-[#121417]" />
+              <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
             </>
           )}
         </button>
@@ -157,8 +157,8 @@ function LoginForm() {
 
       {/* Verificación de Seguridad y Cifrado */}
       <div className="mt-6 pt-5 border-t border-[#F2F4F7] dark:border-[#1F242D] flex items-center justify-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB]/60 dark:border-[#242A35] text-[11px] font-medium text-[#8C929D]">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933]" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB]/60 dark:border-[#242A35] text-[11px] font-medium text-[#8C929D]">
+          <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           <span>Acceso seguro cifrado con verificación en servidor</span>
         </div>
       </div>
@@ -170,18 +170,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Fondo con Sutiles Luces Ambientales Minimalistas */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-white via-white/50 to-transparent dark:from-white/5 dark:via-transparent dark:to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-amber-500/10 via-amber-200/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 space-y-6">
         {/* Cabecera y Marca Bunker */}
         <div className="text-center space-y-3">
           {/* Píldora de Plataforma */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
-            <Sparkles className="w-3.5 h-3.5 text-[#121417] dark:text-[#D4F933]" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span className="text-[11px] font-bold text-[#121417] dark:text-white tracking-wide">
               Bunker CRM Platform
             </span>
-            <span className="orvion-badge-lime text-[9px] py-0.5 px-2">v2.0</span>
+            <span className="orvion-badge-gold text-[9px] py-0.5 px-2">v2.0</span>
           </div>
 
           <div className="flex justify-center pt-1 pb-1">
@@ -211,7 +211,7 @@ export default function LoginPage() {
         <Suspense
           fallback={
             <div className="bg-white dark:bg-[#121417] rounded-[32px] border border-[#E2E5EB] dark:border-[#1F242D] p-10 text-center shadow-orvion">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#121417] dark:text-[#D4F933] mb-2" />
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500 mb-2" />
               <p className="text-xs text-[#8C929D] font-medium">Cargando módulo de acceso...</p>
             </div>
           }

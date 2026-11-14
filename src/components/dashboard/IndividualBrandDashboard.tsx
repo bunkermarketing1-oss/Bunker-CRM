@@ -53,7 +53,7 @@ export default function IndividualBrandDashboard({
           value={formatCompactMoney(metrics.wonRevenue)}
           hint={`${formatNumber(metrics.wonDealsCount)} negocios · ${formatPercent(metrics.winRate)} tasa de cierre`}
           badgeText={formatPercent(metrics.winRate)}
-          badgeVariant="lime"
+          badgeVariant="gold"
         />
         <StatCard
           icon={KanbanSquare}
@@ -75,7 +75,7 @@ export default function IndividualBrandDashboard({
               : "Ninguno nuevo esta semana"
           }
           badgeText={metrics.leadsThisWeek > 0 ? `+${metrics.leadsThisWeek}` : "Activo"}
-          badgeVariant="lime"
+          badgeVariant="gold"
         />
         <StatCard
           icon={CheckSquare}
@@ -88,7 +88,7 @@ export default function IndividualBrandDashboard({
               : "Todo al día"
           }
           badgeText={metrics.overdueTasks > 0 ? `${metrics.overdueTasks} alertas` : "Al día"}
-          badgeVariant={metrics.overdueTasks > 0 ? "dark" : "lime"}
+          badgeVariant={metrics.overdueTasks > 0 ? "dark" : "gold"}
         />
       </div>
 

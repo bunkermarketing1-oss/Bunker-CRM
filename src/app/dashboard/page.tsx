@@ -47,7 +47,7 @@ function DashboardPageContent() {
             href={ROUTES.DASHBOARD}
             className="px-4 py-2 rounded-full text-xs font-bold bg-[#121417] dark:bg-white text-white dark:text-[#121417] shadow-xs flex items-center gap-1.5 transition-all"
           >
-            <LayoutGrid className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
+            <LayoutGrid className="w-3.5 h-3.5 text-amber-500" />
             <span>Dashboard</span>
           </Link>
           <Link
@@ -85,7 +85,7 @@ function DashboardPageContent() {
               href={ROUTES.CLIENTS}
               className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
             >
-              <Plus className="w-3.5 h-3.5 text-[#D4F933] dark:text-[#121417]" />
+              <Plus className="w-3.5 h-3.5 text-amber-400" />
               <span>Nueva Empresa</span>
             </Link>
           )}
@@ -112,7 +112,7 @@ function DashboardPageContent() {
           </h1>
 
           <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#D4F933] shadow-xs animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
             <span>
               {activeClient
                 ? "Métricas en tiempo real, canales integrados y estado de captación"
@@ -144,7 +144,7 @@ function DashboardPageContent() {
               href={`/crm/clients/${activeClient.id}`}
               className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
             >
-              <Building2 className="w-3.5 h-3.5 text-[#D4F933]" />
+              <Building2 className="w-3.5 h-3.5 text-amber-400" />
               <span>Ficha CRM</span>
             </Link>
           </div>

@@ -62,7 +62,7 @@ export default function GeneralDashboardGrid({
           value={formatNumber(clientCards.length || metrics.activeClients || 0)}
           hint="Empresas y marcas bajo gestión"
           badgeText="Directorio"
-          badgeVariant="lime"
+          badgeVariant="gold"
         />
         <StatCard
           icon={Users}
@@ -75,7 +75,7 @@ export default function GeneralDashboardGrid({
               : "Sin nuevos esta semana"
           }
           badgeText={metrics.leadsThisWeek > 0 ? `+${metrics.leadsThisWeek}` : "Al día"}
-          badgeVariant="lime"
+          badgeVariant="gold"
         />
         <StatCard
           icon={KanbanSquare}
@@ -93,7 +93,7 @@ export default function GeneralDashboardGrid({
           value={formatNumber(totalConnectedAccounts)}
           hint="Meta Ads, Instagram, Messenger y SMS"
           badgeText="100% online"
-          badgeVariant="lime"
+          badgeVariant="gold"
         />
       </div>
 
@@ -121,7 +121,7 @@ export default function GeneralDashboardGrid({
                 : "bg-transparent text-[#667085] hover:text-[#121417] dark:text-[#94A3B8] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229]"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#D4F933]" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Con prospectos
           </button>
           <button

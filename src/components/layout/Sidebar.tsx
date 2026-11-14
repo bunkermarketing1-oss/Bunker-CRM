@@ -421,16 +421,16 @@ function SidebarLink({ item, label, isActive }: { item: NavItem; label: string; 
       <Icon
         className={`w-4 h-4 flex-shrink-0 transition-colors ${
           isActive
-            ? "text-[#D4F933] dark:text-[#121417]"
+            ? "text-amber-400 dark:text-amber-300"
             : "text-[#8C929D] group-hover:text-[#121417]"
         }`}
       />
       <span className="truncate">{label}</span>
       {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#D4F933] dark:bg-[#121417] shrink-0" />
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-300 shrink-0 shadow-xs" />
       )}
       {item.badge && !isActive && (
-        <span className="ml-auto text-[9px] font-bold bg-[#D4F933] text-[#121417] px-2 py-0.5 rounded-full shadow-2xs">
+        <span className="ml-auto text-[9px] font-bold bg-[#F59E0B] text-[#121417] px-2 py-0.5 rounded-full shadow-2xs">
           {item.badge}
         </span>
       )}
