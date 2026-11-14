@@ -32,6 +32,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
@@ -72,12 +73,197 @@ interface Lead {
   } | null;
 }
 
+interface DuplicateMatch {
+  id: string;
+  name: string;
+  companyName: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
 interface TeamMember {
   id: string;
   name: string;
   email: string;
   role: string;
 }
+
+// Prospectos realistas de demostración para presentaciones a clientes
+const DEMO_LEADS_DATA: Lead[] = [
+  {
+    id: "demo-lead-1",
+    name: "Mateo Bermúdez",
+    companyName: "Constructora Bolívar",
+    email: "m.bermudez@constructorabolivar.com",
+    phone: "+57 312 456 7890",
+    normalizedPhone: "+573124567890",
+    source: "meta_ads",
+    campaign: "Campañas Penthouse & Suites 2026",
+    externalLeadId: "fb_lead_982341",
+    externalFormId: "form_meta_9823",
+    externalAdId: "ad_video_penthouse",
+    status: "qualified",
+    qualification: 94,
+    aiSummary: "Lead Caliente: Alta capacidad adquisitiva, solicita reunión de presentación de portafolio para esta tarde.",
+    estimatedValue: 125000,
+    notes: "Interesado en 2 penthouses para inversión de renta vacacional.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
+    ownerId: "demo-adv-1",
+    owner: {
+      id: "demo-adv-1",
+      name: "Valeria Mendoza",
+      email: "valeria@bunkermarketing.io",
+      role: "SALES",
+    },
+    client: {
+      id: "c1",
+      name: "Grupo Alianza Constructora",
+    },
+  },
+  {
+    id: "demo-lead-2",
+    name: "Valentina Castro",
+    companyName: "Inmobiliaria Andina",
+    email: "vcastro@inmobiliariaandina.co",
+    phone: "+57 310 987 6543",
+    normalizedPhone: "+573109876543",
+    source: "instagram_ads",
+    campaign: "Reels Edición Gold - Retorno Inversión",
+    externalLeadId: "ig_lead_872134",
+    externalFormId: "form_ig_8721",
+    externalAdId: "ad_reels_gold",
+    status: "proposal",
+    qualification: 88,
+    aiSummary: "Alta Intención: Busca cotización formal para adquisición de 3 unidades comerciales.",
+    estimatedValue: 280000,
+    notes: "Tiene presupuesto aprobado por junta directiva.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+    ownerId: "demo-adv-2",
+    owner: {
+      id: "demo-adv-2",
+      name: "Carlos Andrés Rivas",
+      email: "carlos@bunkermarketing.io",
+      role: "SALES",
+    },
+    client: {
+      id: "c1",
+      name: "Grupo Alianza Constructora",
+    },
+  },
+  {
+    id: "demo-lead-3",
+    name: "Dr. Alejandro Morales",
+    companyName: "Clínica Especialistas Orales",
+    email: "amorales@especialistasorales.com",
+    phone: "+57 301 234 5678",
+    normalizedPhone: "+573012345678",
+    source: "whatsapp",
+    campaign: "Meta Click to WhatsApp",
+    externalLeadId: "wa_lead_651239",
+    status: "contacted",
+    qualification: 91,
+    aiSummary: "Lead Caliente: Consultó por tecnología guiada 3D. Requiere respuesta prioritaria.",
+    estimatedValue: 18500,
+    notes: "Pide agendar demo técnica con asesor senior.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 4 * 3600000).toISOString(),
+    ownerId: "demo-adv-1",
+    owner: {
+      id: "demo-adv-1",
+      name: "Valeria Mendoza",
+      email: "valeria@bunkermarketing.io",
+      role: "SALES",
+    },
+    client: {
+      id: "c2",
+      name: "Clínica Especialistas Orales",
+    },
+  },
+  {
+    id: "demo-lead-4",
+    name: "Camila Restrepo",
+    companyName: "Automotriz del Valle",
+    email: "crestrepo@automotrizvalle.com",
+    phone: "+57 315 678 1234",
+    normalizedPhone: "+573156781234",
+    source: "facebook_ads",
+    campaign: "Test Drive SUV Híbrida 2026",
+    externalLeadId: "fb_lead_441920",
+    status: "contacted",
+    qualification: 82,
+    aiSummary: "Calificado: Pregunta por plan de financiamiento y toma de vehículo usado en parte de pago.",
+    estimatedValue: 45000,
+    notes: "Agendó llamada de seguimiento para mañana 10am.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 7 * 3600000).toISOString(),
+    ownerId: "demo-adv-2",
+    owner: {
+      id: "demo-adv-2",
+      name: "Carlos Andrés Rivas",
+      email: "carlos@bunkermarketing.io",
+      role: "SALES",
+    },
+    client: {
+      id: "c1",
+      name: "Grupo Alianza Constructora",
+    },
+  },
+  {
+    id: "demo-lead-5",
+    name: "Mariana Gómez",
+    companyName: "Luxury Travel Club",
+    email: "mgomez@luxurytravelclub.net",
+    phone: "+57 320 890 4321",
+    normalizedPhone: "+573208904321",
+    source: "tiktok_ads",
+    campaign: "Experiencias VIP Caribe",
+    externalLeadId: "tt_lead_120934",
+    status: "new",
+    qualification: 86,
+    aiSummary: "Alta Intención: Descargó catálogo de paquetes corporativos de fin de año.",
+    estimatedValue: 34000,
+    notes: "Lead recién captado vía formulario instantáneo.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
+    ownerId: null,
+    owner: null,
+    client: {
+      id: "c2",
+      name: "Clínica Especialistas Orales",
+    },
+  },
+  {
+    id: "demo-lead-6",
+    name: "Ing. Roberto Salazar",
+    companyName: "Soluciones Logísticas SAS",
+    email: "rsalazar@solucioneslogisticas.co",
+    phone: "+57 318 432 9876",
+    normalizedPhone: "+573184329876",
+    source: "google_ads",
+    campaign: "Software B2B Cadena de Suministro",
+    externalLeadId: "g_lead_773129",
+    status: "converted",
+    qualification: 89,
+    aiSummary: "Calificado: Empresa con 120 empleados buscando centralizar comunicaciones de su equipo de ventas.",
+    estimatedValue: 62000,
+    notes: "Solicitó reunión con el director de operaciones.",
+    isDemo: true,
+    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+    ownerId: "demo-adv-1",
+    owner: {
+      id: "demo-adv-1",
+      name: "Valeria Mendoza",
+      email: "valeria@bunkermarketing.io",
+      role: "SALES",
+    },
+    client: {
+      id: "c1",
+      name: "Grupo Alianza Constructora",
+    },
+  },
+];
 
 // Next 14 exige un Suspense alrededor de useSearchParams para prerenderizar la página (si no, falla el build).
 export default function LeadsPage() {
@@ -102,6 +288,7 @@ function LeadsPageContent() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState(searchParams.get("clientId") ?? "all");
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Sincronizar filtro si cambia el parámetro de URL (ej. navegación desde el Sidebar)
   useEffect(() => {
@@ -138,7 +325,7 @@ function LeadsPageContent() {
     notes: "",
   });
   const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string[]>>({});
-  const [duplicateWarning, setDuplicateWarning] = useState<any[] | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<DuplicateMatch[] | null>(null);
   const [submittingCreate, setSubmittingCreate] = useState(false);
 
   // Edit Modal State
@@ -273,7 +460,7 @@ function LeadsPageContent() {
     setCreateFieldErrors({});
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name: createData.name,
         companyName: createData.companyName || null,
         email: createData.email || null,
@@ -323,13 +510,14 @@ function LeadsPageContent() {
         campaign: "",
         estimatedValue: "2500",
         ownerId: "",
-    clientId: "",
+        clientId: "",
         notes: "",
       });
       showNotification("¡Prospecto registrado exitosamente!");
       fetchLeads();
-    } catch (err: any) {
-      showNotification(err.message || "Error al conectar con el servidor", "error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al conectar con el servidor";
+      showNotification(message, "error");
     } finally {
       setSubmittingCreate(false);
     }
@@ -363,7 +551,7 @@ function LeadsPageContent() {
     setEditFieldErrors({});
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         id: editFormData.id,
         name: editFormData.name,
         companyName: editFormData.companyName || null,
@@ -401,8 +589,9 @@ function LeadsPageContent() {
       if (selectedLead && selectedLead.id === json.lead.id) {
         setSelectedLead(json.lead);
       }
-    } catch (err: any) {
-      showNotification(err.message || "Error de conexión", "error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error de conexión";
+      showNotification(message, "error");
     } finally {
       setSubmittingEdit(false);
     }
@@ -429,8 +618,9 @@ function LeadsPageContent() {
       } else {
         showNotification(json.error || "No se pudo convertir el prospecto.", "error");
       }
-    } catch (e: any) {
-      showNotification("Error: " + e.message, "error");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error desconocido";
+      showNotification("Error: " + message, "error");
     }
   };
 
@@ -456,8 +646,9 @@ function LeadsPageContent() {
       } else {
         showNotification(json.error || "Error al eliminar prospecto.", "error");
       }
-    } catch (e: any) {
-      showNotification("Error: " + e.message, "error");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error desconocido";
+      showNotification("Error: " + message, "error");
     }
   };
 
@@ -468,16 +659,20 @@ function LeadsPageContent() {
     return raw.replace(/[^0-9]/g, "");
   };
 
+  // Si no hay leads o el modo demo está activado, usar datos de presentación
+  const isShowingDemo = isDemoMode || (!loading && leads.length === 0);
+  const activeLeads = isShowingDemo ? DEMO_LEADS_DATA : leads;
+
   // Metrics Calculations
-  const totalLeadsCount = leads.length;
-  const qualifiedCount = leads.filter(
-    (l) => l.status === "qualified" || (l.qualification || 0) >= 70
+  const totalLeadsCount = activeLeads.length;
+  const qualifiedCount = activeLeads.filter(
+    (l) => l.status.toLowerCase() === "qualified" || (l.qualification || 0) >= 70
   ).length;
-  const totalPipelineVal = leads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
+  const totalPipelineVal = activeLeads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
   const conversionRate =
     totalLeadsCount > 0
       ? Math.round(
-          (leads.filter((l) => l.status === "converted").length / totalLeadsCount) * 100
+          (activeLeads.filter((l) => l.status.toLowerCase() === "converted").length / totalLeadsCount) * 100
         )
       : 0;
 
@@ -486,7 +681,7 @@ function LeadsPageContent() {
   const validCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (validCurrentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalLeadsCount);
-  const paginatedLeads = leads.slice(startIndex, endIndex);
+  const paginatedLeads = activeLeads.slice(startIndex, endIndex);
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
@@ -525,7 +720,7 @@ function LeadsPageContent() {
       "Fecha_Registro",
     ];
 
-    const rows = leads.map((l) => [
+    const rows = activeLeads.map((l) => [
       l.id,
       l.name,
       l.companyName || "",
@@ -556,38 +751,67 @@ function LeadsPageContent() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Top Header Banner con Estilo Orvion Capsule */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
         <div>
-          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="orvion-badge-gold text-[10px]">
+              Directorio Central
+            </span>
+            {isShowingDemo && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700">
+                <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+                Demostración Activa
+              </span>
+            )}
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             Gestión de Leads & Prospectos
           </h1>
-          <p className="text-xs text-[#475467] mt-0.5">
+          <p className="text-xs text-[#667085] dark:text-[#8C929D] mt-0.5">
             Captación multicanal desde Meta Ads, calificación con IA, teléfonos verificados y prevención de duplicados.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Botón de alternancia de Modo Demo */}
           <button
+            type="button"
+            onClick={() => setIsDemoMode((prev) => !prev)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+              isShowingDemo
+                ? "bg-[#FFFBEB] dark:bg-amber-950/40 border border-amber-300 text-amber-900 dark:text-amber-300"
+                : "bg-white dark:bg-[#121417] text-[#667085] dark:text-[#8C929D] border border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
+            }`}
+            title="Alternar prospectos de demostración para presentaciones a clientes"
+          >
+            <Zap className={`w-3.5 h-3.5 ${isShowingDemo ? "text-amber-500 fill-amber-500" : "text-[#8C929D]"}`} />
+            <span>Modo Demo</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleSyncMetaLeads}
             disabled={syncingMeta}
-            className="px-3.5 py-2 rounded-2xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#F8F9FA] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-60"
+            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-60 cursor-pointer"
             title="Sincronizar prospectos desde campañas de Meta Ads"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#667085] ${syncingMeta ? "animate-spin text-amber-500" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${syncingMeta ? "animate-spin" : ""}`} />
             <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
           </button>
 
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-2xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#F8F9FA] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-[#667085]" />
+            <Download className="w-3.5 h-3.5 text-[#8C929D]" />
             <span>Exportar CSV</span>
           </button>
 
           <button
+            type="button"
             onClick={() => {
               setDuplicateWarning(null);
               setCreateFieldErrors({});
@@ -597,9 +821,9 @@ function LeadsPageContent() {
               }));
               setIsCreateOpen(true);
             }}
-            className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-xs"
+            className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-orvion transition-all hover:scale-[1.02] cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-white" />
+            <Plus className="w-4 h-4 text-amber-400 dark:text-[#121417]" />
             <span>+ Registrar Prospecto</span>
           </button>
         </div>
@@ -623,85 +847,95 @@ function LeadsPageContent() {
         </div>
       )}
 
-      {/* KPI Metric Strip Cards */}
+      {/* KPI Metric Strip Cards con Diseño Cápsula Orvion */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Leads */}
-        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-medium">Total Prospectos</span>
-            <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
-              <Users className="w-3.5 h-3.5 text-amber-700" />
+        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
+          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
+            <span className="text-xs font-bold">Total Prospectos</span>
+            <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center">
+              <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828] tracking-tight">{totalLeadsCount}</div>
-          <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
+          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
+            {totalLeadsCount.toLocaleString()}
+          </div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" />
             <span>Captación activa multicanal</span>
           </div>
         </div>
 
         {/* Calificados con IA */}
-        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-medium">Calificados por IA (≥70)</span>
-            <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
+          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
+            <span className="text-xs font-bold">Calificados por IA (≥70)</span>
+            <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-300/40 dark:border-amber-500/30 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-amber-500" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828] tracking-tight">{qualifiedCount}</div>
-          <div className="text-[11px] text-[#475467]">Alta probabilidad de cierre comercial</div>
+          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
+            {qualifiedCount.toLocaleString()}
+          </div>
+          <div className="text-[11px] text-[#667085] dark:text-[#8C929D] font-medium">
+            Alta probabilidad de cierre comercial
+          </div>
         </div>
 
         {/* Pipeline Estimado */}
-        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-medium">Pipeline Proyectado</span>
-            <div className="w-7 h-7 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center">
-              <DollarSign className="w-3.5 h-3.5 text-[#101828]" />
+        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
+          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
+            <span className="text-xs font-bold">Pipeline Proyectado</span>
+            <div className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-[#121417] dark:text-amber-400" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828] tracking-tight">
+          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             ${totalPipelineVal.toLocaleString()}{" "}
-            <span className="text-xs font-normal text-[#667085]">USD</span>
+            <span className="text-xs font-medium text-[#667085] dark:text-[#8C929D]">USD</span>
           </div>
-          <div className="text-[11px] text-amber-700 font-medium">
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
             Presupuesto estimado de pautas
           </div>
         </div>
 
         {/* Tasa de Conversión */}
-        <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-medium">Tasa de Conversión</span>
-            <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5 text-amber-600" />
+        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
+          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
+            <span className="text-xs font-bold">Tasa de Conversión</span>
+            <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-amber-500" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828] tracking-tight">{conversionRate}%</div>
-          <div className="text-[11px] text-[#475467]">Leads convertidos a clientes activos</div>
+          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
+            {conversionRate}%
+          </div>
+          <div className="text-[11px] text-[#667085] dark:text-[#8C929D] font-medium">
+            Leads convertidos a clientes activos
+          </div>
         </div>
       </div>
 
-      {/* Unified Filter & Search Bar */}
-      <div className="p-4 rounded-3xl bg-white border border-[#EAECF0] shadow-xs space-y-3">
+      {/* Unified Filter & Search Bar con Estilo Cápsula */}
+      <div className="p-4 sm:p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-3">
         <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
-          {/* Search */}
+          {/* Search Input con Bordes Redondeados */}
           <div className="relative w-full lg:w-96">
-            <Search className="w-3.5 h-3.5 text-[#667085] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#8C929D] absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, correo, empresa, teléfono o notas..."
-              className="w-full bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl pl-9 pr-4 py-2 text-xs text-[#101828] placeholder-[#98A2B3] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+              className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#121417] dark:text-white placeholder:text-[#8C929D] focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all shadow-2xs"
             />
           </div>
 
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             {/* Status Selector */}
-            <div className="flex items-center gap-1 bg-[#F8F9FA] p-1 rounded-2xl border border-[#EAECF0] text-xs">
-              <span className="text-[11px] text-[#667085] px-2 font-medium">Estado:</span>
+            <div className="flex items-center gap-1 bg-[#F8F9FA] dark:bg-[#1A1D24] p-1 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] text-xs">
+              <span className="text-[11px] text-[#667085] dark:text-[#8C929D] px-2.5 font-bold">Estado:</span>
               {[
                 { id: "all", label: "Todos" },
                 { id: "new", label: "Nuevo" },
@@ -712,10 +946,10 @@ function LeadsPageContent() {
                 <button
                   key={st.id}
                   onClick={() => setStatusFilter(st.id)}
-                  className={`px-2.5 py-1 rounded-xl text-xs transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     statusFilter === st.id
-                      ? "bg-white text-[#101828] font-bold shadow-xs"
-                      : "text-[#475467] hover:text-[#101828]"
+                      ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+                      : "text-[#667085] hover:text-[#121417] dark:text-[#8C929D] dark:hover:text-white"
                   }`}
                 >
                   {st.label}
@@ -727,7 +961,7 @@ function LeadsPageContent() {
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
+              className="bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-3.5 py-1.5 text-xs text-[#121417] dark:text-white focus:outline-hidden font-semibold cursor-pointer shadow-2xs"
             >
               <option value="all">Todos los Canales</option>
               <option value="meta_ads">Meta Ads (Instagram / FB)</option>
@@ -749,7 +983,7 @@ function LeadsPageContent() {
               <select
                 value={ownerFilter}
                 onChange={(e) => setOwnerFilter(e.target.value)}
-                className="bg-[#F8F9FA] border border-[#EAECF0] rounded-2xl px-3 py-1.5 text-xs text-[#101828] focus:outline-none font-medium"
+                className="bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-3.5 py-1.5 text-xs text-[#121417] dark:text-white focus:outline-hidden font-semibold cursor-pointer shadow-2xs"
               >
                 <option value="all">Todos los Asesores</option>
                 <option value="unassigned">Sin Asignar</option>
@@ -764,28 +998,30 @@ function LeadsPageContent() {
         </div>
       </div>
 
-      {/* Main Leads Table */}
-      <div ref={tableTopRef} className="bg-white rounded-3xl border border-[#EAECF0] shadow-xs overflow-hidden scroll-mt-6">
-        <div className="p-4 border-b border-[#EAECF0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F8F9FA]">
-          <div className="text-xs font-bold text-[#101828]">
-            Directorio de Prospectos{" "}
-            <span className="text-[#667085] font-normal">({totalLeadsCount.toLocaleString()})</span>
+      {/* Main Leads Table con Diseño Cápsula Orvion */}
+      <div ref={tableTopRef} className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion overflow-hidden scroll-mt-6">
+        <div className="p-4 sm:p-5 border-b border-[#E2E5EB] dark:border-[#1F242D] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F8F9FA] dark:bg-[#1A1D24]">
+          <div className="text-xs font-bold text-[#121417] dark:text-white flex items-center gap-2">
+            <span>Directorio de Prospectos</span>
+            <span className="orvion-badge-gold text-[10px] py-0.5 px-2">
+              {totalLeadsCount.toLocaleString()}
+            </span>
           </div>
           {totalLeadsCount > 0 && (
-            <div className="flex items-center gap-3 text-xs text-[#667085]">
+            <div className="flex items-center gap-3 text-xs text-[#667085] dark:text-[#8C929D]">
               <span>
-                Mostrando <strong className="text-[#101828] font-semibold">{startIndex + 1}–{endIndex}</strong> de{" "}
-                <strong className="text-[#101828] font-semibold">{totalLeadsCount.toLocaleString()}</strong>
+                Mostrando <strong className="text-[#121417] dark:text-white font-semibold">{startIndex + 1}–{endIndex}</strong> de{" "}
+                <strong className="text-[#121417] dark:text-white font-semibold">{totalLeadsCount.toLocaleString()}</strong>
               </span>
-              <div className="flex items-center gap-1.5 pl-2 border-l border-[#EAECF0]">
-                <span className="text-[11px] text-[#667085]">Por página:</span>
+              <div className="flex items-center gap-1.5 pl-2 border-l border-[#E2E5EB] dark:border-[#2A2E37]">
+                <span className="text-[11px] text-[#667085] dark:text-[#8C929D]">Por página:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-white border border-[#EAECF0] rounded-lg px-2 py-0.5 text-xs font-semibold text-[#101828] focus:outline-none cursor-pointer"
+                  className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-2.5 py-0.5 text-xs font-bold text-[#121417] dark:text-white focus:outline-hidden cursor-pointer shadow-2xs"
                 >
                   <option value={25}>25</option>
                   <option value={50}>50</option>
@@ -800,29 +1036,43 @@ function LeadsPageContent() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[#EAECF0] text-[11px] font-semibold text-[#667085] bg-[#F8F9FA]/60">
-                <th className="py-3.5 px-4 font-semibold">Prospecto / Empresa</th>
-                <th className="py-3.5 px-4 font-semibold">Contacto & WhatsApp</th>
-                <th className="py-3.5 px-4 font-semibold">Origen & Campaña</th>
-                <th className="py-3.5 px-4 font-semibold">Asesor Asignado</th>
-                <th className="py-3.5 px-4 font-semibold">Calificación IA</th>
-                <th className="py-3.5 px-4 font-semibold">Presupuesto</th>
-                <th className="py-3.5 px-4 font-semibold">Estado</th>
-                <th className="py-3.5 px-4 text-right font-semibold">Acciones</th>
+              <tr className="border-b border-[#E2E5EB] dark:border-[#1F242D] text-[11px] font-bold text-[#667085] dark:text-[#8C929D] bg-[#F8F9FA]/60 dark:bg-[#1A1D24]/60">
+                <th className="py-3.5 px-4 font-bold">Prospecto / Empresa</th>
+                <th className="py-3.5 px-4 font-bold">Contacto & WhatsApp</th>
+                <th className="py-3.5 px-4 font-bold">Origen & Campaña</th>
+                <th className="py-3.5 px-4 font-bold">Asesor Asignado</th>
+                <th className="py-3.5 px-4 font-bold">Calificación IA</th>
+                <th className="py-3.5 px-4 font-bold">Presupuesto</th>
+                <th className="py-3.5 px-4 font-bold">Estado</th>
+                <th className="py-3.5 px-4 text-right font-bold">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EAECF0]">
+            <tbody className="divide-y divide-[#E2E5EB] dark:divide-[#1F242D]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#667085] text-xs">
+                  <td colSpan={8} className="py-12 text-center text-[#667085] dark:text-[#8C929D] text-xs">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500 mb-2" />
                     <span>Cargando prospectos en tiempo real...</span>
                   </td>
                 </tr>
-              ) : leads.length === 0 ? (
+              ) : activeLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#667085] text-xs">
-                    No se encontraron prospectos con los filtros actuales.
+                  <td colSpan={8} className="py-14 text-center text-[#667085] dark:text-[#8C929D] text-xs space-y-2">
+                    <Inbox className="w-6 h-6 mx-auto text-[#8C929D] mb-1 opacity-70" />
+                    <p className="font-semibold text-[#121417] dark:text-white">No se encontraron prospectos con los filtros actuales.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setStatusFilter("all");
+                        setSourceFilter("all");
+                        setOwnerFilter("all");
+                        setClientFilter("all");
+                      }}
+                      className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+                    >
+                      Restablecer filtros
+                    </button>
                   </td>
                 </tr>
               ) : (
@@ -842,14 +1092,14 @@ function LeadsPageContent() {
                   return (
                     <tr
                       key={lead.id}
-                      className="hover:bg-[#F8F9FA] transition-colors group"
+                      className="hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24]/50 transition-colors group"
                     >
                       {/* Profile / Company */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="w-9 h-9 rounded-full bg-[#0F172A] text-amber-400 hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs border border-amber-500/30 transition-transform"
+                            className="w-9 h-9 rounded-full bg-[#121417] text-amber-400 dark:bg-white dark:text-[#121417] hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs border border-amber-500/30 transition-transform"
                             title="Ver expediente en InsightCRM"
                           >
                             {initials}
@@ -857,17 +1107,17 @@ function LeadsPageContent() {
                           <div>
                             <Link
                               href={`/crm/leads/${lead.id}`}
-                              className="font-bold text-[#101828] hover:text-amber-600 hover:underline flex items-center gap-1.5 leading-tight transition-colors"
+                              className="font-bold text-[#121417] dark:text-white hover:text-amber-600 dark:hover:text-amber-400 hover:underline flex items-center gap-1.5 leading-tight transition-colors"
                             >
                               <span>{lead.name}</span>
                               {lead.isDemo && (
-                                <span className="text-[9px] bg-amber-50 text-amber-800 font-bold px-1.5 py-0.2 rounded-md border border-amber-300">
+                                <span className="orvion-badge-gold text-[9px] py-0.2 px-1.5">
                                   DEMO
                                 </span>
                               )}
                             </Link>
-                            <div className="text-[11px] text-[#475467] flex items-center gap-1.5 mt-0.5">
-                              <Building className="w-3 h-3 text-[#667085]" />
+                            <div className="text-[11px] text-[#667085] dark:text-[#8C929D] flex items-center gap-1.5 mt-0.5">
+                              <Building className="w-3 h-3 text-[#8C929D]" />
                               <span>{lead.companyName || "Sin empresa especificada"}</span>
                             </div>
                             {/* Mostrar badge de empresa asignada */}
@@ -887,8 +1137,8 @@ function LeadsPageContent() {
                       <td className="py-3.5 px-4 text-[11px]">
                         <div className="space-y-1">
                           {lead.email ? (
-                            <div className="flex items-center gap-1.5 text-[#101828] font-medium">
-                              <Mail className="w-3 h-3 text-[#667085] flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 text-[#121417] dark:text-white font-medium">
+                              <Mail className="w-3 h-3 text-[#8C929D] flex-shrink-0" />
                               <a
                                 href={`mailto:${lead.email}`}
                                 className="hover:underline truncate max-w-[170px]"
@@ -897,11 +1147,11 @@ function LeadsPageContent() {
                               </a>
                             </div>
                           ) : (
-                            <span className="text-[#98A2B3] italic">Sin correo</span>
+                            <span className="text-[#8C929D] italic">Sin correo</span>
                           )}
 
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#475467] font-mono">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[#667085] dark:text-[#8C929D] font-mono">
                               {lead.phone || lead.normalizedPhone || "Sin teléfono"}
                             </span>
                             {waNumber && (
@@ -911,19 +1161,19 @@ function LeadsPageContent() {
                                 )}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors text-[10px] font-semibold"
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors text-[10px] font-bold shadow-2xs"
                                 title="Abrir chat en WhatsApp"
                               >
-                                <MessageCircle className="w-2.5 h-2.5 text-emerald-600" />
+                                <MessageCircle className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                                 <span>WhatsApp</span>
                               </a>
                             )}
                             <Link
                               href={`/inbox?search=${encodeURIComponent(lead.name)}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors text-[10px] font-semibold"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors text-[10px] font-bold shadow-2xs"
                               title="Abrir chat en la Bandeja de Entrada"
                             >
-                              <Inbox className="w-2.5 h-2.5 text-amber-700" />
+                              <Inbox className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                               <span>Bandeja</span>
                             </Link>
                           </div>
@@ -940,14 +1190,14 @@ function LeadsPageContent() {
                                 lead.source.includes("meta") ||
                                 lead.source.includes("facebook") ||
                                 lead.source.includes("instagram")
-                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
                                   : lead.source.includes("google")
-                                  ? "bg-sky-50 text-sky-700 border-sky-200"
+                                  ? "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
                                   : lead.source.includes("tiktok")
-                                  ? "bg-pink-50 text-pink-700 border-pink-200"
+                                  ? "bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800"
                                   : lead.source === "referral"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                                  : "bg-slate-50 text-slate-700 border-slate-200"
+                                  ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                               }`}
                             >
                               {lead.source.replace(/_/g, " ")}
@@ -956,23 +1206,23 @@ function LeadsPageContent() {
 
                           {lead.campaign ? (
                             <div
-                              className="text-[11px] font-semibold text-[#101828] flex items-center gap-1.5 truncate max-w-[200px]"
+                              className="text-[11px] font-semibold text-[#121417] dark:text-white flex items-center gap-1.5 truncate max-w-[200px]"
                               title={`Campaña: ${lead.campaign}`}
                             >
-                              <Tag className="w-3 h-3 text-amber-600 shrink-0" />
+                              <Tag className="w-3 h-3 text-amber-500 shrink-0" />
                               <span className="truncate">{lead.campaign}</span>
                             </div>
                           ) : (
-                            <p className="text-[10px] text-[#98A2B3] italic">Sin campaña asignada</p>
+                            <p className="text-[10px] text-[#8C929D] italic">Sin campaña asignada</p>
                           )}
 
                           <button
                             type="button"
                             onClick={() => setSelectedLead(lead)}
-                            className="text-[10px] text-[#475467] hover:text-amber-700 font-medium flex items-center gap-1 truncate max-w-[200px] text-left transition-colors group"
+                            className="text-[10px] text-[#667085] dark:text-[#8C929D] hover:text-amber-600 dark:hover:text-amber-400 font-medium flex items-center gap-1 truncate max-w-[200px] text-left transition-colors group cursor-pointer"
                             title="Ver respuestas del formulario y anuncio de Meta Ads"
                           >
-                            <FileText className="w-2.5 h-2.5 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                            <FileText className="w-2.5 h-2.5 text-amber-500 shrink-0 group-hover:scale-110 transition-transform" />
                             <span className="truncate group-hover:underline">
                               {lead.externalAdId ? `Anuncio: ${lead.externalAdId}` : lead.externalFormId ? `Form: ${lead.externalFormId}` : (lead.campaign || "Ver contenido & respuestas")}
                             </span>
@@ -983,12 +1233,12 @@ function LeadsPageContent() {
                       {/* Assigned Advisor */}
                       <td className="py-3.5 px-4 text-[11px]">
                         {lead.owner ? (
-                          <div className="flex items-center gap-1.5 text-[#101828] font-medium">
-                            <UserCheck className="w-3 h-3 text-amber-600" />
+                          <div className="flex items-center gap-1.5 text-[#121417] dark:text-white font-semibold">
+                            <UserCheck className="w-3.5 h-3.5 text-amber-500" />
                             <span className="truncate max-w-[120px]">{lead.owner.name}</span>
                           </div>
                         ) : (
-                          <span className="text-[#98A2B3] italic">Sin asignar</span>
+                          <span className="text-[#8C929D] italic">Sin asignar</span>
                         )}
                       </td>
 
@@ -996,18 +1246,19 @@ function LeadsPageContent() {
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
                           <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-md border inline-block ${
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1 shadow-2xs ${
                               score >= 80
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700"
                                 : score >= 60
-                                ? "bg-amber-50 text-amber-800 border-amber-300"
-                                : "bg-red-50 text-red-800 border-red-200"
+                                ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700"
+                                : "bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-900"
                             }`}
                           >
-                            {score}/100
+                            {score >= 90 && <Flame className="w-3 h-3 text-amber-500 fill-amber-500" />}
+                            <span>{score}/100</span>
                           </span>
                           {lead.aiSummary && (
-                            <p className="text-[10px] text-[#475467] line-clamp-1 max-w-[140px]">
+                            <p className="text-[10px] text-[#667085] dark:text-[#8C929D] line-clamp-1 max-w-[140px]">
                               {lead.aiSummary}
                             </p>
                           )}
@@ -1016,10 +1267,10 @@ function LeadsPageContent() {
 
                       {/* Budget */}
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-[#101828]">
+                        <div className="font-bold text-[#121417] dark:text-white">
                           ${lead.estimatedValue?.toLocaleString() || 0}
                         </div>
-                        <div className="text-[10px] text-[#667085]">USD / mes</div>
+                        <div className="text-[10px] text-[#667085] dark:text-[#8C929D]">USD / mes</div>
                       </td>
 
                       {/* Status */}
@@ -1033,17 +1284,17 @@ function LeadsPageContent() {
                           {lead.status !== "converted" && (
                             <button
                               onClick={() => handleConvert(lead.id)}
-                              className="btn-black-gold rounded-xl px-2 py-1 text-[11px] font-semibold flex items-center gap-1 shadow-xs"
+                              className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-2.5 py-1 text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer transition-transform hover:scale-105"
                               title="Convertir a Contacto y Oportunidad"
                             >
-                              <ArrowRightCircle className="w-3 h-3 text-white" />
+                              <ArrowRightCircle className="w-3 h-3 text-amber-400 dark:text-[#121417]" />
                               <span>Convertir</span>
                             </button>
                           )}
 
                           <button
                             onClick={() => handleOpenEdit(lead)}
-                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-[#101828] border border-[#EAECF0] transition-colors"
+                            className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] hover:bg-white text-[#667085] dark:text-[#8C929D] hover:text-[#121417] dark:hover:text-white border border-[#E2E5EB] dark:border-[#2A2E37] transition-colors cursor-pointer"
                             title="Editar prospecto"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -1052,24 +1303,24 @@ function LeadsPageContent() {
                           <button
                             type="button"
                             onClick={() => setSelectedLead(lead)}
-                            className="p-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-colors shadow-2xs"
+                            className="p-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer"
                             title="Ver contenido, anuncio y respuestas del formulario Meta Ads"
                           >
-                            <FileText className="w-3.5 h-3.5 text-amber-700" />
+                            <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                           </button>
 
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="p-1.5 rounded-xl bg-[#F8F9FA] hover:bg-white text-[#475467] hover:text-amber-600 border border-[#EAECF0] transition-colors"
+                            className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] hover:bg-white text-[#667085] dark:text-[#8C929D] hover:text-amber-600 border border-[#E2E5EB] dark:border-[#2A2E37] transition-colors cursor-pointer"
                             title="Ver Expediente Completo (InsightCRM)"
                           >
-                            <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
+                            <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
                           </Link>
 
                           {isAdmin && (
                             <button
                               onClick={() => handleDelete(lead.id)}
-                              className="p-1.5 rounded-xl text-[#667085] hover:text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-full text-[#8C929D] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                               title="Eliminar prospecto (Solo Admin)"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1087,11 +1338,11 @@ function LeadsPageContent() {
 
         {/* Barra de Paginación */}
         {totalLeadsCount > pageSize && (
-          <div className="p-3.5 border-t border-[#EAECF0] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
-            <div className="text-xs text-[#667085]">
-              Página <strong className="font-semibold text-[#101828]">{validCurrentPage}</strong> de{" "}
-              <strong className="font-semibold text-[#101828]">{totalPages}</strong>{" "}
-              <span className="text-[#98A2B3]">({totalLeadsCount.toLocaleString()} prospectos en total)</span>
+          <div className="p-3.5 sm:p-4 border-t border-[#E2E5EB] dark:border-[#1F242D] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#121417]">
+            <div className="text-xs text-[#667085] dark:text-[#8C929D]">
+              Página <strong className="font-semibold text-[#121417] dark:text-white">{validCurrentPage}</strong> de{" "}
+              <strong className="font-semibold text-[#121417] dark:text-white">{totalPages}</strong>{" "}
+              <span className="text-[#8C929D]">({totalLeadsCount.toLocaleString()} prospectos en total)</span>
             </div>
 
             <div className="flex items-center gap-1">
@@ -1099,7 +1350,7 @@ function LeadsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(1)}
                 disabled={validCurrentPage === 1}
-                className="p-1.5 rounded-lg border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-white dark:bg-[#1A1D24] text-[#667085] dark:text-[#8C929D] hover:bg-[#F8F9FA] hover:text-[#121417] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
                 title="Primera página"
               >
                 <ChevronsLeft className="w-3.5 h-3.5" />
@@ -1109,7 +1360,7 @@ function LeadsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(validCurrentPage - 1)}
                 disabled={validCurrentPage === 1}
-                className="px-2.5 py-1.5 rounded-lg border border-[#EAECF0] bg-white text-xs font-medium text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+                className="px-3 py-1.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-white dark:bg-[#1A1D24] text-xs font-semibold text-[#667085] dark:text-[#8C929D] hover:bg-[#F8F9FA] hover:text-[#121417] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Anterior</span>
@@ -1118,7 +1369,7 @@ function LeadsPageContent() {
               <div className="flex items-center gap-1 px-1">
                 {getPageNumbers().map((num, idx) =>
                   num === "..." ? (
-                    <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-[#98A2B3]">
+                    <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-[#8C929D]">
                       …
                     </span>
                   ) : (
@@ -1126,10 +1377,10 @@ function LeadsPageContent() {
                       key={`page-${num}`}
                       type="button"
                       onClick={() => handlePageChange(num as number)}
-                      className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-medium transition-colors ${
+                      className={`min-w-[32px] h-8 px-2.5 rounded-full text-xs font-bold transition-colors cursor-pointer ${
                         validCurrentPage === num
-                          ? "bg-[#0F172A] text-white font-bold shadow-xs"
-                          : "border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828]"
+                          ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+                          : "border border-[#E2E5EB] dark:border-[#2A2E37] bg-white dark:bg-[#1A1D24] text-[#667085] dark:text-[#8C929D] hover:bg-[#F8F9FA] hover:text-[#121417]"
                       }`}
                     >
                       {num}
@@ -1142,7 +1393,7 @@ function LeadsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(validCurrentPage + 1)}
                 disabled={validCurrentPage === totalPages}
-                className="px-2.5 py-1.5 rounded-lg border border-[#EAECF0] bg-white text-xs font-medium text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+                className="px-3 py-1.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-white dark:bg-[#1A1D24] text-xs font-semibold text-[#667085] dark:text-[#8C929D] hover:bg-[#F8F9FA] hover:text-[#121417] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
               >
                 <span className="hidden sm:inline">Siguiente</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1152,7 +1403,7 @@ function LeadsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(totalPages)}
                 disabled={validCurrentPage === totalPages}
-                className="p-1.5 rounded-lg border border-[#EAECF0] bg-white text-[#475467] hover:bg-[#F8F9FA] hover:text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-white dark:bg-[#1A1D24] text-[#667085] dark:text-[#8C929D] hover:bg-[#F8F9FA] hover:text-[#121417] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
                 title="Última página"
               >
                 <ChevronsRight className="w-3.5 h-3.5" />
@@ -1162,14 +1413,14 @@ function LeadsPageContent() {
         )}
       </div>
 
-      {/* Modal: Contenido y Detalle del Formulario Meta */}
+      {/* Modal: Contenido y Detalle del Formulario Meta con Diseño Cápsula */}
       {selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0c0d12] border border-[#EAECF0] dark:border-slate-800 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[32px] w-full max-w-xl overflow-hidden shadow-orvion">
             {/* Modal Header */}
-            <div className="p-5 border-b border-[#EAECF0] dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-50/50 via-white to-amber-50/30 dark:from-amber-950/20 dark:via-[#0c0d12] dark:to-transparent">
+            <div className="p-6 border-b border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-transparent to-transparent">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#0F172A] border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-[#121417] text-amber-400 dark:bg-white dark:text-[#121417] border border-amber-500/40 flex items-center justify-center font-bold text-sm shadow-md">
                   {selectedLead.name
                     .split(" ")
                     .map((p) => p[0])
@@ -1178,15 +1429,15 @@ function LeadsPageContent() {
                     .toUpperCase()}
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#101828] dark:text-white flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[#121417] dark:text-white flex items-center gap-2">
                     <span>{selectedLead.name}</span>
                     {isAdmin && selectedLead.client?.name && (
-                      <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full">
+                      <span className="orvion-badge-gold text-[10px] py-0.5 px-2">
                         {selectedLead.client.name}
                       </span>
                     )}
                   </h2>
-                  <p className="text-xs text-[#475467] dark:text-slate-400">
+                  <p className="text-xs text-[#667085] dark:text-[#8C929D] mt-0.5">
                     {selectedLead.companyName || "Prospecto Comercial"} • Captado {new Date(selectedLead.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
@@ -1194,7 +1445,7 @@ function LeadsPageContent() {
               <button
                 type="button"
                 onClick={() => setSelectedLead(null)}
-                className="text-[#667085] hover:text-[#101828] dark:text-slate-400 dark:hover:text-white p-2 rounded-2xl hover:bg-[#F8F9FA] dark:hover:bg-slate-800 transition-colors"
+                className="text-[#8C929D] hover:text-[#121417] dark:hover:text-white p-1.5 rounded-full hover:bg-white dark:hover:bg-[#1A1D24] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1215,54 +1466,54 @@ function LeadsPageContent() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Campaña Publicitaria</div>
-                    <div className="font-bold text-[#101828] dark:text-white mt-0.5 truncate" title={selectedLead.campaign || "Campaña no especificada"}>
+                  <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                    <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Campaña Publicitaria</div>
+                    <div className="font-bold text-[#121417] dark:text-white mt-0.5 truncate" title={selectedLead.campaign || "Campaña no especificada"}>
                       {selectedLead.campaign || "Campaña no especificada"}
                     </div>
                   </div>
 
                   {selectedLead.client && (
-                    <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                      <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Empresa Gestora / Cuenta</div>
-                      <div className="font-bold text-amber-700 dark:text-amber-400 mt-0.5 capitalize">
+                    <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                      <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Empresa Gestora / Cuenta</div>
+                      <div className="font-bold text-amber-600 dark:text-amber-400 mt-0.5 capitalize">
                         {selectedLead.client.name}
                       </div>
                     </div>
                   )}
 
-                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Presupuesto Estimado</div>
-                    <div className="font-bold text-[#101828] dark:text-white mt-0.5">
+                  <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                    <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Presupuesto Estimado</div>
+                    <div className="font-bold text-[#121417] dark:text-white mt-0.5">
                       ${selectedLead.estimatedValue?.toLocaleString() || 0} USD
                     </div>
                   </div>
 
-                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Score Bunker AI</div>
+                  <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                    <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Score Bunker AI</div>
                     <div className="font-bold text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{selectedLead.qualification || 70}/100</span>
                     </div>
                   </div>
 
-                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Formulario / Origen</div>
-                    <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
+                  <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                    <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Formulario / Origen</div>
+                    <div className="font-semibold text-[#121417] dark:text-white mt-0.5 truncate">
                       {selectedLead.externalFormId ? `Formulario Meta Lead Ads` : selectedLead.source}
                     </div>
                     {selectedLead.externalFormId && (
-                      <div className="text-[9px] text-[#667085] font-mono mt-0.5">Form ID: {selectedLead.externalFormId}</div>
+                      <div className="text-[9px] text-[#667085] dark:text-[#8C929D] font-mono mt-0.5">Form ID: {selectedLead.externalFormId}</div>
                     )}
                   </div>
 
-                  <div className="bg-white/90 dark:bg-slate-900/90 p-3 rounded-xl border border-amber-200/60 dark:border-slate-800">
-                    <div className="text-[10px] text-[#667085] dark:text-slate-400 uppercase font-semibold">Anuncio / Creativo</div>
-                    <div className="font-semibold text-[#101828] dark:text-slate-200 mt-0.5 truncate">
+                  <div className="bg-white/90 dark:bg-[#1A1D24] p-3 rounded-xl border border-amber-200/60 dark:border-[#2A2E37]">
+                    <div className="text-[10px] text-[#667085] dark:text-[#8C929D] uppercase font-semibold">Anuncio / Creativo</div>
+                    <div className="font-semibold text-[#121417] dark:text-white mt-0.5 truncate">
                       {selectedLead.externalAdId ? `Anuncio Meta` : (selectedLead.campaign || "Lead Inbound")}
                     </div>
                     {selectedLead.externalAdId && (
-                      <div className="text-[9px] text-[#667085] font-mono mt-0.5">Ad ID: {selectedLead.externalAdId}</div>
+                      <div className="text-[9px] text-[#667085] dark:text-[#8C929D] font-mono mt-0.5">Ad ID: {selectedLead.externalAdId}</div>
                     )}
                   </div>
                 </div>
@@ -1270,46 +1521,46 @@ function LeadsPageContent() {
 
               {/* Respuestas del Formulario enviadas por el Lead */}
               <div className="space-y-2.5">
-                <h3 className="text-xs font-bold text-[#101828] dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-xs font-bold text-[#121417] dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
                   Contenido & Respuestas Enviadas por el Prospecto
                 </h3>
 
                 <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span className="text-[#667085] dark:text-slate-400 font-medium">Nombre completo:</span>
-                    <span className="font-bold text-[#101828] dark:text-white">{selectedLead.name}</span>
+                  <div className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-[#8C929D] font-medium">Nombre completo:</span>
+                    <span className="font-bold text-[#121417] dark:text-white">{selectedLead.name}</span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span className="text-[#667085] dark:text-slate-400 font-medium">Correo Electrónico:</span>
+                  <div className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-[#8C929D] font-medium">Correo Electrónico:</span>
                     <a href={`mailto:${selectedLead.email}`} className="font-bold text-amber-600 dark:text-amber-400 hover:underline">
                       {selectedLead.email || "No registrado"}
                     </a>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span className="text-[#667085] dark:text-slate-400 font-medium">Número de Teléfono:</span>
-                    <span className="font-mono font-bold text-[#101828] dark:text-white">
+                  <div className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between text-xs">
+                    <span className="text-[#667085] dark:text-[#8C929D] font-medium">Número de Teléfono:</span>
+                    <span className="font-mono font-bold text-[#121417] dark:text-white">
                       {selectedLead.phone || selectedLead.normalizedPhone || "No registrado"}
                     </span>
                   </div>
 
                   {selectedLead.notes && (
-                    <div className="p-3 rounded-xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-[#EAECF0] dark:border-slate-800 text-xs space-y-1">
-                      <span className="text-[10px] text-[#667085] dark:text-slate-400 font-semibold uppercase">Preguntas adicionales / Notas del Lead:</span>
-                      <pre className="text-xs font-sans text-[#101828] dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                    <div className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] text-xs space-y-1">
+                      <span className="text-[10px] text-[#667085] dark:text-[#8C929D] font-bold uppercase">Preguntas adicionales / Notas del Lead:</span>
+                      <pre className="text-xs font-sans text-[#121417] dark:text-white whitespace-pre-wrap leading-relaxed">
                         {selectedLead.notes}
                       </pre>
                     </div>
                   )}
 
                   {selectedLead.aiSummary && (
-                    <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 text-xs space-y-1">
-                      <span className="text-[10px] text-amber-800 dark:text-amber-400 font-bold uppercase flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> Resumen y Análisis IA:
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-300/40 dark:border-amber-500/30 text-xs space-y-1">
+                      <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-500" /> Resumen y Análisis IA:
                       </span>
-                      <p className="text-xs text-[#475467] dark:text-slate-300 leading-relaxed">
+                      <p className="text-xs text-[#121417] dark:text-slate-200 leading-relaxed font-medium">
                         {selectedLead.aiSummary}
                       </p>
                     </div>
@@ -1319,10 +1570,10 @@ function LeadsPageContent() {
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-4 border-t border-[#EAECF0] dark:border-slate-800 bg-[#F8F9FA] dark:bg-slate-900/80 flex flex-wrap items-center justify-between gap-2.5">
+            <div className="p-4 border-t border-[#E2E5EB] dark:border-[#1F242D] bg-[#F8F9FA] dark:bg-[#1A1D24] flex flex-wrap items-center justify-between gap-2.5">
               <Link
                 href={`/crm/leads/${selectedLead.id}`}
-                className="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-[#EAECF0] dark:border-slate-700 hover:border-amber-400 text-xs font-semibold text-[#101828] dark:text-white flex items-center gap-1.5 transition-colors shadow-2xs"
+                className="px-3.5 py-2 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#2A2E37] hover:border-amber-400 text-xs font-bold text-[#121417] dark:text-white flex items-center gap-1.5 transition-colors shadow-2xs"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
                 <span>Ver Expediente Completo</span>
@@ -1336,9 +1587,9 @@ function LeadsPageContent() {
                     setSelectedLead(null);
                     handleOpenEdit(leadToEdit);
                   }}
-                  className="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 hover:bg-[#F8F9FA] text-[#101828] dark:text-white border border-[#EAECF0] dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                  className="px-3.5 py-2 rounded-full bg-white dark:bg-[#121417] hover:bg-[#F8F9FA] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                 >
-                  <Edit className="w-3.5 h-3.5 text-[#667085]" />
+                  <Edit className="w-3.5 h-3.5 text-[#8C929D]" />
                   <span>Editar</span>
                 </button>
 
@@ -1350,19 +1601,19 @@ function LeadsPageContent() {
                       setSelectedLead(null);
                       handleConvert(leadId);
                     }}
-                    className="btn-black-gold rounded-2xl px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
+                    className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
-                    <ArrowRightCircle className="w-3.5 h-3.5 text-[#E5C158]" />
+                    <ArrowRightCircle className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
                     <span>Convertir</span>
                   </button>
                 )}
 
                 <Link
                   href={`/inbox?search=${encodeURIComponent(selectedLead.name)}`}
-                  className="px-3.5 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                  className="px-3.5 py-2 rounded-full bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
                   title="Abrir chat en la Bandeja de Entrada"
                 >
-                  <Inbox className="w-3.5 h-3.5 text-amber-600" />
+                  <Inbox className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>Bandeja de Entrada</span>
                 </Link>
 
@@ -1373,7 +1624,7 @@ function LeadsPageContent() {
                     )}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                    className="px-3.5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span>WhatsApp</span>
@@ -1383,7 +1634,7 @@ function LeadsPageContent() {
                 <button
                   type="button"
                   onClick={() => setSelectedLead(null)}
-                  className="px-3.5 py-2 rounded-2xl bg-[#101828] hover:bg-black text-white text-xs font-semibold transition-colors"
+                  className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold transition-colors cursor-pointer"
                 >
                   Cerrar
                 </button>
@@ -1393,23 +1644,23 @@ function LeadsPageContent() {
         </div>
       )}
 
-      {/* Modal: Registrar Prospecto */}
+      {/* Modal: Registrar Prospecto con Diseño Cápsula Orvion */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[32px] w-full max-w-lg overflow-hidden shadow-orvion">
+            <div className="p-6 border-b border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#1A1D24]">
               <div>
-                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#D4AF37]" />
+                <h2 className="text-base font-bold text-[#121417] dark:text-white flex items-center gap-2">
+                  <Users className="w-4 h-4 text-amber-500" />
                   Registrar Nuevo Prospecto
                 </h2>
-                <p className="text-[11px] text-[#6B6861] mt-0.5">
+                <p className="text-xs text-[#667085] dark:text-[#8C929D] mt-0.5">
                   Completa los datos del contacto y asigna un asesor comercial.
                 </p>
               </div>
               <button
                 onClick={() => setIsCreateOpen(false)}
-                className="text-[#8C887E] hover:text-[#141414] p-1 rounded-xl hover:bg-[#F6F5F2]"
+                className="text-[#8C929D] hover:text-[#121417] dark:hover:text-white p-1.5 rounded-full hover:bg-white dark:hover:bg-[#121417] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1417,21 +1668,21 @@ function LeadsPageContent() {
 
             {/* Duplicate Detected Warning Alert */}
             {duplicateWarning && duplicateWarning.length > 0 && (
-              <div className="p-4 mx-6 mt-4 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-900 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-bold text-amber-950">
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <div className="p-4 mx-6 mt-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-2xl text-amber-950 dark:text-amber-300 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   <span>Posible prospecto duplicado detectado</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-800">
+                <p className="text-[11px] leading-relaxed text-[#667085] dark:text-[#8C929D]">
                   Ya existe un registro con correo o teléfono similar en su organización:
                 </p>
-                <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200 text-[11px] space-y-1">
+                <div className="bg-white/80 dark:bg-[#121417]/80 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800 text-[11px] space-y-1">
                   {duplicateWarning.map((m) => (
                     <div key={m.id} className="flex items-center justify-between">
-                      <span className="font-semibold text-[#141414]">
+                      <span className="font-bold text-[#121417] dark:text-white">
                         {m.name} ({m.companyName || "Sin empresa"})
                       </span>
-                      <span className="text-[#8C887E] font-mono">
+                      <span className="text-[#8C929D] font-mono">
                         {m.email || m.phone}
                       </span>
                     </div>
@@ -1441,14 +1692,14 @@ function LeadsPageContent() {
                   <button
                     type="button"
                     onClick={() => setDuplicateWarning(null)}
-                    className="px-2.5 py-1 text-[11px] rounded-xl bg-white border border-amber-300 font-medium text-amber-900 hover:bg-amber-100"
+                    className="px-3 py-1 text-[11px] rounded-full bg-white dark:bg-[#1A1D24] border border-amber-300 font-semibold text-amber-900 dark:text-amber-300 hover:bg-amber-50 cursor-pointer"
                   >
                     Corregir datos
                   </button>
                   <button
                     type="button"
                     onClick={(e) => handleCreateLead(e, true)}
-                    className="btn-black-gold rounded-xl px-3 py-1 text-[11px] font-semibold shadow-xs"
+                    className="rounded-full bg-[#121417] text-white dark:bg-white dark:text-[#121417] px-3.5 py-1 text-[11px] font-bold shadow-xs cursor-pointer"
                   >
                     Guardar de todos modos
                   </button>
@@ -1456,10 +1707,10 @@ function LeadsPageContent() {
               </div>
             )}
 
-            <form onSubmit={(e) => handleCreateLead(e, false)} className="p-6 space-y-4">
+            <form onSubmit={(e) => handleCreateLead(e, false)} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Nombre Completo *
                 </label>
                 <input
@@ -1468,16 +1719,16 @@ function LeadsPageContent() {
                   placeholder="ej. Lic. Roberto Garza"
                   value={createData.name}
                   onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
                 {createFieldErrors.name && (
-                  <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.name[0]}</p>
+                  <p className="text-[11px] text-red-600 mt-1 pl-2">{createFieldErrors.name[0]}</p>
                 )}
               </div>
 
               {/* Company */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Empresa / Negocio
                 </label>
                 <input
@@ -1487,14 +1738,14 @@ function LeadsPageContent() {
                   onChange={(e) =>
                     setCreateData({ ...createData, companyName: e.target.value })
                   }
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
               </div>
 
               {/* Email & Phone */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Correo Electrónico
                   </label>
                   <input
@@ -1504,35 +1755,35 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, email: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                   {createFieldErrors.email && (
-                    <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.email[0]}</p>
+                    <p className="text-[11px] text-red-600 mt-1 pl-2">{createFieldErrors.email[0]}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
-                    Teléfono / WhatsApp (Internacional)
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
+                    Teléfono / WhatsApp
                   </label>
                   <input
                     type="tel"
-                    placeholder="+52 55 1234 5678"
+                    placeholder="+57 310 123 4567"
                     value={createData.phone}
                     onChange={(e) =>
                       setCreateData({ ...createData, phone: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                   {createFieldErrors.phone && (
-                    <p className="text-[11px] text-red-600 mt-1">{createFieldErrors.phone[0]}</p>
+                    <p className="text-[11px] text-red-600 mt-1 pl-2">{createFieldErrors.phone[0]}</p>
                   )}
                 </div>
               </div>
 
               {/* Source & Campaign */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Canal de Origen *
                   </label>
                   <select
@@ -1540,7 +1791,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, source: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="meta_ads">Meta Ads (Instagram / FB)</option>
                     <option value="facebook_ads">Facebook Ads</option>
@@ -1557,7 +1808,7 @@ function LeadsPageContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Campaña de Origen
                   </label>
                   <input
@@ -1567,15 +1818,15 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, campaign: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                 </div>
               </div>
 
               {/* Budget & Owner */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Presupuesto Mensual ($ USD)
                   </label>
                   <input
@@ -1584,11 +1835,11 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, estimatedValue: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Asesor Responsable
                   </label>
                   <select
@@ -1596,7 +1847,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, ownerId: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="">Asignar a mí mismo</option>
                     {teamMembers.map((m) => (
@@ -1611,7 +1862,7 @@ function LeadsPageContent() {
               {/* Client Selection (Admin only) */}
               {!user?.isClientUser && (
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Empresa / Marca del Cliente
                   </label>
                   <select
@@ -1619,7 +1870,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setCreateData({ ...createData, clientId: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="">Sin vincular (General Bunker Agency)</option>
                     {clients.map((c) => (
@@ -1628,33 +1879,7 @@ function LeadsPageContent() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-[#667085] mt-0.5">
-                    Vincula este prospecto directamente a la marca seleccionada para aislar métricas y mensajería.
-                  </p>
-                </div>
-              )}
-
-              {/* Client Selection (Admin only) */}
-              {!user?.isClientUser && (
-                <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
-                    Empresa / Marca del Cliente
-                  </label>
-                  <select
-                    value={createData.clientId}
-                    onChange={(e) =>
-                      setCreateData({ ...createData, clientId: e.target.value })
-                    }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
-                  >
-                    <option value="">Sin vincular (General Bunker Agency)</option>
-                    {clients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-[#667085] mt-0.5">
+                  <p className="text-[10px] text-[#667085] dark:text-[#8C929D] mt-1 pl-1">
                     Vincula este prospecto directamente a la marca seleccionada para aislar métricas y mensajería.
                   </p>
                 </div>
@@ -1662,7 +1887,7 @@ function LeadsPageContent() {
 
               {/* Notes */}
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Observaciones Comerciales
                 </label>
                 <textarea
@@ -1672,7 +1897,7 @@ function LeadsPageContent() {
                   onChange={(e) =>
                     setCreateData({ ...createData, notes: e.target.value })
                   }
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-2xl px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
               </div>
 
@@ -1680,18 +1905,18 @@ function LeadsPageContent() {
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-2xl bg-[#F6F5F2] border border-[#ECEAE3] text-[#6B6861] hover:text-[#141414] text-xs font-medium"
+                  className="px-4 py-2 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] text-[#667085] dark:text-[#8C929D] hover:text-[#121417] dark:hover:text-white text-xs font-bold cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submittingCreate}
-                  className="btn-black-gold rounded-2xl px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
+                  className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-5 py-2 text-xs font-bold shadow-orvion flex items-center gap-1.5 cursor-pointer disabled:opacity-60 transition-transform hover:scale-102"
                 >
                   {submittingCreate ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                       <span>Guardando...</span>
                     </>
                   ) : (
@@ -1704,31 +1929,31 @@ function LeadsPageContent() {
         </div>
       )}
 
-      {/* Modal: Editar Prospecto */}
+      {/* Modal: Editar Prospecto con Diseño Cápsula Orvion */}
       {isEditOpen && editingLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white border border-[#ECEAE3] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="p-5 border-b border-[#ECEAE3] flex items-center justify-between bg-[#FDFDFC]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[32px] w-full max-w-lg overflow-hidden shadow-orvion">
+            <div className="p-6 border-b border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#1A1D24]">
               <div>
-                <h2 className="text-base font-semibold text-[#141414] flex items-center gap-2">
-                  <Edit className="w-4 h-4 text-[#D4AF37]" />
+                <h2 className="text-base font-bold text-[#121417] dark:text-white flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-amber-500" />
                   Editar Prospecto
                 </h2>
-                <p className="text-[11px] text-[#6B6861] mt-0.5">
+                <p className="text-xs text-[#667085] dark:text-[#8C929D] mt-0.5">
                   Actualización de información comercial y trazabilidad de cambios.
                 </p>
               </div>
               <button
                 onClick={() => setIsEditOpen(false)}
-                className="text-[#8C887E] hover:text-[#141414] p-1 rounded-xl hover:bg-[#F6F5F2]"
+                className="text-[#8C929D] hover:text-[#121417] dark:hover:text-white p-1.5 rounded-full hover:bg-white dark:hover:bg-[#121417] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateLead} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateLead} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Nombre Completo *
                 </label>
                 <input
@@ -1738,15 +1963,15 @@ function LeadsPageContent() {
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, name: e.target.value })
                   }
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
                 {editFieldErrors.name && (
-                  <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.name[0]}</p>
+                  <p className="text-[11px] text-red-600 mt-1 pl-2">{editFieldErrors.name[0]}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Empresa / Negocio
                 </label>
                 <input
@@ -1755,13 +1980,13 @@ function LeadsPageContent() {
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, companyName: e.target.value })
                   }
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Correo Electrónico
                   </label>
                   <input
@@ -1770,14 +1995,14 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, email: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                   {editFieldErrors.email && (
-                    <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.email[0]}</p>
+                    <p className="text-[11px] text-red-600 mt-1 pl-2">{editFieldErrors.email[0]}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Teléfono / WhatsApp
                   </label>
                   <input
@@ -1786,17 +2011,17 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, phone: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                   {editFieldErrors.phone && (
-                    <p className="text-[11px] text-red-600 mt-1">{editFieldErrors.phone[0]}</p>
+                    <p className="text-[11px] text-red-600 mt-1 pl-2">{editFieldErrors.phone[0]}</p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Estado Comercial
                   </label>
                   <select
@@ -1804,7 +2029,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, status: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="new">Nuevo</option>
                     <option value="contacted">Contactado</option>
@@ -1817,7 +2042,7 @@ function LeadsPageContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Canal de Origen
                   </label>
                   <select
@@ -1825,7 +2050,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, source: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="meta_ads">Meta Ads (Instagram / FB)</option>
                     <option value="facebook_ads">Facebook Ads</option>
@@ -1843,9 +2068,9 @@ function LeadsPageContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Presupuesto ($ USD)
                   </label>
                   <input
@@ -1857,11 +2082,11 @@ function LeadsPageContent() {
                         estimatedValue: e.target.value,
                       })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#141414] mb-1">
+                  <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Asesor Responsable
                   </label>
                   <select
@@ -1869,7 +2094,7 @@ function LeadsPageContent() {
                     onChange={(e) =>
                       setEditFormData({ ...editFormData, ownerId: e.target.value })
                     }
-                    className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden cursor-pointer"
                   >
                     <option value="">Sin asignar</option>
                     {teamMembers.map((m) => (
@@ -1882,7 +2107,7 @@ function LeadsPageContent() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#141414] mb-1">
+                <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                   Observaciones Comerciales
                 </label>
                 <textarea
@@ -1891,7 +2116,7 @@ function LeadsPageContent() {
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, notes: e.target.value })
                   }
-                  className="w-full bg-[#F6F5F2] border border-[#ECEAE3] rounded-xl px-3 py-2 text-xs text-[#141414] focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-2xl px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
               </div>
 
@@ -1899,18 +2124,18 @@ function LeadsPageContent() {
                 <button
                   type="button"
                   onClick={() => setIsEditOpen(false)}
-                  className="px-4 py-2 rounded-2xl bg-[#F6F5F2] border border-[#ECEAE3] text-[#6B6861] hover:text-[#141414] text-xs font-medium"
+                  className="px-4 py-2 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] text-[#667085] dark:text-[#8C929D] hover:text-[#121417] dark:hover:text-white text-xs font-bold cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="btn-black-gold rounded-2xl px-5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5"
+                  className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-5 py-2 text-xs font-bold shadow-orvion flex items-center gap-1.5 cursor-pointer disabled:opacity-60 transition-transform hover:scale-102"
                 >
                   {submittingEdit ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                       <span>Actualizando...</span>
                     </>
                   ) : (

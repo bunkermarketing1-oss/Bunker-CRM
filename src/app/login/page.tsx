@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Lock,
@@ -16,7 +17,10 @@ import {
   TrendingUp,
   Inbox,
   BarChart3,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +135,7 @@ function LoginForm() {
       </div>
 
       {/* Selector Rápido de Rol para Presentaciones y Demostraciones con Clientes */}
-      <div className="mb-5 p-1.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB]/80 dark:border-[#242A35] flex items-center gap-1">
+      <div className="mb-2 p-1.5 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB]/80 dark:border-[#242A35] flex items-center gap-1">
         <button
           type="button"
           onClick={() => handleRolePreset("admin")}
@@ -165,6 +169,15 @@ function LoginForm() {
         >
           👤 Cliente
         </button>
+      </div>
+
+      <div className="mb-5 px-1 flex items-center justify-between text-[10px] text-[#8C929D]">
+        <span>
+          {activeRolePreset === "admin" && "Control global de la agencia, métricas agregadas y ajustes."}
+          {activeRolePreset === "director" && "Supervisión comercial de asesores y llamadas en vivo."}
+          {activeRolePreset === "client" && "Portal exclusivo de cliente, leads y retorno de pauta."}
+        </span>
+        <span className="font-semibold text-amber-600 dark:text-amber-400">Listo para demo</span>
       </div>
 
       {errorMessage && (
@@ -259,13 +272,46 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
+    <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-6 relative overflow-hidden transition-colors">
       {/* Luces Ambientales Doradas Flotantes */}
       <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-tr from-amber-500/12 via-amber-200/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[350px] bg-gradient-to-bl from-amber-400/10 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-5xl relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      {/* Barra Superior con Selector de Tema y Enlace a Políticas */}
+      <header className="w-full max-w-5xl mx-auto flex items-center justify-between relative z-20 py-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-semibold text-[#667085] dark:text-[#8C929D]">
+            Sistemas Bunker Operativos
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Cambiar tema de color"
+            className="h-8 px-3 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs text-[#121417] dark:text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#F8F9FA] dark:hover:bg-[#1C2028] transition-colors cursor-pointer"
+          >
+            {theme === "dark" ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span>Modo Claro</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-[#667085]" />
+                <span>Modo Oscuro</span>
+              </>
+            )}
+          </button>
+        </div>
+      </header>
+
+      <div className="w-full max-w-5xl mx-auto my-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-6">
         {/* Columna Izquierda: Showcase de Alto Impacto para el Cliente */}
         <div className="lg:col-span-6 space-y-6 animate-fade-in-up">
           {/* Insignia Cápsula de Plataforma */}
@@ -366,8 +412,12 @@ export default function LoginPage() {
             <LoginForm />
           </Suspense>
 
-          <div className="text-center text-[11px] text-[#8C929D] font-medium mt-4">
-            © {new Date().getFullYear()} Bunker Marketing Agency · Todos los derechos reservados.
+          <div className="text-center text-[11px] text-[#8C929D] font-medium mt-4 flex items-center justify-center gap-2">
+            <span>© {new Date().getFullYear()} Bunker Marketing Agency</span>
+            <span>·</span>
+            <Link href="/privacy" className="hover:text-[#121417] dark:hover:text-white transition-colors">Privacidad</Link>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-[#121417] dark:hover:text-white transition-colors">Términos</Link>
           </div>
         </div>
       </div>
