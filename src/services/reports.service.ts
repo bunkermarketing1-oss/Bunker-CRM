@@ -54,7 +54,12 @@ export async function buildCommercialReport(scope: TenantScope, days: number): P
     }),
   ]);
 
-  const firstContactByLead = await getFirstContactByLead(leads.map((lead) => lead.id));
+  let firstContactByLead = new Map<string, Date>();
+  try {
+    firstContactByLead = await getFirstContactByLead(leads.map((lead) => lead.id));
+  } catch (contactErr) {
+    console.error("Warning: Error fetching firstContactByLead in reports, proceeding gracefully:", contactErr);
+  }
 
   const responseHours = leads.flatMap((lead) => {
     const firstContact = firstContactByLead.get(lead.id);

@@ -73,6 +73,8 @@ const config: Config = {
         "gold-shimmer": "goldShimmer 3s ease-in-out infinite",
         "gold-pulse": "goldPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "gradient-x": "gradientX 6s ease infinite",
+        "float-slow": "floatSlow 6s ease-in-out infinite",
+        "fade-in-up": "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
       keyframes: {
         goldShimmer: {
@@ -86,6 +88,14 @@ const config: Config = {
         gradientX: {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
+        },
+        floatSlow: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
       borderRadius: {

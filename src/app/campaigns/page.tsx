@@ -18,6 +18,8 @@ import {
   Building2,
   CheckCircle2,
   Search,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
@@ -297,6 +299,139 @@ interface CampaignsData {
   };
 }
 
+const DEMO_CAMPAIGNS_DATA: CampaignsData = {
+  success: true,
+  days: 30,
+  clientId: null,
+  selectedAccountId: "all",
+  currency: "USD",
+  accounts: [
+    {
+      id: "demo-acc-1",
+      accountName: "Meta Ads Agency · Bunker VIP",
+      accountType: "meta_ads",
+      status: "active",
+      lastSyncAt: new Date().toISOString(),
+      client: { id: "c1", name: "Grupo Alianza Constructora" },
+    },
+  ],
+  campaigns: [
+    {
+      id: "demo-camp-1",
+      name: "Meta Ads · Captación WhatsApp Leads Inmobiliaria Preventa",
+      platform: "meta_ads",
+      objective: "MESSAGES",
+      status: "active",
+      currency: "USD",
+      budget: 150,
+      budgetType: "daily",
+      startDate: new Date(Date.now() - 25 * 86400000).toISOString(),
+      endDate: null,
+      connectedAccountId: "demo-acc-1",
+      accountName: "Meta Ads Agency",
+      client: { id: "c1", name: "Grupo Alianza Constructora" },
+      spend: 4250,
+      impressions: 185000,
+      clicks: 4820,
+      conversions: 380,
+      ctr: 2.61,
+      cpc: 0.88,
+      cpm: 22.97,
+      costPerConversion: 11.18,
+    },
+    {
+      id: "demo-camp-2",
+      name: "Instagram Reels · Retargeting Carrito Abandonado E-Commerce",
+      platform: "meta_ads",
+      objective: "CONVERSIONS",
+      status: "active",
+      currency: "USD",
+      budget: 100,
+      budgetType: "daily",
+      startDate: new Date(Date.now() - 20 * 86400000).toISOString(),
+      endDate: null,
+      connectedAccountId: "demo-acc-1",
+      accountName: "Meta Ads Agency",
+      client: { id: "c2", name: "Kroma Brands Latam" },
+      spend: 2890,
+      impressions: 142000,
+      clicks: 3910,
+      conversions: 290,
+      ctr: 2.75,
+      cpc: 0.74,
+      cpm: 20.35,
+      costPerConversion: 9.96,
+    },
+    {
+      id: "demo-camp-3",
+      name: "Meta Feed · Formulario Instantáneo LeadGen B2B Software",
+      platform: "meta_ads",
+      objective: "LEAD_GENERATION",
+      status: "active",
+      currency: "USD",
+      budget: 120,
+      budgetType: "daily",
+      startDate: new Date(Date.now() - 18 * 86400000).toISOString(),
+      endDate: null,
+      connectedAccountId: "demo-acc-1",
+      accountName: "Meta Ads Agency",
+      client: { id: "c3", name: "Nova Cloud Tech" },
+      spend: 3120,
+      impressions: 98000,
+      clicks: 2450,
+      conversions: 195,
+      ctr: 2.5,
+      cpc: 1.27,
+      cpm: 31.84,
+      costPerConversion: 16.0,
+    },
+    {
+      id: "demo-camp-4",
+      name: "WhatsApp Direct · Campaña Flash Descuentos Especiales",
+      platform: "meta_ads",
+      objective: "MESSAGES",
+      status: "active",
+      currency: "USD",
+      budget: 80,
+      budgetType: "daily",
+      startDate: new Date(Date.now() - 10 * 86400000).toISOString(),
+      endDate: null,
+      connectedAccountId: "demo-acc-1",
+      accountName: "Meta Ads Agency",
+      client: { id: "c4", name: "MacroAlimentos Corp" },
+      spend: 1840,
+      impressions: 82000,
+      clicks: 2100,
+      conversions: 210,
+      ctr: 2.56,
+      cpc: 0.88,
+      cpm: 22.44,
+      costPerConversion: 8.76,
+    },
+  ],
+  daily: Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(Date.now() - (29 - i) * 86400000);
+    return {
+      date: d.toISOString().slice(0, 10),
+      spend: Math.round(350 + Math.sin(i) * 80 + i * 5),
+      impressions: Math.round(15000 + Math.sin(i) * 3000 + i * 200),
+      clicks: Math.round(400 + Math.sin(i) * 80 + i * 6),
+      conversions: Math.round(32 + Math.sin(i) * 8 + i * 0.5),
+    };
+  }),
+  totals: {
+    spend: 12100,
+    impressions: 507000,
+    clicks: 13280,
+    conversions: 1075,
+    ctr: 2.62,
+    cpc: 0.91,
+    cpm: 23.86,
+    costPerConversion: 11.25,
+    activeCampaigns: 4,
+  },
+};
+
 export default function CampaignsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando campañas...</div>}>
@@ -324,6 +459,7 @@ function CampaignsPageContent() {
   const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const handleSyncCampaigns = async () => {
     setSyncing(true);
@@ -391,25 +527,36 @@ function CampaignsPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, days, clientId, selectedAccountId]);
 
-  const currency: string | null = data?.currency || null;
-  const totals = data?.totals;
-  const hasAccounts = Boolean(data?.accounts && data.accounts.length > 0);
-  const selectedAccount = data?.accounts.find((a) => a.id === selectedAccountId);
+  const displayData = useMemo(() => {
+    if (isDemoMode) return DEMO_CAMPAIGNS_DATA;
+    if (data && data.campaigns && data.campaigns.length > 0) return data;
+    if (!loading && (!data || !data.campaigns || data.campaigns.length === 0)) {
+      return DEMO_CAMPAIGNS_DATA;
+    }
+    return data;
+  }, [data, isDemoMode, loading]);
+
+  const isShowingDemo = displayData === DEMO_CAMPAIGNS_DATA;
+
+  const currency: string | null = displayData?.currency || null;
+  const totals = displayData?.totals;
+  const hasAccounts = Boolean(displayData?.accounts && displayData.accounts.length > 0);
+  const selectedAccount = displayData?.accounts.find((a) => a.id === selectedAccountId);
 
   const networkCounts = useMemo(() => {
     const counts = { all: 0, instagram: 0, facebook: 0, whatsapp: 0, tiktok: 0, google: 0 };
-    if (!data?.campaigns) return counts;
-    counts.all = data.campaigns.length;
-    for (const c of data.campaigns) {
+    if (!displayData?.campaigns) return counts;
+    counts.all = displayData.campaigns.length;
+    for (const c of displayData.campaigns) {
       const net = detectCampaignNetwork(c.name, c.platform, c.objective).network;
       if (counts[net] !== undefined) counts[net]++;
     }
     return counts;
-  }, [data?.campaigns]);
+  }, [displayData?.campaigns]);
 
   const filteredCampaigns = useMemo(() => {
-    if (!data?.campaigns) return [];
-    let list = data.campaigns;
+    if (!displayData?.campaigns) return [];
+    let list = displayData.campaigns;
 
     if (activeNetwork !== "all") {
       list = list.filter(
@@ -427,7 +574,7 @@ function CampaignsPageContent() {
     }
 
     return list;
-  }, [data?.campaigns, activeNetwork, campaignSearch]);
+  }, [displayData?.campaigns, activeNetwork, campaignSearch]);
 
   const kpis = totals
     ? [
@@ -445,27 +592,33 @@ function CampaignsPageContent() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAECF0]">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-              Pautas & Marketing
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="orvion-badge-gold">
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              <span>Pautas & Marketing</span>
             </span>
+            {isShowingDemo && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400">
+                ✦ Modo Presentación Activo
+              </span>
+            )}
             {activeClient ? (
-              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 text-amber-600" />
-                Marca: <strong>{activeClient.name}</strong>
+              <span className="orvion-badge-dark text-[11px] py-1 px-3">
+                <Building2 className="w-3 h-3 text-amber-400" />
+                <span>Marca: {activeClient.name}</span>
               </span>
             ) : !isClient ? (
-              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#8C929D] border border-[#E2E5EB] dark:border-[#242A35]">
                 Todas las Marcas
               </span>
             ) : null}
           </div>
-          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
           </h1>
-          <p className="text-xs text-[#475467] mt-0.5">
+          <p className="text-xs text-[#8C929D] font-medium mt-0.5">
             Inversión, alcance y resultados de las campañas pagadas en Meta (Facebook e Instagram) y TikTok.
           </p>
         </div>
@@ -499,19 +652,37 @@ function CampaignsPageContent() {
               ))}
             </select>
           )}
-          <div className="flex rounded-xl border border-[#EAECF0] bg-white p-0.5">
+          {/* Selector de Días */}
+          <div className="flex rounded-full border border-[#E2E5EB] dark:border-[#242A35] bg-white dark:bg-[#121417] p-1 shadow-2xs">
             {[7, 30, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  days === d ? "bg-[#101828] text-amber-400 shadow-sm" : "text-[#475467] hover:text-[#101828]"
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  days === d
+                    ? "bg-[#121417] text-amber-400 dark:bg-amber-400 dark:text-[#121417] shadow-xs"
+                    : "text-[#667085] hover:text-[#121417] dark:hover:text-white"
                 }`}
               >
                 {d} días
               </button>
             ))}
           </div>
+
+          {/* Toggle Demostración para Clientes */}
+          <button
+            type="button"
+            onClick={() => setIsDemoMode(!isDemoMode)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+              isShowingDemo
+                ? "bg-[#121417] text-white border-[#121417] dark:bg-amber-400 dark:text-[#121417] dark:border-amber-400"
+                : "bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#667085] border-[#E2E5EB] dark:border-[#242A35] hover:text-[#121417]"
+            }`}
+            title="Alternar datos demo para presentación a clientes"
+          >
+            <Zap className={`w-3.5 h-3.5 ${isShowingDemo ? "text-amber-400 dark:text-[#121417]" : "text-[#8C929D]"}`} />
+            <span>{isShowingDemo ? "Demo Activa" : "Modo Demo"}</span>
+          </button>
 
           <button
             type="button"
@@ -621,11 +792,11 @@ function CampaignsPageContent() {
                     selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#F2F4F7] text-[#475467]"
                   }`}
                 >
-                  {data.accounts.length}
+                  {displayData?.accounts?.length || 0}
                 </span>
               </button>
 
-              {data.accounts.map((a) => {
+              {(displayData?.accounts || []).map((a) => {
                 const isSelected = selectedAccountId === a.id;
                 return (
                   <button
@@ -664,7 +835,7 @@ function CampaignsPageContent() {
                 {!isClient && selectedAccount.client && (
                   <span className="text-amber-800/80">({selectedAccount.client.name})</span>
                 )}
-                <span className="text-amber-700 font-mono text-[11px]">· {data.campaigns.length} campaña(s)</span>
+                <span className="text-amber-700 font-mono text-[11px]">· {displayData?.campaigns?.length || 0} campaña(s)</span>
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId("all")}
@@ -710,7 +881,7 @@ function CampaignsPageContent() {
                 ))}
               </div>
             </div>
-            <DailyBars daily={data.daily} metric={metric} currency={currency} />
+            <DailyBars daily={displayData?.daily || []} metric={metric} currency={currency} />
           </div>
 
           {/* Pestañas de Clasificación de Red (Instagram, Facebook, WhatsApp, etc.) & Buscador */}
@@ -865,14 +1036,14 @@ function CampaignsPageContent() {
                     <tr>
                       <td colSpan={10} className="px-4 py-10 text-center text-[#667085]">
                         <div className="max-w-md mx-auto space-y-3">
-                          {data.campaigns.length === 0 ? (
+                          {!displayData?.campaigns || displayData.campaigns.length === 0 ? (
                             <>
                               <p className="text-xs">No hay campañas sincronizadas todavía para las cuentas seleccionadas.</p>
                               <button
                                 type="button"
                                 onClick={handleSyncCampaigns}
                                 disabled={syncing}
-                                className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 shadow-2xs"
+                                className="px-4 py-2 rounded-full bg-[#121417] text-white hover:bg-[#1E2229] text-xs font-bold inline-flex items-center gap-2 shadow-2xs cursor-pointer"
                               >
                                 <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${syncing ? "animate-spin" : ""}`} />
                                 <span>{syncing ? "Sincronizando de Meta Ads..." : "Sincronizar Campañas Ahora"}</span>
@@ -889,9 +1060,9 @@ function CampaignsPageContent() {
                                   setActiveNetwork("all");
                                   setCampaignSearch("");
                                 }}
-                                className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-medium hover:bg-slate-800 transition-colors cursor-pointer"
+                                className="px-4 py-1.5 rounded-full bg-[#121417] text-white text-xs font-bold hover:bg-[#1E2229] transition-colors cursor-pointer"
                               >
-                                Ver todas las campañas ({data.campaigns.length})
+                                Ver todas las campañas ({displayData?.campaigns?.length || 0})
                               </button>
                             </>
                           )}
