@@ -54,14 +54,7 @@ export async function buildCommercialReport(scope: TenantScope, days: number): P
     }),
   ]);
 
-  const firstContacts = leads.length
-    ? await prisma.activity.groupBy({
-        by: ["leadId"],
-        where: { leadId: { in: leads.map((lead) => lead.id) } },
-        _min: { performedAt: true },
-      })
-    : [];
-  const firstContactByLead = new Map(firstContacts.map((row) => [row.leadId, row._min.performedAt]));
+  const firstContactByLead = await getFirstContactByLead(leads.map((lead) => lead.id));
 
   const responseHours = leads.flatMap((lead) => {
     const firstContact = firstContactByLead.get(lead.id);
@@ -151,4 +144,40 @@ function breakdownBySource(
   return Array.from(rows.values())
     .map((row) => ({ ...row, conversionRate: percentage(row.converted, row.leads) }))
     .sort((a, b) => b.leads - a.leads);
+}
+
+const ACTIVITY_CHUNK_SIZE = 5000;
+
+/**
+ * Consulta la primera actividad por lead fragmentando en lotes de 5000 IDs para evitar
+ * exceder el límite de parámetros de PostgreSQL (máximo 32767 bind variables).
+ */
+async function getFirstContactByLead(leadIds: string[]): Promise<Map<string, Date>> {
+  if (leadIds.length === 0) return new Map();
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < leadIds.length; i += ACTIVITY_CHUNK_SIZE) {
+    chunks.push(leadIds.slice(i, i + ACTIVITY_CHUNK_SIZE));
+  }
+
+  const chunkResults = await Promise.all(
+    chunks.map((chunk) =>
+      prisma.activity.groupBy({
+        by: ["leadId"],
+        where: { leadId: { in: chunk } },
+        _min: { performedAt: true },
+      })
+    )
+  );
+
+  const map = new Map<string, Date>();
+  for (const group of chunkResults) {
+    for (const row of group) {
+      if (row.leadId && row._min.performedAt) {
+        map.set(row.leadId, row._min.performedAt);
+      }
+    }
+  }
+
+  return map;
 }

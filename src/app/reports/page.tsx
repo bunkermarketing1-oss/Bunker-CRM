@@ -55,26 +55,33 @@ function ReportsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#EAECF0]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+      {/* Cabecera Estilo Cápsula Orvion con Paleta Dorado y Negro */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="orvion-badge-gold text-[10px]">
               Analítica & Retorno
             </span>
             {activeClient ? (
-              <span className="text-[11px] font-semibold text-[#101828] bg-[#F8F9FA] px-2.5 py-0.5 rounded-md border border-[#EAECF0] flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 text-amber-600" />
+              <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-amber-500" />
                 Marca: <strong>{activeClient.name}</strong>
               </span>
             ) : !user?.isClientUser ? (
-              <span className="text-[11px] text-[#667085] bg-[#F8F9FA] px-2 py-0.5 rounded-md border border-[#EAECF0]">
+              <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
                 Vista Global Agencia
               </span>
             ) : null}
           </div>
-          <h1 className="text-2xl font-semibold text-[#101828] tracking-tight">Reportes & ROI</h1>
-          <p className="text-xs text-[#667085] mt-0.5">
-            Captación, conversión, velocidad de respuesta y retorno de la pauta de {scopeLabel}, calculados con los registros reales del CRM.
+
+          <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight">
+            Reportes & ROI
+          </h1>
+          <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
+            <span>
+              Captación, conversión, velocidad de respuesta y retorno de la pauta de {scopeLabel}, calculados con los registros reales del CRM.
+            </span>
           </p>
         </div>
 
@@ -84,17 +91,17 @@ function ReportsContent() {
             type="button"
             onClick={refresh}
             aria-label="Actualizar reporte"
-            className="w-9 h-9 rounded-2xl bg-white border border-[#ECEAE3] flex items-center justify-center text-[#6B6861] hover:text-[#141414] shadow-2xs"
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-center text-[#121417] dark:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] shadow-orvion transition-all cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {error}
+        <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs font-semibold text-red-700 dark:text-red-400 flex items-center gap-2.5 shadow-orvion">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -102,35 +109,48 @@ function ReportsContent() {
         <ReportSkeleton />
       ) : report && kpis ? (
         <div className={`space-y-6 transition-opacity ${loading ? "opacity-60" : ""}`}>
+          {/* Tarjetas de Métricas en Cápsula Orvion */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <StatCard
               emphasis
               icon={DollarSign}
               label="Ingresos ganados"
+              subPeriod="Cierre comercial"
               value={formatCompactMoney(kpis.wonRevenue)}
               hint={`${formatNumber(kpis.wonDeals)} negocios · ticket promedio ${formatMoney(kpis.averageTicket)}`}
+              badgeText="Ingresos"
+              badgeVariant="gold"
             />
             <StatCard
               icon={Users}
               label="Leads nuevos"
+              subPeriod="Conversión"
               value={formatNumber(kpis.newLeads)}
               hint={`${formatPercent(kpis.conversionRate)} ya convertidos`}
+              badgeText={formatPercent(kpis.conversionRate)}
+              badgeVariant="gold"
             />
             <StatCard
               icon={Clock}
               label="Primera respuesta"
+              subPeriod="Velocidad SLA"
               value={kpis.medianFirstResponseHours === null ? "—" : formatHours(kpis.medianFirstResponseHours)}
               hint={`Mediana · ${formatPercent(kpis.contactedRate)} de los leads tiene actividad`}
+              badgeText="SLA"
+              badgeVariant="dark"
             />
             <StatCard
               icon={Target}
               label="Costo por lead"
+              subPeriod="Pauta unitaria"
               value={kpis.costPerLead === null ? "—" : formatMoney(kpis.costPerLead, kpis.adSpendCurrency ?? undefined)}
               hint={
                 kpis.adSpend > 0
                   ? `Inversión ${kpis.adSpendCurrency ? formatCompactMoney(kpis.adSpend, kpis.adSpendCurrency) : formatNumber(Math.round(kpis.adSpend)) + " (monedas mixtas)"} / leads de pauta`
                   : "Sin inversión sincronizada en el período"
               }
+              badgeText="Pauta"
+              badgeVariant="gold"
             />
           </div>
 
@@ -143,7 +163,7 @@ function ReportsContent() {
                 <button
                   type="button"
                   onClick={() => setShowTrendTable((v) => !v)}
-                  className="text-[11px] font-semibold text-[#6B6861] hover:text-[#141414] underline-offset-4 hover:underline"
+                  className="px-3 py-1 rounded-full text-[11px] font-semibold bg-[#F3F4F7] dark:bg-[#1E2229] text-[#121417] dark:text-white hover:bg-[#E2E5EB] dark:hover:bg-[#2A2E37] transition-all cursor-pointer"
                 >
                   {showTrendTable ? "Ver gráfica" : "Ver tabla"}
                 </button>
@@ -156,26 +176,16 @@ function ReportsContent() {
               )}
             </Panel>
 
-            <Panel icon={KanbanSquare} title="Pipeline abierto">
-              <div className="flex items-baseline justify-between mb-5">
-                <div>
-                  <div className="text-2xl text-[#141414]">{formatCompactMoney(kpis.openPipelineValue)}</div>
-                  <div className="text-[11px] text-[#6B6861]">valor total abierto</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-base text-[#9A7320] dark:text-[#E5C158]">{formatCompactMoney(kpis.weightedPipelineValue)}</div>
-                  <div className="text-[11px] text-[#6B6861]">ponderado por probabilidad</div>
-                </div>
-              </div>
+            <Panel icon={KanbanSquare} title="Pipeline por etapa">
               {report.stages.some((stage) => stage.deals > 0) ? (
-                <PipelineStageList stages={report.stages.filter((stage) => stage.deals > 0)} />
+                <PipelineStageList stages={report.stages} />
               ) : (
                 <EmptyState icon={KanbanSquare} title="Sin negocios abiertos" />
               )}
             </Panel>
           </div>
 
-          <Panel icon={Megaphone} title="Rendimiento por fuente de captación">
+          <Panel icon={Megaphone} title="Desglose por canal de adquisición">
             {report.sources.length === 0 ? (
               <EmptyState icon={Megaphone} title="Sin leads en este período" />
             ) : (
@@ -183,7 +193,7 @@ function ReportsContent() {
             )}
           </Panel>
 
-          <p className="text-[11px] text-[#9C988F] leading-relaxed">
+          <p className="text-[11px] text-[#8C929D] leading-relaxed font-medium">
             Ingresos: oportunidades marcadas como ganadas en el período (por fecha de última actualización). Primera respuesta: tiempo
             entre el alta del lead y su primera actividad registrada. Costo por lead: gasto de campañas sincronizadas dividido entre
             leads de fuentes pagadas.
@@ -199,12 +209,12 @@ function ReportSkeleton() {
     <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Cargando reporte">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-36 rounded-3xl bg-white border border-[#ECEAE3]" />
+          <div key={i} className="h-40 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
         ))}
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 h-72 rounded-3xl bg-white border border-[#ECEAE3]" />
-        <div className="h-72 rounded-3xl bg-white border border-[#ECEAE3]" />
+        <div className="xl:col-span-2 h-80 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
+        <div className="h-80 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion" />
       </div>
     </div>
   );

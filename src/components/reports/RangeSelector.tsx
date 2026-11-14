@@ -15,7 +15,7 @@ interface RangeSelectorProps {
 
 export default function RangeSelector({ value, onChange }: RangeSelectorProps) {
   return (
-    <div role="radiogroup" aria-label="Período del reporte" className="inline-flex p-1 rounded-2xl bg-white border border-[#ECEAE3]">
+    <div role="radiogroup" aria-label="Período del reporte" className="inline-flex p-1 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
       {REPORT_RANGE_DAYS.map((days) => {
         const isActive = days === value;
         return (
@@ -25,8 +25,10 @@ export default function RangeSelector({ value, onChange }: RangeSelectorProps) {
             role="radio"
             aria-checked={isActive}
             onClick={() => onChange(days)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-              isActive ? "bg-[#141414] text-[#FAF8F3] dark:bg-[#FAF8F3] dark:text-[#141414]" : "text-[#6B6861] hover:text-[#141414]"
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+              isActive
+                ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+                : "text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229]"
             }`}
           >
             {RANGE_LABEL[days]}
