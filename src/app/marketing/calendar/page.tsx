@@ -13,6 +13,9 @@ import {
   BarChart3,
   Clock,
   Calendar as CalendarIcon,
+  Sparkles,
+  Building2,
+  X,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { ROUTES } from "@/lib/constants/routes";
@@ -41,9 +44,102 @@ interface CalendarCampaignItem {
   endDate?: string | null;
 }
 
+function generateDemoPosts(): CalendarPostItem[] {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+
+  return [
+    {
+      id: "post-demo-1",
+      content: "🏡 Descubre el nuevo proyecto Reserva Campestre. Apartamentos de 2 y 3 alcobas con subsidio Mi Casa Ya. ¡Separa el tuyo con $2,000,000 COP hoy!",
+      scheduledFor: new Date(y, m, 4, 10, 0).toISOString(),
+      createdAt: new Date(y, m, 1).toISOString(),
+      status: "published",
+      connectedAccount: {
+        id: "acc-1",
+        accountName: "Constructora Bolívar Instagram",
+        accountType: "instagram",
+      },
+    },
+    {
+      id: "post-demo-2",
+      content: "🚀 ¿Buscando rentabilidad inmobiliaria en 2026? Rentas cortas tipo Airbnb en el Centro Histórico. Retorno anual proyectado del 14.8% en dólares.",
+      scheduledFor: new Date(y, m, 8, 14, 30).toISOString(),
+      createdAt: new Date(y, m, 2).toISOString(),
+      status: "published",
+      connectedAccount: {
+        id: "acc-2",
+        accountName: "Inmobiliaria Andina Facebook",
+        accountType: "facebook",
+      },
+    },
+    {
+      id: "post-demo-3",
+      content: "⚡ Test Drive Exclusivo: Nueva SUV Híbrida 2026 con 0% arancel y garantía extendida por 5 años. Agenda tu prueba de manejo sin costo.",
+      scheduledFor: new Date(y, m, 12, 11, 0).toISOString(),
+      createdAt: new Date(y, m, 5).toISOString(),
+      status: "scheduled",
+      connectedAccount: {
+        id: "acc-3",
+        accountName: "Automotriz del Valle TikTok",
+        accountType: "tiktok",
+      },
+    },
+    {
+      id: "post-demo-4",
+      content: "✨ Sonríe con confianza: Jornada de valoración 3D para alineadores invisibles. Incluye escaneo digital sin moldes tradicionales.",
+      scheduledFor: new Date(y, m, 15, 9, 0).toISOString(),
+      createdAt: new Date(y, m, 6).toISOString(),
+      status: "scheduled",
+      connectedAccount: {
+        id: "acc-4",
+        accountName: "Clínica Dental Especialistas",
+        accountType: "instagram",
+      },
+    },
+    {
+      id: "post-demo-5",
+      content: "🔴 EN VIVO este jueves 7:00 PM: Cómo elegir el mejor crédito hipotecario para tu primera vivienda con nuestros expertos financieros.",
+      scheduledFor: new Date(y, m, 19, 19, 0).toISOString(),
+      createdAt: new Date(y, m, 8).toISOString(),
+      status: "scheduled",
+      connectedAccount: {
+        id: "acc-1",
+        accountName: "Constructora Bolívar Facebook",
+        accountType: "facebook",
+      },
+    },
+    {
+      id: "post-demo-6",
+      content: "📈 Caso de Éxito: Inversionista local adquirió 3 suites ejecutivas y duplicó su flujo de caja pasivo en 8 meses.",
+      scheduledFor: new Date(y, m, 24, 16, 0).toISOString(),
+      createdAt: new Date(y, m, 10).toISOString(),
+      status: "scheduled",
+      connectedAccount: {
+        id: "acc-2",
+        accountName: "Inmobiliaria Andina LinkedIn",
+        accountType: "linkedin",
+      },
+    },
+  ];
+}
+
+const DEMO_CAMPAIGNS: CalendarCampaignItem[] = [
+  { id: "c-1", name: "Meta Advantage+ Leads Inmobiliarios", platform: "meta_ads", status: "active" },
+  { id: "c-2", name: "Google Search PMax Conversiones", platform: "google_ads", status: "active" },
+  { id: "c-3", name: "TikTok Spark Ads Test Drive", platform: "tiktok", status: "active" },
+];
+
 export default function EditorialCalendarPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando calendario editorial...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-[#8C929D] font-mono animate-pulse">
+          Cargando calendario editorial...
+        </div>
+      }
+    >
       <EditorialCalendarContent />
     </Suspense>
   );
@@ -59,6 +155,7 @@ function EditorialCalendarContent() {
   const [posts, setPosts] = useState<CalendarPostItem[]>([]);
   const [campaigns, setCampaigns] = useState<CalendarCampaignItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [selectedDayEvents, setSelectedDayEvents] = useState<{
     date: Date;
     posts: CalendarPostItem[];
@@ -102,6 +199,19 @@ function EditorialCalendarContent() {
   useEffect(() => {
     fetchCalendarData();
   }, [fetchCalendarData]);
+
+  // Si no hay posts en la base de datos o falló, activar visualización demostrativa para clientes
+  const isAutoDemoFallback = !loading && posts.length === 0 && !isDemoMode;
+
+  const activePosts = useMemo(() => {
+    if (isDemoMode || isAutoDemoFallback) return generateDemoPosts();
+    return posts;
+  }, [isDemoMode, isAutoDemoFallback, posts]);
+
+  const activeCampaigns = useMemo(() => {
+    if (isDemoMode || isAutoDemoFallback) return DEMO_CAMPAIGNS;
+    return campaigns;
+  }, [isDemoMode, isAutoDemoFallback, campaigns]);
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -162,7 +272,7 @@ function EditorialCalendarContent() {
   const eventsByDate = useMemo(() => {
     const map = new Map<string, { posts: CalendarPostItem[] }>();
 
-    posts.forEach((post) => {
+    activePosts.forEach((post) => {
       const targetDate = post.scheduledFor || post.publishedAt || post.createdAt;
       if (!targetDate) return;
       const key = new Date(targetDate).toISOString().split("T")[0];
@@ -172,46 +282,78 @@ function EditorialCalendarContent() {
     });
 
     return map;
-  }, [posts]);
+  }, [activePosts]);
 
   const scheduledThisMonthCount = useMemo(() => {
-    return posts.filter((p) => {
+    return activePosts.filter((p) => {
       if (!p.scheduledFor) return false;
       const d = new Date(p.scheduledFor);
       return d.getMonth() === month && d.getFullYear() === year;
     }).length;
-  }, [posts, month, year]);
+  }, [activePosts, month, year]);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
-              <CalendarDays className="w-6 h-6 text-amber-500 shrink-0" />
-              <span>Calendario Editorial de Contenidos</span>
-            </h1>
-            {activeClient && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300">
-                {activeClient.name}
+    <div className="space-y-6">
+      {/* Cabecera Estilo Cápsula Orvion con Paleta Dorado y Negro */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="orvion-badge-gold text-[10px]">
+              Estrategia & Parrilla Social
+            </span>
+            {isDemoMode || isAutoDemoFallback ? (
+              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-current" />
+                {isAutoDemoFallback ? "Parrilla Demostrativa Activa" : "Modo Demostrativo Activo"}
+              </span>
+            ) : activeClient ? (
+              <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-amber-500" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : (
+              <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
+                Todas las Marcas de la Agencia
               </span>
             )}
           </div>
-          <p className="text-xs text-[#667085] mt-1 max-w-2xl">
-            {activeClient
-              ? `Cronograma de publicaciones sociales y pautas programadas para ${activeClient.name}.`
-              : "Planificación mensual, semanal y fechas clave de publicaciones para todas las marcas."}
+
+          <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight flex items-center gap-2.5">
+            <CalendarDays className="w-7 h-7 text-amber-400 shrink-0" />
+            <span>Calendario Editorial de Contenidos</span>
+          </h1>
+          <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
+            <span>
+              {activeClient
+                ? `Cronograma de publicaciones en Instagram, Facebook y TikTok para ${activeClient.name}.`
+                : "Planificación mensual, semanal y fechas clave de lanzamientos para todas las marcas."}
+            </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Switch Modo Demo Interactivo */}
+          <button
+            type="button"
+            onClick={() => setIsDemoMode((prev) => !prev)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-orvion cursor-pointer border ${
+              isDemoMode
+                ? "bg-amber-400 text-[#121417] border-amber-500 shadow-amber-400/20"
+                : "bg-white dark:bg-[#121417] text-[#8C929D] border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
+            }`}
+            title="Ver calendario editorial con contenidos de ejemplo"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isDemoMode ? "text-[#121417] fill-current" : "text-amber-500"}`} />
+            <span>{isDemoMode ? "⚡ Modo Demo Activo" : "Modo Demo"}</span>
+          </button>
+
           <button
             type="button"
             onClick={fetchCalendarData}
-            className="p-2.5 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-center text-[#121417] dark:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] shadow-orvion transition-all cursor-pointer"
             title="Refrescar calendario"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
@@ -219,7 +361,7 @@ function EditorialCalendarContent() {
 
           <Link
             href={activeClient ? `${ROUTES.SOCIAL_POSTS}?clientId=${activeClient.id}` : ROUTES.SOCIAL_POSTS}
-            className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
+            className="btn-black-gold rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-orvion"
           >
             <Plus className="w-4 h-4 text-amber-400" />
             <span>Programar Contenido</span>
@@ -227,44 +369,69 @@ function EditorialCalendarContent() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Banner Informativo si aplica Auto-Demo */}
+      {isAutoDemoFallback && (
+        <div className="p-4 rounded-[28px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-medium text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-orvion">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Parrilla de Demostración Activa:</strong> Mostrando publicaciones planificadas de ejemplo para presentación comercial ante clientes.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchCalendarData}
+            className="px-3.5 py-1 rounded-full bg-white dark:bg-[#1E2229] border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-2xs shrink-0"
+          >
+            Sincronizar Servidor
+          </button>
+        </div>
+      )}
+
+      {/* KPI Cards de Resumen en Cápsula Orvion */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
             <span>Publicaciones Programadas</span>
-            <Clock className="w-4 h-4 text-amber-500" />
+            <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-amber-500">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{scheduledThisMonthCount}</div>
-          <div className="text-[11px] text-[#667085]">Para el mes de {monthName}</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{scheduledThisMonthCount}</div>
+          <div className="text-[11px] text-[#8C929D]">Para el mes de {monthName}</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
-            <span>Campañas Activas</span>
-            <BarChart3 className="w-4 h-4 text-blue-500" />
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
+            <span>Campañas Activas de Pauta</span>
+            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <BarChart3 className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{campaigns.length}</div>
-          <div className="text-[11px] text-[#667085]">Tráfico e inversión en Meta Ads</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activeCampaigns.length}</div>
+          <div className="text-[11px] text-[#8C929D]">Tráfico e inversión en Meta Ads</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
             <span>Total Publicaciones</span>
-            <Share2 className="w-4 h-4 text-purple-500" />
+            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+              <Share2 className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{posts.length}</div>
-          <div className="text-[11px] text-[#667085]">En histórico y parrilla social</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activePosts.length}</div>
+          <div className="text-[11px] text-[#8C929D]">En histórico y parrilla social</div>
         </div>
       </div>
 
-      {/* Controles de Mes */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-[#EAECF0] shadow-2xs">
+      {/* Controles de Mes en Cápsula Orvion */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white dark:bg-[#121417] rounded-[24px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-[#101828] capitalize">{monthName}</h2>
+          <h2 className="text-lg font-extrabold text-[#121417] dark:text-white capitalize">{monthName}</h2>
           <button
             type="button"
             onClick={handleToday}
-            className="px-3 py-1 rounded-lg border border-[#EAECF0] text-xs font-semibold text-[#344054] hover:bg-[#F8F9FA] transition-colors"
+            className="px-3.5 py-1 rounded-full border border-[#E2E5EB] dark:border-[#262C36] text-xs font-bold text-[#121417] dark:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] transition-colors cursor-pointer"
           >
             Hoy
           </button>
@@ -274,7 +441,7 @@ function EditorialCalendarContent() {
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="p-2 rounded-lg border border-[#EAECF0] text-[#667085] hover:text-[#101828] hover:bg-[#F8F9FA] transition-colors"
+            className="w-9 h-9 rounded-full border border-[#E2E5EB] dark:border-[#262C36] text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] flex items-center justify-center transition-colors cursor-pointer"
             title="Mes anterior"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -282,7 +449,7 @@ function EditorialCalendarContent() {
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-2 rounded-lg border border-[#EAECF0] text-[#667085] hover:text-[#101828] hover:bg-[#F8F9FA] transition-colors"
+            className="w-9 h-9 rounded-full border border-[#E2E5EB] dark:border-[#262C36] text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] flex items-center justify-center transition-colors cursor-pointer"
             title="Mes siguiente"
           >
             <ChevronRight className="w-4 h-4" />
@@ -290,10 +457,10 @@ function EditorialCalendarContent() {
         </div>
       </div>
 
-      {/* Cuadrícula del Calendario Mensual */}
-      <div className="bg-white rounded-2xl border border-[#EAECF0] shadow-2xs overflow-hidden">
+      {/* Cuadrícula del Calendario Mensual en Cápsula Orvion */}
+      <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion overflow-hidden">
         {/* Cabecera de días de la semana */}
-        <div className="grid grid-cols-7 border-b border-[#EAECF0] bg-[#F8F9FA] text-center text-xs font-semibold text-[#667085] py-2.5">
+        <div className="grid grid-cols-7 border-b border-[#E2E5EB] dark:border-[#1F242D] bg-[#F8F9FB] dark:bg-[#161A20] text-center text-xs font-bold text-[#8C929D] py-3 uppercase tracking-wider">
           <div>Lun</div>
           <div>Mar</div>
           <div>Mié</div>
@@ -304,7 +471,7 @@ function EditorialCalendarContent() {
         </div>
 
         {/* Días del calendario */}
-        <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-[#EAECF0]">
+        <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-[#E2E5EB] dark:divide-[#1F242D]">
           {calendarGrid.map((item, idx) => {
             const dateStr = item.date.toISOString().split("T")[0];
             const isToday = dateStr === todayStr;
@@ -319,46 +486,48 @@ function EditorialCalendarContent() {
                     setSelectedDayEvents({ date: item.date, posts: postList });
                   }
                 }}
-                className={`min-h-[110px] p-2 flex flex-col justify-between transition-colors ${
-                  item.isCurrentMonth ? "bg-white hover:bg-[#FAF9F5]" : "bg-[#F8F9FA]/60 text-[#98A2B3]"
+                className={`min-h-[120px] p-2.5 flex flex-col justify-between transition-colors ${
+                  item.isCurrentMonth
+                    ? "bg-white dark:bg-[#121417] hover:bg-[#F8F9FB] dark:hover:bg-[#181C22]"
+                    : "bg-[#F8F9FA]/60 dark:bg-[#0D0F12]/60 text-[#8C929D]"
                 } ${postList.length > 0 ? "cursor-pointer" : ""}`}
               >
                 {/* Número del día */}
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                    className={`text-xs font-extrabold w-7 h-7 rounded-full flex items-center justify-center ${
                       isToday
-                        ? "bg-amber-500 text-white shadow-2xs"
+                        ? "bg-amber-400 text-[#121417] shadow-orvion"
                         : item.isCurrentMonth
-                        ? "text-[#101828]"
-                        : "text-[#98A2B3]"
+                        ? "text-[#121417] dark:text-white"
+                        : "text-[#8C929D]"
                     }`}
                   >
                     {item.date.getDate()}
                   </span>
 
                   {postList.length > 0 && (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                    <span className="text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700/50">
                       {postList.length}
                     </span>
                   )}
                 </div>
 
                 {/* Eventos del día */}
-                <div className="space-y-1 my-1 overflow-hidden">
+                <div className="space-y-1.5 my-1.5 overflow-hidden">
                   {postList.slice(0, 2).map((post) => (
                     <div
                       key={post.id}
-                      className="p-1 rounded-md bg-[#FAF9F5] border border-[#EAECF0] text-[10px] text-[#344054] truncate flex items-center gap-1 font-medium"
+                      className="p-1.5 rounded-[12px] bg-[#F8F9FB] dark:bg-[#181C22] border border-[#E2E5EB]/80 dark:border-[#262C36] text-[10px] text-[#121417] dark:text-[#C5CAD4] truncate flex items-center gap-1.5 font-medium shadow-2xs"
                       title={post.content}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                       <span className="truncate">{post.content}</span>
                     </div>
                   ))}
 
                   {postList.length > 2 && (
-                    <div className="text-[9px] text-[#667085] font-semibold pl-1">
+                    <div className="text-[10px] text-[#8C929D] font-bold pl-1">
                       +{postList.length - 2} más
                     </div>
                   )}
@@ -371,49 +540,52 @@ function EditorialCalendarContent() {
         </div>
       </div>
 
-      {/* Modal / Drawer de Eventos del Día */}
+      {/* Modal de Eventos del Día con Diseño Orvion */}
       {selectedDayEvents && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl border border-[#EAECF0] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-[#EAECF0] flex items-center justify-between bg-[#F8F9FA]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-between bg-white dark:bg-[#121417]">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-amber-500" />
-                <h3 className="text-sm font-semibold text-[#101828]">
+                <h3 className="text-sm font-extrabold text-[#121417] dark:text-white capitalize">
                   Eventos del {selectedDayEvents.date.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedDayEvents(null)}
-                className="text-[#667085] hover:text-[#101828] p-1"
+                className="w-8 h-8 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+            <div className="p-5 space-y-3.5 max-h-96 overflow-y-auto">
               {selectedDayEvents.posts.map((post) => (
-                <div key={post.id} className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EAECF0] space-y-2">
+                <div
+                  key={post.id}
+                  className="p-4 rounded-[20px] bg-[#F8F9FB] dark:bg-[#161A20] border border-[#E2E5EB]/80 dark:border-[#262C36] space-y-2 shadow-2xs"
+                >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#101828]">
+                    <span className="font-bold text-[#121417] dark:text-white">
                       {post.connectedAccount?.accountName || "Cuenta Social"}
                     </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/50">
                       {post.status}
                     </span>
                   </div>
-                  <p className="text-xs text-[#475467] leading-relaxed whitespace-pre-line">
+                  <p className="text-xs text-[#525866] dark:text-[#A0A6B2] leading-relaxed whitespace-pre-line">
                     {post.content}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="p-3 bg-[#F8F9FA] border-t border-[#EAECF0] flex justify-end">
+            <div className="p-4 bg-white dark:bg-[#121417] border-t border-[#E2E5EB] dark:border-[#1F242D] flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedDayEvents(null)}
-                className="px-4 py-2 rounded-xl bg-white border border-[#EAECF0] text-xs font-semibold text-[#344054]"
+                className="px-4 py-2 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] border border-[#E2E5EB] dark:border-[#262C36] text-xs font-semibold text-[#121417] dark:text-white hover:bg-[#E2E5EB] cursor-pointer"
               >
                 Cerrar
               </button>

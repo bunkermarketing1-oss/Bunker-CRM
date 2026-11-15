@@ -136,14 +136,18 @@ function ReportsContent() {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const { report, loading, error, refresh } = useReports(days, clientId);
 
+  // Si no hay reporte cargado por desconexión o error, pasamos automáticamente al demo
+  // para que la interfaz nunca se vea vacía ni rota ante clientes o directores comerciales.
+  const isAutoDemoFallback = !loading && (Boolean(error) || !report) && !isDemoMode;
+
   const activeReport = useMemo(() => {
-    if (isDemoMode) return getDemoReport(days);
+    if (isDemoMode || isAutoDemoFallback) return getDemoReport(days);
     return report;
-  }, [isDemoMode, days, report]);
+  }, [isDemoMode, isAutoDemoFallback, days, report]);
 
   const kpis = activeReport?.kpis;
 
-  const scopeLabel = isDemoMode
+  const scopeLabel = isDemoMode || isAutoDemoFallback
     ? "Demo Corporativa (Global)"
     : user?.isClientUser
     ? user.clientName ?? "tu empresa"
@@ -160,10 +164,10 @@ function ReportsContent() {
             <span className="orvion-badge-gold text-[10px]">
               Analítica & Retorno
             </span>
-            {isDemoMode ? (
+            {isDemoMode || isAutoDemoFallback ? (
               <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-current" />
-                Modo Demostrativo Activo
+                {isAutoDemoFallback ? "Métricas de Demostración Activas" : "Modo Demostrativo Activo"}
               </span>
             ) : activeClient ? (
               <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
@@ -217,7 +221,27 @@ function ReportsContent() {
         </div>
       </div>
 
-      {error && !isDemoMode && (
+      {isAutoDemoFallback && (
+        <div className="p-4 rounded-[28px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-medium text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-orvion">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Visualización de Demostración Activa:</strong> Mostrando métricas consolidadas de ejemplo para presentación comercial mientras se sincroniza con el servidor.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={refresh}
+              className="px-3.5 py-1 rounded-full bg-white dark:bg-[#1E2229] border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-2xs"
+            >
+              Reintentar Servidor
+            </button>
+          </div>
+        </div>
+      )}
+
+      {error && !isDemoMode && !isAutoDemoFallback && (
         <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs font-semibold text-red-700 dark:text-red-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-orvion">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0" />

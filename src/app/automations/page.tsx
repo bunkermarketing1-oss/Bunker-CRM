@@ -11,6 +11,8 @@ import {
   Zap,
   ShieldCheck,
   Flame,
+  Building2,
+  Sparkles,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { useTaskAutomations } from "@/hooks/useTaskAutomations";
@@ -24,7 +26,13 @@ import type { SmsAutomationSummary } from "@/types/automations";
 
 export default function AutomationsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando automatizaciones...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-[#8C929D] font-mono animate-pulse">
+          Cargando centro de automatizaciones...
+        </div>
+      }
+    >
       <AutomationsPageContent />
     </Suspense>
   );
@@ -97,77 +105,97 @@ function AutomationsPageContent() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAECF0]">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-[#101828] tracking-tight flex items-center gap-2.5">
-              <Workflow className="w-6 h-6 text-amber-500 shrink-0" />
-              <span>Centro de Automatizaciones & Flujos</span>
-            </h1>
-            {activeClient && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300">
-                {activeClient.name}
+    <div className="space-y-6">
+      {/* Cabecera Estilo Cápsula Orvion con Paleta Dorado y Negro */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="orvion-badge-gold text-[10px]">
+              Automatizaciones & Triggers
+            </span>
+            {activeClient ? (
+              <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-amber-500" />
+                Marca: <strong>{activeClient.name}</strong>
+              </span>
+            ) : (
+              <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
+                Flujos Globales de la Agencia
               </span>
             )}
           </div>
-          <p className="text-xs text-[#667085] mt-1 max-w-2xl">
-            {activeClient
-              ? `Reglas automáticas de onboarding, tareas y mensajes SMS configuradas para ${activeClient.name}.`
-              : "Disparadores automáticos de tareas, alertas de reactivación y mensajes SMS para acelerar la conversión comercial de la agencia."}
+
+          <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight flex items-center gap-2.5">
+            <Workflow className="w-7 h-7 text-amber-400 shrink-0" />
+            <span>Centro de Automatizaciones & Flujos</span>
+          </h1>
+          <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
+            <span>
+              {activeClient
+                ? `Reglas automáticas de asignación inmediata, recordatorios SLA y mensajes para ${activeClient.name}.`
+                : "Disparadores automáticos de tareas, alertas de reactivación y mensajes SMS para acelerar la conversión comercial."}
+            </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
             onClick={handleRefreshAll}
-            className="p-2.5 rounded-xl bg-white border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
-            title="Refrescar automatizaciones"
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-center text-[#121417] dark:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] shadow-orvion transition-all cursor-pointer"
+            title="Refrescar reglas del servidor"
           >
             <RefreshCw className={`w-4 h-4 ${taskLoading || smsLoading ? "animate-spin text-amber-500" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* KPI Cards de Resumen */}
+      {/* KPI Cards de Resumen en Cápsula Orvion */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
             <span>Reglas de Tareas Activas</span>
-            <CheckSquare className="w-4 h-4 text-emerald-600" />
+            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <CheckSquare className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{activeTaskCount}</div>
-          <div className="text-[11px] text-[#667085]">Onboarding, etapas y reactivación</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activeTaskCount}</div>
+          <div className="text-[11px] text-[#8C929D]">Onboarding, etapas del pipeline y seguimiento</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
             <span>SMS Automáticos Activos</span>
-            <MessageSquare className="w-4 h-4 text-purple-600" />
+            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+              <MessageSquare className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">{activeSmsCount}</div>
-          <div className="text-[11px] text-[#667085]">Calificación inmediata por fuente</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activeSmsCount}</div>
+          <div className="text-[11px] text-[#8C929D]">Respuesta y calificación instantánea por fuente</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#667085]">
+        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
             <span>Protección de Leads Fríos</span>
-            <ShieldCheck className="w-4 h-4 text-amber-600" />
+            <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-amber-500">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-[#101828]">Auto-Scan</div>
-          <div className="text-[11px] text-[#667085]">Barrido de estancamiento en pipeline</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">Auto-Scan SLA</div>
+          <div className="text-[11px] text-[#8C929D]">Barrido periódico de prospectos desatendidos</div>
         </div>
       </div>
 
-      {/* Pestañas de Navegación */}
-      <div className="flex items-center gap-1.5 p-1 bg-[#F8F9FA] border border-[#EAECF0] rounded-xl w-fit">
+      {/* Pestañas de Navegación en Cápsulas Orvion */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab("tasks")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "tasks" ? "bg-white text-[#101828] shadow-xs" : "text-[#667085] hover:text-[#101828]"
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 shadow-orvion cursor-pointer ${
+            activeTab === "tasks"
+              ? "bg-[#121417] text-white dark:bg-amber-400 dark:text-[#121417]"
+              : "bg-white dark:bg-[#121417] text-[#8C929D] hover:text-[#121417] dark:hover:text-white border border-[#E2E5EB] dark:border-[#1F242D]"
           }`}
         >
           <CheckSquare className="w-3.5 h-3.5 text-amber-500" />
@@ -177,8 +205,10 @@ function AutomationsPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("sms")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "sms" ? "bg-white text-[#101828] shadow-xs" : "text-[#667085] hover:text-[#101828]"
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 shadow-orvion cursor-pointer ${
+            activeTab === "sms"
+              ? "bg-[#121417] text-white dark:bg-amber-400 dark:text-[#121417]"
+              : "bg-white dark:bg-[#121417] text-[#8C929D] hover:text-[#121417] dark:hover:text-white border border-[#E2E5EB] dark:border-[#1F242D]"
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5 text-purple-500" />
@@ -188,8 +218,10 @@ function AutomationsPageContent() {
         <button
           type="button"
           onClick={() => setActiveTab("stale")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "stale" ? "bg-white text-[#101828] shadow-xs" : "text-[#667085] hover:text-[#101828]"
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 shadow-orvion cursor-pointer ${
+            activeTab === "stale"
+              ? "bg-[#121417] text-white dark:bg-amber-400 dark:text-[#121417]"
+              : "bg-white dark:bg-[#121417] text-[#8C929D] hover:text-[#121417] dark:hover:text-white border border-[#E2E5EB] dark:border-[#1F242D]"
           }`}
         >
           <Flame className="w-3.5 h-3.5 text-rose-500" />
@@ -199,15 +231,15 @@ function AutomationsPageContent() {
 
       {/* Contenido según pestaña */}
       {activeTab === "tasks" && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {taskError && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800">
+            <div className="p-4 rounded-[22px] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-800 dark:text-red-300 shadow-orvion">
               {taskError}
             </div>
           )}
 
           {/* Sección 1: Onboarding inmediato */}
-          <div className="bg-white border border-[#EAECF0] rounded-2xl p-5 shadow-2xs">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[28px] p-6 shadow-orvion">
             <TaskAutomationsSection
               kind={TASK_AUTOMATION_KIND.ONBOARDING}
               description="Crea tareas inmediatas para el asesor en cuanto entra un nuevo prospecto (ej. primer contacto dentro de los primeros 15 minutos)."
@@ -221,7 +253,7 @@ function AutomationsPageContent() {
           </div>
 
           {/* Sección 2: Transición de Etapa */}
-          <div className="bg-white border border-[#EAECF0] rounded-2xl p-5 shadow-2xs">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[28px] p-6 shadow-orvion">
             <TaskAutomationsSection
               kind={TASK_AUTOMATION_KIND.STAGE_FOLLOWUP}
               description="Dispara tareas cuando una oportunidad avanza a una etapa clave del pipeline (ej. agendar demo técnica, enviar cotización formal)."
@@ -235,7 +267,7 @@ function AutomationsPageContent() {
           </div>
 
           {/* Sección 3: Reactivación de Leads Estancados */}
-          <div className="bg-white border border-[#EAECF0] rounded-2xl p-5 shadow-2xs">
+          <div className="bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] rounded-[28px] p-6 shadow-orvion">
             <TaskAutomationsSection
               kind={TASK_AUTOMATION_KIND.STALE_REACTIVATION}
               description="Genera tareas automáticas de reactivación si un lead o negocio pasa demasiados días sin llamadas, mensajes ni notas."
@@ -257,11 +289,13 @@ function AutomationsPageContent() {
       )}
 
       {activeTab === "sms" && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs">
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
             <div>
-              <h2 className="text-sm font-semibold text-[#101828]">Mensajes SMS de Respuesta Inmediata</h2>
-              <p className="text-xs text-[#667085]">
+              <h2 className="text-sm font-extrabold text-[#121417] dark:text-white">
+                Mensajes SMS de Respuesta Inmediata
+              </h2>
+              <p className="text-xs text-[#8C929D] mt-0.5">
                 Dispara un SMS instantáneo en cuanto un prospecto deja sus datos por Meta Lead Ads, TikTok o formulario web.
               </p>
             </div>
@@ -271,7 +305,7 @@ function AutomationsPageContent() {
                 setEditingSms(null);
                 setSmsFormOpen(true);
               }}
-              className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-xs"
+              className="btn-black-gold rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-orvion"
             >
               <Plus className="w-4 h-4 text-amber-400" />
               <span>Nueva Regla SMS</span>
@@ -279,16 +313,18 @@ function AutomationsPageContent() {
           </div>
 
           {smsError && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800">
+            <div className="p-4 rounded-[22px] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-800 dark:text-red-300 shadow-orvion">
               {smsError}
             </div>
           )}
 
           {filteredSmsAutomations.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl border border-dashed border-[#EAECF0] bg-white space-y-3">
-              <Zap className="w-10 h-10 text-[#D0D5DD] mx-auto" />
-              <div className="text-sm font-semibold text-[#101828]">No hay reglas de SMS automáticos configuradas</div>
-              <p className="text-xs text-[#667085] max-w-sm mx-auto">
+            <div className="p-12 text-center rounded-[28px] border border-dashed border-[#E2E5EB] dark:border-[#262C36] bg-white dark:bg-[#121417] space-y-3 shadow-orvion">
+              <Zap className="w-10 h-10 text-amber-400/50 mx-auto" />
+              <div className="text-sm font-bold text-[#121417] dark:text-white">
+                No hay reglas de SMS automáticos configuradas
+              </div>
+              <p className="text-xs text-[#8C929D] max-w-sm mx-auto">
                 Crea una regla para enviar automáticamente un SMS a los prospectos que entren desde tus campañas publicitarias.
               </p>
               <button
@@ -297,7 +333,7 @@ function AutomationsPageContent() {
                   setEditingSms(null);
                   setSmsFormOpen(true);
                 }}
-                className="btn-black-gold rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5"
+                className="btn-black-gold rounded-full px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5 shadow-orvion cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-400" />
                 <span>Crear Regla SMS</span>
@@ -340,15 +376,15 @@ function AutomationsPageContent() {
       )}
 
       {activeTab === "stale" && (
-        <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] shadow-2xs space-y-4">
+        <div className="space-y-6">
+          <div className="p-6 rounded-[28px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-[#101828] flex items-center gap-2">
+                <h2 className="text-base font-extrabold text-[#121417] dark:text-white flex items-center gap-2">
                   <Flame className="w-5 h-5 text-rose-500" />
                   <span>Escáner y Barrido de Reactivación de Leads</span>
                 </h2>
-                <p className="text-xs text-[#667085] mt-1 max-w-2xl">
+                <p className="text-xs text-[#8C929D] mt-1 max-w-2xl">
                   Revisa todos los prospectos de la agencia y detecta aquellos sin contacto reciente para asignar tareas
                   de reactivación comercial a los asesores correspondientes.
                 </p>
