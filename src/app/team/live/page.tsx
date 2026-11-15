@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Users,
@@ -360,6 +361,14 @@ function TeamLiveContent() {
                 ))}
               </select>
             )}
+
+            <Link
+              href={ROUTES.TEAM_USERS}
+              className="px-4 py-2 rounded-full bg-[#121417] dark:bg-white text-white dark:text-[#121417] text-xs font-bold flex items-center gap-1.5 shadow-orvion hover:scale-102 transition-all cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5 text-amber-400" />
+              <span>Gestionar Asesores</span>
+            </Link>
 
             <button
               type="button"

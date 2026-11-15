@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   AlertTriangle,
@@ -10,6 +11,7 @@ import {
   MinusCircle,
   ShieldCheck,
   Users,
+  RefreshCw,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Panel from "@/components/ui/Panel";
@@ -23,11 +25,31 @@ import type { EnvVarStatus } from "@/types/settings";
 const GROUP_ORDER: EnvGroup[] = ["core", "integrations", "messaging"];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
-  const [activeTab, setActiveTab] = useState<"users" | "agency" | "server">(
-    isAdmin ? "users" : "agency"
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-xs font-semibold text-[#8C929D] flex items-center justify-center gap-2">
+          <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
+          <span>Cargando configuración...</span>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
+}
+
+function SettingsContent() {
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
+
+  const defaultTab = isAdmin
+    ? (tabParam === "agency" || tabParam === "server" ? tabParam : "users")
+    : "agency";
+
+  const [activeTab, setActiveTab] = useState<"users" | "agency" | "server">(defaultTab);
 
   const { settings, loading, error } = useSettings();
   const missingRequired = settings?.environment.filter((v) => v.required && !v.isSet) ?? [];
@@ -40,19 +62,19 @@ export default function SettingsPage() {
         description="Administra los usuarios, el equipo comercial y los datos de tu agencia."
       />
 
-      {/* Selector de pestañas limpio y directo */}
-      <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-[#EAECF0] shadow-2xs w-fit">
+      {/* Selector de pestañas estilo Cápsula Orvion */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-white dark:bg-[#121417] rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion w-fit">
         {isAdmin && (
           <button
             type="button"
             onClick={() => setActiveTab("users")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === "users"
-                ? "bg-[#101828] text-white shadow-xs"
-                : "text-[#667085] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+                : "text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229]"
             }`}
           >
-            <Users className="w-3.5 h-3.5" />
+            <Users className="w-3.5 h-3.5 text-amber-500" />
             <span>Equipo y Usuarios</span>
           </button>
         )}
@@ -60,13 +82,13 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("agency")}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "agency"
-              ? "bg-[#101828] text-white shadow-xs"
-              : "text-[#667085] hover:text-[#101828] hover:bg-[#F8F9FA]"
+              ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+              : "text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229]"
           }`}
         >
-          <Building2 className="w-3.5 h-3.5" />
+          <Building2 className="w-3.5 h-3.5 text-amber-500" />
           <span>Datos de la Agencia</span>
         </button>
 
@@ -74,20 +96,20 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setActiveTab("server")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === "server"
-                ? "bg-[#101828] text-white shadow-xs"
-                : "text-[#667085] hover:text-[#101828] hover:bg-[#F8F9FA]"
+                ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
+                : "text-[#8C929D] hover:text-[#121417] dark:hover:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229]"
             }`}
           >
-            <Key className="w-3.5 h-3.5" />
+            <Key className="w-3.5 h-3.5 text-amber-500" />
             <span>Servicios del Servidor</span>
           </button>
         )}
       </div>
 
       {error && (
-        <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+        <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs font-semibold text-red-700 dark:text-red-300 flex items-center gap-2.5 shadow-orvion">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>

@@ -17,6 +17,7 @@ export const ROUTES = {
   INBOX: "/inbox",
   CALLS: "/messaging/calls",
   TEAM_LIVE: "/team/live",
+  TEAM_USERS: "/team/users",
   AUTOMATIONS: "/automations",
   SETTINGS: "/settings",
   PRIVACY: "/privacy",

@@ -10,6 +10,7 @@ import {
   MessageSquare,
   PhoneCall,
   Plug,
+  Radio,
   Settings,
   Share2,
   Sparkles,
@@ -67,6 +68,11 @@ const OWNER_NAVIGATION_SECTION: NavSection = {
   items: [
     {
       href: ROUTES.TEAM_LIVE,
+      icon: Radio,
+      label: { es: "Supervisión en Vivo", en: "Live Supervision" },
+    },
+    {
+      href: ROUTES.TEAM_USERS,
       icon: Users,
       label: { es: "Equipo de Ventas", en: "Sales Team" },
     },
@@ -98,12 +104,13 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.CALLS, icon: PhoneCall, label: { es: "Central Telefónica", en: "Phone System" } },
       { href: ROUTES.SMS, icon: MessageSquare, label: { es: "Mensajes SMS", en: "SMS" } },
-      { href: ROUTES.TEAM_LIVE, icon: Users, label: { es: "Equipo de Ventas", en: "Sales Team" } },
+      { href: ROUTES.TEAM_LIVE, icon: Radio, label: { es: "Supervisión en Vivo", en: "Live Supervision" } },
     ],
   },
   {
     title: { es: "Administración", en: "Settings" },
     items: [
+      { href: ROUTES.TEAM_USERS, icon: Users, label: { es: "Equipo & Asesores", en: "Team & Advisors" } },
       { href: ROUTES.SETTINGS, icon: Settings, label: { es: "Configuración", en: "Settings" } },
     ],
   },
