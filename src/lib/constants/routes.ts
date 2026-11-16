@@ -23,6 +23,7 @@ export const ROUTES = {
   PRIVACY: "/privacy",
   TERMS: "/terms",
   DATA_DELETION: "/data-deletion",
+  SMS_CONSENT: "/sms-consent",
 } as const;
 
 export function clientDetailRoute(clientId: string): string {
