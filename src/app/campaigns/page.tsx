@@ -449,7 +449,6 @@ function CampaignsPageContent() {
   const [selectedAccountId, setSelectedAccountId] = useState("all");
   const [activeNetwork, setActiveNetwork] = useState<CampaignNetwork>("all");
   const [campaignSearch, setCampaignSearch] = useState("");
-  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [metric, setMetric] = useState<Metric>("spend");
   const [data, setData] = useState<CampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -490,14 +489,6 @@ function CampaignsPageContent() {
     const param = searchParams.get("clientId") ?? "all";
     setClientId(param);
   }, [searchParams]);
-
-  useEffect(() => {
-    if (!user || isClient) return;
-    fetch("/api/clients")
-      .then((r) => r.json())
-      .then((json) => json.success && setClients(json.clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))))
-      .catch(console.error);
-  }, [user, isClient]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -607,33 +598,6 @@ function CampaignsPageContent() {
 
         {/* Filters and Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          {!isClient && (
-            <select
-              value={clientId}
-              onChange={(e) => {
-                const val = e.target.value;
-                setClientId(val);
-                setSelectedAccountId("all");
-                if (typeof window !== "undefined") {
-                  localStorage.setItem("bunker_selected_client_id", val);
-                }
-                const currentParams = new URLSearchParams(searchParams.toString());
-                if (val !== "all") {
-                  currentParams.set("clientId", val);
-                } else {
-                  currentParams.delete("clientId");
-                }
-                const q = currentParams.toString();
-                router.push(q ? `/campaigns?${q}` : "/campaigns");
-              }}
-              className="bg-white border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400/50"
-            >
-              <option value="all">Todas las empresas</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          )}
           {/* Selector de Días */}
           <div className="flex rounded-full border border-[#E2E5EB] dark:border-[#242A35] bg-white dark:bg-[#121417] p-1 shadow-2xs">
             {[7, 30, 90].map((d) => (
