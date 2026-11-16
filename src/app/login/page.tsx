@@ -12,10 +12,7 @@ import {
   ArrowRight,
   Loader2,
   ShieldCheck,
-  Sun,
-  Moon,
 } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
 
 export const dynamic = "force-dynamic";
 
@@ -174,26 +171,8 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  const { theme, toggleTheme } = useTheme();
-
   return (
-    <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex flex-col justify-between px-4 sm:px-6 py-6 relative overflow-hidden transition-colors">
-      {/* Botón de Tema en la esquina superior derecha */}
-      <header className="w-full max-w-md mx-auto flex items-center justify-end relative z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Cambiar tema de color"
-          className="w-8 h-8 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs text-[#121417] dark:text-white flex items-center justify-center hover:bg-[#F8F9FA] dark:hover:bg-[#1C2028] transition-colors cursor-pointer"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-3.5 h-3.5 text-amber-400" />
-          ) : (
-            <Moon className="w-3.5 h-3.5 text-[#667085]" />
-          )}
-        </button>
-      </header>
-
+    <div className="min-h-screen bg-[#ECEEF2] dark:bg-[#0C0D12] flex flex-col justify-between px-4 sm:px-6 py-8 relative overflow-hidden transition-colors">
       {/* Contenedor Central Limpio y Minimalista */}
       <main className="w-full max-w-md mx-auto my-auto relative z-10 space-y-6 py-4">
         {/* Cabecera Centrada: Logo y Saludo */}
