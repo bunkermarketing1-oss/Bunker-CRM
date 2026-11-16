@@ -4,16 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo, Suspense } from "reac
 import { useSearchParams } from "next/navigation";
 import {
   Sparkles,
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
   Zap,
-  ShieldAlert,
   Info,
   Building2,
-  Layers,
-  ArrowRight,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
 
