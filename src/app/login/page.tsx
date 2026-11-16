@@ -34,7 +34,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [activeRolePreset, setActiveRolePreset] = useState<string>("admin");
+  const [activeRolePreset, setActiveRolePreset] = useState<string | null>(null);
 
   const handleRolePreset = (role: "admin" | "director" | "client") => {
     setActiveRolePreset(role);
@@ -109,8 +109,8 @@ function LoginForm() {
           onClick={() => handleRolePreset("admin")}
           className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
             activeRolePreset === "admin"
-              ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white"
+              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
+              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
           }`}
         >
           Admin
@@ -120,8 +120,8 @@ function LoginForm() {
           onClick={() => handleRolePreset("director")}
           className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
             activeRolePreset === "director"
-              ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white"
+              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
+              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
           }`}
         >
           Director
@@ -131,8 +131,8 @@ function LoginForm() {
           onClick={() => handleRolePreset("client")}
           className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
             activeRolePreset === "client"
-              ? "bg-[#121417] text-white dark:bg-white dark:text-[#121417] shadow-xs"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white"
+              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
+              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
           }`}
         >
           Cliente
@@ -237,18 +237,12 @@ export default function LoginPage() {
           type="button"
           onClick={toggleTheme}
           aria-label="Cambiar tema de color"
-          className="h-8 px-3 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs text-[#121417] dark:text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#F8F9FA] dark:hover:bg-[#1C2028] transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs text-[#121417] dark:text-white flex items-center justify-center hover:bg-[#F8F9FA] dark:hover:bg-[#1C2028] transition-colors cursor-pointer"
         >
           {theme === "dark" ? (
-            <>
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
-              <span>Claro</span>
-            </>
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
           ) : (
-            <>
-              <Moon className="w-3.5 h-3.5 text-[#667085]" />
-              <span>Oscuro</span>
-            </>
+            <Moon className="w-3.5 h-3.5 text-[#667085]" />
           )}
         </button>
       </header>
