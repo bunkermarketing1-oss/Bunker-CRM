@@ -26,6 +26,7 @@ import {
   Tag,
   ArrowRightCircle,
 } from "lucide-react";
+import LeadAvatar from "@/components/crm/LeadAvatar";
 
 interface LeadOwner {
   id: string;
@@ -81,6 +82,7 @@ interface LeadTask {
 interface LeadDetail {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   companyName: string | null;
   email: string | null;
   phone: string | null;
@@ -385,13 +387,6 @@ export default function LeadDetailPage() {
     );
   }
 
-  const initials = lead.name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
   const waNumber = lead.normalizedPhone || lead.phone?.replace(/\D/g, "");
 
   return (
@@ -437,9 +432,12 @@ export default function LeadDetailPage() {
           <div className="bg-white rounded-3xl border border-[#EAECF0] p-6 shadow-xs text-center space-y-4">
             {/* Avatar Central Circular Grande */}
             <div className="relative inline-block mx-auto">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400/30 via-yellow-100 to-amber-200/50 border-2 border-white shadow-md flex items-center justify-center text-3xl font-extrabold text-[#101828]">
-                {initials}
-              </div>
+              <LeadAvatar
+                name={lead.name}
+                avatarUrl={lead.avatarUrl}
+                size="xl"
+                className="border-2 border-white shadow-md"
+              />
               <span
                 className={`absolute bottom-1 right-2 w-4 h-4 rounded-full border-2 border-white ${
                   lead.status === "converted"

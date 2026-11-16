@@ -10,6 +10,7 @@ import {
 import { ACCOUNT_STATUS, ACCOUNT_TYPE } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, type MessageChannel } from "@/lib/constants/messaging";
 import { LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 
 function isGenericLeadName(name: unknown): boolean {
   if (!name || typeof name !== "string") return true;
@@ -168,7 +169,7 @@ async function handleSingleMessagingItem(
         organizationId: connectedAccount.organizationId,
         clientId: connectedAccount.clientId,
         name: senderName || defaultName,
-        avatarUrl: senderAvatar,
+        avatarUrl: senderAvatar || getLeadAvatarUrl(senderName || defaultName),
         source: isInstagram ? LEAD_SOURCE.INSTAGRAM_DIRECT : LEAD_SOURCE.FACEBOOK_MESSENGER,
         externalLeadId: leadExternalId,
         status: LEAD_STATUS.NEW,
@@ -524,7 +525,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
             organizationId: account.organizationId,
             clientId: account.clientId,
             name: finalName,
-            avatarUrl: profilePic,
+            avatarUrl: profilePic || getLeadAvatarUrl(finalName),
             source: isInstagram ? LEAD_SOURCE.INSTAGRAM_DIRECT : LEAD_SOURCE.FACEBOOK_MESSENGER,
             externalLeadId: customer.id,
             status: LEAD_STATUS.CONTACTED,

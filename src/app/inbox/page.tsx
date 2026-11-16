@@ -33,6 +33,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 import SlidingTabs from "@/components/ui/SlidingTabs";
 import type {
   ConversationItem,
@@ -119,11 +120,13 @@ function ContactAvatar({
         .join("") || "?"
     : "?";
 
+  const resolvedAvatar = getLeadAvatarUrl(name, avatarUrl);
+
   return (
     <div className={`relative shrink-0 ${dimCls}`}>
-      {avatarUrl && !imageError ? (
+      {resolvedAvatar && !imageError ? (
         <img
-          src={avatarUrl}
+          src={resolvedAvatar}
           alt={name}
           onError={() => setImageError(true)}
           className={`${dimCls} rounded-full object-cover border border-[#EAECF0] shadow-2xs`}

@@ -4,6 +4,7 @@ import { ACCOUNT_TYPE, ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
 import { sendMetaOutboundReply, syncConnectedPageConversations } from "@/services/meta-messaging.service";
 import { sendManualSms } from "@/services/sms.service";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 import type { TenantScope } from "@/types/tenant";
 import type {
   ConversationItem,
@@ -247,7 +248,7 @@ export async function getInboxConversations(
         id: convKey,
         channel: ch,
         senderName: sender,
-        senderAvatar: msg.lead?.avatarUrl || null,
+        senderAvatar: getLeadAvatarUrl(sender, msg.lead?.avatarUrl),
         recipient: msg.recipient || "Línea Oficial",
         clientId: msg.clientId || msg.lead?.clientId || null,
         clientName: msg.client?.name || msg.lead?.client?.name || null,
@@ -375,7 +376,7 @@ export async function getInboxConversations(
               id: convKey,
               channel: ch,
               senderName: sender,
-              senderAvatar: msg.lead?.avatarUrl || null,
+              senderAvatar: getLeadAvatarUrl(sender, msg.lead?.avatarUrl),
               recipient: msg.recipient || "Línea Oficial",
               clientId: msg.clientId || msg.lead?.clientId || null,
               clientName: msg.client?.name || msg.lead?.client?.name || null,

@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { CLIENT_STATUS, OPPORTUNITY_STATUS, TASK_STATUS } from "@/lib/constants/crm";
 import { groupOpenDealsByStage, percentage } from "@/lib/reports";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 import type { DashboardData } from "@/types/dashboard";
 import type { TenantScope } from "@/types/tenant";
 
@@ -219,7 +220,11 @@ export async function getDashboard(scope: TenantScope): Promise<DashboardData> {
       overdueTasks,
     },
     pipeline: groupOpenDealsByStage(stages, openDeals),
-    recentLeads: recentLeads.map((lead) => ({ ...lead, createdAt: lead.createdAt.toISOString() })),
+    recentLeads: recentLeads.map((lead) => ({
+      ...lead,
+      avatarUrl: getLeadAvatarUrl(lead.name, lead.avatarUrl),
+      createdAt: lead.createdAt.toISOString(),
+    })),
     recentActivities: recentActivities.map((activity) => ({
       id: activity.id,
       type: activity.type,

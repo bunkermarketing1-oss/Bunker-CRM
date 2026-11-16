@@ -37,11 +37,13 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
+import LeadAvatar from "@/components/crm/LeadAvatar";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
 interface Lead {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   companyName: string | null;
   email: string | null;
   phone: string | null;
@@ -1077,15 +1079,6 @@ function LeadsPageContent() {
                 </tr>
               ) : (
                 paginatedLeads.map((lead) => {
-                  const initials = lead.name
-                    ? lead.name
-                        .split(" ")
-                        .map((n: string) => n[0])
-                        .slice(0, 2)
-                        .join("")
-                        .toUpperCase()
-                    : "LD";
-
                   const score = lead.qualification || 75;
                   const waNumber = getWhatsAppNumber(lead);
 
@@ -1099,10 +1092,10 @@ function LeadsPageContent() {
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="w-9 h-9 rounded-full bg-[#121417] text-amber-400 dark:bg-white dark:text-[#121417] hover:scale-105 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs border border-amber-500/30 transition-transform"
+                            className="hover:scale-105 transition-transform shrink-0"
                             title="Ver expediente en InsightCRM"
                           >
-                            {initials}
+                            <LeadAvatar name={lead.name} avatarUrl={lead.avatarUrl} size="md" />
                           </Link>
                           <div>
                             <Link
