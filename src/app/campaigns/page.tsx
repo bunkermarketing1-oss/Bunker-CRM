@@ -17,7 +17,6 @@ import {
   Globe,
   CheckCircle2,
   Search,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
@@ -456,7 +455,6 @@ function CampaignsPageContent() {
   const [selectedCampaignForAds, setSelectedCampaignForAds] = useState<CampaignItem | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const handleSyncCampaigns = async () => {
     setSyncing(true);
@@ -517,15 +515,12 @@ function CampaignsPageContent() {
   }, [user, days, clientId, selectedAccountId]);
 
   const displayData = useMemo(() => {
-    if (isDemoMode) return DEMO_CAMPAIGNS_DATA;
     if (data && data.campaigns && data.campaigns.length > 0) return data;
     if (!loading && (!data || !data.campaigns || data.campaigns.length === 0)) {
       return DEMO_CAMPAIGNS_DATA;
     }
     return data;
-  }, [data, isDemoMode, loading]);
-
-  const isShowingDemo = displayData === DEMO_CAMPAIGNS_DATA;
+  }, [data, loading]);
 
   const currency: string | null = displayData?.currency || null;
   const totals = displayData?.totals;
@@ -581,13 +576,6 @@ function CampaignsPageContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
         <div>
-          {isShowingDemo && (
-            <div className="mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400">
-                ✦ Modo Presentación Activo
-              </span>
-            </div>
-          )}
           <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
           </h1>
@@ -614,21 +602,6 @@ function CampaignsPageContent() {
               </button>
             ))}
           </div>
-
-          {/* Toggle Demostración para Clientes */}
-          <button
-            type="button"
-            onClick={() => setIsDemoMode(!isDemoMode)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
-              isShowingDemo
-                ? "bg-[#121417] text-white border-[#121417] dark:bg-amber-400 dark:text-[#121417] dark:border-amber-400"
-                : "bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#667085] border-[#E2E5EB] dark:border-[#242A35] hover:text-[#121417]"
-            }`}
-            title="Alternar datos demo para presentación a clientes"
-          >
-            <Zap className={`w-3.5 h-3.5 ${isShowingDemo ? "text-amber-400 dark:text-[#121417]" : "text-[#8C929D]"}`} />
-            <span>{isShowingDemo ? "Demo Activa" : "Modo Demo"}</span>
-          </button>
 
           <button
             type="button"
