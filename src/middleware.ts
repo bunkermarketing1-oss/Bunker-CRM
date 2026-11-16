@@ -63,6 +63,7 @@ const STANDALONE_PUBLIC_PATHS = [
   "/eliminacion-de-datos",
   "/sms-consent",
   "/api/public/sms-consent",
+  "/api/integrations/twilio",
   "/api/integrations/meta/webhook",
   "/api/integrations/meta/data-deletion",
 ];
