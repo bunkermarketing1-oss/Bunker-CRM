@@ -34,22 +34,6 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [activeRolePreset, setActiveRolePreset] = useState<string | null>(null);
-
-  const handleRolePreset = (role: "admin" | "director" | "client") => {
-    setActiveRolePreset(role);
-    setErrorMessage("");
-    if (role === "admin") {
-      setEmail("admin@bunkermarketing.io");
-      setPassword("bunker2026");
-    } else if (role === "director") {
-      setEmail("director@bunkermarketing.io");
-      setPassword("bunker2026");
-    } else {
-      setEmail("cliente@bunkermarketing.io");
-      setPassword("bunker2026");
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,43 +86,6 @@ function LoginForm() {
 
   return (
     <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] p-7 sm:p-8 shadow-orvion transition-all">
-      {/* Selector Sutil de Rol Demo */}
-      <div className="mb-6 p-1 rounded-full bg-[#F3F4F7] dark:bg-[#1A1D24] border border-[#E2E5EB]/80 dark:border-[#242A35] flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => handleRolePreset("admin")}
-          className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
-            activeRolePreset === "admin"
-              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
-          }`}
-        >
-          Admin
-        </button>
-        <button
-          type="button"
-          onClick={() => handleRolePreset("director")}
-          className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
-            activeRolePreset === "director"
-              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
-          }`}
-        >
-          Director
-        </button>
-        <button
-          type="button"
-          onClick={() => handleRolePreset("client")}
-          className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
-            activeRolePreset === "client"
-              ? "bg-white text-[#121417] dark:bg-[#1E2229] dark:text-white shadow-xs border border-[#E2E5EB] dark:border-[#2A2E39]"
-              : "text-[#667085] hover:text-[#121417] dark:hover:text-white border border-transparent"
-          }`}
-        >
-          Cliente
-        </button>
-      </div>
-
       {errorMessage && (
         <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs flex items-start gap-2.5 shadow-2xs">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
@@ -158,7 +105,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu.correo@bunkermarketing.io"
+              placeholder="nombre@empresa.com"
               disabled={isLoading}
               autoComplete="email"
               className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-11 pr-4 py-3 text-xs text-[#121417] dark:text-white placeholder:text-[#8C929D] focus:outline-hidden focus:border-amber-400 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] focus:ring-2 focus:ring-amber-400/20 transition-all shadow-2xs"
