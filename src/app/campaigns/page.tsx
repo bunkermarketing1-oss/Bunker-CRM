@@ -15,10 +15,8 @@ import {
   MessageSquare,
   FileSpreadsheet,
   Globe,
-  Building2,
   CheckCircle2,
   Search,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -587,34 +585,18 @@ function CampaignsPageContent() {
       ]
     : [];
 
-  const activeClient = clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
         <div>
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="orvion-badge-gold">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              <span>Pautas & Marketing</span>
-            </span>
-            {isShowingDemo && (
+          {isShowingDemo && (
+            <div className="mb-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400">
                 ✦ Modo Presentación Activo
               </span>
-            )}
-            {activeClient ? (
-              <span className="orvion-badge-dark text-[11px] py-1 px-3">
-                <Building2 className="w-3 h-3 text-amber-400" />
-                <span>Marca: {activeClient.name}</span>
-              </span>
-            ) : !isClient ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#8C929D] border border-[#E2E5EB] dark:border-[#242A35]">
-                Todas las Marcas
-              </span>
-            ) : null}
-          </div>
+            </div>
+          )}
           <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
           </h1>
