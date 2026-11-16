@@ -142,7 +142,7 @@ export async function PUT(req: NextRequest) {
     if (errorResponse) return errorResponse;
 
     const body = await req.json().catch(() => ({}));
-    const { id, name, companyName, email, phone, website, industry, logoUrl, status, revenue, notes } = body;
+    const { id, name, companyName, email, phone, website, industry, logoUrl, status, revenue, smsConsent, notes } = body;
 
     if (!id || typeof id !== "string") {
       return NextResponse.json({ success: false, error: "ID es requerido." }, { status: 400 });
@@ -195,6 +195,8 @@ export async function PUT(req: NextRequest) {
         logoUrl: logoUrl !== undefined ? logoUrl?.trim() || null : undefined,
         status: status !== undefined ? status : undefined,
         revenue: revenueAmount,
+        smsConsent: smsConsent !== undefined ? Boolean(smsConsent) : undefined,
+        smsConsentAt: smsConsent !== undefined ? (smsConsent ? new Date() : null) : undefined,
         notes: notes !== undefined ? notes?.trim() || null : undefined,
       },
     });

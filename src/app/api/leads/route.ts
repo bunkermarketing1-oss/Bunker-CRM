@@ -218,6 +218,9 @@ export async function POST(req: NextRequest) {
         estimatedValue: data.estimatedValue,
         ownerId: assignedOwnerId,
         aiSummary: data.aiSummary,
+        smsConsent: data.smsConsent ?? true,
+        smsConsentAt: data.smsConsent ? new Date() : null,
+        smsConsentSource: data.smsConsentSource || (data.source ? `source_${data.source}` : "manual"),
         isDemo: false,
       },
       include: {
@@ -428,6 +431,9 @@ export async function PUT(req: NextRequest) {
           utmMedium: data.utmMedium !== undefined ? data.utmMedium : undefined,
           utmCampaign: data.utmCampaign !== undefined ? data.utmCampaign : undefined,
           aiSummary: data.aiSummary !== undefined ? data.aiSummary : undefined,
+          smsConsent: data.smsConsent !== undefined ? data.smsConsent : undefined,
+          smsConsentAt: data.smsConsent !== undefined ? (data.smsConsent ? new Date() : null) : undefined,
+          smsConsentSource: data.smsConsentSource !== undefined ? data.smsConsentSource : undefined,
           clientId:
             !user!.isClientUser && data.clientId !== undefined ? data.clientId : undefined,
         },

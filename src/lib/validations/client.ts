@@ -61,6 +61,7 @@ export const createClientSchema = z
     industry: optionalText(100),
     logoUrl: optionalText(500000),
     revenue: amountField(REVENUE_MESSAGE).optional(),
+    smsConsent: z.boolean().optional().default(true),
     notes: optionalText(2000),
     ownerId: optionalId,
     // Un contacto sin nombre se descarta: el formulario simple de clientes no lo pide.

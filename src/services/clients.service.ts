@@ -89,6 +89,8 @@ export async function createClient(actor: Actor, input: CreateClientInput) {
         industry: input.industry || "General",
         logoUrl: input.logoUrl,
         revenue: input.revenue ?? 0,
+        smsConsent: input.smsConsent ?? true,
+        smsConsentAt: input.smsConsent ? new Date() : null,
         notes: input.notes,
         ownerId: input.ownerId || actor.userId,
         status: CLIENT_STATUS.ACTIVE,

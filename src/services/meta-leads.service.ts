@@ -291,6 +291,8 @@ async function upsertLeadFromMeta(
           source: LEAD_SOURCE.META_ADS,
         }),
         campaign: campaignName,
+        smsConsent: true,
+        smsConsentSource: "meta_lead_ad",
         externalLeadId: metaLead.id,
         externalFormId: metaLead.form_id ?? null,
         externalAdId: metaLead.ad_id ?? null,

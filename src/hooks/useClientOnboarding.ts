@@ -12,6 +12,7 @@ export interface ClientOnboardingPayload {
   industry: string;
   revenue: string;
   ownerId?: string;
+  smsConsent?: boolean;
   notes?: string;
   primaryContact: {
     firstName: string;

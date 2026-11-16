@@ -179,6 +179,8 @@ export const createLeadSchema = z
     utmMedium: optionalText(100),
     utmCampaign: optionalText(100),
     aiSummary: optionalText(1000),
+    smsConsent: z.boolean().optional().default(true),
+    smsConsentSource: optionalText(50),
     forceDuplicate: z.boolean().optional().default(false),
   })
   .strict(); // Disallow unknown/tampered fields like organizationId
@@ -237,6 +239,8 @@ export const updateLeadSchema = z
     utmMedium: optionalTextUpdate(100),
     utmCampaign: optionalTextUpdate(100),
     aiSummary: optionalTextUpdate(1000),
+    smsConsent: z.boolean().optional(),
+    smsConsentSource: optionalTextUpdate(50),
   })
   .strict();
 

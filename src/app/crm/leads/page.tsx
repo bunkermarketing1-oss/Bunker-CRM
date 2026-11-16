@@ -33,11 +33,13 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Zap,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 import LeadAvatar from "@/components/crm/LeadAvatar";
+import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
 interface Lead {
@@ -59,6 +61,9 @@ interface Lead {
   aiSummary: string | null;
   estimatedValue: number;
   notes: string | null;
+  smsConsent?: boolean;
+  smsConsentAt?: string | null;
+  smsConsentSource?: string | null;
   isDemo: boolean;
   createdAt: string;
   ownerId: string | null;
@@ -325,6 +330,7 @@ function LeadsPageContent() {
     ownerId: "",
     clientId: "",
     notes: "",
+    smsConsent: true,
   });
   const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string[]>>({});
   const [duplicateWarning, setDuplicateWarning] = useState<DuplicateMatch[] | null>(null);
@@ -346,6 +352,7 @@ function LeadsPageContent() {
     ownerId: "",
     clientId: "",
     notes: "",
+    smsConsent: true,
   });
   const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string[]>>({});
   const [submittingEdit, setSubmittingEdit] = useState(false);
@@ -473,6 +480,8 @@ function LeadsPageContent() {
         ownerId: createData.ownerId || null,
         clientId: createData.clientId || (clientFilter !== "all" ? clientFilter : null),
         notes: createData.notes || null,
+        smsConsent: createData.smsConsent,
+        smsConsentSource: "crm_manual",
         forceDuplicate: force,
       };
 
@@ -514,6 +523,7 @@ function LeadsPageContent() {
         ownerId: "",
         clientId: "",
         notes: "",
+        smsConsent: true,
       });
       showNotification("¡Prospecto registrado exitosamente!");
       fetchLeads();
@@ -541,6 +551,7 @@ function LeadsPageContent() {
       ownerId: lead.ownerId || "",
       clientId: lead.clientId || "",
       notes: lead.notes || "",
+      smsConsent: lead.smsConsent !== false,
     });
     setEditFieldErrors({});
     setIsEditOpen(true);
@@ -565,6 +576,7 @@ function LeadsPageContent() {
         estimatedValue: parseFloat(editFormData.estimatedValue) || 0,
         ownerId: editFormData.ownerId || null,
         notes: editFormData.notes || null,
+        smsConsent: editFormData.smsConsent,
       };
 
       const res = await fetch("/api/leads", {
@@ -1169,6 +1181,23 @@ function LeadsPageContent() {
                               <Inbox className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                               <span>Bandeja</span>
                             </Link>
+                            {lead.phone && (
+                              <span
+                                className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                                  lead.smsConsent !== false
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
+                                    : "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800"
+                                }`}
+                                title={
+                                  lead.smsConsent !== false
+                                    ? "Consentimiento SMS verificado (A2P 10DLC / Twilio)"
+                                    : "Sin consentimiento SMS registrado"
+                                }
+                              >
+                                <ShieldCheck className="w-2.5 h-2.5" />
+                                <span>{lead.smsConsent !== false ? "10DLC Opt-in" : "Sin Opt-in"}</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -1894,6 +1923,18 @@ function LeadsPageContent() {
                 />
               </div>
 
+              {/* Twilio A2P 10DLC SMS & Voice Consent */}
+              <TwilioSmsConsentNotice
+                id="create-lead-sms-consent"
+                checked={createData.smsConsent}
+                onChange={(checked) => setCreateData({ ...createData, smsConsent: checked })}
+                brandName={
+                  createData.clientId
+                    ? clients.find((c) => c.id === createData.clientId)?.name || "Bunker Agency"
+                    : "Bunker Agency"
+                }
+              />
+
               <div className="pt-2 flex justify-end gap-2.5">
                 <button
                   type="button"
@@ -2112,6 +2153,16 @@ function LeadsPageContent() {
                   className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-2xl px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                 />
               </div>
+
+              {/* Twilio A2P 10DLC SMS & Voice Consent */}
+              <TwilioSmsConsentNotice
+                id="edit-lead-sms-consent"
+                checked={editFormData.smsConsent}
+                onChange={(checked) => setEditFormData({ ...editFormData, smsConsent: checked })}
+                brandName={
+                  editingLead?.client?.name || "Bunker Agency"
+                }
+              />
 
               <div className="pt-2 flex justify-end gap-2.5">
                 <button

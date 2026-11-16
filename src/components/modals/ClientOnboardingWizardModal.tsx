@@ -18,6 +18,7 @@ import {
   KanbanSquare,
 } from "lucide-react";
 import { useClientOnboarding, type ClientOnboardingPayload } from "@/hooks/useClientOnboarding";
+import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 
 interface TeamMember {
   id: string;
@@ -68,6 +69,7 @@ export function ClientOnboardingWizardModal({
 
   // Step 4: Activación comercial
   const [createInitialDeal, setCreateInitialDeal] = useState(true);
+  const [smsConsent, setSmsConsent] = useState(true);
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -123,6 +125,7 @@ export function ClientOnboardingWizardModal({
       industry,
       revenue,
       ownerId: ownerId || undefined,
+      smsConsent,
       notes: notes.trim() || undefined,
       primaryContact: {
         firstName: contactFirstName.trim(),
@@ -428,6 +431,13 @@ export function ClientOnboardingWizardModal({
                   </div>
                 </div>
               </div>
+
+              <TwilioSmsConsentNotice
+                id="onboarding-client-sms-consent"
+                checked={smsConsent}
+                onChange={setSmsConsent}
+                brandName={name.trim() || "Bunker Agency"}
+              />
             </div>
           )}
 

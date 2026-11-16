@@ -25,6 +25,7 @@ import {
   Loader2,
   Tag,
   ArrowRightCircle,
+  ShieldCheck,
 } from "lucide-react";
 import LeadAvatar from "@/components/crm/LeadAvatar";
 
@@ -90,6 +91,9 @@ interface LeadDetail {
   source: string;
   campaign: string | null;
   notes: string | null;
+  smsConsent?: boolean;
+  smsConsentAt?: string | null;
+  smsConsentSource?: string | null;
   status: string;
   qualification: number;
   aiSummary: string | null;
@@ -621,6 +625,29 @@ export default function LeadDetailPage() {
                       </div>
                     </div>
                   )}
+
+                  <div className="pt-2 border-t border-[#EAECF0]">
+                    <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
+                      Consentimiento Twilio / A2P 10DLC
+                    </div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border shadow-2xs ${
+                          lead.smsConsent !== false
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-rose-50 text-rose-800 border-rose-200"
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>{lead.smsConsent !== false ? "SMS Autorizado (10DLC Opt-In)" : "Sin Consentimiento"}</span>
+                      </span>
+                    </div>
+                    {lead.smsConsentAt && (
+                      <p className="text-[10px] text-[#82807C] mt-1">
+                        Registrado el {new Date(lead.smsConsentAt).toLocaleDateString("es-ES")} vía {lead.smsConsentSource || "formulario"}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="pt-4 space-y-3 text-xs">

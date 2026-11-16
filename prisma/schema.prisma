@@ -86,6 +86,8 @@ model Client {
   logoUrl        String?
   status         String        @default("active") // active, churned, on_hold
   revenue        Float?        @default(0)
+  smsConsent     Boolean       @default(true) // Consentimiento expreso para SMS / A2P 10DLC
+  smsConsentAt   DateTime?     @default(now())
   notes          String?
   isDemo         Boolean       @default(false)
   isDeleted      Boolean       @default(false)
@@ -149,6 +151,9 @@ model Lead {
   externalAdId       String?
   externalCampaignId String?
   smsOptOutAt        DateTime? // Solo para mostrar: la baja vigente vive en SmsOptOut (por número, global)
+  smsConsent         Boolean      @default(true) // Consentimiento expreso para SMS / A2P 10DLC
+  smsConsentAt       DateTime?    @default(now())
+  smsConsentSource   String?      @default("manual") // manual, website_form, meta_lead_ad, onboarding
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?

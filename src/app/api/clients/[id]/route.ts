@@ -147,7 +147,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { name, companyName, email, phone, website, industry, logoUrl, status, revenue, notes, ownerId } = body;
+    const { name, companyName, email, phone, website, industry, logoUrl, status, revenue, notes, ownerId, smsConsent } = body;
 
     if (name !== undefined && (typeof name !== "string" || name.trim().length < 2)) {
       return NextResponse.json(
@@ -210,6 +210,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         logoUrl: logoUrl !== undefined ? (logoUrl?.trim() || null) : undefined,
         status: status !== undefined ? status : undefined,
         revenue: revenueAmount !== undefined ? revenueAmount : undefined,
+        smsConsent: smsConsent !== undefined ? Boolean(smsConsent) : undefined,
+        smsConsentAt: smsConsent !== undefined ? (smsConsent ? new Date() : null) : undefined,
         notes: notes !== undefined ? (notes?.trim() || null) : undefined,
         ownerId: ownerId !== undefined ? ownerId : undefined,
       },

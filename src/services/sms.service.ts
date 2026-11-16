@@ -334,6 +334,7 @@ function bulkLeadWhere(organizationId: string, filter: BulkSmsFilter) {
   return {
     organizationId,
     isDeleted: false,
+    smsConsent: { not: false },
     ...(filter.clientId ? { clientId: filter.clientId } : {}),
     ...(filter.statuses.length ? { status: { in: filter.statuses } } : {}),
     ...(filter.sources.length ? { source: { in: filter.sources } } : {}),
@@ -639,6 +640,19 @@ export async function sendManualSms(scope: TenantScope, userId: string, input: M
 
   if (await isPhoneOptedOut(phone)) {
     throw new SmsTargetError("Este número pidió no recibir más SMS (respondió BAJA o STOP).", 409);
+  }
+
+  if (target.leadId) {
+    const leadConsent = await prisma.lead.findUnique({
+      where: { id: target.leadId },
+      select: { smsConsent: true },
+    });
+    if (leadConsent && leadConsent.smsConsent === false) {
+      throw new SmsTargetError(
+        "El prospecto no ha otorgado consentimiento explícito para SMS (A2P 10DLC). Actualiza el consentimiento en su ficha.",
+        403
+      );
+    }
   }
 
   // Se registra antes de enviar: el SID queda guardado justo al volver de Twilio y el

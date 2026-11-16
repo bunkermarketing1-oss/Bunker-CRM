@@ -35,6 +35,7 @@ import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardin
 import { emitClientsUpdated } from "@/hooks/useClientOptions";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
+import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
 
 interface Contact {
@@ -78,6 +79,8 @@ interface Client {
   website: string | null;
   industry: string | null;
   logoUrl?: string | null;
+  smsConsent?: boolean;
+  smsConsentAt?: string | null;
   status: string; // active, on_hold, churned
   revenue: number | null;
   notes: string | null;
@@ -186,6 +189,7 @@ export default function ClientsPage() {
     revenue: "0",
     notes: "",
     ownerId: "",
+    smsConsent: true,
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -204,6 +208,7 @@ export default function ClientsPage() {
       revenue: String(c.revenue || 0),
       notes: c.notes || "",
       ownerId: c.owner?.id || "",
+      smsConsent: c.smsConsent !== false,
     });
   };
 
@@ -227,6 +232,7 @@ export default function ClientsPage() {
           revenue: editFormData.revenue,
           notes: editFormData.notes,
           ownerId: editFormData.ownerId || undefined,
+          smsConsent: editFormData.smsConsent,
         }),
       });
       const json = await res.json();
@@ -1562,6 +1568,13 @@ export default function ClientsPage() {
                   className="w-full bg-[#FFFFFF] border border-[#EAECF0] rounded-xl px-3 py-2 text-xs text-[#101828] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
+
+              <TwilioSmsConsentNotice
+                id="edit-client-sms-consent"
+                checked={editFormData.smsConsent}
+                onChange={(checked) => setEditFormData({ ...editFormData, smsConsent: checked })}
+                brandName={editFormData.name || "Bunker Agency"}
+              />
 
               <div className="pt-3 flex justify-end gap-2 border-t border-[#F0EEE6]">
                 <button
