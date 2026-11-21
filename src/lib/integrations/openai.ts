@@ -57,3 +57,44 @@ export async function createChatCompletion(input: ChatCompletionInput): Promise<
     return failure(error instanceof Error ? error.message : "Fallo de conexión con OpenAI");
   }
 }
+
+/**
+ * Transcribe un archivo de audio (MP3, WAV, etc.) a texto en español utilizando Whisper de OpenAI.
+ */
+export async function transcribeAudio(
+  audioBuffer: Buffer,
+  filename = "call.mp3"
+): Promise<{ text: string | null; error: string | null }> {
+  const { apiKey } = getAiConfig();
+  if (!apiKey) {
+    return { text: null, error: "AI_API_KEY no está configurada en las variables de entorno." };
+  }
+
+  try {
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(audioBuffer)], { type: "audio/mpeg" });
+    formData.append("file", blob, filename);
+    formData.append("model", "whisper-1");
+    formData.append("language", "es");
+
+    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: formData,
+      signal: AbortSignal.timeout(60000), // 60 segundos timeout para audio
+    });
+
+    const data = (await res.json().catch(() => ({}))) as { text?: string; error?: { message?: string } };
+    if (!res.ok) {
+      return { text: null, error: `Whisper respondió ${res.status}: ${data.error?.message ?? "Error en transcripción"}` };
+    }
+
+    return { text: data.text?.trim() ?? "", error: null };
+  } catch (error) {
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    if (timedOut) return { text: null, error: "OpenAI Whisper excedió el tiempo límite de 60 segundos." };
+    return { text: null, error: error instanceof Error ? error.message : "Error inesperado al transcribir audio" };
+  }
+}

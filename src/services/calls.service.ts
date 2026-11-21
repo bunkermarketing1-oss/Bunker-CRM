@@ -14,6 +14,7 @@ import {
 import { createVoiceAccessToken } from "@/lib/integrations/twilio-voice-token";
 import { conferenceTwiml, dialClientsTwiml, emptyTwiml, sayTwiml } from "@/lib/integrations/twilio-twiml";
 import { ensureTwilioRuntimeConfig } from "@/services/integrations.service";
+import { analyzeCall } from "@/services/call-intelligence.service";
 import { isAllowedCallDestination, parseAllowedCountries, statusesThatCanAdvanceTo } from "@/lib/voice-policy";
 import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
 import { validateAndNormalizePhone } from "@/lib/phone";
@@ -220,6 +221,11 @@ const callSelect = {
   leadId: true,
   clientId: true,
   userId: true,
+  transcriptionText: true,
+  aiSummary: true,
+  aiKeyTakeaways: true,
+  aiActionItems: true,
+  aiSentiment: true,
   lead: { select: { name: true } },
   user: { select: { name: true } },
   line: { select: { label: true } },
@@ -239,6 +245,11 @@ type CallRow = {
   leadId: string | null;
   clientId: string | null;
   userId: string | null;
+  transcriptionText?: string | null;
+  aiSummary?: string | null;
+  aiKeyTakeaways?: string | null;
+  aiActionItems?: string | null;
+  aiSentiment?: string | null;
   lead: { name: string } | null;
   user: { name: string } | null;
   line: { label: string } | null;
@@ -261,6 +272,11 @@ const toCallSummary = (call: CallRow): CallSummary => ({
   createdAt: call.createdAt.toISOString(),
   answeredAt: call.answeredAt?.toISOString() ?? null,
   endedAt: call.endedAt?.toISOString() ?? null,
+  transcriptionText: call.transcriptionText ?? null,
+  aiSummary: call.aiSummary ?? null,
+  aiKeyTakeaways: call.aiKeyTakeaways ?? null,
+  aiActionItems: call.aiActionItems ?? null,
+  aiSentiment: call.aiSentiment ?? null,
 });
 
 const scopeWhere = (scope: TenantScope) => ({
@@ -760,6 +776,8 @@ export async function applyVoiceCallback(callId: string, leg: string, params: Re
   if (leg === CALL_CALLBACK_LEG.RECORDING) {
     if (params.RecordingStatus === "completed" && params.RecordingSid) {
       await prisma.call.update({ where: { id: call.id }, data: { recordingSid: params.RecordingSid, recordingUrl: params.RecordingUrl ?? null } });
+      // Análisis comercial automático en segundo plano con IA (Whisper + Minuta ejecutiva)
+      analyzeCall(call.id).catch((err) => console.error(`Error en análisis de llamada ${call.id}:`, err));
     }
     return null;
   }

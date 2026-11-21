@@ -17,6 +17,11 @@ export interface CallSummary {
   createdAt: string;
   answeredAt: string | null;
   endedAt: string | null;
+  transcriptionText?: string | null;
+  aiSummary?: string | null;
+  aiKeyTakeaways?: string | null;
+  aiActionItems?: string | null;
+  aiSentiment?: string | null;
 }
 
 export interface CallsResponse {

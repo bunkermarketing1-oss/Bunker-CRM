@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { History, PhoneIncoming, PhoneOutgoing, Play, Pause, Download, Loader2, Disc, Filter } from "lucide-react";
+import { History, PhoneIncoming, PhoneOutgoing, Play, Pause, Download, Loader2, Disc, Sparkles } from "lucide-react";
 import { CALL_DIRECTION, CALL_STATUS, CALL_STATUS_LABEL } from "@/lib/constants/voice";
 import type { CallSummary } from "@/types/voice";
+import { CallIntelligenceModal } from "./CallIntelligenceModal";
 
 const formatDuration = (seconds: number | null) =>
   seconds ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : "—";
@@ -21,11 +22,17 @@ const STATUS_STYLE: Partial<Record<CallSummary["status"], string>> = {
 type HistoryFilter = "all" | "inbound" | "outbound" | "recorded";
 
 export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; loading: boolean }) {
+  const [callItems, setCallItems] = useState<CallSummary[]>(calls);
   const [filter, setFilter] = useState<HistoryFilter>("all");
   const [playingCallId, setPlayingCallId] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [selectedAiCall, setSelectedAiCall] = useState<CallSummary | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    setCallItems(calls);
+  }, [calls]);
 
   // Limpiar el audio si el componente se desmonta
   useEffect(() => {
@@ -41,20 +48,20 @@ export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; load
     let inbound = 0;
     let outbound = 0;
     let recorded = 0;
-    for (const c of calls) {
+    for (const c of callItems) {
       if (c.direction === CALL_DIRECTION.INBOUND) inbound++;
       else outbound++;
       if (c.hasRecording) recorded++;
     }
-    return { all: calls.length, inbound, outbound, recorded };
-  }, [calls]);
+    return { all: callItems.length, inbound, outbound, recorded };
+  }, [callItems]);
 
   const filteredCalls = useMemo(() => {
-    if (filter === "inbound") return calls.filter((c) => c.direction === CALL_DIRECTION.INBOUND);
-    if (filter === "outbound") return calls.filter((c) => c.direction === CALL_DIRECTION.OUTBOUND);
-    if (filter === "recorded") return calls.filter((c) => c.hasRecording);
-    return calls;
-  }, [calls, filter]);
+    if (filter === "inbound") return callItems.filter((c) => c.direction === CALL_DIRECTION.INBOUND);
+    if (filter === "outbound") return callItems.filter((c) => c.direction === CALL_DIRECTION.OUTBOUND);
+    if (filter === "recorded") return callItems.filter((c) => c.hasRecording);
+    return callItems;
+  }, [callItems, filter]);
 
   const handleTogglePlay = (callId: string) => {
     setPlaybackError(null);
@@ -225,7 +232,7 @@ export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; load
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
-                  {/* Botón de reproducción de grabación */}
+                  {/* Botón de reproducción de grabación y Minuta IA */}
                   {call.hasRecording && (
                     <div className="flex items-center gap-1.5 mr-1">
                       <button
@@ -248,6 +255,21 @@ export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; load
                         <span>{isPlaying ? "Pausar" : "Escuchar"}</span>
                       </button>
 
+                      {/* Botón Minuta IA / Análisis de Llamada */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAiCall(call)}
+                        title={call.aiSummary ? "Ver Minuta Ejecutiva y Análisis IA" : "Analizar llamada con IA"}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer active:scale-95 shadow-2xs ${
+                          call.aiSummary
+                            ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                            : "bg-white text-[#475467] border-[#D0D5DD] hover:bg-[#F9FAFB]"
+                        }`}
+                      >
+                        <Sparkles className={`w-3.5 h-3.5 ${call.aiSummary ? "text-purple-600 fill-purple-200" : "text-amber-500"}`} />
+                        <span className="hidden sm:inline">{call.aiSummary ? "Minuta IA" : "Analizar IA"}</span>
+                      </button>
+
                       <a
                         href={`/api/voice/calls/${call.id}/recording`}
                         download={`grabacion-${call.id}.mp3`}
@@ -257,6 +279,15 @@ export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; load
                         <Download className="w-3.5 h-3.5" />
                       </a>
                     </div>
+                  )}
+
+                  {call.aiSentiment && (
+                    <span
+                      title={`Sentimiento del cliente: ${call.aiSentiment === "positive" ? "Positivo" : call.aiSentiment === "negative" ? "Objeción o Negativo" : "Neutral"}`}
+                      className="text-xs cursor-help"
+                    >
+                      {call.aiSentiment === "positive" ? "🟢" : call.aiSentiment === "negative" ? "🔴" : "🟡"}
+                    </span>
                   )}
 
                   <span className="font-mono text-[11px] font-semibold text-[#344054] px-2 py-0.5 rounded-md bg-[#F8F9FA] border border-[#EAECF0]">
@@ -274,6 +305,17 @@ export function CallHistoryList({ calls, loading }: { calls: CallSummary[]; load
             );
           })}
         </ul>
+      )}
+
+      {selectedAiCall && (
+        <CallIntelligenceModal
+          call={selectedAiCall}
+          onClose={() => setSelectedAiCall(null)}
+          onAnalysisUpdated={(updatedCall) => {
+            setSelectedAiCall(updatedCall);
+            setCallItems((prev) => prev.map((c) => (c.id === updatedCall.id ? updatedCall : c)));
+          }}
+        />
       )}
     </section>
   );
