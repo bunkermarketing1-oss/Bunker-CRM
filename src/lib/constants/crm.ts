@@ -30,6 +30,7 @@ export const LEAD_SOURCE = {
   MANUAL: "manual",
   PHONE_CALL: "phone_call",
   WHATSAPP: "whatsapp",
+  TIKTOK_ADS: "tiktok_ads",
 } as const;
 
 /** Etiquetas visibles de las fuentes de lead (`Lead.source`). */

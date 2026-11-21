@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { syncMetaIntegration, type SyncSummary } from "@/lib/integrations/meta-sync";
+import { syncTikTokIntegration } from "@/lib/integrations/tiktok-sync";
 import { syncConnectedPageConversations } from "@/services/meta-messaging.service";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { isCommercialLicenseActive } from "@/lib/license";
@@ -58,6 +59,8 @@ export async function POST(req: NextRequest) {
           console.error(`[SYNC_ROUTE] Error sincronizando mensajes de página ${page.id}:`, pageSyncErr);
         }
       }
+    } else if (integration.provider === INTEGRATION_PROVIDER.TIKTOK) {
+      summary = await syncTikTokIntegration(integration.id);
     }
 
     const syncError = summary && summary.errors.length > 0 ? summary.errors.join(" | ") : null;

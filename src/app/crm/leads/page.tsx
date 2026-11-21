@@ -316,6 +316,7 @@ function LeadsPageContent() {
   // Notifications & Feedback
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [syncingMeta, setSyncingMeta] = useState(false);
+  const [assigningRoundRobin, setAssigningRoundRobin] = useState(false);
 
   // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -390,6 +391,30 @@ function LeadsPageContent() {
       showNotification("Error de conexión al sincronizar con Meta.", "error");
     } finally {
       setSyncingMeta(false);
+    }
+  };
+
+  const handleBulkRoundRobin = async () => {
+    try {
+      setAssigningRoundRobin(true);
+      const res = await fetch("/api/leads/round-robin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: clientFilter !== "all" ? clientFilter : undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showNotification(json.message, "success");
+        fetchLeads();
+      } else {
+        showNotification(json.error || "No se pudo ejecutar la auto-asignación.", "error");
+      }
+    } catch {
+      showNotification("Error de red al ejecutar auto-asignación Round-Robin.", "error");
+    } finally {
+      setAssigningRoundRobin(false);
     }
   };
 
@@ -813,6 +838,17 @@ function LeadsPageContent() {
           >
             <RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${syncingMeta ? "animate-spin" : ""}`} />
             <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleBulkRoundRobin}
+            disabled={assigningRoundRobin}
+            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-60 cursor-pointer"
+            title="Auto-asignar prospectos sin asesor mediante Round-Robin equitativo"
+          >
+            <Users className={`w-3.5 h-3.5 text-blue-500 ${assigningRoundRobin ? "animate-spin" : ""}`} />
+            <span>{assigningRoundRobin ? "Asignando..." : "Rotar Leads (Round-Robin)"}</span>
           </button>
 
           <button

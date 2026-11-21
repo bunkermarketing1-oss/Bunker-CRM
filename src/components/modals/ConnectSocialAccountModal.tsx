@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Trash2,
   LogOut,
+  Copy,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
@@ -77,6 +78,7 @@ export function ConnectSocialAccountModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<ChannelFilterType>("all");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   // Formulario manual avanzado
   const [manualAccountName, setManualAccountName] = useState("");
@@ -797,23 +799,70 @@ export function ConnectSocialAccountModal({
           {/* PESTAÑA 2: TIKTOK ADS                                     */}
           {/* ========================================================= */}
           {activeTab === "tiktok" && (
-            <div className="p-6 rounded-3xl bg-[#FAF9F5] border border-[#E8E6DF] space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                  🎵
+            <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+              <div className="p-5 rounded-3xl bg-slate-900 text-white space-y-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-black border border-slate-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    🎵
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">TikTok for Business & Ads Manager</h3>
+                    <p className="text-xs text-slate-300">
+                      Conecta tus cuentas publicitarias de TikTok para capturar clientes potenciales en tiempo real y sincronizar métricas.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#1F1E1D]">TikTok for Business</h3>
-                  <p className="text-xs text-[#6B6966]">
-                    Conecta tus cuentas de TikTok Ads Manager para capturar leads y sincronizar métricas de campañas.
+
+                {/* Webhook URL de TikTok Lead Gen */}
+                <div className="pt-2 border-t border-slate-800">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[11px] font-semibold text-amber-400">
+                      URL del Webhook de Leads (Instant Forms):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${typeof window !== "undefined" ? window.location.origin : ""}/api/integrations/tiktok/webhook`;
+                        navigator.clipboard.writeText(url);
+                        setCopiedWebhook(true);
+                        setTimeout(() => setCopiedWebhook(false), 2500);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      {copiedWebhook ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span className="text-emerald-400">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar URL</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-2 rounded-xl bg-black/60 font-mono text-[11px] text-slate-300 select-all break-all border border-slate-800">
+                    {typeof window !== "undefined" ? `${window.location.origin}/api/integrations/tiktok/webhook` : "/api/integrations/tiktok/webhook"}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Pega esta URL en el Webhook de TikTok Developers o en la automatización de tus Instant Forms para recibir prospectos de inmediato (SLA &lt; 60s con auto-asignación Round-Robin).
                   </p>
                 </div>
               </div>
 
+              {/* Formulario de Vinculación */}
               <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] space-y-3">
-                <p className="text-xs text-[#1F1E1D]">
-                  Para vincular una cuenta de anunciante de TikTok, ingresa el <strong>Advertiser ID</strong> del cliente.
-                </p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#1F1E1D]">
+                    Vincular Cuenta Publicitaria de TikTok
+                  </h4>
+                  {activeClient && (
+                    <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                      Asignando a: {activeClient.name}
+                    </span>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -822,7 +871,7 @@ export function ConnectSocialAccountModal({
                     </label>
                     <input
                       type="text"
-                      placeholder="ej. Carrito Naranja TikTok Ads"
+                      placeholder="ej. Campañas TikTok Carrito Naranja"
                       value={manualAccountName}
                       onChange={(e) => setManualAccountName(e.target.value)}
                       className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
@@ -830,7 +879,7 @@ export function ConnectSocialAccountModal({
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
-                      Advertiser ID de TikTok:
+                      Advertiser ID (TikTok Ads Manager):
                     </label>
                     <input
                       type="text"
@@ -842,19 +891,100 @@ export function ConnectSocialAccountModal({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setManualProvider(INTEGRATION_PROVIDER.TIKTOK);
-                    setManualAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
-                    handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
-                  }}
-                  disabled={manualSubmitting}
-                  className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
-                  <span>Vincular Cuenta de TikTok Ads</span>
-                </button>
+                <div>
+                  <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                    Token de Acceso (Access Token de TikTok Marketing API) — Opcional:
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Generado en TikTok for Business Developers o Ads Manager"
+                    value={manualAccessToken}
+                    onChange={(e) => setManualAccessToken(e.target.value)}
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+                  />
+                  <p className="text-[10px] text-[#82807C] mt-1">
+                    Si agregas el Token de Acceso, Bunker CRM podrá sincronizar automáticamente el gasto, impresiones, clics y campañas activas.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualProvider(INTEGRATION_PROVIDER.TIKTOK);
+                      setManualAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
+                      handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
+                    }}
+                    disabled={manualSubmitting || !manualAccountName.trim() || !manualExternalId.trim()}
+                    className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+                    <span>{manualSubmitting ? "Vinculando..." : "Vincular Cuenta de TikTok Ads"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Cuentas de TikTok ya vinculadas */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-xs font-bold text-slate-800">
+                  Cuentas de TikTok Ads Vinculadas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER).length})
+                </h4>
+                {channels.filter((c) => c.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER).length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-500 text-center">
+                    No hay cuentas de TikTok Ads vinculadas todavía.
+                  </div>
+                ) : (
+                  channels
+                    .filter((c) => c.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER)
+                    .map((ch) => {
+                      return (
+                        <div
+                          key={ch.id}
+                          className="px-4 py-3 rounded-2xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shrink-0">
+                              🎵
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-xs font-semibold text-slate-900 truncate">{ch.accountName}</h5>
+                              <p className="text-[10px] text-slate-500">ID: {ch.externalId || "—"}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <select
+                              value={ch.clientId || ""}
+                              onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
+                              disabled={assigningId === ch.id}
+                              className="text-xs border border-slate-200 rounded-xl px-2 py-1 bg-slate-50 text-slate-700"
+                            >
+                              <option value="">Portafolio Agencia</option>
+                              {clients.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteChannel(ch.id, ch.accountName)}
+                              disabled={deletingChannelId === ch.id}
+                              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title={`Eliminar "${ch.accountName}"`}
+                            >
+                              {deletingChannelId === ch.id ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
               </div>
             </div>
           )}
