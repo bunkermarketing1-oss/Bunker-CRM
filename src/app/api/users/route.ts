@@ -86,9 +86,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Only Bunker Administrators can create users
-    const { user, errorResponse } = await requireAdmin(req);
+    // Administradores de Bunker o Dueños de Empresa Cliente pueden dar de alta usuarios
+    const { user, errorResponse } = await requireAuth(req);
     if (errorResponse) return errorResponse;
+
+    if (user!.isClientUser && !user!.isClientOwner) {
+      return NextResponse.json(
+        { success: false, error: "No tienes permisos para crear usuarios en este espacio." },
+        { status: 403 }
+      );
+    }
 
     const body = await req.json().catch(() => ({}));
     const { email, password, name, role, clientId } = body;
@@ -112,11 +119,21 @@ export async function POST(req: NextRequest) {
     if (!parsedRole.success) {
       return NextResponse.json({ success: false, error: "Rol inválido." }, { status: 400 });
     }
-    const cleanRole = parsedRole.data ?? (clientId ? ROLES.CLIENT : ROLES.ADMIN);
+    let cleanRole = parsedRole.data ?? (clientId ? ROLES.CLIENT : ROLES.ADMIN);
 
-    // If creating a Client Portal user (asesor o dueño), clientId is mandatory and must belong to this org
+    // Resolver clientId objetivo con seguridad multi-tenant
     let targetClientId: string | null = null;
-    if (isClientRole(cleanRole)) {
+    if (user!.isClientUser) {
+      // Un Dueño de Empresa Cliente solo puede crear usuarios Asesores para su propia empresa
+      if (!user!.clientId) {
+        return NextResponse.json(
+          { success: false, error: "Tu cuenta de usuario no está asociada a ninguna empresa." },
+          { status: 403 }
+        );
+      }
+      targetClientId = user!.clientId;
+      cleanRole = ROLES.CLIENT;
+    } else if (isClientRole(cleanRole)) {
       if (!clientId || typeof clientId !== "string") {
         return NextResponse.json(
           { success: false, error: "Debe especificar el cliente (empresa) al que pertenecerá el usuario con rol CLIENT." },

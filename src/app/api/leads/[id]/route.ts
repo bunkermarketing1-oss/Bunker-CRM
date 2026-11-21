@@ -68,6 +68,13 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
           orderBy: { createdAt: "desc" },
           take: 10,
         },
+        appointments: {
+          orderBy: { scheduledAt: "desc" },
+          take: 15,
+          include: {
+            user: { select: { id: true, name: true } },
+          },
+        },
       },
     });
 

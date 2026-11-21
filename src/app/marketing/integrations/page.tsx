@@ -39,6 +39,7 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   facebook_page: "Página de Facebook",
   instagram_business: "Perfil de Instagram",
   tiktok_advertiser: "Cuenta de TikTok Ads",
+  whatsapp_business: "Línea WhatsApp Business",
 };
 
 /** Traduce mensajes técnicos o de variables de entorno a explicaciones claras para usuarios comerciales */
@@ -95,7 +96,7 @@ function IntegrationsPageContent() {
   // Vista comercial vs canales (Buffer) vs técnica
   const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
   const [searchFilter, setSearchFilter] = useState("");
-  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "unassigned">("all");
+  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "whatsapp" | "unassigned">("all");
   const [channelSearchFilter, setChannelSearchFilter] = useState("");
   const [unassignedFilter, setUnassignedFilter] = useState<"all" | "pages" | "ads" | "instagram">("all");
   const [unassignedSearch, setUnassignedSearch] = useState("");
@@ -401,6 +402,7 @@ function IntegrationsPageContent() {
       if (channelTypeFilter === "pages") return acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
       if (channelTypeFilter === "ads") return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
       if (channelTypeFilter === "instagram") return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+      if (channelTypeFilter === "whatsapp") return acc.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS;
       return true;
     });
   }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, activeClient]);
@@ -704,6 +706,23 @@ function IntegrationsPageContent() {
                 {
                   allConnectedAccounts.filter((a) => {
                     if (a.accountType !== ACCOUNT_TYPE.INSTAGRAM_BUSINESS) return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("whatsapp")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  channelTypeFilter === "whatsapp"
+                    ? "bg-[#25D366] text-white shadow-sm"
+                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                }`}
+              >
+                WhatsApp (
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.accountType !== ACCOUNT_TYPE.WHATSAPP_BUSINESS) return false;
                     return activeClient ? a.clientId === activeClient.id : true;
                   }).length
                 }

@@ -27,8 +27,13 @@ import {
   ArrowRightCircle,
   ShieldCheck,
   RefreshCw,
+  CalendarDays,
+  MapPin,
 } from "lucide-react";
 import LeadAvatar from "@/components/crm/LeadAvatar";
+import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
+import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants/appointments";
+import type { CreateAppointmentInput } from "@/types/appointments";
 
 interface LeadOwner {
   id: string;
@@ -81,6 +86,33 @@ interface LeadTask {
   user: { id: string; name: string } | null;
 }
 
+interface LeadCall {
+  id: string;
+  direction: string;
+  status: string;
+  fromNumber: string;
+  toNumber: string;
+  durationSec: number | null;
+  recordingSid: string | null;
+  transcriptionText?: string | null;
+  aiSummary?: string | null;
+  aiKeyTakeaways?: string | null;
+  aiActionItems?: string | null;
+  aiSentiment?: string | null;
+  createdAt: string;
+}
+
+interface LeadAppointment {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: string;
+  locationType: string;
+  locationAddress: string | null;
+  user?: { id: string; name: string } | null;
+}
+
 interface LeadDetail {
   id: string;
   name: string;
@@ -106,6 +138,8 @@ interface LeadDetail {
   opportunities: LeadOpportunity[];
   activities: LeadActivity[];
   tasks: LeadTask[];
+  calls?: LeadCall[];
+  appointments?: LeadAppointment[];
 }
 
 function fmtMoney(n: number) {
@@ -140,13 +174,14 @@ export default function LeadDetailPage() {
   const [feedback, setFeedback] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Tabs de navegación
-  const [activeTab, setActiveTab] = useState<"activity" | "calls" | "emails" | "tasks" | "notes">("activity");
+  const [activeTab, setActiveTab] = useState<"activity" | "appointments" | "calls" | "emails" | "tasks" | "notes">("activity");
   const [leftTab, setLeftTab] = useState<"address" | "company">("address");
 
   // Modales
   const [isDealModalOpen, setIsDealModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [activityType, setActivityType] = useState<"call" | "meeting" | "note" | "email">("note");
   const [converting, setConverting] = useState(false);
 
@@ -231,6 +266,25 @@ export default function LeadDetailPage() {
       showToast("Error de conexión al asignar por Round-Robin.", "error");
     } finally {
       setAssigningRoundRobin(false);
+    }
+  };
+
+  const handleCreateAppointment = async (input: CreateAppointmentInput) => {
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("Cita agendada exitosamente.", "success");
+        fetchLead();
+        return { success: true };
+      }
+      return { success: false, error: data.error || "Error al agendar cita." };
+    } catch {
+      return { success: false, error: "Error de conexión al agendar cita." };
     }
   };
 
@@ -543,6 +597,16 @@ export default function LeadDetailPage() {
                 </a>
               )}
 
+              {/* Botón Agendar Cita */}
+              <button
+                type="button"
+                onClick={() => setIsBookingOpen(true)}
+                title="Agendar Cita Comercial con este prospecto"
+                className="w-10 h-10 rounded-full bg-purple-50 border border-purple-200 hover:bg-purple-100 flex items-center justify-center text-purple-700 transition-colors shadow-2xs cursor-pointer"
+              >
+                <CalendarDays className="w-4 h-4 text-purple-600" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -763,7 +827,8 @@ export default function LeadDetailPage() {
               {(
                 [
                   { id: "activity", label: "Actividad" },
-                  { id: "calls", label: "Llamadas" },
+                  { id: "appointments", label: `Citas (${lead.appointments?.length ?? 0})` },
+                  { id: "calls", label: `Llamadas IA (${lead.calls?.length ?? 0})` },
                   { id: "emails", label: "Correos" },
                   { id: "tasks", label: "Tareas" },
                   { id: "notes", label: "Notas" },
@@ -869,54 +934,213 @@ export default function LeadDetailPage() {
             )}
           </div>
 
-          {/* SECTION: Activity history */}
-          <div className="space-y-3">
-            <h2 className="text-sm font-bold text-[#101828] tracking-tight">Historial de actividades</h2>
-
-            {filteredActivities.length === 0 ? (
-              <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] text-center text-xs text-[#82807C]">
-                Aún no hay actividades registradas en esta sección.
+          {/* SECTION: Tab Content */}
+          {activeTab === "appointments" ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-[#101828] tracking-tight">
+                  Citas Agendadas ({lead.appointments?.length ?? 0})
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsBookingOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-[#101828] text-white text-xs font-bold hover:bg-[#1E293B] flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nueva Cita</span>
+                </button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredActivities.map((act) => (
-                  <div
-                    key={act.id}
-                    className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs flex items-start gap-3 hover:border-[#C7C5BE] transition-all"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] shrink-0 mt-0.5">
-                      {act.type === "call" ? (
-                        <Phone className="w-4 h-4 text-blue-600" />
-                      ) : act.type === "meeting" ? (
-                        <Video className="w-4 h-4 text-amber-600" />
-                      ) : act.type === "email" ? (
-                        <Mail className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <FileText className="w-4 h-4 text-amber-500" />
-                      )}
-                    </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-bold text-[#101828] leading-tight">{act.title}</h4>
-                        <span className="text-[10px] text-[#82807C] shrink-0">
-                          {timeAgo(act.performedAt)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#82807C] mt-0.5">
-                        Por {act.user?.name || "Asesor comercial"}
-                      </p>
-                      {act.description && (
-                        <p className="text-xs text-[#4D4C48] mt-2 whitespace-pre-line leading-relaxed">
-                          {act.description}
-                        </p>
-                      )}
-                    </div>
+              {(!lead.appointments || lead.appointments.length === 0) ? (
+                <div className="p-8 rounded-2xl bg-white border border-[#EAECF0] text-center space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 mx-auto flex items-center justify-center">
+                    <CalendarDays className="w-5 h-5" />
                   </div>
-                ))}
+                  <div>
+                    <p className="text-xs font-bold text-[#101828]">No hay citas registradas</p>
+                    <p className="text-[11px] text-[#82807C] mt-0.5">Programa una reunión comercial, demo o visita para este prospecto.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsBookingOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold hover:bg-purple-100 transition-colors cursor-pointer"
+                  >
+                    Agendar Cita Ahora
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {lead.appointments.map((app) => (
+                    <div
+                      key={app.id}
+                      className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-200 transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shrink-0">
+                          <CalendarDays className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#101828]">{app.title}</h4>
+                          <p className="text-[11px] text-[#82807C] mt-0.5 flex items-center gap-1.5">
+                            <Clock className="w-3 h-3 text-[#475467]" />
+                            <span>
+                              {new Date(app.scheduledAt).toLocaleString("es-MX", {
+                                weekday: "short",
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })} ({app.durationMinutes} min)
+                            </span>
+                          </p>
+                          {app.locationAddress && (
+                            <p className="text-[11px] text-[#82807C] mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-[#475467]" />
+                              <span>{app.locationAddress}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const st = APPOINTMENT_STATUS_LABELS[app.status as keyof typeof APPOINTMENT_STATUS_LABELS];
+                          return (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${st?.bg || "bg-purple-50 border-purple-200"} ${st?.color || "text-purple-700"}`}>
+                              {st?.label || app.status}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : activeTab === "calls" ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-[#101828] tracking-tight">
+                  Llamadas con Inteligencia Artificial ({lead.calls?.length ?? 0})
+                </h2>
               </div>
-            )}
-          </div>
+
+              {(!lead.calls || lead.calls.length === 0) ? (
+                <div className="p-8 rounded-2xl bg-white border border-[#EAECF0] text-center space-y-2">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-bold text-[#101828]">Sin llamadas registradas</p>
+                  <p className="text-[11px] text-[#82807C]">Las llamadas salientes y entrantes se transcribirán automáticamente aquí.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {lead.calls.map((call) => (
+                    <div
+                      key={call.id}
+                      className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-3 hover:border-blue-200 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                            <Phone className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-[#101828]">
+                              Llamada {call.direction === "outbound" ? "Saliente" : "Entrante"} · {call.durationSec ? `${Math.floor(call.durationSec / 60)}:${String(call.durationSec % 60).padStart(2, "0")}` : "0:00"}
+                            </span>
+                            <p className="text-[10px] text-[#82807C]">
+                              {new Date(call.createdAt).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {call.aiSentiment && (
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                            call.aiSentiment === "positive"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : call.aiSentiment === "negative"
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : "bg-slate-50 text-slate-700 border-slate-200"
+                          }`}>
+                            {call.aiSentiment === "positive" ? "😊 Positiva" : call.aiSentiment === "negative" ? "😟 Objeción" : "😐 Neutral"}
+                          </span>
+                        )}
+                      </div>
+
+                      {call.aiSummary && (
+                        <div className="p-3 rounded-xl bg-purple-50/40 border border-purple-100 text-xs text-[#101828] space-y-1">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-purple-900">
+                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                            <span>Minuta IA Ejecutiva</span>
+                          </div>
+                          <p className="text-xs leading-relaxed text-[#344054]">{call.aiSummary}</p>
+                          {call.aiActionItems && (
+                            <p className="text-[11px] text-purple-950 font-semibold pt-1">
+                              Acción: {call.aiActionItems}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {call.recordingSid && (
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <audio controls className="h-8 max-w-full" src={`/api/voice/calls/${call.id}/recording`} preload="none" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Historial de actividades</h2>
+
+              {filteredActivities.length === 0 ? (
+                <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] text-center text-xs text-[#82807C]">
+                  Aún no hay actividades registradas en esta sección.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredActivities.map((act) => (
+                    <div
+                      key={act.id}
+                      className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs flex items-start gap-3 hover:border-[#C7C5BE] transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#101828] shrink-0 mt-0.5">
+                        {act.type === "call" ? (
+                          <Phone className="w-4 h-4 text-blue-600" />
+                        ) : act.type === "meeting" ? (
+                          <Video className="w-4 h-4 text-amber-600" />
+                        ) : act.type === "email" ? (
+                          <Mail className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-amber-500" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-xs font-bold text-[#101828] leading-tight">{act.title}</h4>
+                          <span className="text-[10px] text-[#82807C] shrink-0">
+                            {timeAgo(act.performedAt)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#82807C] mt-0.5">
+                          Por {act.user?.name || "Asesor comercial"}
+                        </p>
+                        {act.description && (
+                          <p className="text-xs text-[#4D4C48] mt-2 whitespace-pre-line leading-relaxed">
+                            {act.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ========================================================= */}
@@ -1279,6 +1503,18 @@ export default function LeadDetailPage() {
             </form>
           </div>
         </div>
+      )}
+      {/* Modal de Agendamiento de Citas */}
+      {lead && isBookingOpen && (
+        <CreateAppointmentModal
+          isOpen={isBookingOpen}
+          onClose={() => setIsBookingOpen(false)}
+          onSubmit={handleCreateAppointment}
+          initialLeadId={lead.id}
+          initialLeadName={lead.name}
+          initialLeadPhone={lead.normalizedPhone || lead.phone || undefined}
+          initialClientId={lead.client?.id || undefined}
+        />
       )}
     </div>
   );
