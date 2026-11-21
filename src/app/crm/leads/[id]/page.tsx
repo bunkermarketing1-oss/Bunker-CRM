@@ -26,6 +26,7 @@ import {
   Tag,
   ArrowRightCircle,
   ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
 import LeadAvatar from "@/components/crm/LeadAvatar";
 
@@ -200,6 +201,37 @@ export default function LeadDetailPage() {
   const showToast = (text: string, type: "success" | "error" = "success") => {
     setFeedback({ text, type });
     setTimeout(() => setFeedback(null), 4000);
+  };
+
+  const [assigningRoundRobin, setAssigningRoundRobin] = useState(false);
+
+  const handleRoundRobinAssign = async () => {
+    if (!lead) return;
+    setAssigningRoundRobin(true);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/round-robin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceReassign: Boolean(lead.owner) }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.lead) {
+        setLead(data.lead);
+        showToast(
+          data.result?.instantContactSent
+            ? `Asignado a ${data.lead.owner?.name || "asesor"} y SMS de bienvenida enviado.`
+            : `Asignado a ${data.lead.owner?.name || "asesor"} mediante Round-Robin.`,
+          "success"
+        );
+        fetchLead();
+      } else {
+        showToast(data.error || "No se pudo asignar el asesor.", "error");
+      }
+    } catch {
+      showToast("Error de conexión al asignar por Round-Robin.", "error");
+    } finally {
+      setAssigningRoundRobin(false);
+    }
   };
 
   const handleConvert = async () => {
@@ -670,8 +702,24 @@ export default function LeadDetailPage() {
                   </div>
 
                   <div>
-                    <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
-                      Asesor Responsable
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
+                        Asesor Responsable
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRoundRobinAssign}
+                        disabled={assigningRoundRobin}
+                        title="Distribuir equitativamente mediante Round-Robin"
+                        className="text-[11px] font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      >
+                        {assigningRoundRobin ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-3 h-3" />
+                        )}
+                        <span>{lead.owner ? "Rotar (Round-Robin)" : "Auto-asignar"}</span>
+                      </button>
                     </div>
                     <div className="font-semibold text-[#101828] mt-0.5">
                       {lead.owner ? `${lead.owner.name} (${lead.owner.role})` : "Sin asignar"}

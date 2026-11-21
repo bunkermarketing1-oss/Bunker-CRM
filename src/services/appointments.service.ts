@@ -11,6 +11,7 @@ import type {
 import { validateAndNormalizePhone } from "@/lib/phone";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
 import { LEAD_STATUS } from "@/lib/constants/crm";
+import { assignLeadRoundRobin } from "@/services/round-robin.service";
 
 export interface AppointmentScope {
   organizationId: string;
@@ -444,15 +445,22 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
     }
   }
 
-  // 2. Asignar un asesor disponible del cliente si existe
-  const advisor = await prisma.user.findFirst({
-    where: {
-      clientId: client.id,
-      isActive: true,
-    },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, name: true },
-  });
+  // 2. Asignar un asesor disponible del cliente vía Round-Robin
+  let assignedAdvisorId: string | null = null;
+  const rrResult = await assignLeadRoundRobin(lead.id, { triggerInstantContact: false }).catch(() => null);
+  if (rrResult?.success && rrResult.assignedAdvisorId) {
+    assignedAdvisorId = rrResult.assignedAdvisorId;
+  } else {
+    const fallbackAdvisor = await prisma.user.findFirst({
+      where: {
+        clientId: client.id,
+        isActive: true,
+      },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true },
+    });
+    assignedAdvisorId = fallbackAdvisor?.id || null;
+  }
 
   // 3. Crear la Cita
   const appointment = await prisma.appointment.create({
@@ -460,7 +468,7 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
       organizationId: client.organizationId,
       clientId: client.id,
       leadId: lead.id,
-      userId: advisor?.id || null,
+      userId: assignedAdvisorId,
       title: `Cita con ${input.customerName} - ${client.name}`,
       description: input.customerNotes || null,
       scheduledAt: scheduledDate,

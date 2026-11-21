@@ -28,6 +28,7 @@ import {
 import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
 import { computeInitialQualification } from "@/lib/lead-scoring";
 import { runLeadCreatedAutomations } from "@/services/automations.service";
+import { assignLeadRoundRobin } from "@/services/round-robin.service";
 import type { PageLeadgenStatus } from "@/types/meta-leads";
 
 const LEADGEN_FIELD = "leadgen";
@@ -203,6 +204,11 @@ export async function processMetaLeadEvent(eventId: string): Promise<MetaLeadEve
     }
 
     const leadId = await upsertLeadFromMeta(page.organizationId, targetClientId, metaLead, isRecent);
+
+    // Auto-asignación equitativa por Round-Robin al equipo comercial del cliente
+    await assignLeadRoundRobin(leadId).catch((err) =>
+      console.error(`Error en auto-asignación Round-Robin para lead ${leadId}:`, err)
+    );
 
     // También cuando el lead ya existía: si un intento anterior lo creó y murió antes del SMS,
     // este lo manda; `runLeadCreatedAutomations` no lo repite si ya salió.

@@ -6,6 +6,7 @@ import { validateAndNormalizePhone } from "@/lib/phone";
 import { findDuplicateLeads } from "@/lib/validations/duplicate-detector";
 import { computeInitialQualification } from "@/lib/lead-scoring";
 import { clientBelongsToOrg } from "@/lib/validation-helpers";
+import { assignLeadRoundRobin } from "@/services/round-robin.service";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
     const data = validationResult.data;
 
     // 2. Validate Assigned Owner if provided
-    const assignedOwnerId = data.ownerId || user!.id;
+    const assignedOwnerId = data.ownerId || null;
     if (data.ownerId) {
       const isMember = await prisma.organizationMember.findFirst({
         where: {
@@ -245,6 +246,32 @@ export async function POST(req: NextRequest) {
         }),
       },
     });
+
+    // Si no se asignó asesor explícito, ejecutar auto-asignación por Round-Robin
+    if (!assignedOwnerId) {
+      const rrResult = await assignLeadRoundRobin(lead.id).catch((err) => {
+        console.error("Error en auto-asignación Round-Robin:", err);
+        return null;
+      });
+
+      if (rrResult?.success && rrResult.assignedAdvisorId) {
+        const updated = await prisma.lead.findUnique({
+          where: { id: lead.id },
+          include: {
+            owner: { select: { id: true, name: true, email: true, role: true } },
+          },
+        });
+        if (updated) {
+          return NextResponse.json({ success: true, lead: updated }, { status: 201 });
+        }
+      } else {
+        // Respaldo: asignar al creador si no hubo candidatos
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: { ownerId: user!.id },
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, lead }, { status: 201 });
   } catch (error: any) {
