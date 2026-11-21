@@ -29,6 +29,7 @@ export const LEAD_SOURCE = {
   INSTAGRAM_DIRECT: "instagram_direct",
   MANUAL: "manual",
   PHONE_CALL: "phone_call",
+  WHATSAPP: "whatsapp",
 } as const;
 
 /** Etiquetas visibles de las fuentes de lead (`Lead.source`). */

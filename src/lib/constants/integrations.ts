@@ -27,6 +27,7 @@ export const ACCOUNT_TYPE = {
   FACEBOOK_PAGE: "facebook_page",
   INSTAGRAM_BUSINESS: "instagram_business",
   TIKTOK_ADVERTISER: "tiktok_advertiser",
+  WHATSAPP_BUSINESS: "whatsapp_business",
 } as const;
 export type AccountType = ValueOf<typeof ACCOUNT_TYPE>;
 

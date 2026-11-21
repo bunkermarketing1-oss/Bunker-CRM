@@ -3,6 +3,7 @@ import { timingSafeEqual } from "crypto";
 import { verifyMetaSignature, type MetaWebhookPayload } from "@/lib/integrations/meta";
 import { processMetaLeadEvent, recordLeadgenEvents } from "@/services/meta-leads.service";
 import { processMetaMessaging } from "@/services/meta-messaging.service";
+import { processWhatsAppWebhook } from "@/services/whatsapp-messaging.service";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,12 @@ export async function POST(req: NextRequest) {
   // Siempre 200 con firma válida: si respondemos error Meta reintenta y, tras muchos
   // fallos, desactiva el webhook.
   try {
+    let whatsappProcessed = 0;
+    if ((payload as unknown as { object?: string }).object === "whatsapp_business_account") {
+      const waOutcome = await processWhatsAppWebhook(payload as Record<string, unknown>);
+      whatsappProcessed = waOutcome.processed;
+    }
+
     const [leadgenOutcome, messagingOutcome] = await Promise.allSettled([
       recordLeadgenEvents(payload).then((eventIds) =>
         Promise.allSettled(eventIds.map((id) => processMetaLeadEvent(id)))
@@ -61,7 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       leadEventsReceived: leadEventsCount,
-      messagesProcessed: messagesCount,
+      messagesProcessed: messagesCount + whatsappProcessed,
     });
   } catch (error) {
     console.error("POST /api/integrations/meta/webhook error:", error);

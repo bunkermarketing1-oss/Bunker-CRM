@@ -4,6 +4,7 @@ import { ACCOUNT_TYPE, ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS } from "@/lib/constants/messaging";
 import { sendMetaOutboundReply, syncConnectedPageConversations } from "@/services/meta-messaging.service";
 import { sendManualSms } from "@/services/sms.service";
+import { sendWhatsAppOutboundMessage } from "@/services/whatsapp-messaging.service";
 import { getLeadAvatarUrl } from "@/lib/avatar";
 import type { TenantScope } from "@/types/tenant";
 import type {
@@ -698,8 +699,20 @@ export async function replyToConversation({
       throw new Error(smsResult.errorMessage || "Error al enviar SMS vía Twilio.");
     }
     savedMessage = smsResult.message;
+  } else if ((channel === MESSAGE_CHANNEL.WHATSAPP || channel.includes("whatsapp")) && recipient && recipient !== "Usuario Social") {
+    // Canal WhatsApp Business Cloud API Oficial
+    const waResult = await sendWhatsAppOutboundMessage({
+      organizationId,
+      userId,
+      clientId: targetClientId,
+      leadId: leadId || null,
+      recipient,
+      body: body || (fileName ? `Archivo: ${fileName}` : ""),
+      mediaUrl: attachmentUrl || undefined,
+    });
+    savedMessage = waResult.message;
   } else {
-    // Canal WhatsApp u otros: registrar en base de datos
+    // Otros canales o registro local
     const finalBody = body && attachmentUrl
       ? `${body}\n${attachmentUrl}`
       : (attachmentUrl || body || (fileName ? `[Archivo: ${fileName}]` : "[Archivo adjunto]"));
