@@ -24,6 +24,8 @@ export const ROUTES = {
   TERMS: "/terms",
   DATA_DELETION: "/data-deletion",
   SMS_CONSENT: "/sms-consent",
+  APPOINTMENTS: "/crm/appointments",
+  PUBLIC_BOOKING: "/citas",
 } as const;
 
 export function clientDetailRoute(clientId: string): string {

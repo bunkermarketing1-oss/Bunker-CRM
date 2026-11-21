@@ -31,7 +31,9 @@ import {
   VolumeX,
   Bell,
   Sparkles,
+  Calendar,
 } from "lucide-react";
+import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import { getLeadAvatarUrl } from "@/lib/avatar";
 import SlidingTabs from "@/components/ui/SlidingTabs";
@@ -530,6 +532,7 @@ function UnifiedInboxPageContent() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cronómetro en vivo (tick de 1 segundo)
@@ -1633,6 +1636,14 @@ function UnifiedInboxPageContent() {
                         <PhoneCall className="w-3.5 h-3.5" />
                         Llamar
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => setIsBookingModalOpen(true)}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 px-3 py-1 rounded-full transition-all cursor-pointer"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Agendar Cita
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1802,6 +1813,30 @@ function UnifiedInboxPageContent() {
           )}
         </div>
       </div>
+
+      {activeConversation && (
+        <CreateAppointmentModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          initialLeadId={activeConversation.leadId || undefined}
+          initialLeadName={activeConversation.senderName}
+          initialLeadPhone={activeConversation.leadPhone || undefined}
+          initialClientId={activeConversation.clientId || undefined}
+          onSubmit={async (input) => {
+            const res = await fetch("/api/appointments", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(input),
+            });
+            const data = await res.json();
+            if (data.success) {
+              setFeedback("✅ ¡Cita agendada con éxito!");
+              setTimeout(() => setFeedback(null), 4000);
+            }
+            return data;
+          }}
+        />
+      )}
     </div>
   );
 }

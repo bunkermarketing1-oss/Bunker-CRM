@@ -30,6 +30,7 @@ model User {
   leads        Lead[]               @relation("LeadOwner")
   clients      Client[]             @relation("ClientOwner")
   calls        Call[]
+  appointments Appointment[]
 }
 
 model Organization {
@@ -58,6 +59,7 @@ model Organization {
   calls             Call[]
   smsOptOuts        SmsOptOut[]
   aiAssistants      ClientAiAssistant[]
+  appointments      Appointment[]
 }
 
 model OrganizationMember {
@@ -109,6 +111,11 @@ model Client {
   phoneLines        PhoneLine[]
   calls             Call[]
   aiAssistant       ClientAiAssistant?
+  appointments      Appointment[]
+  bookingSlug       String?           @unique
+  bookingTitle      String?
+  bookingNotice     String?
+  bookingDurationMin Int              @default(45)
 }
 
 model Contact {
@@ -179,6 +186,7 @@ model Lead {
   messages       Message[]
   metaLeadEvents MetaLeadEvent[]
   calls          Call[]
+  appointments   Appointment[]
 
   // Evita duplicados cuando Meta reintenta el webhook o el cron recupera el mismo lead.
   @@unique([organizationId, externalLeadId])
@@ -507,6 +515,11 @@ model Call {
   durationSec     Int?
   recordingSid    String?
   recordingUrl    String?
+  transcriptionText String?
+  aiSummary         String?
+  aiKeyTakeaways    String?
+  aiActionItems     String?
+  aiSentiment       String?
   answeredAt      DateTime?
   endedAt         DateTime?
   createdAt       DateTime     @default(now())
@@ -561,4 +574,40 @@ model AuditLog {
 
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// Citas comerciales programadas (visitas a showroom, videollamadas o llamadas comerciales)
+model Appointment {
+  id              String        @id @default(uuid())
+  organizationId  String
+  clientId        String?
+  leadId          String?
+  userId          String?       // Asesor comercial asignado
+  title           String        // Ej: "Cita en Showroom - Muebles de Sala"
+  description     String?
+  scheduledAt     DateTime      // Fecha y hora de la cita
+  durationMinutes Int           @default(45)
+  status          String        @default("scheduled") // scheduled, confirmed, completed, cancelled, no_show
+  locationType    String        @default("in_store") // in_store, phone_call, video_call
+  locationAddress String?       // Dirección del local o enlace de reunión
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  customerNotes   String?       // Requerimientos o notas del cliente
+  internalNotes   String?       // Notas internas del asesor
+  reminder24hSent Boolean       @default(false)
+  reminder2hSent  Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  lead            Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, scheduledAt])
+  @@index([clientId, scheduledAt])
+  @@index([userId, scheduledAt])
+  @@index([leadId])
+  @@index([status])
 }

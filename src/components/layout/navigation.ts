@@ -45,6 +45,7 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Inicio", en: "Home" } },
       { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Inbox" } },
+      { href: ROUTES.APPOINTMENTS, icon: CalendarDays, label: { es: "Citas & Agenda", en: "Appointments" } },
       { href: ROUTES.LEADS, icon: Users, label: { es: "Prospectos", en: "Prospects" } },
       { href: ROUTES.CLIENTS, icon: Building2, label: { es: "Mi Empresa", en: "My Company" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline", en: "Pipeline" } },
@@ -85,6 +86,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: { es: "Inicio", en: "Home" } },
       { href: ROUTES.INBOX, icon: Inbox, label: { es: "Bandeja de Entrada", en: "Inbox" } },
+      { href: ROUTES.APPOINTMENTS, icon: CalendarDays, label: { es: "Citas & Agenda", en: "Appointments" } },
       { href: ROUTES.CLIENTS, icon: UserCheck, label: { es: "Empresas", en: "Companies" } },
       { href: ROUTES.LEADS, icon: Users, label: { es: "Prospectos", en: "Prospects" } },
       { href: ROUTES.PIPELINE, icon: KanbanSquare, label: { es: "Pipeline", en: "Pipeline" } },
