@@ -133,7 +133,7 @@ const CONTENT = {
 };
 
 export default function SmsConsentPage() {
-  const [lang, setLang] = useState<Language>("es");
+  const [lang, setLang] = useState<Language>("en");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -145,6 +145,15 @@ export default function SmsConsentPage() {
     timestamp: string;
     message: string;
   } | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const navLang = navigator.language?.toLowerCase() || "";
+      if (navLang.startsWith("es")) {
+        setLang("es");
+      }
+    }
+  }, []);
 
   const t = CONTENT[lang];
 
@@ -222,13 +231,14 @@ export default function SmsConsentPage() {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Navigation & Language Switcher */}
         <div className="flex items-center justify-between pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
-          <Link
-            href={ROUTES.LOGIN}
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#8C929D] hover:text-[#121417] dark:hover:text-white transition-colors px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs"
-          >
-            <ArrowLeft className="w-4 h-4 text-amber-500" />
-            {t.back}
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#121417] dark:bg-white flex items-center justify-center text-white dark:text-[#121417] font-black text-xs shadow-2xs">
+              B
+            </div>
+            <span className="text-xs font-black tracking-tight text-[#121417] dark:text-white uppercase">
+              Bunker Marketing Agency
+            </span>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center bg-white dark:bg-[#121417] rounded-full p-1 border border-[#E2E5EB] dark:border-[#1F242D] shadow-2xs text-xs">

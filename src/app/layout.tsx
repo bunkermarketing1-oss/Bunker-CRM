@@ -21,9 +21,13 @@ export default function RootLayout({
     pathname === ROUTES.PRIVACY ||
     pathname === ROUTES.TERMS ||
     pathname === ROUTES.DATA_DELETION ||
+    pathname === ROUTES.SMS_CONSENT ||
+    pathname === "/sms-consent" ||
+    pathname.startsWith("/sms-consent") ||
     pathname === "/politica-de-privacidad" ||
     pathname === "/terminos-y-condiciones" ||
-    pathname === "/eliminacion-de-datos";
+    pathname === "/eliminacion-de-datos" ||
+    pathname.startsWith("/citas");
 
   return (
     <html lang="es" className={inter.variable}>
