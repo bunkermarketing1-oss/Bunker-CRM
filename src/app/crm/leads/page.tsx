@@ -1140,10 +1140,31 @@ function LeadsPageContent() {
                         <div className="flex items-center gap-3">
                           <Link
                             href={`/crm/leads/${lead.id}`}
-                            className="hover:scale-105 transition-transform shrink-0"
+                            className="hover:scale-105 transition-transform shrink-0 relative inline-block"
                             title="Ver expediente en InsightCRM"
                           >
                             <LeadAvatar name={lead.name} avatarUrl={lead.avatarUrl} size="md" />
+                            {lead.source && (
+                              <div
+                                className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white dark:bg-[#121417] shadow-2xs border border-white dark:border-[#1F242D]"
+                                title={`Canal: ${lead.source}`}
+                              >
+                                <SocialNetworkIcon
+                                  type={
+                                    lead.source.includes("instagram")
+                                      ? "instagram"
+                                      : lead.source.includes("facebook") || lead.source.includes("messenger")
+                                      ? "facebook"
+                                      : lead.source.includes("whatsapp")
+                                      ? "whatsapp"
+                                      : lead.source.includes("tiktok")
+                                      ? "tiktok"
+                                      : "meta"
+                                  }
+                                  size="xs"
+                                />
+                              </div>
+                            )}
                           </Link>
                           <div>
                             <Link

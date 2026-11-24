@@ -192,7 +192,11 @@ async function handleSingleMessagingItem(
         }),
       },
     });
-  } else if (lead && !isEcho && isGenericLeadName(lead.name)) {
+  } else if (
+    lead &&
+    !isEcho &&
+    (isGenericLeadName(lead.name) || !lead.avatarUrl || lead.avatarUrl.includes("randomuser.me"))
+  ) {
     try {
       const pageToken = decryptSecret(connectedAccount.accessTokenEnc);
       const profile = await getMetaSenderProfile(pageToken, leadExternalId, isInstagram);
@@ -200,14 +204,14 @@ async function handleSingleMessagingItem(
         const realName =
           profile.name ||
           (profile.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : null) ||
-          profile.username;
+          (profile.username ? `@${profile.username}` : null);
         const pic = profile.profile_pic;
         const updateData: { name?: string; avatarUrl?: string } = {};
         if (realName && isGenericLeadName(lead.name)) {
           updateData.name = realName;
           lead.name = realName;
         }
-        if (pic && !lead.avatarUrl) {
+        if (pic && (!lead.avatarUrl || lead.avatarUrl.includes("randomuser.me"))) {
           updateData.avatarUrl = pic;
           lead.avatarUrl = pic;
         }
@@ -499,8 +503,9 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
     let realName = customer.name;
     let profilePic: string | null = null;
 
-    // Solo consultar el perfil a la API si el nombre es genérico para no ralentizar el bucle con 25 llamadas HTTP
-    const shouldFetchProfile = isGenericLeadName(realName) || (lead && isGenericLeadName(lead.name));
+    // Consultar el perfil de Meta si el nombre es genérico o si aún no tenemos su foto real de perfil
+    const needsAvatar = !lead?.avatarUrl || lead.avatarUrl.includes("randomuser.me");
+    const shouldFetchProfile = isGenericLeadName(realName) || (lead && isGenericLeadName(lead.name)) || needsAvatar;
     if (shouldFetchProfile) {
       try {
         const profile = await getMetaSenderProfile(pageToken, customer.id, isInstagram);
@@ -508,7 +513,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
           const profileName =
             profile.name ||
             (profile.first_name ? `${profile.first_name} ${profile.last_name || ""}`.trim() : null) ||
-            profile.username;
+            (profile.username ? `@${profile.username}` : null);
           if (profileName) realName = profileName;
           if (profile.profile_pic) profilePic = profile.profile_pic;
         }
@@ -547,7 +552,7 @@ export async function syncConnectedPageConversations(connectedAccountId: string)
         updateData.name = realName;
         lead.name = realName;
       }
-      if (profilePic && !lead.avatarUrl) {
+      if (profilePic && (!lead.avatarUrl || lead.avatarUrl.includes("randomuser.me"))) {
         updateData.avatarUrl = profilePic;
         lead.avatarUrl = profilePic;
       }

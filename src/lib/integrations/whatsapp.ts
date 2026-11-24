@@ -217,3 +217,41 @@ export async function sendWhatsAppTemplateMessage({
     return { success: false, error: error instanceof Error ? error.message : "Error al enviar plantilla de WhatsApp" };
   }
 }
+
+export interface WhatsAppMediaInfo {
+  url?: string;
+  mimeType?: string;
+  fileSize?: number;
+  id?: string;
+}
+
+/**
+ * Consulta la URL temporal oficial de descarga para un archivo multimedia recibido en WhatsApp Cloud API.
+ */
+export async function getWhatsAppMediaUrl(
+  mediaId: string,
+  accessToken: string
+): Promise<WhatsAppMediaInfo | null> {
+  if (!mediaId || !accessToken) return null;
+  const url = `${GRAPH_API_BASE}/${mediaId}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    if (!data?.url) return null;
+    return {
+      url: data.url,
+      mimeType: data.mime_type,
+      fileSize: data.file_size,
+      id: data.id,
+    };
+  } catch {
+    return null;
+  }
+}

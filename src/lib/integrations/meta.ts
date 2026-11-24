@@ -467,27 +467,64 @@ export interface MetaSenderProfile {
 }
 
 /** Consulta el perfil básico de un usuario remitente en Messenger o Instagram Direct. */
-export async function getMetaSenderProfile(pageToken: string, senderId: string, isInstagram = false): Promise<MetaSenderProfile | null> {
+export async function getMetaSenderProfile(
+  pageToken: string,
+  senderId: string,
+  isInstagram = false
+): Promise<MetaSenderProfile | null> {
   if (!senderId || !pageToken) return null;
+
+  // Intento 1: Campos completos según la red (Instagram vs Messenger)
   try {
-    const fields = isInstagram ? "name,username,profile_pic" : "first_name,last_name,profile_pic";
-    const res = await graphFetch<MetaSenderProfile>(
+    const fields = isInstagram
+      ? "name,username,profile_pic,profile_picture_url"
+      : "name,first_name,last_name,profile_pic,picture.type(large)";
+    const res = await graphFetch<MetaSenderProfile & { profile_picture_url?: string }>(
       graphUrl(senderId, { fields, access_token: pageToken })
     );
-    if (res && !res.profile_pic && res.picture?.data?.url) res.profile_pic = res.picture.data.url;
-    return res;
-  } catch {
-    try {
-      const fallbackFields = isInstagram ? "username,profile_pic" : "first_name,last_name,picture.type(large)";
-      const res = await graphFetch<MetaSenderProfile>(
-        graphUrl(senderId, { fields: fallbackFields, access_token: pageToken })
-      );
-      if (res && !res.profile_pic && res.picture?.data?.url) res.profile_pic = res.picture.data.url;
+
+    if (res) {
+      if (!res.profile_pic) {
+        res.profile_pic = res.profile_picture_url || res.picture?.data?.url;
+      }
+      if (!res.name) {
+        if (res.first_name) {
+          res.name = [res.first_name, res.last_name].filter(Boolean).join(" ").trim();
+        } else if (res.username) {
+          res.name = `@${res.username}`;
+        }
+      }
       return res;
-    } catch {
-      return null;
     }
+  } catch {
+    // Continuar a fallback seguro
   }
+
+  // Intento 2: Fallback con campos mínimos estándar
+  try {
+    const fallbackFields = isInstagram ? "username,profile_pic" : "first_name,last_name,picture.type(large)";
+    const res = await graphFetch<MetaSenderProfile & { profile_picture_url?: string }>(
+      graphUrl(senderId, { fields: fallbackFields, access_token: pageToken })
+    );
+
+    if (res) {
+      if (!res.profile_pic) {
+        res.profile_pic = res.profile_picture_url || res.picture?.data?.url;
+      }
+      if (!res.name) {
+        if (res.first_name) {
+          res.name = [res.first_name, res.last_name].filter(Boolean).join(" ").trim();
+        } else if (res.username) {
+          res.name = `@${res.username}`;
+        }
+      }
+      return res;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 export interface MetaLeadField {

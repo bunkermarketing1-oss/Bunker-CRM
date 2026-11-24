@@ -538,6 +538,28 @@ export default function LeadDetailPage() {
                 }`}
                 title={`Estado: ${lead.status}`}
               />
+              {/* Badge de Canal Social (WhatsApp, Facebook, Instagram, TikTok) */}
+              {lead.source && (
+                <div
+                  className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-md border border-white"
+                  title={`Canal de origen: ${lead.source}`}
+                >
+                  <SocialNetworkIcon
+                    type={
+                      lead.source.includes("instagram")
+                        ? "instagram"
+                        : lead.source.includes("facebook") || lead.source.includes("messenger")
+                        ? "facebook"
+                        : lead.source.includes("whatsapp")
+                        ? "whatsapp"
+                        : lead.source.includes("tiktok")
+                        ? "tiktok"
+                        : "meta"
+                    }
+                    size="xs"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Nombre y Rol / Empresa */}

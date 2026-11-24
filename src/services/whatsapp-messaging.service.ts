@@ -4,8 +4,10 @@ import {
   sendWhatsAppTextMessage,
   sendWhatsAppMediaMessage,
   cleanWhatsAppNumber,
+  getWhatsAppMediaUrl,
   type WhatsAppSendResult,
 } from "@/lib/integrations/whatsapp";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, type MessageStatus } from "@/lib/constants/messaging";
 import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
@@ -238,28 +240,10 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
         });
         if (existing) continue;
 
-        // Determinar texto del mensaje
-        let textBody = "";
-        const msgType = (msg.type as string) || "text";
-        if (msgType === "text") {
-          textBody = ((msg.text as Record<string, string>)?.body || "").trim();
-        } else if (msgType === "image") {
-          textBody = "[Foto enviada por WhatsApp]";
-        } else if (msgType === "audio" || msgType === "voice") {
-          textBody = "[Mensaje de voz de WhatsApp]";
-        } else if (msgType === "document") {
-          textBody = "[Documento adjunto de WhatsApp]";
-        } else {
-          textBody = `[Mensaje ${msgType}]`;
-        }
-
-        // Obtener nombre de perfil del contacto en WhatsApp
-        const contactProfile = contacts.find((c) => cleanWhatsAppNumber((c.wa_id as string) || "") === fromDigits);
-        const senderName = ((contactProfile?.profile as Record<string, string>)?.name || "").trim() || `Contacto WhatsApp +${fromDigits}`;
-
         // Resolver la organización y cliente a partir del Phone Number ID
         let organizationId: string | null = null;
         let clientId: string | null = null;
+        let waAccessToken: string | null = null;
 
         if (phoneNumberId) {
           const account = await prisma.connectedAccount.findFirst({
@@ -267,11 +251,18 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
               externalId: phoneNumberId,
               accountType: ACCOUNT_TYPE.WHATSAPP_BUSINESS,
             },
-            select: { organizationId: true, clientId: true },
+            select: { organizationId: true, clientId: true, accessTokenEnc: true },
           });
           if (account) {
             organizationId = account.organizationId;
             clientId = account.clientId;
+            if (account.accessTokenEnc) {
+              try {
+                waAccessToken = decryptSecret(account.accessTokenEnc);
+              } catch {
+                // Silencioso
+              }
+            }
           }
         }
 
@@ -281,6 +272,72 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
           if (!defaultOrg) continue;
           organizationId = defaultOrg.id;
         }
+
+        if (!waAccessToken && organizationId) {
+          const creds = await resolveWhatsAppCredentials(organizationId, clientId);
+          if (creds?.accessToken) waAccessToken = creds.accessToken;
+        }
+
+        // Determinar texto y archivos multimedia del mensaje
+        let textBody = "";
+        let mediaUrlFound: string | null = null;
+        const msgType = (msg.type as string) || "text";
+
+        if (msgType === "text") {
+          textBody = ((msg.text as Record<string, string>)?.body || "").trim();
+        } else if (msgType === "image") {
+          const img = msg.image as Record<string, string> | undefined;
+          const mediaId = img?.id;
+          const caption = (img?.caption || "").trim();
+          if (mediaId && waAccessToken) {
+            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
+            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+          }
+          textBody = caption ? `[Foto de WhatsApp: ${caption}]` : "[Foto enviada por WhatsApp]";
+          if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;
+        } else if (msgType === "audio" || msgType === "voice") {
+          const audio = (msg.audio || msg.voice) as Record<string, string> | undefined;
+          const mediaId = audio?.id;
+          if (mediaId && waAccessToken) {
+            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
+            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+          }
+          textBody = "[Mensaje de voz de WhatsApp]";
+          if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;
+        } else if (msgType === "document") {
+          const doc = msg.document as Record<string, string> | undefined;
+          const mediaId = doc?.id;
+          const filename = (doc?.filename || "archivo").trim();
+          if (mediaId && waAccessToken) {
+            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
+            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+          }
+          textBody = `[Documento de WhatsApp: ${filename}]`;
+          if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;
+        } else if (msgType === "location") {
+          const loc = msg.location as Record<string, unknown> | undefined;
+          const locName = (loc?.name as string) || "";
+          const locAddress = (loc?.address as string) || "";
+          const lat = loc?.latitude;
+          const lng = loc?.longitude;
+          const placeStr = [locName, locAddress].filter(Boolean).join(" - ");
+          textBody = placeStr
+            ? `[Ubicación de WhatsApp: ${placeStr} (${lat}, ${lng})]`
+            : `[Ubicación compartida por WhatsApp: Lat ${lat}, Lng ${lng}]`;
+        } else if (msgType === "interactive" || msgType === "button") {
+          const interactive = msg.interactive as Record<string, unknown> | undefined;
+          const btnReply = interactive?.button_reply as Record<string, string> | undefined;
+          const listReply = interactive?.list_reply as Record<string, string> | undefined;
+          const btnText = btnReply?.title || listReply?.title || (msg.button as Record<string, string>)?.text || "";
+          textBody = btnText ? `[Opción seleccionada: ${btnText}]` : `[Respuesta interactiva de WhatsApp]`;
+        } else {
+          textBody = `[Mensaje ${msgType} de WhatsApp]`;
+        }
+
+        // Obtener nombre de perfil del contacto en WhatsApp
+        const contactProfile = contacts.find((c) => cleanWhatsAppNumber((c.wa_id as string) || "") === fromDigits);
+        const rawProfileName = ((contactProfile?.profile as Record<string, string>)?.name || "").trim();
+        const senderName = rawProfileName || `Contacto WhatsApp +${fromDigits}`;
 
         // Normalizar número telefónico
         const normalizedPhone = `+${fromDigits}`;
@@ -304,6 +361,7 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
               organizationId,
               clientId,
               name: senderName,
+              avatarUrl: getLeadAvatarUrl(senderName),
               phone: normalizedPhone,
               normalizedPhone,
               source: LEAD_SOURCE.WHATSAPP,
@@ -313,6 +371,31 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
             },
           });
           isNewLead = true;
+        } else {
+          // Si el lead ya existía, enriquecerlo con el nombre y foto de WhatsApp
+          const updateData: { name?: string; avatarUrl?: string } = {};
+          const isGeneric =
+            !lead.name ||
+            lead.name.startsWith("Contacto WhatsApp") ||
+            lead.name.startsWith("+") ||
+            lead.name.toLowerCase().includes("desconocido") ||
+            lead.name.startsWith("Lead WhatsApp");
+
+          if (isGeneric && rawProfileName) {
+            updateData.name = rawProfileName;
+            lead.name = rawProfileName;
+          }
+          if (!lead.avatarUrl) {
+            const newAvatar = getLeadAvatarUrl(lead.name || senderName);
+            updateData.avatarUrl = newAvatar;
+            lead.avatarUrl = newAvatar;
+          }
+          if (Object.keys(updateData).length > 0) {
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: updateData,
+            });
+          }
         }
 
         // 4. Si el lead es nuevo, auto-asignar por Round-Robin inmediatamente

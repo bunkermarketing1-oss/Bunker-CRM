@@ -174,8 +174,27 @@ interface AttachedFile {
 }
 
 function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  const clean = lower.split("?")[0];
+  if (/\.(jpe?g|png|webp|gif|svg|bmp)$/i.test(clean)) return true;
+  if (
+    lower.includes("fbsbx.com") ||
+    lower.includes("fbcdn.net") ||
+    lower.includes("cdninstagram.com") ||
+    lower.includes("profilepic") ||
+    lower.includes("whatsapp_business/attachments") ||
+    lower.includes("randomuser.me/api/portraits")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isAudioUrl(url: string): boolean {
+  if (!url) return false;
   const clean = url.split("?")[0].toLowerCase();
-  return /\.(jpe?g|png|webp|gif|svg)$/i.test(clean);
+  return /\.(mp3|wav|ogg|m4a|aac|opus)$/i.test(clean);
 }
 
 function getFilenameFromUrl(url: string): string {
@@ -220,6 +239,15 @@ function renderMessageContent(body: string, isOutbound: boolean) {
                   <ExternalLink className="w-3 h-3" />
                   <span>Ampliar</span>
                 </button>
+              </div>
+            );
+          }
+
+          const isAud = isAudioUrl(part);
+          if (isAud) {
+            return (
+              <div key={idx} className="my-1.5 p-1 bg-black/5 dark:bg-white/5 rounded-lg">
+                <audio controls src={part} className="w-full max-w-xs h-8" preload="metadata" />
               </div>
             );
           }

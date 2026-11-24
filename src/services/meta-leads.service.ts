@@ -27,6 +27,7 @@ import {
 } from "@/lib/constants/integrations";
 import { ACTIVITY_TYPE, LEAD_SOURCE, LEAD_STATUS } from "@/lib/constants/crm";
 import { computeInitialQualification } from "@/lib/lead-scoring";
+import { getLeadAvatarUrl } from "@/lib/avatar";
 import { runLeadCreatedAutomations } from "@/services/automations.service";
 import { assignLeadRoundRobin } from "@/services/round-robin.service";
 import type { PageLeadgenStatus } from "@/types/meta-leads";
@@ -277,16 +278,26 @@ async function upsertLeadFromMeta(
       if (siblingLead?.campaign) campaignName = siblingLead.campaign;
     }
 
+    const isInstagramLead = metaLead.platform === "ig";
+    const leadNotes = [
+      mapped.notes,
+      metaLead.ad_name ? `Anuncio: ${metaLead.ad_name}` : null,
+      isInstagramLead ? "Plataforma: Instagram Ads" : "Plataforma: Facebook Ads",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
     const lead = await tx.lead.create({
       data: {
         organizationId,
         clientId,
         name: mapped.name,
+        avatarUrl: getLeadAvatarUrl(mapped.name),
         email: mapped.email,
         phone: phone.formatted ?? mapped.phone,
         normalizedPhone: phone.normalized ?? null,
         companyName: mapped.companyName,
-        notes: mapped.notes,
+        notes: leadNotes || mapped.notes,
         source: LEAD_SOURCE.META_ADS,
         status: LEAD_STATUS.NEW,
         qualification: computeInitialQualification({
