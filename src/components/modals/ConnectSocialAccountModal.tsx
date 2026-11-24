@@ -247,10 +247,10 @@ export function ConnectSocialAccountModal({
           prev.map((ch) =>
             ch.id === accountId
               ? {
-                  ...ch,
-                  clientId: newClientId,
-                  client: newClientId ? clients.find((c) => c.id === newClientId) || null : null,
-                }
+                ...ch,
+                clientId: newClientId,
+                client: newClientId ? clients.find((c) => c.id === newClientId) || null : null,
+              }
               : ch
           )
         );
@@ -352,11 +352,10 @@ export function ConnectSocialAccountModal({
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`mx-6 mt-3 p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all ${
-              feedback.type === "success"
-                ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                : "bg-red-50 border border-red-200 text-red-800"
-            }`}
+            className={`mx-6 mt-3 p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all ${feedback.type === "success"
+              ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+              : "bg-red-50 border border-red-200 text-red-800"
+              }`}
           >
             {feedback.type === "success" ? (
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
@@ -378,11 +377,10 @@ export function ConnectSocialAccountModal({
           <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl">
             <button
               onClick={() => setActiveTab("meta")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "meta"
-                  ? "bg-white text-slate-900 font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "meta"
+                ? "bg-white text-slate-900 font-semibold shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               <div className="w-3.5 h-3.5 rounded-full bg-[#1877F2] flex items-center justify-center text-white text-[8px] font-bold">
                 f
@@ -397,11 +395,10 @@ export function ConnectSocialAccountModal({
 
             <button
               onClick={() => setActiveTab("tiktok")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "tiktok"
-                  ? "bg-white text-slate-900 font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "tiktok"
+                ? "bg-white text-slate-900 font-semibold shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               <span className="text-xs">🎵</span>
               <span>TikTok Ads</span>
@@ -409,11 +406,10 @@ export function ConnectSocialAccountModal({
 
             <button
               onClick={() => setActiveTab("manual")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                activeTab === "manual"
-                  ? "bg-white text-slate-900 font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${activeTab === "manual"
+                ? "bg-white text-slate-900 font-semibold shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               <span>Token Manual</span>
             </button>
@@ -579,17 +575,15 @@ export function ConnectSocialAccountModal({
                           <button
                             key={f.id}
                             onClick={() => setChannelFilter(f.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                              active
-                                ? "bg-slate-900 text-white font-semibold shadow-xs"
-                                : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                            }`}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${active
+                              ? "bg-slate-900 text-white font-semibold shadow-xs"
+                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
                           >
                             <span>{f.label}</span>
                             <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                                active ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600"
-                              }`}
+                              className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600"
+                                }`}
                             >
                               {f.count}
                             </span>
@@ -632,11 +626,10 @@ export function ConnectSocialAccountModal({
                         return (
                           <div
                             key={ch.id}
-                            className={`px-4 py-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                              isAssigned
-                                ? "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
-                                : "bg-slate-50/60 border-slate-200/60 hover:bg-white hover:border-slate-300"
-                            }`}
+                            className={`px-4 py-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${isAssigned
+                              ? "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
+                              : "bg-slate-50/60 border-slate-200/60 hover:bg-white hover:border-slate-300"
+                              }`}
                           >
                             {/* Left: Icon & Info */}
                             <div className="flex items-center gap-3 min-w-0">
@@ -713,11 +706,10 @@ export function ConnectSocialAccountModal({
                                       value={ch.clientId || ""}
                                       onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
                                       disabled={assigningId === ch.id}
-                                      className={`appearance-none text-xs font-semibold rounded-xl pl-3 pr-7 py-1.5 border transition-all cursor-pointer focus:outline-none ${
-                                        isAssigned
-                                          ? "bg-emerald-50/80 hover:bg-emerald-100/70 text-emerald-900 border-emerald-200/90"
-                                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                                      }`}
+                                      className={`appearance-none text-xs font-semibold rounded-xl pl-3 pr-7 py-1.5 border transition-all cursor-pointer focus:outline-none ${isAssigned
+                                        ? "bg-emerald-50/80 hover:bg-emerald-100/70 text-emerald-900 border-emerald-200/90"
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                                        }`}
                                     >
                                       <option value="" className="text-slate-400 font-normal">
                                         Asignar a empresa...
@@ -734,9 +726,8 @@ export function ConnectSocialAccountModal({
                                       )}
                                     </select>
                                     <ChevronDown
-                                      className={`w-3.5 h-3.5 pointer-events-none absolute right-2 top-2 ${
-                                        isAssigned ? "text-emerald-700" : "text-slate-400"
-                                      }`}
+                                      className={`w-3.5 h-3.5 pointer-events-none absolute right-2 top-2 ${isAssigned ? "text-emerald-700" : "text-slate-400"
+                                        }`}
                                     />
                                   </div>
 
@@ -913,7 +904,7 @@ export function ConnectSocialAccountModal({
                     onClick={() => {
                       setManualProvider(INTEGRATION_PROVIDER.TIKTOK);
                       setManualAccountType(ACCOUNT_TYPE.TIKTOK_ADVERTISER);
-                      handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
+                      handleManualSubmit({ preventDefault: () => { } } as React.FormEvent);
                     }}
                     disabled={manualSubmitting || !manualAccountName.trim() || !manualExternalId.trim()}
                     className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"

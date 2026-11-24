@@ -96,7 +96,7 @@ function IntegrationsPageContent() {
   // Vista comercial vs canales (Buffer) vs técnica
   const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
   const [searchFilter, setSearchFilter] = useState("");
-  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "whatsapp" | "tiktok" | "unassigned">("all");
+  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "whatsapp" | "unassigned">("all");
   const [channelSearchFilter, setChannelSearchFilter] = useState("");
   const [unassignedFilter, setUnassignedFilter] = useState<"all" | "pages" | "ads" | "instagram">("all");
   const [unassignedSearch, setUnassignedSearch] = useState("");
@@ -403,7 +403,6 @@ function IntegrationsPageContent() {
       if (channelTypeFilter === "ads") return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
       if (channelTypeFilter === "instagram") return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
       if (channelTypeFilter === "whatsapp") return acc.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS;
-      if (channelTypeFilter === "tiktok") return acc.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER || acc.provider === "tiktok";
       return true;
     });
   }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, activeClient]);
@@ -484,11 +483,10 @@ function IntegrationsPageContent() {
 
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${
-            feedback.type === "success"
-              ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
-              : "bg-[#FDF2F2] border-[#F8D7DA] text-red-800"
-          }`}
+          className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${feedback.type === "success"
+            ? "bg-[#EBF5EE] border-[#C2E2CC] text-emerald-800"
+            : "bg-[#FDF2F2] border-[#F8D7DA] text-red-800"
+            }`}
         >
           {feedback.type === "success" ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -548,11 +546,10 @@ function IntegrationsPageContent() {
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
             onClick={() => setActiveView("channels")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeView === "channels"
-                ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
-                : "text-[#716F6A] hover:text-[#1F1E1D]"
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${activeView === "channels"
+              ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
+              : "text-[#716F6A] hover:text-[#1F1E1D]"
+              }`}
           >
             <Share2 className="w-4 h-4 text-[#1877F2]" />
             <span>Canales Sociales</span>
@@ -563,11 +560,10 @@ function IntegrationsPageContent() {
 
           <button
             onClick={() => setActiveView("clients")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeView === "clients"
-                ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
-                : "text-[#716F6A] hover:text-[#1F1E1D]"
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${activeView === "clients"
+              ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
+              : "text-[#716F6A] hover:text-[#1F1E1D]"
+              }`}
           >
             <Users className="w-4 h-4 text-[#D97757]" />
             <span>Cuentas por Empresa</span>
@@ -578,11 +574,10 @@ function IntegrationsPageContent() {
 
           <button
             onClick={() => setActiveView("platforms")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeView === "platforms"
-                ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
-                : "text-[#716F6A] hover:text-[#1F1E1D]"
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${activeView === "platforms"
+              ? "bg-white text-[#1F1E1D] shadow-sm border border-[#E8E6DF]"
+              : "text-[#716F6A] hover:text-[#1F1E1D]"
+              }`}
           >
             <Key className="w-4 h-4 text-[#82807C]" />
             <span>APIs & Plataformas</span>
@@ -646,11 +641,10 @@ function IntegrationsPageContent() {
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               <button
                 onClick={() => setChannelTypeFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "all"
-                    ? "bg-[#1F1E1D] text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "all"
+                  ? "bg-[#1F1E1D] text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 {activeClient ? `Activos de ${activeClient.name}` : "Todos"} (
                 {
@@ -663,11 +657,10 @@ function IntegrationsPageContent() {
               </button>
               <button
                 onClick={() => setChannelTypeFilter("pages")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "pages"
-                    ? "bg-[#1877F2] text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "pages"
+                  ? "bg-[#1877F2] text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 Páginas Facebook (
                 {
@@ -680,11 +673,10 @@ function IntegrationsPageContent() {
               </button>
               <button
                 onClick={() => setChannelTypeFilter("ads")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "ads"
-                    ? "bg-[#0081FB] text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "ads"
+                  ? "bg-[#0081FB] text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 Cuentas Ads (
                 {
@@ -697,11 +689,10 @@ function IntegrationsPageContent() {
               </button>
               <button
                 onClick={() => setChannelTypeFilter("instagram")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "instagram"
-                    ? "bg-[#E4405F] text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "instagram"
+                  ? "bg-[#E4405F] text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 Instagram (
                 {
@@ -714,11 +705,10 @@ function IntegrationsPageContent() {
               </button>
               <button
                 onClick={() => setChannelTypeFilter("whatsapp")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "whatsapp"
-                    ? "bg-[#25D366] text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "whatsapp"
+                  ? "bg-[#25D366] text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 WhatsApp (
                 {
@@ -730,29 +720,11 @@ function IntegrationsPageContent() {
                 )
               </button>
               <button
-                onClick={() => setChannelTypeFilter("tiktok")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "tiktok"
-                    ? "bg-black text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
-              >
-                TikTok Ads (
-                {
-                  allConnectedAccounts.filter((a) => {
-                    if (a.accountType !== ACCOUNT_TYPE.TIKTOK_ADVERTISER && a.provider !== "tiktok") return false;
-                    return activeClient ? a.clientId === activeClient.id : true;
-                  }).length
-                }
-                )
-              </button>
-              <button
                 onClick={() => setChannelTypeFilter("unassigned")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  channelTypeFilter === "unassigned"
-                    ? "bg-amber-600 text-white shadow-sm"
-                    : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "unassigned"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
               >
                 Sin Asignar ({agencyAccounts.filter((a) => a.externalId !== "meta_master_user").length})
               </button>
@@ -786,8 +758,8 @@ function IntegrationsPageContent() {
                   {activeClient
                     ? `Vincula la Fan Page de Facebook, cuenta de Instagram o cuenta de anuncios de ${activeClient.name} para que sus mensajes, prospectos y campañas se carguen automáticamente al seleccionarla.`
                     : isMetaConnected
-                    ? "Puedes hacer clic en 'Sincronizar Cuentas Meta' para buscar páginas o cuentas creadas recientemente en Business Manager."
-                    : "Conecta tu cuenta de Facebook para importar automáticamente tus canales."}
+                      ? "Puedes hacer clic en 'Sincronizar Cuentas Meta' para buscar páginas o cuentas creadas recientemente en Business Manager."
+                      : "Conecta tu cuenta de Facebook para importar automáticamente tus canales."}
                 </p>
               </div>
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -843,13 +815,12 @@ function IntegrationsPageContent() {
 
                         {/* Status Badge */}
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${
-                            isIG
-                              ? "bg-pink-50 text-pink-700 border-pink-200"
-                              : isFB
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${isIG
+                            ? "bg-pink-50 text-pink-700 border-pink-200"
+                            : isFB
                               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                               : "bg-blue-50 text-blue-800 border-blue-200"
-                          }`}
+                            }`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${isIG ? "bg-pink-500 animate-pulse" : isFB ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
                           <span>{isIG ? "DMS & MENSAJES" : isFB ? "LEADS & MENSAJES" : "MÉTRICAS & ANUNCIOS"}</span>
@@ -899,11 +870,10 @@ function IntegrationsPageContent() {
                           value={acc.clientId || ""}
                           disabled={assigningId === acc.id}
                           onChange={(e) => handleAssignClient(acc.id, e.target.value)}
-                          className={`w-full rounded-xl px-3 py-2 text-xs font-semibold transition-all appearance-none border focus:outline-none ${
-                            hasClient
-                              ? "bg-[#FAF9F5] border-[#D1CFCA] text-[#1F1E1D] focus:border-[#D97757]"
-                              : "bg-white border-[#E8E6DF] text-[#716F6A] focus:border-[#D97757]"
-                          }`}
+                          className={`w-full rounded-xl px-3 py-2 text-xs font-semibold transition-all appearance-none border focus:outline-none ${hasClient
+                            ? "bg-[#FAF9F5] border-[#D1CFCA] text-[#1F1E1D] focus:border-[#D97757]"
+                            : "bg-white border-[#E8E6DF] text-[#716F6A] focus:border-[#D97757]"
+                            }`}
                         >
                           <option value="">Portafolio Agencia (Sin empresa asignada)</option>
                           {clients.map((c) => (
@@ -1029,11 +999,10 @@ function IntegrationsPageContent() {
                       </div>
 
                       <span
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0 ${
-                          hasAccounts
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-[#FAF9F5] text-[#9C9890] border-[#E8E6DF]"
-                        }`}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0 ${hasAccounts
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-[#FAF9F5] text-[#9C9890] border-[#E8E6DF]"
+                          }`}
                       >
                         {hasAccounts ? (
                           <>
@@ -1119,11 +1088,10 @@ function IntegrationsPageContent() {
                                 </div>
 
                                 <span
-                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${
-                                    acc.status === ACCOUNT_STATUS.ACTIVE
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : "bg-amber-50 text-amber-700 border-amber-200"
-                                  }`}
+                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${acc.status === ACCOUNT_STATUS.ACTIVE
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                    }`}
                                 >
                                   ● {acc.status === ACCOUNT_STATUS.ACTIVE ? "Activa" : acc.status}
                                 </span>
@@ -1234,44 +1202,40 @@ function IntegrationsPageContent() {
                     <button
                       type="button"
                       onClick={() => setUnassignedFilter("all")}
-                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
-                        unassignedFilter === "all"
-                          ? "bg-[#1F1E1D] text-white shadow-sm"
-                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${unassignedFilter === "all"
+                        ? "bg-[#1F1E1D] text-white shadow-sm"
+                        : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                        }`}
                     >
                       Todas ({agencyAccounts.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setUnassignedFilter("pages")}
-                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
-                        unassignedFilter === "pages"
-                          ? "bg-[#1877F2] text-white shadow-sm"
-                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${unassignedFilter === "pages"
+                        ? "bg-[#1877F2] text-white shadow-sm"
+                        : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                        }`}
                     >
                       Páginas ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE).length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setUnassignedFilter("ads")}
-                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
-                        unassignedFilter === "ads"
-                          ? "bg-[#0081FB] text-white shadow-sm"
-                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${unassignedFilter === "ads"
+                        ? "bg-[#0081FB] text-white shadow-sm"
+                        : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                        }`}
                     >
                       Anuncios ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT).length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setUnassignedFilter("instagram")}
-                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
-                        unassignedFilter === "instagram"
-                          ? "bg-[#E4405F] text-white shadow-sm"
-                          : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl font-medium transition-all ${unassignedFilter === "instagram"
+                        ? "bg-[#E4405F] text-white shadow-sm"
+                        : "bg-[#FAF9F5] text-[#6B6966] hover:text-[#1F1E1D] hover:bg-white border border-[#E8E6DF]"
+                        }`}
                     >
                       Instagram ({agencyAccounts.filter((a) => a.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS).length})
                     </button>
@@ -1298,7 +1262,7 @@ function IntegrationsPageContent() {
                   ) : (
                     filteredAgencyAccounts.map((acc) => {
                       const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
-                const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                      const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
 
                       const isAd = acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
                       const isTikTok = acc.provider === "tiktok" || acc.accountType?.includes("tiktok");
@@ -1422,11 +1386,10 @@ function IntegrationsPageContent() {
                       </div>
 
                       <span
-                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase flex-shrink-0 ${
-                          isConnected
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                        }`}
+                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border uppercase flex-shrink-0 ${isConnected
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
                       >
                         {isConnected ? "CONECTADO" : "PENDIENTE"}
                       </span>
@@ -1530,32 +1493,32 @@ function IntegrationsPageContent() {
             </div>
 
             <form onSubmit={handleConnectSubmit} className="p-5 space-y-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                    Clave de API / Token de Acceso
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Token o clave oficial..."
-                    value={creds.apiKey}
-                    onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                  Clave de API / Token de Acceso
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Token o clave oficial..."
+                  value={creds.apiKey}
+                  onChange={(e) => setCreds({ ...creds, apiKey: e.target.value })}
+                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
-                    Identificador de Cuenta (Account ID / ID de Anunciante)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="ej. act_1234567890"
-                    value={creds.accountId}
-                    onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
-                    className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
+                  Identificador de Cuenta (Account ID / ID de Anunciante)
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej. act_1234567890"
+                  value={creds.accountId}
+                  onChange={(e) => setCreds({ ...creds, accountId: e.target.value })}
+                  className="w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757] font-mono"
+                />
+              </div>
 
               <div className="pt-2 flex justify-end gap-2">
                 <button
