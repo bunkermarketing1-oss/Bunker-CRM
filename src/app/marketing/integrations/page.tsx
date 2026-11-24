@@ -96,7 +96,7 @@ function IntegrationsPageContent() {
   // Vista comercial vs canales (Buffer) vs técnica
   const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
   const [searchFilter, setSearchFilter] = useState("");
-  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "whatsapp" | "unassigned">("all");
+  const [channelTypeFilter, setChannelTypeFilter] = useState<"all" | "pages" | "ads" | "instagram" | "whatsapp" | "tiktok" | "unassigned">("all");
   const [channelSearchFilter, setChannelSearchFilter] = useState("");
   const [unassignedFilter, setUnassignedFilter] = useState<"all" | "pages" | "ads" | "instagram">("all");
   const [unassignedSearch, setUnassignedSearch] = useState("");
@@ -403,6 +403,7 @@ function IntegrationsPageContent() {
       if (channelTypeFilter === "ads") return acc.accountType === ACCOUNT_TYPE.META_AD_ACCOUNT;
       if (channelTypeFilter === "instagram") return acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
       if (channelTypeFilter === "whatsapp") return acc.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS;
+      if (channelTypeFilter === "tiktok") return acc.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER || acc.provider === "tiktok";
       return true;
     });
   }, [allConnectedAccounts, channelSearchFilter, channelTypeFilter, clients, activeClient]);
@@ -714,6 +715,22 @@ function IntegrationsPageContent() {
                 {
                   allConnectedAccounts.filter((a) => {
                     if (a.accountType !== ACCOUNT_TYPE.WHATSAPP_BUSINESS) return false;
+                    return activeClient ? a.clientId === activeClient.id : true;
+                  }).length
+                }
+                )
+              </button>
+              <button
+                onClick={() => setChannelTypeFilter("tiktok")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "tiktok"
+                  ? "bg-black text-white shadow-sm"
+                  : "bg-[#F0EEE6] text-[#716F6A] hover:text-[#1F1E1D]"
+                  }`}
+              >
+                TikTok Ads (
+                {
+                  allConnectedAccounts.filter((a) => {
+                    if (a.accountType !== ACCOUNT_TYPE.TIKTOK_ADVERTISER && a.provider !== "tiktok") return false;
                     return activeClient ? a.clientId === activeClient.id : true;
                   }).length
                 }

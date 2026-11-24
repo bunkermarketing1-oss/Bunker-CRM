@@ -18,6 +18,7 @@ import {
   Trash2,
   LogOut,
   Copy,
+  MessageCircle,
 } from "lucide-react";
 import {
   ACCOUNT_TYPE,
@@ -63,8 +64,8 @@ export function ConnectSocialAccountModal({
   initialProvider = "meta",
   initialClientId = "",
 }: ConnectSocialAccountModalProps) {
-  const [activeTab, setActiveTab] = useState<"meta" | "tiktok" | "manual">(
-    initialProvider === "tiktok" ? "tiktok" : "meta"
+  const [activeTab, setActiveTab] = useState<"meta" | "tiktok" | "whatsapp" | "manual">(
+    initialProvider === "tiktok" ? "tiktok" : initialProvider === "whatsapp" ? "whatsapp" : "meta"
   );
   const [targetClientId, setTargetClientId] = useState<string>(initialClientId);
   const [channels, setChannels] = useState<ChannelItem[]>([]);
@@ -79,6 +80,8 @@ export function ConnectSocialAccountModal({
   const [channelFilter, setChannelFilter] = useState<ChannelFilterType>("all");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [copiedWebhook, setCopiedWebhook] = useState(false);
+  const [copiedWaWebhook, setCopiedWaWebhook] = useState(false);
+  const [copiedWaToken, setCopiedWaToken] = useState(false);
 
   // Formulario manual avanzado
   const [manualAccountName, setManualAccountName] = useState("");
@@ -135,7 +138,9 @@ export function ConnectSocialAccountModal({
   useEffect(() => {
     if (isOpen) {
       setTargetClientId(initialClientId);
-      setActiveTab(initialProvider === "tiktok" ? "tiktok" : "meta");
+      setActiveTab(
+        initialProvider === "tiktok" ? "tiktok" : initialProvider === "whatsapp" ? "whatsapp" : "meta"
+      );
       setFeedback(null);
       setSearchQuery("");
       setChannelFilter("all");
@@ -405,6 +410,19 @@ export function ConnectSocialAccountModal({
             </button>
 
             <button
+              onClick={() => setActiveTab("whatsapp")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "whatsapp"
+                ? "bg-white text-slate-900 font-semibold shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
+            >
+              <div className="w-3.5 h-3.5 rounded-full bg-[#25D366] flex items-center justify-center text-white">
+                <MessageCircle className="w-2.5 h-2.5 text-white" />
+              </div>
+              <span>WhatsApp Cloud</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab("manual")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${activeTab === "manual"
                 ? "bg-white text-slate-900 font-semibold shadow-xs"
@@ -471,13 +489,17 @@ export function ConnectSocialAccountModal({
                     </svg>
                   </div>
 
-                  <div className="space-y-1.5 max-w-md mx-auto">
+                  <div className="space-y-2 max-w-md mx-auto">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>App Oficial Verificada en Vivo • Meta Marketing API</span>
+                    </div>
                     <h3 className="text-lg font-bold text-[#1F1E1D]">
                       Conectar Cuenta de Meta for Business
                     </h3>
                     <p className="text-xs text-[#6B6966] leading-relaxed">
-                      Conecta tu cuenta de Facebook para detectar automáticamente todas tus
-                      <strong> páginas, perfiles de Instagram y cuentas de anuncios</strong> sin configuraciones manuales.
+                      Conecta cualquier cuenta de Facebook para importar automáticamente tus
+                      <strong> páginas, perfiles de Instagram y cuentas de anuncios</strong> en 1 solo clic.
                     </p>
                   </div>
 
@@ -981,7 +1003,221 @@ export function ConnectSocialAccountModal({
           )}
 
           {/* ========================================================= */}
-          {/* PESTAÑA 3: REGISTRO MANUAL AVANZADO (TOKEN / CLAVES)      */}
+          {/* PESTAÑA 3: WHATSAPP BUSINESS CLOUD API (META OFICIAL)     */}
+          {/* ========================================================= */}
+          {activeTab === "whatsapp" && (
+            <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+              <div className="p-5 rounded-3xl bg-slate-900 text-white space-y-3 shadow-sm border border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-white">WhatsApp Business Cloud API Oficial</h3>
+                      <span className="text-[10px] font-bold bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 px-2 py-0.2 rounded-full">
+                        Meta Graph v21.0
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      Conecta líneas oficiales de WhatsApp para recibir y responder mensajes desde el CRM con auto-asignación comercial por Round-Robin.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Webhook & Verify Token Box */}
+                <div className="pt-2 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-semibold text-emerald-400">
+                        URL de Callback (Webhook):
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${typeof window !== "undefined" ? window.location.origin : ""}/api/integrations/meta/webhook`;
+                          navigator.clipboard.writeText(url);
+                          setCopiedWaWebhook(true);
+                          setTimeout(() => setCopiedWaWebhook(false), 2500);
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        {copiedWaWebhook ? "¡Copiado!" : "Copiar"}
+                      </button>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/60 font-mono text-[10px] text-slate-300 select-all break-all border border-slate-800">
+                      {typeof window !== "undefined" ? `${window.location.origin}/api/integrations/meta/webhook` : "/api/integrations/meta/webhook"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-semibold text-emerald-400">
+                        Token de Verificación:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("bunker_meta_webhook_verify_2026");
+                          setCopiedWaToken(true);
+                          setTimeout(() => setCopiedWaToken(false), 2500);
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        {copiedWaToken ? "¡Copiado!" : "Copiar"}
+                      </button>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/60 font-mono text-[10px] text-slate-300 select-all border border-slate-800">
+                      bunker_meta_webhook_verify_2026
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulario de Registro de Línea */}
+              <div className="p-4 rounded-2xl bg-white border border-[#E8E6DF] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#1F1E1D]">
+                    Vincular Línea Telefónica de WhatsApp
+                  </h4>
+                  {activeClient && (
+                    <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                      Asignando a: {activeClient.name}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                      Nombre Descriptivo de la Línea:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. WhatsApp Ventas (+52 55...)"
+                      value={manualAccountName}
+                      onChange={(e) => setManualAccountName(e.target.value)}
+                      className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#25D366]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                      Phone Number ID (Meta Cloud API):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej. 104829104829104"
+                      value={manualExternalId}
+                      onChange={(e) => setManualExternalId(e.target.value)}
+                      className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#25D366]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-[#6B6966] mb-1">
+                    Token Permanente de Sistema (System User Access Token):
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="EAAG... (Token permanente con permiso whatsapp_business_messaging)"
+                    value={manualAccessToken}
+                    onChange={(e) => setManualAccessToken(e.target.value)}
+                    className="w-full bg-white border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#25D366]"
+                  />
+                  <p className="text-[10px] text-[#82807C] mt-1">
+                    Se guarda cifrado con AES-256-GCM. Permite al CRM enviar respuestas a prospectos y recibir mensajes entrantes.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualProvider(INTEGRATION_PROVIDER.META);
+                      setManualAccountType(ACCOUNT_TYPE.WHATSAPP_BUSINESS);
+                      handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
+                    }}
+                    disabled={manualSubmitting || !manualAccountName.trim() || !manualExternalId.trim()}
+                    className="px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-white" />
+                    <span>{manualSubmitting ? "Vinculando..." : "Vincular Línea de WhatsApp"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Líneas ya vinculadas */}
+              <div className="space-y-2 pt-2">
+                <h4 className="text-xs font-bold text-slate-800">
+                  Líneas de WhatsApp Vinculadas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length})
+                </h4>
+                {channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-500 text-center">
+                    No hay líneas de WhatsApp conectadas todavía.
+                  </div>
+                ) : (
+                  channels
+                    .filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS)
+                    .map((ch) => (
+                      <div
+                        key={ch.id}
+                        className="px-4 py-3 rounded-2xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-[#25D366] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                            <MessageCircle className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h5 className="text-xs font-semibold text-slate-900 truncate">{ch.accountName}</h5>
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-100">
+                                WhatsApp Cloud
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-mono">ID: {ch.externalId || "—"}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <select
+                            value={ch.clientId || ""}
+                            onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
+                            disabled={assigningId === ch.id}
+                            className="text-xs border border-slate-200 rounded-xl px-2 py-1 bg-slate-50 text-slate-700"
+                          >
+                            <option value="">Portafolio Agencia</option>
+                            {clients.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteChannel(ch.id, ch.accountName)}
+                            disabled={deletingChannelId === ch.id}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title={`Eliminar "${ch.accountName}"`}
+                          >
+                            {deletingChannelId === ch.id ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* PESTAÑA 4: REGISTRO MANUAL AVANZADO (TOKEN / CLAVES)      */}
           {/* ========================================================= */}
           {activeTab === "manual" && (
             <form onSubmit={handleManualSubmit} className="space-y-4">
