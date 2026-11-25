@@ -100,6 +100,12 @@ export function middleware(request: NextRequest) {
 
   // 3. Handle login page access
   if (pathname === "/login") {
+    // Si se solicita relogin explícito o viene de sesión expirada, limpiar cookie y permitir login
+    if (request.nextUrl.searchParams.has("relogin") || request.nextUrl.searchParams.has("logout")) {
+      const response = NextResponse.next();
+      response.cookies.delete(AUTH_COOKIE_NAME);
+      return response;
+    }
     if (isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }

@@ -106,9 +106,9 @@ function getCampaignVisualInfo(name: string, objective: string | null): Campaign
   };
 }
 
-export type CampaignNetwork = "all" | "instagram" | "facebook" | "whatsapp" | "tiktok" | "google";
+type CampaignNetwork = "all" | "instagram" | "facebook" | "whatsapp" | "tiktok" | "google";
 
-export interface CampaignNetworkInfo {
+interface CampaignNetworkInfo {
   network: CampaignNetwork;
   label: string;
   badgeCls: string;
@@ -116,7 +116,7 @@ export interface CampaignNetworkInfo {
   iconProvider: string;
 }
 
-export function detectCampaignNetwork(
+function detectCampaignNetwork(
   name: string,
   platform: string,
   objective: string | null

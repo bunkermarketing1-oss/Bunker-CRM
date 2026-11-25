@@ -82,14 +82,17 @@ export async function getVerifiedSupabaseUser(tokenOrReq?: string | NextRequest)
     try {
       const parts = token.split('.');
       if (parts.length === 3) {
-        const payloadJson = Buffer.from(parts[1], 'base64').toString('utf-8');
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payloadJson = Buffer.from(base64, 'base64').toString('utf-8');
         const payload = JSON.parse(payloadJson);
         const nowSeconds = Math.floor(Date.now() / 1000);
         if (payload.exp && typeof payload.exp === 'number' && payload.exp > nowSeconds) {
-          if (payload.sub && payload.email) {
+          const email = payload.email || payload.user_metadata?.email || null;
+          if (payload.sub) {
             return {
               id: payload.sub,
-              email: payload.email,
+              email: email,
               user_metadata: payload.user_metadata || {},
               app_metadata: payload.app_metadata || {},
             };
@@ -113,18 +116,18 @@ export async function getVerifiedSupabaseUser(tokenOrReq?: string | NextRequest)
 export async function getCurrentUser(req?: NextRequest): Promise<AuthenticatedUser | null> {
   try {
     const supabaseUser = await getVerifiedSupabaseUser(req);
-    if (!supabaseUser || !supabaseUser.email) {
+    if (!supabaseUser || (!supabaseUser.email && !supabaseUser.id)) {
       return null;
     }
 
-    const email = supabaseUser.email.toLowerCase();
+    const email = supabaseUser.email ? supabaseUser.email.toLowerCase() : undefined;
 
     // Find user in Prisma by supabaseAuthId or email
     let dbUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { supabaseAuthId: supabaseUser.id },
-          { email: email },
+          ...(supabaseUser.id ? [{ supabaseAuthId: supabaseUser.id }] : []),
+          ...(email ? [{ email: email }] : []),
         ],
         isActive: true,
       },

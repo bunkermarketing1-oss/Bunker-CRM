@@ -158,12 +158,16 @@ function DashboardPageContent() {
             <span>{error}</span>
           </div>
           {error.toLowerCase().includes("sesión") && (
-            <Link
-              href="/login"
-              className="px-3.5 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-xs shrink-0"
+            <button
+              onClick={() => {
+                fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+                  window.location.href = "/login?relogin=1";
+                });
+              }}
+              className="px-3.5 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
             >
               Iniciar Sesión
-            </Link>
+            </button>
           )}
         </div>
       )}
