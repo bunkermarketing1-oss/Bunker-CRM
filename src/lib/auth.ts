@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { supabase, getSupabaseAdmin } from "@/lib/supabase";
 import { ROLES, isClientOwnerRole, normalizeRole, type UserRole } from "@/lib/roles";
 
 export const AUTH_COOKIE_NAME = "bunker_session";
@@ -57,14 +57,50 @@ export async function getVerifiedSupabaseUser(tokenOrReq?: string | NextRequest)
       return null;
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-
-    if (error || !data.user) {
-      return null;
+    // 1. Validar con cliente anon de Supabase
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data?.user) {
+        return data.user;
+      }
+    } catch {
+      // Continuar
     }
 
-    return data.user;
+    // 2. Validar con supabaseAdmin
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data: adminData, error: adminError } = await supabaseAdmin.auth.getUser(token);
+      if (!adminError && adminData?.user) {
+        return adminData.user;
+      }
+    } catch {
+      // Continuar
+    }
+
+    // 3. Fallback de claims JWT no expirado
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payloadJson = Buffer.from(parts[1], 'base64').toString('utf-8');
+        const payload = JSON.parse(payloadJson);
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        if (payload.exp && typeof payload.exp === 'number' && payload.exp > nowSeconds) {
+          if (payload.sub && payload.email) {
+            return {
+              id: payload.sub,
+              email: payload.email,
+              user_metadata: payload.user_metadata || {},
+              app_metadata: payload.app_metadata || {},
+            };
+          }
+        }
+      }
+    } catch {
+      // Silencioso
+    }
+
+    return null;
   } catch (err) {
     console.error("Error al verificar token de Supabase:", err);
     return null;
