@@ -35,7 +35,7 @@ const TERMS_CONTENT: Record<Language, TermsSection[]> = {
       bullets: [
         "Centralizar prospectos, oportunidades, tareas y actividades por empresa o marca.",
         "Sincronizar campañas y formularios de Meta (Facebook e Instagram) y consultar su rendimiento.",
-        "Atender conversaciones de Facebook Messenger, Instagram Direct y SMS desde una bandeja unificada.",
+        "Atender conversaciones de WhatsApp Business, Facebook Messenger, Instagram Direct y SMS desde una bandeja unificada.",
         "Enviar SMS y realizar llamadas mediante proveedores de telecomunicaciones como Twilio.",
       ],
     },
@@ -126,7 +126,7 @@ const TERMS_CONTENT: Record<Language, TermsSection[]> = {
       bullets: [
         "Centralizing leads, opportunities, tasks and activities per company or brand.",
         "Syncing Meta (Facebook and Instagram) campaigns and forms and reviewing their performance.",
-        "Handling Facebook Messenger, Instagram Direct and SMS conversations from a unified inbox.",
+        "Handling WhatsApp Business, Facebook Messenger, Instagram Direct and SMS conversations from a unified inbox.",
         "Sending SMS and placing calls through telecommunications providers such as Twilio.",
       ],
     },
