@@ -1134,8 +1134,6 @@ function UnifiedInboxPageContent() {
     }
   };
 
-  const activeClient = activeClientId !== "all" ? clients.find((c) => c.id === activeClientId) : null;
-
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header Estilo Cápsula Orvion */}
