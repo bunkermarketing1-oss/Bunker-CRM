@@ -36,7 +36,7 @@ export default function LeadAvatar({
     <span
       className={`relative inline-flex items-center justify-center rounded-full shrink-0 overflow-hidden font-bold select-none border border-amber-500/20 shadow-xs ${sizeClass} ${className}`}
     >
-      {!hasError ? (
+      {resolvedUrl && !hasError ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={resolvedUrl}
@@ -46,7 +46,7 @@ export default function LeadAvatar({
           className="w-full h-full object-cover rounded-full"
         />
       ) : (
-        <span className="w-full h-full flex items-center justify-center bg-[#121417] text-amber-400 dark:bg-white dark:text-[#121417]">
+        <span className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#121417] to-slate-800 text-amber-400 dark:bg-white dark:text-[#121417]">
           {initials}
         </span>
       )}
