@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Share2,
@@ -19,6 +19,7 @@ import {
   Sparkles,
   ChevronDown,
   Trash2,
+  Building2,
 } from "lucide-react";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
@@ -81,6 +82,7 @@ export default function IntegrationsPage() {
 }
 
 function IntegrationsPageContent() {
+  const router = useRouter();
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [, setCredentialStatus] = useState<any>({});
   const [twilioEnv, setTwilioEnv] = useState<TwilioEnvStatus | null>(null);
@@ -433,13 +435,45 @@ function IntegrationsPageContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Selector de Marca / Empresa para Aislamiento Total */}
+          {clients.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#E8E6DF] shadow-sm">
+              <Building2 className="w-4 h-4 text-amber-500 shrink-0" />
+              <select
+                value={activeClient?.id || "all"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "all") {
+                    router.push("/marketing/integrations");
+                  } else {
+                    router.push(`/marketing/integrations?clientId=${encodeURIComponent(val)}`);
+                  }
+                }}
+                className="bg-transparent text-xs text-[#1F1E1D] font-semibold focus:outline-none cursor-pointer"
+                title="Filtrar por marca / empresa"
+              >
+                <option value="all">
+                  Todas las Marcas ({allConnectedAccounts.length} activos)
+                </option>
+                {clients.map((c) => {
+                  const clientAccsCount = allConnectedAccounts.filter((a) => a.clientId === c.id).length;
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({clientAccsCount} activos)
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
           <button
             onClick={() => {
               fetchIntegrations();
               fetchClients();
             }}
-            className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all"
+            className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
             title="Actualizar estado de conexiones"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -450,7 +484,7 @@ function IntegrationsPageContent() {
             <button
               onClick={handleRefreshMeta}
               disabled={refreshingMeta}
-              className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+              className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
               title="Re-escanear páginas y cuentas de Meta sin re-autorizar"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshingMeta ? "animate-spin text-[#1877F2]" : "text-[#1877F2]"}`} />
@@ -460,19 +494,22 @@ function IntegrationsPageContent() {
 
           <button
             onClick={() => setWizardOpen(true)}
-            className="px-3.5 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm"
+            className="px-3.5 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-[#E5C158]" />
             <span>+ Crear Cliente (Asistente)</span>
           </button>
 
           <button
-            onClick={() =>
-              activeClient
-                ? handleOpenConnectForClient(activeClient.id, "meta")
-                : handleOpenConnectGeneral("meta")
-            }
-            className="px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
+            onClick={() => {
+              const defaultTab = channelTypeFilter === "whatsapp" ? "whatsapp" : "meta";
+              if (activeClient) {
+                handleOpenConnectForClient(activeClient.id, defaultTab);
+              } else {
+                handleOpenConnectGeneral(defaultTab);
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>
@@ -806,6 +843,7 @@ function IntegrationsPageContent() {
               {filteredChannelsList.map((acc: any) => {
                 const isFB = acc.accountType === ACCOUNT_TYPE.FACEBOOK_PAGE;
                 const isIG = acc.accountType === ACCOUNT_TYPE.INSTAGRAM_BUSINESS;
+                const isWA = acc.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS;
                 const assignedClient = clients.find((c) => c.id === acc.clientId);
                 const hasClient = Boolean(assignedClient);
 
@@ -832,15 +870,36 @@ function IntegrationsPageContent() {
 
                         {/* Status Badge */}
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${isIG
-                            ? "bg-pink-50 text-pink-700 border-pink-200"
-                            : isFB
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 flex-shrink-0 ${
+                            isWA
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : isIG
+                              ? "bg-pink-50 text-pink-700 border-pink-200"
+                              : isFB
                               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                               : "bg-blue-50 text-blue-800 border-blue-200"
-                            }`}
+                          }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${isIG ? "bg-pink-500 animate-pulse" : isFB ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
-                          <span>{isIG ? "DMS & MENSAJES" : isFB ? "LEADS & MENSAJES" : "MÉTRICAS & ANUNCIOS"}</span>
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isWA
+                                ? "bg-emerald-500 animate-pulse"
+                                : isIG
+                                ? "bg-pink-500 animate-pulse"
+                                : isFB
+                                ? "bg-emerald-500 animate-pulse"
+                                : "bg-blue-500"
+                            }`}
+                          ></span>
+                          <span>
+                            {isWA
+                              ? "WHATSAPP & CHAT EN VIVO"
+                              : isIG
+                              ? "DMS & MENSAJES"
+                              : isFB
+                              ? "LEADS & MENSAJES"
+                              : "MÉTRICAS & ANUNCIOS"}
+                          </span>
                         </span>
                       </div>
 
@@ -1572,7 +1631,7 @@ function IntegrationsPageContent() {
         }}
         clients={clients.map((c) => ({ id: c.id, name: c.name }))}
         initialProvider={activeSocialProvider}
-        initialClientId={modalClientId}
+        initialClientId={modalClientId || (activeClient?.id ?? "")}
       />
 
       {/* Asistente Guiado de Creación de Cliente + Vinculación de Redes */}

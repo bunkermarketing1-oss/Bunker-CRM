@@ -332,6 +332,15 @@ export function ConnectSocialAccountModal({
     });
   }, [channels, searchQuery, channelFilter]);
 
+  // Líneas de WhatsApp visibles según filtro de cliente/marca
+  const waChannelsForView = useMemo(() => {
+    const allWa = channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS);
+    if (targetClientId) {
+      return allWa.filter((c) => c.clientId === targetClientId);
+    }
+    return allWa;
+  }, [channels, targetClientId]);
+
   if (!isOpen) return null;
 
   return (
@@ -432,6 +441,13 @@ export function ConnectSocialAccountModal({
                 <MessageCircle className="w-2.5 h-2.5 text-white" />
               </div>
               <span>WhatsApp Cloud</span>
+              {channels.some((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS) && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                  {targetClientId
+                    ? channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS && c.clientId === targetClientId).length
+                    : channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length}
+                </span>
+              )}
             </button>
 
             <button
@@ -1074,15 +1090,27 @@ export function ConnectSocialAccountModal({
 
               {/* Formulario Simplificado de Conexión */}
               <div className="p-4 rounded-2xl bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#2A2E37] space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800">
                   <h4 className="text-xs font-bold text-[#121417] dark:text-white">
                     Datos de la Línea
                   </h4>
-                  {activeClient && (
-                    <span className="text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full font-medium">
-                      Asignando a: {activeClient.name}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium">
+                      Asignar a:
                     </span>
-                  )}
+                    <select
+                      value={targetClientId || ""}
+                      onChange={(e) => setTargetClientId(e.target.value)}
+                      className="text-xs border border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-semibold rounded-xl px-2.5 py-1 focus:outline-none cursor-pointer"
+                    >
+                      <option value="">Portafolio General (Agencia)</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1133,7 +1161,7 @@ export function ConnectSocialAccountModal({
                       handleManualSubmit(undefined, {
                         provider: INTEGRATION_PROVIDER.META,
                         accountType: ACCOUNT_TYPE.WHATSAPP_BUSINESS,
-                        clientId: activeClient?.id ?? (targetClientId || null),
+                        clientId: targetClientId || null,
                       });
                     }}
                     disabled={manualSubmitting || !manualAccountName.trim() || !manualExternalId.trim()}
@@ -1147,17 +1175,30 @@ export function ConnectSocialAccountModal({
 
               {/* Líneas ya vinculadas */}
               <div className="space-y-2 pt-2">
-                <h4 className="text-xs font-bold text-slate-800">
-                  Líneas de WhatsApp Vinculadas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length})
-                </h4>
-                {channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length === 0 ? (
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-white">
+                    {activeClient
+                      ? `Líneas de WhatsApp de ${activeClient.name} (${waChannelsForView.length})`
+                      : `Líneas de WhatsApp Vinculadas (${waChannelsForView.length})`}
+                  </h4>
+                  {targetClientId && (
+                    <button
+                      type="button"
+                      onClick={() => setTargetClientId("")}
+                      className="text-[11px] text-amber-600 hover:text-amber-700 hover:underline font-medium cursor-pointer"
+                    >
+                      Ver todas las marcas ({channels.filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS).length})
+                    </button>
+                  )}
+                </div>
+                {waChannelsForView.length === 0 ? (
                   <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-500 text-center">
-                    No hay líneas de WhatsApp conectadas todavía.
+                    {activeClient
+                      ? `No hay líneas de WhatsApp conectadas para ${activeClient.name} todavía.`
+                      : "No hay líneas de WhatsApp conectadas todavía."}
                   </div>
                 ) : (
-                  channels
-                    .filter((c) => c.accountType === ACCOUNT_TYPE.WHATSAPP_BUSINESS)
-                    .map((ch) => (
+                  waChannelsForView.map((ch) => (
                       <div
                         key={ch.id}
                         className="px-4 py-3 rounded-2xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs"
@@ -1172,6 +1213,11 @@ export function ConnectSocialAccountModal({
                               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-100">
                                 WhatsApp Cloud
                               </span>
+                              {ch.client?.name && (
+                                <span className="text-[10px] font-medium text-slate-600 bg-slate-100 px-2 py-0.2 rounded-full">
+                                  {ch.client.name}
+                                </span>
+                              )}
                             </div>
                             <p className="text-[10px] text-slate-500 font-mono">ID: {ch.externalId || "—"}</p>
                           </div>
@@ -1182,7 +1228,7 @@ export function ConnectSocialAccountModal({
                             value={ch.clientId || ""}
                             onChange={(e) => handleAssignChannel(ch.id, e.target.value || null)}
                             disabled={assigningId === ch.id}
-                            className="text-xs border border-slate-200 rounded-xl px-2 py-1 bg-slate-50 text-slate-700"
+                            className="text-xs border border-slate-200 rounded-xl px-2 py-1 bg-slate-50 text-slate-700 font-medium"
                           >
                             <option value="">Portafolio Agencia</option>
                             {clients.map((c) => (
