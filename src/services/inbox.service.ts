@@ -855,7 +855,7 @@ export async function assignConversation({
       data: {
         organizationId,
         clientId: targetClientId || null,
-        name: senderName || "Prospecto de Bandeja Omnicanal",
+        name: senderName || "Prospecto de Bandeja de Entrada",
         phone: senderPhone || null,
         email: senderEmail || null,
         source: "SOCIAL_INBOX",

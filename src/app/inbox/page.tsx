@@ -1143,7 +1143,7 @@ function UnifiedInboxPageContent() {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="orvion-badge-gold text-[10px]">
-              Mensajería Omnicanal
+              Mensajería en Vivo
             </span>
             {activeClient ? (
               <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
@@ -1159,7 +1159,7 @@ function UnifiedInboxPageContent() {
 
           <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight flex items-center gap-2.5">
             <Inbox className="w-7 h-7 text-amber-500 shrink-0" />
-            <span>Bandeja Omnicanal</span>
+            <span>Bandeja de Entrada</span>
           </h1>
           <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
