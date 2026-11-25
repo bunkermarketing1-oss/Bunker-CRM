@@ -564,10 +564,15 @@ function UnifiedInboxPageContent() {
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Filtros
-  const [activeChannel, setActiveChannel] = useState<string>("all");
+  const [activeChannel, setActiveChannel] = useState<string>(() => searchParams.get("channel") || "all");
   const activeClientId = isClient ? (user?.clientId ?? "all") : (searchParams.get("clientId") ?? "all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const ch = searchParams.get("channel");
+    if (ch) setActiveChannel(ch);
+  }, [searchParams]);
 
   // Respuestas
   const [replyText, setReplyText] = useState("");

@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Trash2,
   Building2,
+  MessageCircle,
 } from "lucide-react";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE, INTEGRATION_PROVIDER, INTEGRATION_STATUS } from "@/lib/constants/integrations";
 import { TwilioEnvStatusCard } from "@/components/integrations/TwilioEnvStatusCard";
@@ -987,6 +988,19 @@ function IntegrationsPageContent() {
                               </button>
                             </div>
                           ) : null}
+                        </div>
+                      )}
+
+                      {/* Enlace directo a la Bandeja de Entrada */}
+                      {isWA && (
+                        <div className="pt-2">
+                          <Link
+                            href="/inbox?channel=whatsapp"
+                            className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Abrir Chats de WhatsApp</span>
+                          </Link>
                         </div>
                       )}
                     </div>
