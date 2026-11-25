@@ -30,6 +30,7 @@ import {
   Bell,
   Sparkles,
   Calendar,
+  Copy,
 } from "lucide-react";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
@@ -77,6 +78,14 @@ const CHANNEL_CONFIG: Record<
     iconType: "instagram",
   },
 };
+
+const QUICK_REPLIES = [
+  { id: "greet", label: "👋 Saludo", text: "¡Hola! Gracias por comunicarte con nosotros. ¿En qué podemos apoyarte hoy?" },
+  { id: "info", label: "📋 Info y Catálogo", text: "Con gusto te comparto nuestras opciones y promociones vigentes. ¿Qué servicio te interesa principalmente?" },
+  { id: "call", label: "📅 Agendar Cita", text: "¿Te parece bien si agendamos una breve llamada o reunión para darte todos los detalles y resolver tus dudas?" },
+  { id: "hours", label: "📍 Horarios y Ubicación", text: "Nuestras oficinas y canales de atención están disponibles de Lunes a Sábado de 9:00 AM a 6:00 PM." },
+  { id: "follow", label: "🤝 Seguimiento", text: "¡Hola! Quería darte seguimiento a nuestra conversación anterior. ¿Tuviste oportunidad de revisar la propuesta?" },
+];
 
 function ContactAvatar({
   name,
@@ -566,6 +575,7 @@ function UnifiedInboxPageContent() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -890,6 +900,45 @@ function UnifiedInboxPageContent() {
     } finally {
       setAssigning(false);
     }
+  };
+
+  const handleUpdateLeadStatus = async (leadId: string, newStatus: string) => {
+    if (!activeConversation || updatingStatus) return;
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setConversations((prev) =>
+          prev.map((c) => (c.leadId === leadId ? { ...c, leadStatus: newStatus } : c))
+        );
+        setFeedback("Estado comercial del prospecto actualizado.");
+        setTimeout(() => setFeedback(null), 3000);
+      } else {
+        setErrorMessage(data.error || "No se pudo actualizar el estado del prospecto.");
+      }
+    } catch {
+      setErrorMessage("Error de conexión al actualizar estado comercial.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleCopyTranscript = () => {
+    if (!activeConversation?.messages?.length) return;
+    const lines = activeConversation.messages
+      .map(
+        (m) =>
+          `[${new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}] ${m.senderName}: ${m.body}`
+      )
+      .join("\n");
+    navigator.clipboard.writeText(lines);
+    setFeedback("Historial copiado al portapapeles.");
+    setTimeout(() => setFeedback(null), 3000);
   };
 
   useEffect(() => {
@@ -1475,6 +1524,37 @@ function UnifiedInboxPageContent() {
                     </select>
                   </div>
 
+                  {/* Selector Rápido de Estado Comercial del Lead */}
+                  {activeConversation.leadId && (
+                    <div className="flex items-center gap-1.5 bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-2.5 py-1 text-xs">
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          (activeConversation.leadStatus || "new") === "new"
+                            ? "bg-slate-400"
+                            : activeConversation.leadStatus === "contacted"
+                            ? "bg-blue-500"
+                            : activeConversation.leadStatus === "qualified"
+                            ? "bg-emerald-500"
+                            : activeConversation.leadStatus === "converted"
+                            ? "bg-amber-500"
+                            : "bg-rose-500"
+                        }`}
+                      />
+                      <select
+                        value={activeConversation.leadStatus || "new"}
+                        disabled={updatingStatus}
+                        onChange={(e) => handleUpdateLeadStatus(activeConversation.leadId!, e.target.value)}
+                        className="bg-transparent text-xs text-[#121417] dark:text-white font-semibold focus:outline-none cursor-pointer pr-1"
+                        title="Cambiar estado del prospecto en el CRM"
+                      >
+                        <option value="new" className="dark:bg-[#121417]">Nuevo</option>
+                        <option value="contacted" className="dark:bg-[#121417]">Contactado</option>
+                        <option value="qualified" className="dark:bg-[#121417]">Calificado</option>
+                        <option value="lost" className="dark:bg-[#121417]">Perdido</option>
+                      </select>
+                    </div>
+                  )}
+
                   {user && activeConversation.assignedAdvisorId !== user.id && (
                     <button
                       type="button"
@@ -1520,6 +1600,15 @@ function UnifiedInboxPageContent() {
                       <Building className="w-4 h-4 text-[#8C929D]" />
                     </Link>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={handleCopyTranscript}
+                    className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#E2E5EB] transition-all shadow-2xs cursor-pointer"
+                    title="Copiar historial de chat al portapapeles"
+                  >
+                    <Copy className="w-4 h-4 text-[#8C929D] hover:text-amber-500" />
+                  </button>
                 </div>
               </div>
 
@@ -1721,6 +1810,24 @@ function UnifiedInboxPageContent() {
                     ) : null}
                   </span>
                   <span className="text-[10px] text-[#8C929D]">Enter para enviar</span>
+                </div>
+
+                {/* Plantillas de Respuestas Rápidas Comerciales */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-[11px]">
+                  <span className="text-[10px] font-bold text-[#8C929D] shrink-0 flex items-center gap-1 pl-0.5">
+                    <Sparkles className="w-3 h-3 text-amber-500" /> Rápidas:
+                  </span>
+                  {QUICK_REPLIES.map((qr) => (
+                    <button
+                      key={qr.id}
+                      type="button"
+                      onClick={() => setReplyText((prev) => (prev ? `${prev} ${qr.text}` : qr.text))}
+                      className="px-2.5 py-0.5 rounded-full bg-[#F3F4F7] dark:bg-[#1A1D24] hover:bg-amber-50 dark:hover:bg-amber-950/40 text-[#475467] dark:text-slate-300 hover:text-amber-900 dark:hover:text-amber-300 border border-[#E2E5EB] dark:border-[#2A2E37] hover:border-amber-400 shrink-0 font-medium transition-all cursor-pointer shadow-2xs"
+                      title={qr.text}
+                    >
+                      {qr.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="flex items-end gap-2">

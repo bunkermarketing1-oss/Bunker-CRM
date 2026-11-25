@@ -40,6 +40,7 @@ export interface ConversationItem {
   } | null;
   messages: ConversationMessage[];
   leadId?: string | null;
+  leadStatus?: string | null;
   leadPhone?: string | null;
   leadEmail?: string | null;
   assignedAdvisorId?: string | null;
