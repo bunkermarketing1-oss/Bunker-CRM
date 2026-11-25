@@ -289,7 +289,7 @@ export function ConnectSocialAccountModal({
         ? targetClientId || null
         : null;
 
-    const success = await connectManual({
+    const result = await connectManual({
       provider: targetProvider,
       accountType: targetAccountType,
       accountName: manualAccountName.trim(),
@@ -297,13 +297,18 @@ export function ConnectSocialAccountModal({
       clientId: targetClient,
       accessToken: manualAccessToken.trim() || null,
     });
-    if (success) {
-      setFeedback({ type: "success", message: "Cuenta registrada exitosamente." });
+    if (result.success) {
+      setFeedback({ type: "success", message: result.message || "Cuenta registrada exitosamente." });
       setManualAccountName("");
       setManualExternalId("");
       setManualAccessToken("");
       await loadChannels();
       onSuccess();
+    } else {
+      setFeedback({
+        type: "error",
+        message: result.error || "No se pudo conectar la cuenta. Revisa los datos ingresados.",
+      });
     }
   };
 
