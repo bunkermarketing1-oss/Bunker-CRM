@@ -1027,14 +1027,6 @@ export default function ClientsPage() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
-
-                        <Link
-                          href={`/crm/clients/${client.id}`}
-                          className="btn-black-gold rounded-xl px-3 py-1.5 text-xs font-semibold flex items-center gap-1"
-                        >
-                          <span>Ficha 360°</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
                       </div>
                     </div>
                   </div>
@@ -1274,15 +1266,7 @@ export default function ClientsPage() {
                       <div className="mt-4 p-3.5 rounded-xl border space-y-2 bg-[#FAF9F5] border-[#EAECF0]">
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="text-[#667085] font-medium">Asignada a:</span>
-                          {assignedClient ? (
-                            <Link
-                              href={`/crm/clients/${assignedClient.id}`}
-                              className="text-amber-600 hover:text-amber-700 font-semibold hover:underline flex items-center gap-1"
-                            >
-                              <span>Ver cliente</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </Link>
-                          ) : (
+                          {!assignedClient && (
                             <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                               Agencia Bunker
                             </span>
@@ -1291,9 +1275,18 @@ export default function ClientsPage() {
 
                         <div className="flex items-center gap-2">
                           <Building className="w-4 h-4 text-[#9C9890] shrink-0" />
-                          <span className="font-bold text-[#101828] text-xs truncate">
-                            {assignedClient ? assignedClient.name : "Cuenta Propia de Bunker (Sin cliente)"}
-                          </span>
+                          {assignedClient ? (
+                            <Link
+                              href={`/crm/clients/${assignedClient.id}`}
+                              className="font-bold text-[#101828] hover:text-amber-600 hover:underline text-xs truncate flex items-center gap-1"
+                              title="Abrir la ficha del cliente"
+                            >
+                              <span className="truncate">{assignedClient.name}</span>
+                              <ChevronRight className="w-3 h-3 shrink-0" />
+                            </Link>
+                          ) : (
+                            <span className="font-bold text-[#101828] text-xs truncate">Cuenta propia de Bunker (sin cliente)</span>
+                          )}
                         </div>
 
                         {/* Reasignar cliente directamente */}
@@ -1328,16 +1321,6 @@ export default function ClientsPage() {
                         <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
                         <span>Ver Campañas & Anuncios</span>
                       </Link>
-
-                      {assignedClient && (
-                        <Link
-                          href={`/crm/clients/${assignedClient.id}`}
-                          className="p-2 rounded-xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#475467] hover:text-[#101828] transition-colors"
-                          title="Ir a la Ficha 360° del Cliente"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      )}
                     </div>
                   </div>
                 );
