@@ -271,18 +271,30 @@ export function ConnectSocialAccountModal({
   };
 
   // Enviar formulario manual para casos avanzados
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleManualSubmit = async (
+    e?: React.FormEvent,
+    overrides?: { provider?: AdProvider; accountType?: AccountType; clientId?: string | null }
+  ) => {
+    if (e) e.preventDefault();
     if (!manualAccountName.trim() || !manualExternalId.trim()) {
       setFeedback({ type: "error", message: "Nombre e identificador externo son obligatorios." });
       return;
     }
+    const targetProvider = overrides?.provider ?? manualProvider;
+    const targetAccountType = overrides?.accountType ?? manualAccountType;
+    const targetClient =
+      overrides?.clientId !== undefined
+        ? overrides.clientId
+        : manualTargetType === "client"
+        ? targetClientId || null
+        : null;
+
     const success = await connectManual({
-      provider: manualProvider,
-      accountType: manualAccountType,
+      provider: targetProvider,
+      accountType: targetAccountType,
       accountName: manualAccountName.trim(),
       externalId: manualExternalId.trim(),
-      clientId: manualTargetType === "client" ? targetClientId || null : null,
+      clientId: targetClient,
       accessToken: manualAccessToken.trim() || null,
     });
     if (success) {
@@ -1118,9 +1130,11 @@ export function ConnectSocialAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setManualProvider(INTEGRATION_PROVIDER.META);
-                      setManualAccountType(ACCOUNT_TYPE.WHATSAPP_BUSINESS);
-                      handleManualSubmit({ preventDefault: () => {} } as React.FormEvent);
+                      handleManualSubmit(undefined, {
+                        provider: INTEGRATION_PROVIDER.META,
+                        accountType: ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+                        clientId: activeClient?.id ?? (targetClientId || null),
+                      });
                     }}
                     disabled={manualSubmitting || !manualAccountName.trim() || !manualExternalId.trim()}
                     className="px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
