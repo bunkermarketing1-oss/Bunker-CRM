@@ -18,14 +18,12 @@ import {
   DollarSign,
   MessageCircle,
   ExternalLink,
-  Download,
   Flame,
   Edit,
   AlertTriangle,
   UserCheck,
   Tag,
   Loader2,
-  RefreshCw,
   FileText,
   Inbox,
   ChevronLeft,
@@ -39,6 +37,7 @@ import { useAuth } from "@/context/AuthContext";
 import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 import LeadAvatar from "@/components/crm/LeadAvatar";
+import LeadsActionsMenu from "@/components/crm/LeadsActionsMenu";
 import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
@@ -814,51 +813,15 @@ function LeadsPageContent() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Botón de alternancia de Modo Demo */}
-          <button
-            type="button"
-            onClick={() => setIsDemoMode((prev) => !prev)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
-              isShowingDemo
-                ? "bg-[#FFFBEB] dark:bg-amber-950/40 border border-amber-300 text-amber-900 dark:text-amber-300"
-                : "bg-white dark:bg-[#121417] text-[#667085] dark:text-[#8C929D] border border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
-            }`}
-            title="Alternar prospectos de demostración para presentaciones a clientes"
-          >
-            <Zap className={`w-3.5 h-3.5 ${isShowingDemo ? "text-amber-500 fill-amber-500" : "text-[#8C929D]"}`} />
-            <span>Modo Demo</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSyncMetaLeads}
-            disabled={syncingMeta}
-            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-60 cursor-pointer"
-            title="Sincronizar prospectos desde campañas de Meta Ads"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${syncingMeta ? "animate-spin" : ""}`} />
-            <span>{syncingMeta ? "Sincronizando..." : "Sincronizar Meta"}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleBulkRoundRobin}
-            disabled={assigningRoundRobin}
-            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-60 cursor-pointer"
-            title="Auto-asignar prospectos sin asesor mediante Round-Robin equitativo"
-          >
-            <Users className={`w-3.5 h-3.5 text-blue-500 ${assigningRoundRobin ? "animate-spin" : ""}`} />
-            <span>{assigningRoundRobin ? "Asignando..." : "Rotar Leads (Round-Robin)"}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5 text-[#8C929D]" />
-            <span>Exportar CSV</span>
-          </button>
+          <LeadsActionsMenu
+            syncingMeta={syncingMeta}
+            assigningRoundRobin={assigningRoundRobin}
+            isShowingDemo={isShowingDemo}
+            onSyncMeta={handleSyncMetaLeads}
+            onRoundRobin={handleBulkRoundRobin}
+            onExportCsv={handleExportCSV}
+            onToggleDemo={() => setIsDemoMode((prev) => !prev)}
+          />
 
           <button
             type="button"
@@ -874,7 +837,7 @@ function LeadsPageContent() {
             className="rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-orvion transition-all hover:scale-[1.02] cursor-pointer"
           >
             <Plus className="w-4 h-4 text-amber-400 dark:text-[#121417]" />
-            <span>+ Registrar Prospecto</span>
+            <span>Registrar prospecto</span>
           </button>
         </div>
       </div>
