@@ -13,12 +13,18 @@ export interface ConnectSocialAccountPayload {
   accessToken: string | null;
 }
 
+export interface ConnectSocialAccountResult {
+  success: boolean;
+  error?: string | null;
+  message?: string | null;
+}
+
 /** Registro manual de una cuenta publicitaria/página contra POST /api/integrations/accounts. */
 export function useConnectSocialAccount() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const connect = useCallback(async (payload: ConnectSocialAccountPayload): Promise<boolean> => {
+  const connect = useCallback(async (payload: ConnectSocialAccountPayload): Promise<ConnectSocialAccountResult> => {
     setSubmitting(true);
     setError(null);
     try {
@@ -28,12 +34,16 @@ export function useConnectSocialAccount() {
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (json.success) return true;
-      setError(json.error || "No se pudo conectar la cuenta.");
-      return false;
+      if (json.success) {
+        return { success: true, message: json.message };
+      }
+      const errMsg = json.error || "No se pudo conectar la cuenta.";
+      setError(errMsg);
+      return { success: false, error: errMsg };
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de red al conectar");
-      return false;
+      const errMsg = err instanceof Error ? err.message : "Error de red al conectar";
+      setError(errMsg);
+      return { success: false, error: errMsg };
     } finally {
       setSubmitting(false);
     }
