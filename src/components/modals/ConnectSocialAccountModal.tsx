@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   RefreshCw,
   Search,
-  ExternalLink,
   Sparkles,
   Layers,
   ArrowRight,
@@ -17,7 +16,6 @@ import {
   ChevronDown,
   Trash2,
   LogOut,
-  Copy,
   MessageCircle,
 } from "lucide-react";
 import {
@@ -47,6 +45,7 @@ interface ChannelItem {
   id: string;
   accountName: string;
   accountType: string;
+  provider?: string;
   externalId: string | null;
   status: string;
   clientId: string | null;
@@ -124,7 +123,8 @@ export function ConnectSocialAccountModal({
         setIsMetaConnected(metaInt?.status === "connected");
         setMetaIntegrationId(metaInt?.id || null);
         const allAccs: ChannelItem[] = json.integrations.flatMap(
-          (it: { connectedAccounts?: ChannelItem[] }) => it.connectedAccounts || []
+          (it: { provider?: string; connectedAccounts?: ChannelItem[] }) =>
+            (it.connectedAccounts || []).map((acc) => ({ ...acc, provider: it.provider }))
         );
         setChannels(allAccs);
       }
@@ -403,8 +403,8 @@ export function ConnectSocialAccountModal({
           </div>
         )}
 
-        {/* Barra de Plataformas Unificada */}
-        <div className="px-6 pt-3 pb-3 border-b border-slate-100 bg-white flex items-center justify-between gap-3 flex-wrap">
+        {/* Barra de Plataformas Unificada y Limpia */}
+        <div className="px-6 pt-3 pb-3 border-b border-slate-100 bg-white flex items-center justify-between gap-3">
           <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl">
             <button
               onClick={() => setActiveTab("meta")}
@@ -417,22 +417,11 @@ export function ConnectSocialAccountModal({
                 f
               </div>
               <span>Meta</span>
-              {channels.length > 0 && (
+              {channels.filter((c) => c.provider === "meta" && c.accountType !== ACCOUNT_TYPE.WHATSAPP_BUSINESS).length > 0 && (
                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-semibold">
-                  {channels.length}
+                  {channels.filter((c) => c.provider === "meta" && c.accountType !== ACCOUNT_TYPE.WHATSAPP_BUSINESS).length}
                 </span>
               )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab("tiktok")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "tiktok"
-                ? "bg-white text-slate-900 font-semibold shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-                }`}
-            >
-              <span className="text-xs">🎵</span>
-              <span>TikTok Ads</span>
             </button>
 
             <button
@@ -456,55 +445,21 @@ export function ConnectSocialAccountModal({
             </button>
 
             <button
-              onClick={() => setActiveTab("manual")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${activeTab === "manual"
+              onClick={() => setActiveTab("tiktok")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "tiktok"
                 ? "bg-white text-slate-900 font-semibold shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
                 }`}
             >
-              <span>Token Manual</span>
+              <span className="text-xs">🎵</span>
+              <span>TikTok Ads</span>
+              {channels.filter((c) => c.provider === "tiktok" || c.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER).length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-semibold">
+                  {channels.filter((c) => c.provider === "tiktok" || c.accountType === ACCOUNT_TYPE.TIKTOK_ADVERTISER).length}
+                </span>
+              )}
             </button>
           </div>
-
-          {activeTab === "meta" && isMetaConnected && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleDisconnectMeta}
-                disabled={disconnectingMeta}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 border border-rose-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                title="Desconectar cuenta actual de Meta para conectar otro perfil o cuenta publicitaria"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>{disconnectingMeta ? "Desconectando..." : "Desconectar cuenta"}</span>
-              </button>
-
-              <button
-                onClick={handleRefreshMetaCatalog}
-                disabled={refreshingCatalog}
-                className="px-2.5 py-1.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 cursor-pointer"
-                title="Detectar activos nuevos de Meta"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-blue-600" : ""}`} />
-                <span>{refreshingCatalog ? "Buscando..." : "Sincronizar"}</span>
-              </button>
-
-              <a
-                href={getMetaConnectUrl(true)}
-                onClick={(e) => {
-                  if (typeof window !== "undefined") {
-                    e.preventDefault();
-                    window.location.href = getMetaConnectUrl(true);
-                  }
-                }}
-                className="text-xs text-slate-500 hover:text-blue-600 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1"
-                title="Conectar otra cuenta de Facebook / Cambiar de usuario"
-              >
-                <span>Cambiar cuenta</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          )}
         </div>
 
         {/* Contenido Dinámico */}
@@ -566,33 +521,35 @@ export function ConnectSocialAccountModal({
                 </div>
               ) : (
                 <div className="space-y-3.5">
-                  {/* Conectar otra cuenta de Meta / Socio */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-blue-50/80 border border-blue-200/90 rounded-2xl">
+                  {/* Barra de Estado Meta Unificada */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200/90 rounded-2xl">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                      <div className="w-7 h-7 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                         f
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 truncate">
-                          {activeClient
-                            ? `¿Conectar otra cuenta de Meta para ${activeClient.name}?`
-                            : "Conectar otra cuenta de Meta o Socio"}
+                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>Conectado a Meta</span>
+                          <span className="text-[10px] font-semibold text-slate-500 bg-slate-200/80 px-2 py-0.2 rounded-full">
+                            {channels.filter((c) => c.provider === "meta" && c.accountType !== ACCOUNT_TYPE.WHATSAPP_BUSINESS).length} activos
+                          </span>
                         </div>
-                        <div className="text-[11px] text-slate-600 truncate">
-                          Inicia sesión con otro usuario de Facebook para importar más páginas o activos.
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {activeClient ? `Asignando activos para ${activeClient.name}` : "Sincronizado con Facebook Business"}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
-                        onClick={handleDisconnectMeta}
-                        disabled={disconnectingMeta}
-                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors cursor-pointer"
-                        title="Desconectar cuenta actual de Facebook para conectar otro perfil"
+                        onClick={handleRefreshMetaCatalog}
+                        disabled={refreshingCatalog}
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                        title="Detectar activos nuevos de Meta"
                       >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>{disconnectingMeta ? "Desconectando..." : "Desconectar cuenta"}</span>
+                        <RefreshCw className={`w-3.5 h-3.5 ${refreshingCatalog ? "animate-spin text-blue-600" : "text-blue-600"}`} />
+                        <span>{refreshingCatalog ? "Sincronizando..." : "Sincronizar"}</span>
                       </button>
 
                       <a
@@ -603,13 +560,23 @@ export function ConnectSocialAccountModal({
                             window.location.href = getMetaConnectUrl(true);
                           }
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs shrink-0 transition-colors"
-                        title="Permite iniciar sesión con otro usuario en Facebook"
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors"
+                        title="Conectar otra cuenta de Facebook / Cambiar de usuario"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Conectar otra cuenta</span>
-                        <ExternalLink className="w-3 h-3 opacity-80" />
+                        <span>Conectar otra</span>
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={handleDisconnectMeta}
+                        disabled={disconnectingMeta}
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                        title="Desconectar cuenta actual de Facebook"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>{disconnectingMeta ? "Desconectando..." : "Desconectar"}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -846,55 +813,44 @@ export function ConnectSocialAccountModal({
           {/* ========================================================= */}
           {activeTab === "tiktok" && (
             <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
-              <div className="p-5 rounded-3xl bg-slate-900 text-white space-y-3 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-black border border-slate-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                    🎵
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">TikTok for Business & Ads Manager</h3>
-                    <p className="text-xs text-slate-300">
-                      Conecta tus cuentas publicitarias de TikTok para capturar clientes potenciales en tiempo real y sincronizar métricas.
-                    </p>
-                  </div>
+              {/* Cabecera Limpia */}
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-base shadow-2xs shrink-0">
+                  🎵
                 </div>
-
-                {/* Webhook URL de TikTok Lead Gen */}
-                <div className="pt-2 border-t border-slate-800">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[11px] font-semibold text-amber-400">
-                      URL del Webhook de Leads (Instant Forms):
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <span>TikTok for Business & Ads Manager</span>
+                    <span className="text-[10px] font-semibold bg-slate-200 text-slate-800 px-2 py-0.2 rounded-full border border-slate-300">
+                      TikTok Ads
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = `${typeof window !== "undefined" ? window.location.origin : ""}/api/integrations/tiktok/webhook`;
-                        navigator.clipboard.writeText(url);
-                        setCopiedWebhook(true);
-                        setTimeout(() => setCopiedWebhook(false), 2500);
-                      }}
-                      className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      {copiedWebhook ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-400" />
-                          <span className="text-emerald-400">¡Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copiar URL</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="p-2 rounded-xl bg-black/60 font-mono text-[11px] text-slate-300 select-all break-all border border-slate-800">
-                    {typeof window !== "undefined" ? `${window.location.origin}/api/integrations/tiktok/webhook` : "/api/integrations/tiktok/webhook"}
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Pega esta URL en el Webhook de TikTok Developers o en la automatización de tus Instant Forms para recibir prospectos de inmediato (SLA &lt; 60s con auto-asignación Round-Robin).
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Conecta tus cuentas publicitarias de TikTok para capturar clientes potenciales en tiempo real.
                   </p>
                 </div>
+              </div>
+
+              {/* Webhook Pill */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 min-w-0 text-[11px]">
+                  <span className="font-bold text-slate-800 shrink-0">Webhook TikTok:</span>
+                  <code className="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono text-[10px] truncate max-w-[260px]">
+                    {typeof window !== "undefined" ? `${window.location.origin}/api/integrations/tiktok/webhook` : "/api/integrations/tiktok/webhook"}
+                  </code>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/api/integrations/tiktok/webhook`;
+                    navigator.clipboard.writeText(url);
+                    setCopiedWebhook(true);
+                    setTimeout(() => setCopiedWebhook(false), 2000);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-[11px] font-semibold text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs"
+                >
+                  {copiedWebhook ? "✓ URL Copiada" : "Copiar URL"}
+                </button>
               </div>
 
               {/* Formulario de Vinculación */}
@@ -1394,11 +1350,19 @@ export function ConnectSocialAccountModal({
 
         {/* Footer Minimalista */}
         <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-3 text-xs text-slate-500">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             <span>
               {channels.length} {channels.length === 1 ? "activo vinculado" : "activos vinculados"}
             </span>
+            <span className="text-slate-300">|</span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manual")}
+              className="text-[11px] text-slate-400 hover:text-slate-700 hover:underline cursor-pointer"
+            >
+              Configuración manual avanzada
+            </button>
           </div>
           <button
             onClick={onClose}
