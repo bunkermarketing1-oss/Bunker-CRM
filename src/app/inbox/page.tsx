@@ -1140,23 +1140,7 @@ function UnifiedInboxPageContent() {
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header Estilo Cápsula Orvion */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="orvion-badge-gold text-[10px]">
-              Mensajería en Vivo
-            </span>
-            {activeClient ? (
-              <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-amber-500" />
-                Marca: <strong>{activeClient.name}</strong>
-              </span>
-            ) : !isClient ? (
-              <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
-                Todas las Marcas
-              </span>
-            ) : null}
-          </div>
-
+        <div className="space-y-1">
           <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight flex items-center gap-2.5">
             <Inbox className="w-7 h-7 text-amber-500 shrink-0" />
             <span>Bandeja de Entrada</span>
