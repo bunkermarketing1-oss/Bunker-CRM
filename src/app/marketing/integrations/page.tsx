@@ -379,6 +379,15 @@ function IntegrationsPageContent() {
     }
   };
 
+  const handleSyncAll = async () => {
+    if (isMetaConnected) {
+      await handleRefreshMeta();
+    } else {
+      await fetchIntegrations();
+      await fetchClients();
+    }
+  };
+
   const filteredChannelsList = useMemo(() => {
     return allConnectedAccounts.filter((acc: any) => {
       if (acc.externalId === "meta_master_user") return false;
@@ -468,38 +477,18 @@ function IntegrationsPageContent() {
             </div>
           )}
 
+          {/* Sincronizar unificado */}
           <button
-            onClick={() => {
-              fetchIntegrations();
-              fetchClients();
-            }}
-            className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] text-[#4D4C48] hover:text-[#1F1E1D] text-xs font-medium flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-            title="Actualizar estado de conexiones"
+            onClick={handleSyncAll}
+            disabled={loading || refreshingMeta}
+            className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            title="Sincronizar canales y cuentas de Meta"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refrescar</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading || refreshingMeta ? "animate-spin text-[#1877F2]" : "text-[#1877F2]"}`} />
+            <span>{refreshingMeta ? "Sincronizando..." : "Sincronizar"}</span>
           </button>
 
-          {isMetaConnected && (
-            <button
-              onClick={handleRefreshMeta}
-              disabled={refreshingMeta}
-              className="px-3 py-2 rounded-xl bg-white border border-[#E8E6DF] hover:bg-[#FAF9F5] text-[#1F1E1D] text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-              title="Re-escanear páginas y cuentas de Meta sin re-autorizar"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshingMeta ? "animate-spin text-[#1877F2]" : "text-[#1877F2]"}`} />
-              <span>{refreshingMeta ? "Sincronizando..." : "Sincronizar Cuentas Meta"}</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setWizardOpen(true)}
-            className="px-3.5 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-[#E5C158]" />
-            <span>+ Crear Cliente (Asistente)</span>
-          </button>
-
+          {/* Botón Principal Único de Vincular Red / Canal */}
           <button
             onClick={() => {
               const defaultTab = channelTypeFilter === "whatsapp" ? "whatsapp" : "meta";
@@ -513,7 +502,7 @@ function IntegrationsPageContent() {
           >
             <Plus className="w-4 h-4" />
             <span>
-              {activeClient ? `+ Vincular Red a ${activeClient.name}` : "+ Conectar Canales / Redes"}
+              {activeClient ? `+ Vincular a ${activeClient.name}` : "+ Vincular Canal"}
             </span>
           </button>
         </div>
@@ -535,11 +524,11 @@ function IntegrationsPageContent() {
         </div>
       )}
 
-      {/* Banner de Empresa / Marca Seleccionada */}
+      {/* Banner Informativo de Marca Seleccionada (Sin botones redundantes) */}
       {activeClient && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
               {initialsOf(activeClient.name, "CL")}
             </div>
             <div className="min-w-0 space-y-0.5">
@@ -551,31 +540,19 @@ function IntegrationsPageContent() {
                   {allConnectedAccounts.filter((a) => a.clientId === activeClient.id).length} activos vinculados
                 </span>
               </div>
-              <h2 className="text-base font-bold text-slate-950 truncate">
+              <h2 className="text-sm font-bold text-slate-950 truncate">
                 Activos y Redes de {activeClient.name}
               </h2>
-              <p className="text-xs text-amber-900/80">
-                Páginas de Facebook, Instagram Direct y cuentas publicitarias asignadas exclusivamente a esta marca.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => handleOpenConnectForClient(activeClient.id, "meta")}
-              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-400 hover:text-amber-300 text-xs font-semibold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-amber-400" />
-              <span>Vincular Fan Page / Red</span>
-            </button>
-            <Link
-              href="/marketing/integrations"
-              className="px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-amber-300 text-amber-950 text-xs font-semibold transition-colors"
-            >
-              Ver Todas las Marcas
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/marketing/integrations")}
+            className="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-300 text-amber-950 text-xs font-semibold transition-colors shrink-0 cursor-pointer self-start sm:self-auto"
+          >
+            ✕ Quitar filtro de marca
+          </button>
         </div>
       )}
 
@@ -623,15 +600,24 @@ function IntegrationsPageContent() {
         </div>
 
         {activeView === "clients" && (
-          <div className="relative w-full sm:w-64 px-1">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
-            <input
-              type="text"
-              placeholder="Buscar empresa..."
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full bg-white border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
-            />
+          <div className="flex items-center gap-2 px-1">
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9C9890]" />
+              <input
+                type="text"
+                placeholder="Buscar empresa..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                className="w-full bg-white border border-[#E8E6DF] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]"
+              />
+            </div>
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="px-3 py-1.5 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-1.5 shadow-sm whitespace-nowrap cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#E5C158]" />
+              <span>+ Nuevo Cliente</span>
+            </button>
           </div>
         )}
       </div>
@@ -817,17 +803,22 @@ function IntegrationsPageContent() {
                 </p>
               </div>
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-                {activeClient && (
+                {channelTypeFilter === "whatsapp" ? (
                   <button
                     type="button"
-                    onClick={() => handleOpenConnectForClient(activeClient.id, "meta")}
-                    className="px-4 py-2 rounded-xl btn-black-gold text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer"
+                    onClick={() => {
+                      if (activeClient) {
+                        handleOpenConnectForClient(activeClient.id, "whatsapp");
+                      } else {
+                        handleOpenConnectGeneral("whatsapp");
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold flex items-center gap-2 shadow-sm cursor-pointer transition-all"
                   >
-                    <Plus className="w-4 h-4 text-amber-400" />
-                    <span>Vincular Red a {activeClient.name}</span>
+                    <Plus className="w-4 h-4 text-white" />
+                    <span>Conectar WhatsApp Cloud</span>
                   </button>
-                )}
-                {agencyAccounts.length > 0 && (
+                ) : agencyAccounts.length > 0 ? (
                   <button
                     type="button"
                     onClick={() => setChannelTypeFilter("unassigned")}
@@ -835,7 +826,7 @@ function IntegrationsPageContent() {
                   >
                     <span>Ver {agencyAccounts.length} activos sin asignar</span>
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (
