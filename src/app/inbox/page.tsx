@@ -735,7 +735,7 @@ function UnifiedInboxPageContent() {
     };
   }, [fetchInbox]);
 
-  const isShowingDemo = isDemoMode || (!loading && conversations.length === 0);
+  const isShowingDemo = isDemoMode;
 
   const activeConversations = useMemo(() => {
     if (isShowingDemo) {
