@@ -152,9 +152,19 @@ function DashboardPageContent() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-400 flex items-center gap-2.5 shadow-orvion">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
+        <div className="p-4 rounded-[28px] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-400 flex items-center justify-between gap-3 shadow-orvion flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+          {error.toLowerCase().includes("sesión") && (
+            <Link
+              href="/login"
+              className="px-3.5 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-xs shrink-0"
+            >
+              Iniciar Sesión
+            </Link>
+          )}
         </div>
       )}
 
