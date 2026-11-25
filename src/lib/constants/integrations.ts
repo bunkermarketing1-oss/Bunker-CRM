@@ -31,6 +31,9 @@ export const ACCOUNT_TYPE = {
 } as const;
 export type AccountType = ValueOf<typeof ACCOUNT_TYPE>;
 
+/** Valor de `object` con el que Meta identifica los eventos de WhatsApp Cloud API en el webhook. */
+export const WHATSAPP_WEBHOOK_OBJECT = "whatsapp_business_account";
+
 /** Cuentas que tienen campañas pagadas (las que ve el módulo de Campañas). */
 export const AD_ACCOUNT_TYPES: AccountType[] = [ACCOUNT_TYPE.META_AD_ACCOUNT, ACCOUNT_TYPE.TIKTOK_ADVERTISER];
 

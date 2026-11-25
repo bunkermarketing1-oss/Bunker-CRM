@@ -4,6 +4,7 @@ import { verifyMetaSignature, type MetaWebhookPayload } from "@/lib/integrations
 import { processMetaLeadEvent, recordLeadgenEvents } from "@/services/meta-leads.service";
 import { processMetaMessaging } from "@/services/meta-messaging.service";
 import { processWhatsAppWebhook } from "@/services/whatsapp-messaging.service";
+import { WHATSAPP_WEBHOOK_OBJECT } from "@/lib/constants/integrations";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
   // La firma se calcula sobre el body crudo: hay que leerlo como texto antes de parsear.
   const rawBody = await req.text();
   if (!verifyMetaSignature(rawBody, req.headers.get("x-hub-signature-256"))) {
+    // Sin este rastro un rechazo es invisible: WhatsApp firmado con el secreto de otra app
+    // de Meta (o sin META_APP_SECRET) se descarta en silencio y la bandeja queda vacía.
+    console.warn("Webhook de Meta rechazado por firma inválida", {
+      hasSignatureHeader: Boolean(req.headers.get("x-hub-signature-256")),
+      hasAppSecret: Boolean(process.env.META_APP_SECRET),
+      looksLikeWhatsApp: rawBody.includes(WHATSAPP_WEBHOOK_OBJECT),
+    });
     return NextResponse.json({ success: false, error: "Firma inválida." }, { status: 401 });
   }
 
@@ -56,9 +64,10 @@ export async function POST(req: NextRequest) {
   // fallos, desactiva el webhook.
   try {
     let whatsappProcessed = 0;
-    if ((payload as unknown as { object?: string }).object === "whatsapp_business_account") {
+    if ((payload as unknown as { object?: string }).object === WHATSAPP_WEBHOOK_OBJECT) {
       const waOutcome = await processWhatsAppWebhook(payload as Record<string, unknown>);
       whatsappProcessed = waOutcome.processed;
+      console.warn("Webhook de WhatsApp recibido", { processed: waOutcome.processed, errors: waOutcome.errors.length });
     }
 
     const [leadgenOutcome, messagingOutcome] = await Promise.allSettled([
