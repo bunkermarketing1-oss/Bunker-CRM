@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
+export async function GET(req: NextRequest) {
+  const isHttps =
+    req.headers.get("x-forwarded-proto") === "https" ||
+    req.nextUrl.protocol === "https:";
+
+  const loginUrl = new URL("/login", req.url);
+  const response = NextResponse.redirect(loginUrl);
+
+  response.cookies.set({
+    name: AUTH_COOKIE_NAME,
+    value: "",
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  });
+
+  return response;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Revoke the session in Supabase Auth so a copied token cannot be reused after logout.
