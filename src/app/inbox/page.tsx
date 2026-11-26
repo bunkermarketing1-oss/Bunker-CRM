@@ -37,6 +37,7 @@ import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import { getLeadAvatarUrl } from "@/lib/avatar";
 import SlidingTabs from "@/components/ui/SlidingTabs";
 import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
+import { conversationMatchesChannel, mergeConversations } from "@/lib/inbox-merge";
 import type {
   ConversationItem,
   ConversationMessage,
@@ -399,6 +400,8 @@ function UnifiedInboxPageContent() {
   const isClient = Boolean(user?.isClientUser);
 
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  // Con una búsqueda activa solo se muestran los chats que respondió el servidor; el resto sigue guardado, sin perderse.
+  const [searchMatchIds, setSearchMatchIds] = useState<Set<string> | null>(null);
   const [stats, setStats] = useState<InboxStats>({
     total: 0,
     unread: 0,
@@ -517,6 +520,7 @@ function UnifiedInboxPageContent() {
   useEffect(() => {
     setSelectedConvId(null);
     setConversations([]);
+    setSearchMatchIds(null);
     setLoading(true);
   }, [activeClientId]);
 
@@ -550,17 +554,13 @@ function UnifiedInboxPageContent() {
         if (abortControllerRef.current !== controller) return;
         if (json.success) {
           const newConvs: ConversationItem[] = json.conversations || [];
-          setConversations(newConvs);
+          // Se fusiona con lo ya cargado: cambiar de pestaña no borra los chats, solo suma los nuevos.
+          setConversations((prev) => mergeConversations(prev, newConvs));
+          setSearchMatchIds(debouncedSearch ? new Set(newConvs.map((c) => c.id)) : null);
 
           if (json.stats) setStats(json.stats);
           if (json.clients) setClients(json.clients);
           if (json.advisors) setAdvisors(json.advisors);
-
-          // Preservar la conversación seleccionada si pertenece al nuevo lote o seleccionar la primera
-          setSelectedConvId((current) => {
-            if (current && newConvs.some((c) => c.id === current)) return current;
-            return newConvs.length > 0 ? newConvs[0].id : null;
-          });
         }
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -592,7 +592,14 @@ function UnifiedInboxPageContent() {
     };
   }, [fetchInbox]);
 
-  const activeConversations = conversations;
+  // La pestaña solo filtra lo que ya está en memoria: cambiar de canal es instantáneo y no vuelve a pedir nada.
+  const activeConversations = useMemo(
+    () =>
+      conversations.filter(
+        (c) => conversationMatchesChannel(c.channel, activeChannel) && (!searchMatchIds || searchMatchIds.has(c.id))
+      ),
+    [conversations, activeChannel, searchMatchIds]
+  );
 
   const activeConversation = useMemo(() => {
     return activeConversations.find((c) => c.id === selectedConvId) || activeConversations[0] || null;
@@ -1059,9 +1066,6 @@ function UnifiedInboxPageContent() {
           value={activeChannel}
           onChange={(channel) => {
             if (channel === activeChannel) return;
-            setConversations([]);
-            setSelectedConvId(null);
-            setLoading(true);
             setActiveChannel(channel);
           }}
           options={[
