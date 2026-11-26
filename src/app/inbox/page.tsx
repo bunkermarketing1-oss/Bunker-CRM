@@ -36,6 +36,7 @@ import { CreateAppointmentModal } from "@/components/appointments/CreateAppointm
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import { getLeadAvatarUrl } from "@/lib/avatar";
 import SlidingTabs from "@/components/ui/SlidingTabs";
+import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
 import type {
   ConversationItem,
   ConversationMessage,
@@ -950,6 +951,38 @@ function UnifiedInboxPageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConversation?.messages]);
 
+  // Acciones secundarias de la cabecera del chat. "Abrir en WhatsApp" solo se ofrece en los demás canales:
+  // en una conversación de WhatsApp ya estás dentro de ella.
+  const headerMenuItems: ActionMenuItem[] = [];
+  if (activeConversation) {
+    if (activeConversation.leadId) {
+      headerMenuItems.push({
+        key: "lead",
+        label: "Ver expediente del prospecto",
+        icon: UserCheck,
+        href: `/crm/leads/${activeConversation.leadId}`,
+      });
+    }
+    if (activeConversation.clientId) {
+      headerMenuItems.push({
+        key: "client",
+        label: "Ver ficha de la empresa",
+        icon: Building,
+        href: `/crm/clients/${activeConversation.clientId}`,
+      });
+    }
+    if (activeConversation.channel !== "whatsapp" && isRealPhoneNumber(activeConversation.leadPhone)) {
+      headerMenuItems.push({
+        key: "whatsapp",
+        label: "Abrir en WhatsApp",
+        icon: ExternalLink,
+        href: `https://wa.me/${activeConversation.leadPhone!.replace(/\D/g, "")}`,
+        external: true,
+      });
+    }
+    headerMenuItems.push({ key: "copy", label: "Copiar historial del chat", icon: Copy, onSelect: handleCopyTranscript });
+  }
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1329,12 +1362,6 @@ function UnifiedInboxPageContent() {
             ) : (
               activeConversations.map((conv) => {
                 const isSelected = activeConversation?.id === conv.id;
-                const channelConf = CHANNEL_CONFIG[conv.channel] || {
-                  label: conv.channel,
-                  badgeCls: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/60 dark:text-slate-300 dark:border-slate-800",
-                  iconType: "meta",
-                };
-
                 return (
                   <button
                     key={conv.id}
@@ -1368,59 +1395,40 @@ function UnifiedInboxPageContent() {
                         </span>
                       </div>
 
-                      {/* Badges de Canal, Cliente y Asesor */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${channelConf.badgeCls}`}>
-                          {channelConf.label}
-                        </span>
-                        {conv.clientName && (
-                          <span className="text-[9px] font-medium text-[#121417] dark:text-slate-300 bg-[#F3F4F7] dark:bg-[#1E2229] border border-[#E2E5EB] dark:border-[#2A2E37] px-2 py-0.5 rounded-full truncate max-w-[120px]">
-                            {conv.clientName}
-                          </span>
-                        )}
-                        {conv.assignedAdvisorName ? (
-                          <span className="text-[9px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 px-2 py-0.5 rounded-full flex items-center gap-1 truncate max-w-[120px]">
-                            <UserCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span className="truncate">{conv.assignedAdvisorName}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-medium text-[#8C929D] bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] px-2 py-0.5 rounded-full">
-                            Sin asignar
-                          </span>
-                        )}
-                      </div>
-
                       {/* Snippet de último mensaje */}
                       <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] line-clamp-1 leading-normal mt-0.5">
                         {conv.lastMessageText}
                       </p>
 
-                      {/* Cronómetro en vivo SLA si está esperando respuesta del asesor */}
-                      {conv.waitingForReply && conv.lastInboundTime ? (
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          {(() => {
+                      {/* Una sola línea de estado: espera/respondido a la izquierda, asesor (y marca) a la derecha.
+                          El canal ya se ve en el ícono del avatar, así que no se repite como etiqueta. */}
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        {conv.waitingForReply && conv.lastInboundTime ? (
+                          (() => {
                             const sla = formatSlaTimer(conv.lastInboundTime, now);
                             return (
                               <span
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold border ${sla.badgeCls}`}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold border shrink-0 ${sla.badgeCls}`}
                                 title={`Tiempo de espera del cliente: ${sla.timeStr} (${sla.label})`}
                               >
                                 <span className={`w-1.5 h-1.5 rounded-full ${sla.dotCls}`} />
                                 <Timer className="w-2.5 h-2.5 shrink-0" />
                                 <span>{sla.timeStr}</span>
-                                <span className="text-[8px] font-sans opacity-75 uppercase tracking-wider ml-0.5">
-                                  {sla.label}
-                                </span>
                               </span>
                             );
-                          })()}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 pt-0.5 text-[9px] text-emerald-700 dark:text-emerald-400 font-semibold">
-                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span>Respondido</span>
-                        </div>
-                      )}
+                          })()
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>Respondido</span>
+                          </span>
+                        )}
+                        <span className="text-[10px] text-[#8C929D] truncate min-w-0">
+                          {[!isClient && activeClientId === "all" ? conv.clientName : null, conv.assignedAdvisorName || "Sin asignar"]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </div>
                     </div>
 
                     {conv.unreadCount > 0 && (
@@ -1454,18 +1462,6 @@ function UnifiedInboxPageContent() {
                       <h2 className="font-extrabold text-sm text-[#121417] dark:text-white truncate">
                         {activeConversation.senderName}
                       </h2>
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                          CHANNEL_CONFIG[activeConversation.channel]?.badgeCls
-                        }`}
-                      >
-                        {CHANNEL_CONFIG[activeConversation.channel]?.label}
-                      </span>
-                      {activeConversation.clientName && (
-                        <span className="text-[10px] font-medium text-[#121417] dark:text-slate-300 bg-[#F3F4F7] dark:bg-[#1E2229] border border-[#E2E5EB] dark:border-[#2A2E37] px-2 py-0.5 rounded-full truncate max-w-[140px]">
-                          {activeConversation.clientName}
-                        </span>
-                      )}
                       {activeConversation.waitingForReply && activeConversation.lastInboundTime && (
                         (() => {
                           const sla = formatSlaTimer(activeConversation.lastInboundTime, now);
@@ -1483,11 +1479,15 @@ function UnifiedInboxPageContent() {
                       )}
                     </div>
 
-                    {isRealPhoneNumber(activeConversation.leadPhone) && (
-                      <p className="text-[11px] text-[#8C929D] font-mono mt-0.5">
-                        {activeConversation.leadPhone}
-                      </p>
-                    )}
+                    {/* Teléfono y empresa como texto: son datos de contexto, no acciones. */}
+                    <p className="text-[11px] text-[#8C929D] mt-0.5 truncate">
+                      {[
+                        isRealPhoneNumber(activeConversation.leadPhone) ? activeConversation.leadPhone : null,
+                        !isClient ? activeConversation.clientName : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </div>
                 </div>
 
@@ -1542,7 +1542,7 @@ function UnifiedInboxPageContent() {
                     </div>
                   )}
 
-                  {user && activeConversation.assignedAdvisorId !== user.id && (
+                  {user && !activeConversation.assignedAdvisorId && (
                     <button
                       type="button"
                       disabled={assigning}
@@ -1555,47 +1555,8 @@ function UnifiedInboxPageContent() {
                     </button>
                   )}
 
-                  {/* Acciones Rápidas */}
-                  {isRealPhoneNumber(activeConversation.leadPhone) && (
-                    <a
-                      href={`https://wa.me/${activeConversation.leadPhone!.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 hover:bg-emerald-100 transition-all shadow-2xs"
-                      title="Abrir WhatsApp directo"
-                    >
-                      <SocialNetworkIcon type="whatsapp" size="xs" className="w-4 h-4" />
-                    </a>
-                  )}
-
-                  {activeConversation.leadId && (
-                    <Link
-                      href={`/crm/leads/${activeConversation.leadId}`}
-                      className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#E2E5EB] transition-all shadow-2xs"
-                      title="Ver expediente en el CRM"
-                    >
-                      <UserCheck className="w-4 h-4 text-amber-500" />
-                    </Link>
-                  )}
-
-                  {activeConversation.clientId && (
-                    <Link
-                      href={`/crm/clients/${activeConversation.clientId}`}
-                      className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#E2E5EB] transition-all shadow-2xs"
-                      title="Ver ficha comercial de la empresa"
-                    >
-                      <Building className="w-4 h-4 text-[#8C929D]" />
-                    </Link>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleCopyTranscript}
-                    className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#E2E5EB] transition-all shadow-2xs cursor-pointer"
-                    title="Copiar historial de chat al portapapeles"
-                  >
-                    <Copy className="w-4 h-4 text-[#8C929D] hover:text-amber-500" />
-                  </button>
+                  {/* Acciones secundarias agrupadas en un solo menú */}
+                  <ActionMenu items={headerMenuItems} />
                 </div>
               </div>
 
