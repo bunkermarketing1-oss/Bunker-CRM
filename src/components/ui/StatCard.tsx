@@ -26,7 +26,7 @@ export default function StatCard({
   badgeText,
   badgeVariant = "gold",
   subPeriod,
-  showMiniChart = true,
+  showMiniChart = false,
 }: StatCardProps) {
   return (
     <div
@@ -75,6 +75,7 @@ export default function StatCard({
       </div>
 
       {/* Micro-gráfica decorativa en dorado Bunker y texto de soporte */}
+      {(showMiniChart || hint) && (
       <div className="mt-4 pt-2 border-t border-[#F2F4F7] dark:border-[#1F242D]/50">
         {showMiniChart && (
           <div className="flex items-end gap-1 h-3 mb-2 opacity-60 group-hover:opacity-100 transition-opacity">
@@ -93,6 +94,7 @@ export default function StatCard({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

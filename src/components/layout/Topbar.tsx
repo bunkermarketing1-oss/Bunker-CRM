@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ChevronDown, Globe, LogOut, Menu, Moon, Plus, Search, Shield, Sun } from "lucide-react";
+import { ChevronDown, Globe, LogOut, Menu, Moon, Plus, Search, Shield, Sun } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -147,15 +147,11 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
   }, [showUserMenu]);
 
   const isClient = Boolean(user?.isClientUser);
-  const roleBadge = isClient
-    ? {
-        label: language === "es" ? "Portal Cliente" : "Client Portal",
-        color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
-      }
-    : {
-        label: language === "es" ? "Administrador Bunker" : "Bunker Admin",
-        color: "bg-amber-50 text-amber-800 border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700",
-      };
+  const roleLabel = isClient
+    ? language === "es" ? "Portal Cliente" : "Client Portal"
+    : language === "es" ? "Administrador Bunker" : "Bunker Admin";
+  // En Prospectos la página ya tiene su propio botón de registro: evita dos acciones principales.
+  const showRegisterLead = !pathname?.startsWith(ROUTES.LEADS);
 
   const accountName = isClient ? user?.clientName || "Mi Empresa" : user?.organizationName || "Bunker Agency";
   const breadcrumbs = getBreadcrumbs(pathname || "/");
@@ -204,11 +200,6 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           })}
         </nav>
 
-        {isClient && user?.clientName && (
-          <span className="hidden xl:inline orvion-badge-gold text-[11px]">
-            {user.clientName}
-          </span>
-        )}
       </div>
 
       <button
@@ -252,14 +243,16 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
           <span className="uppercase">{language}</span>
         </button>
 
-        <Link
-          href={ROUTES.LEADS}
-          className="rounded-full h-9 px-4 bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
-          aria-label={t("topbar.register_lead", "+ Registrar Lead")}
-        >
-          <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-[#121417]" />
-          <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
-        </Link>
+        {showRegisterLead && (
+          <Link
+            href={ROUTES.LEADS}
+            className="rounded-full h-9 px-4 bg-white dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#F8F9FA] dark:hover:bg-[#202530] text-[#121417] dark:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+            aria-label={t("topbar.register_lead", "+ Registrar Lead")}
+          >
+            <Plus className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden lg:inline">{t("topbar.register_lead", "+ Registrar Lead").replace(/^\+\s*/, "")}</span>
+          </Link>
+        )}
 
         <AttendanceCheckInButton />
 
@@ -276,7 +269,7 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
             </span>
             <span className="hidden xl:flex flex-col text-left leading-tight">
               <span className="font-bold text-xs text-[#121417] dark:text-white">{user?.name || "Cargando..."}</span>
-              <span className="text-[10px] text-[#8C929D] font-medium">{roleBadge.label}</span>
+              <span className="text-[10px] text-[#8C929D] font-medium">{roleLabel}</span>
             </span>
             <ChevronDown className="hidden sm:block w-3 h-3 text-[#8C929D]" />
           </button>
@@ -286,13 +279,9 @@ export default function Topbar({ onOpenMenu, onOpenSearch }: TopbarProps) {
               <div className="p-3 bg-[#F8F9FA] dark:bg-[#1A1D24] rounded-2xl border border-[#E2E5EB] dark:border-[#2A2E37] mb-2">
                 <p className="text-xs font-extrabold text-[#121417] dark:text-white truncate">{user?.name}</p>
                 <p className="text-[11px] text-[#8C929D] truncate font-medium">{user?.email}</p>
-                <div className="mt-2 pt-2 border-t border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between gap-2 text-[10px]">
-                  <span className="flex items-center gap-1 text-[#475467] dark:text-[#94A3B8] min-w-0">
-                    <Building2 className="w-3 h-3 text-[#8C929D] flex-shrink-0" />
-                    <span className="truncate">{accountName}</span>
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full font-bold border whitespace-nowrap ${roleBadge.color}`}>{roleBadge.label}</span>
-                </div>
+                <p className="mt-2 pt-2 border-t border-[#E2E5EB] dark:border-[#2A2E37] text-[10px] text-[#475467] dark:text-[#94A3B8] truncate">
+                  {accountName} · {roleLabel}
+                </p>
               </div>
 
               <button

@@ -11,9 +11,6 @@ import {
   Copy,
   AlertTriangle,
   X,
-  Building2,
-  Crown,
-  UserCheck,
   UserCog,
   RefreshCw,
   Eye,
@@ -23,6 +20,13 @@ import {
 import { ROLES, type StoredUserRole } from "@/lib/roles";
 import { useUsersManagement, type ManagedUser } from "@/hooks/useUsersManagement";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
+
+const ROLE_LABEL: Record<string, string> = {
+  [ROLES.ADMIN]: "Administrador / CEO",
+  [ROLES.CLIENT_OWNER]: "Director de Empresa",
+  [ROLES.CLIENT]: "Asesor de Ventas",
+};
 
 export function UsersManagementPanel() {
   const {
@@ -179,16 +183,9 @@ export function UsersManagementPanel() {
     <div className="space-y-4">
       {/* Barra de cabecera: Título, Filtros y Botón de Creación */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-5 bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-500 flex items-center justify-center font-bold shrink-0 shadow-2xs">
-            <Users className="w-5 h-5 text-amber-500" />
-          </div>
-          <div>
-            <h2 className="text-sm font-extrabold text-[#121417] dark:text-white">Equipo y Usuarios</h2>
-            <p className="text-xs text-[#8C929D] font-medium">
-              {users.length} miembros registrados en la plataforma
-            </p>
-          </div>
+        <div>
+          <h2 className="text-sm font-extrabold text-[#121417] dark:text-white">Equipo y Usuarios</h2>
+          <p className="text-xs text-[#8C929D] font-medium">{users.length} miembros</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -275,21 +272,42 @@ export function UsersManagementPanel() {
             <p className="font-medium">Prueba ajustando los filtros de búsqueda o crea un nuevo miembro.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div>
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F8F9FA] dark:bg-[#16191F] border-b border-[#E2E5EB] dark:border-[#1F242D] text-[11px] font-bold uppercase tracking-wider text-[#8C929D]">
                 <tr>
                   <th className="py-3 px-4">Usuario</th>
-                  <th className="py-3 px-4">Rol en el Sistema</th>
-                  <th className="py-3 px-4">Empresa Asignada</th>
-                  <th className="py-3 px-4">Estado</th>
-                  <th className="py-3 px-4 text-right">Acciones</th>
+                  <th className="py-3 px-4 w-12" aria-label="Acciones" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E2E5EB] dark:divide-[#1F242D]">
                 {filteredUsers.map((u) => {
                   const isOwner = u.role === ROLES.CLIENT_OWNER;
                   const isAdmin = u.role === ROLES.ADMIN;
+                  const detail = [ROLE_LABEL[u.role] ?? u.role, u.client?.name ?? "Bunker Agency"].join(" · ");
+                  const menuItems: ActionMenuItem[] = [
+                    {
+                      key: "reset",
+                      label: "Enlace de acceso directo",
+                      icon: KeyRound,
+                      onSelect: () => {
+                        if (generatingResetId !== u.id) handleGenerateReset(u);
+                      },
+                    },
+                    ...(!isAdmin
+                      ? [
+                          {
+                            key: "role",
+                            label: isOwner ? "Degradar a Asesor de Ventas" : "Promover a Director de Empresa",
+                            icon: UserCog,
+                            onSelect: () => {
+                              if (savingId !== u.id) setRole(u.id, isOwner ? ROLES.CLIENT : ROLES.CLIENT_OWNER);
+                            },
+                          },
+                        ]
+                      : []),
+                    { key: "delete", label: "Eliminar usuario", icon: Trash2, onSelect: () => setUserToDelete(u) },
+                  ];
 
                   return (
                     <tr key={u.id} className="hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] transition-colors">
@@ -303,84 +321,15 @@ export function UsersManagementPanel() {
                               {u.name}
                             </span>
                             <span className="text-[11px] text-[#8C929D] block truncate font-medium">
-                              {u.email}
+                              {u.email} · {detail}
                             </span>
                           </div>
                         </div>
                       </td>
 
                       <td className="py-3.5 px-4">
-                        {isAdmin ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/50 shadow-2xs">
-                            <Crown className="w-3.5 h-3.5 text-amber-500" />
-                            Administrador / CEO
-                          </span>
-                        ) : isOwner ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 shadow-2xs">
-                            <UserCheck className="w-3.5 h-3.5 text-blue-500" />
-                            Director de Empresa
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#2A2E37] shadow-2xs">
-                            <UserCog className="w-3.5 h-3.5 text-amber-500" />
-                            Asesor de Ventas
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        {u.client ? (
-                          <div className="flex items-center gap-1.5 font-bold text-[#121417] dark:text-white">
-                            <Building2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span className="truncate max-w-[160px]">{u.client.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-[#8C929D] font-medium">Bunker Agency</span>
-                        )}
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          Activo
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Botón Enlace de Acceso */}
-                          <button
-                            type="button"
-                            onClick={() => handleGenerateReset(u)}
-                            disabled={generatingResetId === u.id}
-                            className="p-2 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#F8F9FA] dark:hover:bg-[#1E2229] text-[#121417] dark:text-white text-xs transition-all shadow-2xs cursor-pointer"
-                            title="Generar enlace de acceso directo"
-                          >
-                            <KeyRound className="w-3.5 h-3.5 text-amber-500" />
-                          </button>
-
-                          {/* Cambio de Rol (solo para usuarios de cliente) */}
-                          {!isAdmin && (
-                            <button
-                              type="button"
-                              onClick={() => setRole(u.id, isOwner ? ROLES.CLIENT : ROLES.CLIENT_OWNER)}
-                              disabled={savingId === u.id}
-                              className="px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] hover:bg-[#F8F9FA] dark:hover:bg-[#1E2229] text-[#121417] dark:text-white text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
-                              title={isOwner ? "Degradar a Asesor de Ventas" : "Promover a Director de Empresa"}
-                            >
-                              {isOwner ? "Hacer Asesor" : "Hacer Director"}
-                            </button>
-                          )}
-
-                          {/* Botón Eliminar */}
-                          <button
-                            type="button"
-                            onClick={() => setUserToDelete(u)}
-                            className="p-2 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all cursor-pointer"
-                            title="Eliminar usuario"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="flex justify-end">
+                          <ActionMenu items={menuItems} />
                         </div>
                       </td>
                     </tr>

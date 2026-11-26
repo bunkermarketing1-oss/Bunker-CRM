@@ -9,7 +9,6 @@ import {
   Plug,
   AlertTriangle,
   Lock,
-  Eye,
   Play,
   Image as ImageIcon,
   MessageSquare,
@@ -821,13 +820,12 @@ function CampaignsPageContent() {
                     <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">CTR</th>
                     <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Leads / Conv.</th>
                     <th className="text-right font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Costo / Lead</th>
-                    <th className="text-center font-semibold text-[11px] uppercase tracking-wider px-4 py-3 whitespace-nowrap">Creativos</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0EFEA]">
                   {filteredCampaigns.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="px-4 py-10 text-center text-[#667085]">
+                      <td colSpan={9} className="px-4 py-10 text-center text-[#667085]">
                         <div className="max-w-md mx-auto space-y-3">
                           {!data?.campaigns || data.campaigns.length === 0 ? (
                             <>
@@ -873,41 +871,26 @@ function CampaignsPageContent() {
                       <tr key={c.id} className="hover:bg-[#F8F9FA]/80 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            {/* Previsualización Creativa / Thumbnail interactivo */}
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCampaignForAds(c)}
-                              className="group/thumb relative w-11 h-11 rounded-xl bg-gradient-to-br from-[#101828] via-[#1E293B] to-[#0F172A] border border-[#334155]/40 flex items-center justify-center shrink-0 shadow-xs hover:border-amber-400/80 hover:shadow-md hover:shadow-amber-500/10 transition-all cursor-pointer"
-                              title={`Ver anuncios y creativos de "${c.name}"`}
-                            >
-                              <VisualIcon className="w-5 h-5 text-amber-400 group-hover/thumb:scale-110 transition-transform" />
-                              <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] opacity-0 group-hover/thumb:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                                <Eye className="w-3.5 h-3.5 text-amber-300" />
-                              </div>
+                            {/* Tipo de creativo y red: la miniatura solo informa; el nombre abre los anuncios */}
+                            <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-[#101828] via-[#1E293B] to-[#0F172A] border border-[#334155]/40 flex items-center justify-center shrink-0 shadow-xs">
+                              <VisualIcon className="w-5 h-5 text-amber-400" />
                               <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white shadow-xs ring-1 ring-black/10">
                                 <SocialNetworkIcon provider={netInfo.iconProvider} size="xs" />
                               </div>
-                            </button>
+                            </div>
 
                             <div className="min-w-0">
                               <button
                                 type="button"
                                 onClick={() => setSelectedCampaignForAds(c)}
-                                className="text-left text-[#101828] font-medium hover:text-amber-600 transition-colors truncate block leading-tight max-w-[280px] lg:max-w-[360px]"
-                                title={c.name}
+                                className="text-left text-[#101828] font-medium hover:text-amber-600 hover:underline transition-colors truncate block leading-tight max-w-[280px] lg:max-w-[360px] cursor-pointer"
+                                title={`Ver anuncios y creativos de "${c.name}"`}
                               >
                                 {c.name}
                               </button>
-                              <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-[#667085]">
-                                <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${visual.badgeCls}`}>
-                                  {visual.label}
-                                </span>
-                                <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${netInfo.badgeCls}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${netInfo.dotCls}`} />
-                                  {netInfo.label}
-                                </span>
-                                {c.accountName && <span className="truncate max-w-[160px]">· {c.accountName}</span>}
-                              </div>
+                              {c.accountName && (
+                                <p className="mt-0.5 text-[11px] text-[#667085] truncate max-w-[280px] lg:max-w-[360px]">{c.accountName}</p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -929,17 +912,6 @@ function CampaignsPageContent() {
                           {c.conversions ? fmtMoney(c.costPerConversion, c.currency) : "—"}
                         </td>
 
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedCampaignForAds(c)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-[#EAECF0] text-[#101828] hover:bg-[#101828] hover:text-amber-400 hover:border-amber-500/60 text-[11px] font-semibold transition-all shadow-xs group whitespace-nowrap shrink-0 cursor-pointer"
-                            title="Ver imágenes, videos, textos y creativos"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-400 transition-colors shrink-0" />
-                            <span className="whitespace-nowrap">Ver Anuncios</span>
-                          </button>
-                        </td>
                       </tr>
                     );
                   })}

@@ -21,13 +21,43 @@ interface ActionMenuProps {
   title?: string;
 }
 
+interface MenuPosition {
+  right: number;
+  top?: number;
+  bottom?: number;
+}
+
+const ITEM_HEIGHT_PX = 36;
+const MENU_PADDING_PX = 12;
+const MENU_GAP_PX = 8;
+
 const ITEM_CLASS =
   "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] transition-colors cursor-pointer";
 
 /** Menú "⋯" para agrupar acciones secundarias y dejar visible solo lo principal. */
 export default function ActionMenu({ items, title = "Más acciones" }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<MenuPosition | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // El menú se coloca con coordenadas de pantalla (fixed): dentro de tablas con scroll, un menú absoluto se cortaría.
+  const toggle = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const estimatedHeight = items.length * ITEM_HEIGHT_PX + MENU_PADDING_PX;
+      const fitsBelow = rect.bottom + MENU_GAP_PX + estimatedHeight <= window.innerHeight;
+      setPosition({
+        right: window.innerWidth - rect.right,
+        ...(fitsBelow ? { top: rect.bottom + MENU_GAP_PX } : { bottom: window.innerHeight - rect.top + MENU_GAP_PX }),
+      });
+    }
+    setOpen(true);
+  };
 
   // Se cierra con clic fuera o Escape para que no tape el chat.
   useEffect(() => {
@@ -38,11 +68,17 @@ export default function ActionMenu({ items, title = "Más acciones" }: ActionMen
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+    const close = () => setOpen(false);
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    // Con scroll o cambio de tamaño la posición calculada deja de ser válida.
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
     };
   }, [open]);
 
@@ -51,8 +87,9 @@ export default function ActionMenu({ items, title = "Más acciones" }: ActionMen
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
         title={title}
@@ -61,10 +98,11 @@ export default function ActionMenu({ items, title = "Más acciones" }: ActionMen
         <MoreHorizontal className="w-4 h-4 text-[#667085] dark:text-[#8C929D]" />
       </button>
 
-      {open && (
+      {open && position && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 z-30 p-1.5 rounded-2xl bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion"
+          style={{ position: "fixed", ...position }}
+          className="w-64 z-50 p-1.5 rounded-2xl bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion"
         >
           {items.map(({ key, label, icon: Icon, href, external, onSelect }) => {
             const content = (

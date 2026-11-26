@@ -17,10 +17,9 @@ import {
   TrendingUp,
   DollarSign,
   Briefcase,
-  User,
   ChevronRight,
   RefreshCw,
-  Sparkles,
+  Plus,
   Share2,
   BarChart3,
   Plug,
@@ -37,6 +36,7 @@ import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAcco
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 import { ACCOUNT_TYPE } from "@/lib/constants/integrations";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 interface Contact {
   id: string;
@@ -510,38 +510,23 @@ export default function ClientsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#EAECF0]">
         <div>
           <h1 className="text-3xl font-semibold text-[#101828] tracking-tight">
-            {isClient
-              ? "Mi Empresa & Contactos"
-              : activeTab === "directory"
-              ? "Centro de Gestión de Clientes"
-              : "Cuentas Publicitarias de Clientes"}
+            {isClient ? "Mi Empresa" : activeTab === "directory" ? "Empresas" : "Cuentas Publicitarias"}
           </h1>
-          <p className="text-xs text-[#475467] mt-1 max-w-2xl leading-relaxed">
-            {isClient
-              ? "Información comercial, contactos clave y ficha 360° de tu empresa."
-              : activeTab === "directory"
-              ? "Directorio comercial y administración centralizada de clientes, contratos de facturación recurrente (MRR), contactos clave y cronología comercial 360°."
-              : "Cuentas publicitarias de Meta Ads, TikTok y canales sociales vinculados a cada cliente. Permite supervisar sus anuncios y métricas de forma independiente a las campañas propias de Bunker."}
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={refreshAll}
-            disabled={loading || integrationsLoading}
-            className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EAECF0] text-[#475467] hover:text-[#101828] text-xs transition-colors shadow-2xs"
-            title="Refrescar datos"
-          >
-            <RefreshCw className={`w-4 h-4 ${(loading || integrationsLoading) ? "animate-spin text-amber-500" : ""}`} />
-          </button>
+          <ActionMenu
+            title="Más acciones"
+            items={[{ key: "refresh", label: "Actualizar datos", icon: RefreshCw, onSelect: refreshAll }]}
+          />
 
           {!isClient && activeTab === "directory" && (
             <button
               onClick={() => setIsCreateOpen(true)}
               className="btn-black-gold rounded-2xl px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-sm"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>+ Nueva Empresa</span>
+              <Plus className="w-4 h-4 text-amber-400" />
+              <span>Nueva empresa</span>
             </button>
           )}
 
@@ -554,7 +539,7 @@ export default function ClientsPage() {
               className="px-4 py-2 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
             >
               <Plug className="w-4 h-4" />
-              <span>+ Vincular Cuenta Publicitaria (BM)</span>
+              <span>Vincular cuenta</span>
             </button>
           )}
         </div>
@@ -575,9 +560,7 @@ export default function ClientsPage() {
             >
               <Building className="w-4 h-4 text-amber-500" />
               <span>Directorio de Empresas</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F0EEE6] font-bold text-[#101828]">
-                {clients.length}
-              </span>
+              <span className="text-[11px] font-bold text-[#667085]">{clients.length}</span>
             </button>
 
             <button
@@ -590,17 +573,9 @@ export default function ClientsPage() {
               }`}
             >
               <Share2 className="w-4 h-4 text-[#1877F2]" />
-              <span>Cuentas Publicitarias & Redes</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1877F2]/10 text-[#1877F2] font-bold">
-                {allConnectedAccounts.length}
-              </span>
+              <span>Cuentas Publicitarias</span>
+              <span className="text-[11px] font-bold text-[#667085]">{allConnectedAccounts.length}</span>
             </button>
-          </div>
-
-          <div className="px-3 text-[11px] text-[#667085] hidden md:block">
-            {activeTab === "directory"
-              ? "Empresas, contratos de clientes y contactos CRM"
-              : "Cuentas del BM asignadas con anuncios independientes"}
           </div>
         </div>
       )}
@@ -777,18 +752,8 @@ export default function ClientsPage() {
             </div>
 
             {(search || statusFilter !== "all" || industryFilter !== "all" || ownerFilter !== "all" || sortOption !== "newest") && (
-              <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] text-[11px] text-[#475467]">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-[#101828]">Filtros activos:</span>
-                  {search && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Texto: &ldquo;{search}&rdquo;</span>}
-                  {statusFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Estado: {statusFilter}</span>}
-                  {industryFilter !== "all" && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Sector: {industryFilter}</span>}
-                  {ownerFilter !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">
-                      Asesor: {teamMembers.find((m) => m.id === ownerFilter)?.name || ownerFilter}
-                    </span>
-                  )}
-                </div>
+              <div className="flex justify-end text-[11px]">
+                {/* Los selectores ya muestran el filtro aplicado: solo se ofrece limpiar. */}
                 <button
                   onClick={resetFilters}
                   className="text-amber-600 hover:text-amber-700 hover:underline font-semibold"
@@ -829,10 +794,8 @@ export default function ClientsPage() {
                 const openOppsValue = openOpps.reduce((sum, op) => sum + (op.value || 0), 0);
                 const hasConnectedAccounts = Boolean(client.connectedAccounts && client.connectedAccounts.length > 0);
 
-                let statusBadge = {
-                  label: "ACTIVO",
-                  cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                };
+                // "Activo" es lo normal y el filtro de estado ya lo cubre: solo se marca lo que pide atención.
+                let statusBadge: { label: string; cls: string } | null = null;
                 if (client.status === "on_hold") {
                   statusBadge = {
                     label: "EN PAUSA",
@@ -844,6 +807,20 @@ export default function ClientsPage() {
                     cls: "bg-rose-50 text-rose-700 border-rose-200",
                   };
                 }
+                const subtitle = [
+                  client.companyName && client.companyName.trim().toLowerCase() !== client.name.trim().toLowerCase()
+                    ? client.companyName
+                    : null,
+                  client.industry || "General",
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+                const contextLine = [
+                  primaryContact ? `Contacto: ${primaryContact.firstName} ${primaryContact.lastName || ""}`.trim() : null,
+                  client.owner ? `Asesor: ${client.owner.name}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
 
                 return (
                   <div
@@ -875,21 +852,15 @@ export default function ClientsPage() {
                               <span className="truncate">{client.name}</span>
                               <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                             </Link>
-                            {client.companyName && client.companyName.trim().toLowerCase() !== client.name.trim().toLowerCase() && (
-                              <div className="text-[11px] text-[#475467] font-medium truncate">{client.companyName}</div>
-                            )}
-                            <div className="text-[11px] text-[#475467] flex items-center gap-1">
-                              <Building className="w-3 h-3 text-[#9C9890] shrink-0" />
-                              <span className="truncate">{client.industry || "General"}</span>
-                            </div>
+                            <div className="text-[11px] text-[#667085] truncate">{subtitle}</div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
+                        {statusBadge && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
-                        </div>
+                        )}
                       </div>
 
                       {/* Commercial Notes */}
@@ -901,14 +872,7 @@ export default function ClientsPage() {
 
                       {/* Contact Info & Primary Contact */}
                       <div className="mt-3.5 space-y-1.5 text-[11px] text-[#475467] pt-3 border-t border-[#F0EEE6]">
-                        {primaryContact ? (
-                          <div className="flex items-center justify-between text-[11px] pb-1">
-                            <span className="text-[#9C9890]">Contacto principal:</span>
-                            <span className="font-semibold text-[#101828]">
-                              {primaryContact.firstName} {primaryContact.lastName || ""}
-                            </span>
-                          </div>
-                        ) : null}
+                        {contextLine && <div className="text-[#667085] truncate">{contextLine}</div>}
 
                         {client.email && (
                           <div className="flex items-center gap-2">
@@ -939,32 +903,18 @@ export default function ClientsPage() {
 
                       {/* Summary of Associated Pipeline Deals */}
                       {openOpps.length > 0 && (
-                        <div className="mt-3 px-2.5 py-1.5 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between text-[11px]">
-                          <span className="text-blue-900 font-medium">Deals en Pipeline ({openOpps.length}):</span>
-                          <span className="font-bold text-blue-950">
-                            ${openOppsValue.toLocaleString("en-US")} USD
-                          </span>
+                        <div className="mt-3 text-[11px] text-[#667085]">
+                          {openOpps.length} deal(s) en pipeline ·{" "}
+                          <span className="font-semibold text-[#101828]">${openOppsValue.toLocaleString("en-US")} USD</span>
                         </div>
                       )}
 
-                      {/* Responsible Advisor */}
-                      {client.owner && (
-                        <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-[#475467]">
-                          <User className="w-3 h-3 text-[#9C9890]" />
-                          <span>Asesor: <strong className="text-[#101828]">{client.owner.name}</strong></span>
-                        </div>
-                      )}
-
-                      {/* Separación Visual: Estado de Cuentas Publicitarias del BM */}
+                      {/* Estado de Cuentas Publicitarias del BM */}
                       <div className="mt-3 pt-3 border-t border-[#F0EEE6] flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5 text-[#475467]">
-                          <Share2 className="w-3.5 h-3.5 text-[#1877F2]" />
-                          <span className="text-[11px]">Cuentas BM:</span>
-                          <span className="font-semibold text-[#101828] text-[11px]">
-                            {hasConnectedAccounts
-                              ? `${client.connectedAccounts!.length} asignada(s)`
-                              : "Sin cuenta BM"}
-                          </span>
+                        <div className="text-[11px] text-[#667085]">
+                          {hasConnectedAccounts
+                            ? `${client.connectedAccounts!.length} cuenta(s) BM`
+                            : "Sin cuenta BM"}
                         </div>
                         {hasConnectedAccounts ? (
                           <Link
@@ -1037,30 +987,17 @@ export default function ClientsPage() {
       {activeTab === "ad_accounts" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Banner Explicativo sobre Cuentas vs Clientes */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1877F2]/10 via-[#FAF9F5] to-amber-50/40 border border-[#1877F2]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#1877F2] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-                <Share2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-[#101828]">
-                  Separación de Cuentas Publicitarias del Business Manager (BM)
-                </h3>
-                <p className="text-[11px] text-[#475467] mt-0.5 max-w-2xl leading-relaxed">
-                  Cada cuenta de anuncios conectada se asigna a un cliente específico para que sus métricas, presupuesto y anuncios corran de forma aislada. Las cuentas sin cliente asignado representan los anuncios propios de Bunker Agency.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <Link
-                href="/marketing/integrations"
-                className="text-xs font-semibold text-[#1877F2] hover:underline flex items-center gap-1 bg-white px-3 py-1.5 rounded-xl border border-[#1877F2]/20 shadow-2xs"
-              >
-                <span>Administrar Canales OAuth</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#475467]">
+            <p className="max-w-2xl leading-relaxed">
+              Cada cuenta se asigna a un cliente para aislar sus anuncios y métricas; las que no tienen cliente son de Bunker Agency.
+            </p>
+            <Link
+              href="/marketing/integrations"
+              className="font-semibold text-[#1877F2] hover:underline flex items-center gap-1 shrink-0"
+            >
+              <span>Administrar canales</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Tarjetas KPI de Cuentas Publicitarias */}
@@ -1161,27 +1098,9 @@ export default function ClientsPage() {
               </div>
             </div>
 
+            {/* Los selectores ya muestran el filtro aplicado: solo se ofrece limpiar. */}
             {(accountSearch || accountAssignmentFilter !== "all" || accountClientFilter !== "all" || accountTypeFilter !== "all") && (
-              <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] text-[11px] text-[#475467]">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-[#101828]">Filtros activos:</span>
-                  {accountSearch && <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">Texto: &ldquo;{accountSearch}&rdquo;</span>}
-                  {accountAssignmentFilter !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">
-                      {accountAssignmentFilter === "clients" ? "Cuentas de Clientes" : "Cuentas de Agencia"}
-                    </span>
-                  )}
-                  {accountClientFilter !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">
-                      Cliente: {clients.find((c) => c.id === accountClientFilter)?.name || accountClientFilter}
-                    </span>
-                  )}
-                  {accountTypeFilter !== "all" && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#F8F9FA] border border-[#EAECF0]">
-                      Tipo: {ACCOUNT_TYPE_LABELS[accountTypeFilter] || accountTypeFilter}
-                    </span>
-                  )}
-                </div>
+              <div className="flex justify-end text-[11px]">
                 <button
                   onClick={resetAccountFilters}
                   className="text-[#1877F2] hover:underline font-semibold"
@@ -1243,9 +1162,6 @@ export default function ClientsPage() {
                           </div>
                         </div>
 
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
-                          ● Activa
-                        </span>
                       </div>
 
                       {/* ID Externo del BM */}
@@ -1258,17 +1174,9 @@ export default function ClientsPage() {
 
                       {/* Asignación de Cliente */}
                       <div className="mt-4 p-3.5 rounded-xl border space-y-2 bg-[#FAF9F5] border-[#EAECF0]">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-[#667085] font-medium">Asignada a:</span>
-                          {!assignedClient && (
-                            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
-                              Agencia Bunker
-                            </span>
-                          )}
-                        </div>
+                        <div className="text-[11px] text-[#667085] font-medium">Asignada a:</div>
 
                         <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-[#9C9890] shrink-0" />
                           {assignedClient ? (
                             <Link
                               href={`/crm/clients/${assignedClient.id}`}

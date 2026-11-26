@@ -9,19 +9,15 @@ import {
   Search,
   Trash2,
   ArrowRightCircle,
-  Mail,
-  Building,
   X,
   CheckCircle,
   Sparkles,
-  TrendingUp,
   DollarSign,
   MessageCircle,
   ExternalLink,
   Flame,
   Edit,
   AlertTriangle,
-  UserCheck,
   Tag,
   Loader2,
   FileText,
@@ -37,6 +33,8 @@ import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 import LeadAvatar from "@/components/crm/LeadAvatar";
 import LeadsActionsMenu from "@/components/crm/LeadsActionsMenu";
+import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
+import StatCard from "@/components/ui/StatCard";
 import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
@@ -610,19 +608,9 @@ function LeadsPageContent() {
     <div className="space-y-6 animate-fade-in-up">
       {/* Top Header Banner con Estilo Orvion Capsule */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="orvion-badge-gold text-[10px]">
-              Directorio Central
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            Gestión de Leads & Prospectos
-          </h1>
-          <p className="text-xs text-[#667085] dark:text-[#8C929D] mt-0.5">
-            Captación multicanal desde Meta Ads, calificación con IA, teléfonos verificados y prevención de duplicados.
-          </p>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
+          Prospectos
+        </h1>
 
         <div className="flex items-center gap-2 flex-wrap">
           <LeadsActionsMenu
@@ -670,73 +658,11 @@ function LeadsPageContent() {
         </div>
       )}
 
-      {/* KPI Metric Strip Cards con Diseño Cápsula Orvion */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Leads */}
-        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
-          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
-            <span className="text-xs font-bold">Total Prospectos</span>
-            <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center">
-              <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            {totalLeadsCount.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Captación activa multicanal</span>
-          </div>
-        </div>
-
-        {/* Calificados con IA */}
-        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
-          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
-            <span className="text-xs font-bold">Calificados por IA (≥70)</span>
-            <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-300/40 dark:border-amber-500/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            {qualifiedCount.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-[#667085] dark:text-[#8C929D] font-medium">
-            Alta probabilidad de cierre comercial
-          </div>
-        </div>
-
-        {/* Pipeline Estimado */}
-        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
-          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
-            <span className="text-xs font-bold">Pipeline Proyectado</span>
-            <div className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-[#121417] dark:text-amber-400" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            ${totalPipelineVal.toLocaleString()}{" "}
-            <span className="text-xs font-medium text-[#667085] dark:text-[#8C929D]">USD</span>
-          </div>
-          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
-            Presupuesto estimado de pautas
-          </div>
-        </div>
-
-        {/* Tasa de Conversión */}
-        <div className="p-5 rounded-[26px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-2 transition-all">
-          <div className="flex items-center justify-between text-[#667085] dark:text-[#8C929D]">
-            <span className="text-xs font-bold">Tasa de Conversión</span>
-            <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center">
-              <Flame className="w-4 h-4 text-amber-500" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            {conversionRate}%
-          </div>
-          <div className="text-[11px] text-[#667085] dark:text-[#8C929D] font-medium">
-            Leads convertidos a clientes activos
-          </div>
-        </div>
+        <StatCard label="Prospectos" value={totalLeadsCount.toLocaleString()} icon={Users} />
+        <StatCard label="Calificados (IA ≥70)" value={qualifiedCount.toLocaleString()} icon={Sparkles} />
+        <StatCard label="Pipeline (USD)" value={`$${totalPipelineVal.toLocaleString()}`} icon={DollarSign} />
+        <StatCard label="Conversión" value={`${conversionRate}%`} icon={Flame} />
       </div>
 
       {/* Unified Filter & Search Bar con Estilo Cápsula */}
@@ -758,7 +684,6 @@ function LeadsPageContent() {
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             {/* Status Selector */}
             <div className="flex items-center gap-1 bg-[#F8F9FA] dark:bg-[#1A1D24] p-1 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] text-xs">
-              <span className="text-[11px] text-[#667085] dark:text-[#8C929D] px-2.5 font-bold">Estado:</span>
               {[
                 { id: "all", label: "Todos" },
                 { id: "new", label: "Nuevo" },
@@ -824,12 +749,6 @@ function LeadsPageContent() {
       {/* Main Leads Table con Diseño Cápsula Orvion */}
       <div ref={tableTopRef} className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion overflow-hidden scroll-mt-6">
         <div className="p-4 sm:p-5 border-b border-[#E2E5EB] dark:border-[#1F242D] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F8F9FA] dark:bg-[#1A1D24]">
-          <div className="text-xs font-bold text-[#121417] dark:text-white flex items-center gap-2">
-            <span>Directorio de Prospectos</span>
-            <span className="orvion-badge-gold text-[10px] py-0.5 px-2">
-              {totalLeadsCount.toLocaleString()}
-            </span>
-          </div>
           {totalLeadsCount > 0 && (
             <div className="flex items-center gap-3 text-xs text-[#667085] dark:text-[#8C929D]">
               <span>
@@ -860,14 +779,14 @@ function LeadsPageContent() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[#E2E5EB] dark:border-[#1F242D] text-[11px] font-bold text-[#667085] dark:text-[#8C929D] bg-[#F8F9FA]/60 dark:bg-[#1A1D24]/60">
-                <th className="py-3.5 px-4 font-bold">Prospecto / Empresa</th>
-                <th className="py-3.5 px-4 font-bold">Contacto & WhatsApp</th>
-                <th className="py-3.5 px-4 font-bold">Origen & Campaña</th>
-                <th className="py-3.5 px-4 font-bold">Asesor Asignado</th>
-                <th className="py-3.5 px-4 font-bold">Calificación IA</th>
-                <th className="py-3.5 px-4 font-bold">Presupuesto</th>
+                <th className="py-3.5 px-4 font-bold">Prospecto</th>
+                <th className="py-3.5 px-4 font-bold">Contacto</th>
+                <th className="py-3.5 px-4 font-bold">Origen</th>
+                <th className="py-3.5 px-4 font-bold">Asesor</th>
+                <th className="py-3.5 px-4 font-bold">Calificación</th>
+                <th className="py-3.5 px-4 font-bold">Presupuesto (USD/mes)</th>
                 <th className="py-3.5 px-4 font-bold">Estado</th>
-                <th className="py-3.5 px-4 text-right font-bold">Acciones</th>
+                <th className="py-3.5 px-4 text-right font-bold"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E5EB] dark:divide-[#1F242D]">
@@ -902,6 +821,16 @@ function LeadsPageContent() {
                 paginatedLeads.map((lead) => {
                   const score = lead.qualification || 75;
                   const waNumber = getWhatsAppNumber(lead);
+                  const contextLine = Array.from(
+                    new Set([lead.companyName, lead.client?.name].filter((value): value is string => Boolean(value)))
+                  ).join(" · ");
+                  const menuItems: ActionMenuItem[] = [
+                    { key: "answers", label: "Ver respuestas del formulario", icon: FileText, onSelect: () => setSelectedLead(lead) },
+                    { key: "edit", label: "Editar prospecto", icon: Edit, onSelect: () => handleOpenEdit(lead) },
+                    ...(isAdmin
+                      ? [{ key: "delete", label: "Eliminar prospecto", icon: Trash2, onSelect: () => handleDelete(lead.id) }]
+                      : []),
+                  ];
 
                   return (
                     <tr
@@ -939,50 +868,34 @@ function LeadsPageContent() {
                               </div>
                             )}
                           </Link>
-                          <div>
+                          <div className="min-w-0">
                             <Link
                               href={`/crm/leads/${lead.id}`}
-                              className="font-bold text-[#121417] dark:text-white hover:text-amber-600 dark:hover:text-amber-400 hover:underline flex items-center gap-1.5 leading-tight transition-colors"
+                              className="font-bold text-[#121417] dark:text-white hover:text-amber-600 dark:hover:text-amber-400 hover:underline block truncate leading-tight transition-colors"
                             >
-                              <span>{lead.name}</span>
+                              {lead.name}
                             </Link>
-                            <div className="text-[11px] text-[#667085] dark:text-[#8C929D] flex items-center gap-1.5 mt-0.5">
-                              <Building className="w-3 h-3 text-[#8C929D]" />
-                              <span>{lead.companyName || "Sin empresa especificada"}</span>
-                            </div>
-                            {/* Mostrar badge de empresa asignada */}
-                            {lead.client && (
-                              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-950 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-full shadow-2xs">
-                                  <Building className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
-                                  <span>{lead.client.name}</span>
-                                </span>
-                              </div>
+                            {contextLine && (
+                              <p className="text-[11px] text-[#667085] dark:text-[#8C929D] mt-0.5 truncate">{contextLine}</p>
                             )}
                           </div>
                         </div>
                       </td>
 
-                      {/* Contact & WhatsApp */}
+                      {/* Contacto */}
                       <td className="py-3.5 px-4 text-[11px]">
                         <div className="space-y-1">
-                          {lead.email ? (
-                            <div className="flex items-center gap-1.5 text-[#121417] dark:text-white font-medium">
-                              <Mail className="w-3 h-3 text-[#8C929D] flex-shrink-0" />
-                              <a
-                                href={`mailto:${lead.email}`}
-                                className="hover:underline truncate max-w-[170px]"
-                              >
-                                {lead.email}
-                              </a>
-                            </div>
-                          ) : (
-                            <span className="text-[#8C929D] italic">Sin correo</span>
+                          {lead.email && (
+                            <a
+                              href={`mailto:${lead.email}`}
+                              className="block text-[#121417] dark:text-white font-medium hover:underline truncate max-w-[190px]"
+                            >
+                              {lead.email}
+                            </a>
                           )}
-
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
                             <span className="text-[#667085] dark:text-[#8C929D] font-mono">
-                              {lead.phone || lead.normalizedPhone || "Sin teléfono"}
+                              {lead.phone || lead.normalizedPhone || "—"}
                             </span>
                             {waNumber && (
                               <a
@@ -991,118 +904,78 @@ function LeadsPageContent() {
                                 )}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors text-[10px] font-bold shadow-2xs"
-                                title="Abrir chat en WhatsApp"
+                                className="p-1 rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                                title="Escribir por WhatsApp"
                               >
-                                <MessageCircle className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-                                <span>WhatsApp</span>
+                                <MessageCircle className="w-3.5 h-3.5" />
                               </a>
                             )}
                             <Link
                               href={`/inbox?search=${encodeURIComponent(lead.name)}`}
-                              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors text-[10px] font-bold shadow-2xs"
-                              title="Abrir chat en la Bandeja de Entrada"
+                              className="p-1 rounded-full text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                              title="Abrir la conversación en la Bandeja"
                             >
-                              <Inbox className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
-                              <span>Bandeja</span>
+                              <Inbox className="w-3.5 h-3.5" />
                             </Link>
-                            {lead.phone && (
-                              <span
-                                className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
-                                  lead.smsConsent !== false
-                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
-                                    : "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800"
-                                }`}
-                                title={
-                                  lead.smsConsent !== false
-                                    ? "Consentimiento SMS verificado (A2P 10DLC / Twilio)"
-                                    : "Sin consentimiento SMS registrado"
-                                }
+                          </div>
+                          {/* Solo se avisa la excepción: el consentimiento SMS en regla es lo normal y no necesita etiqueta. */}
+                          {lead.phone && lead.smsConsent === false && (
+                            <p
+                              className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1"
+                              title="Sin consentimiento SMS registrado (A2P 10DLC / Twilio)"
+                            >
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>Sin opt-in SMS</span>
+                            </p>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Origen */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <SocialNetworkIcon provider={lead.source} size="sm" className="!w-5 !h-5 !rounded-md text-[10px] shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-[#121417] dark:text-white capitalize truncate">
+                              {lead.source.replace(/_/g, " ")}
+                            </p>
+                            {lead.campaign && (
+                              <p
+                                className="text-[10px] text-[#667085] dark:text-[#8C929D] truncate max-w-[190px]"
+                                title={`Campaña: ${lead.campaign}`}
                               >
-                                <ShieldCheck className="w-2.5 h-2.5" />
-                                <span>{lead.smsConsent !== false ? "10DLC Opt-in" : "Sin Opt-in"}</span>
-                              </span>
+                                {lead.campaign}
+                              </p>
                             )}
                           </div>
                         </div>
                       </td>
 
-                      {/* Channel & Campaign Traceability */}
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <SocialNetworkIcon provider={lead.source} size="sm" className="!w-5 !h-5 !rounded-md text-[10px]" />
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase inline-block ${
-                                lead.source.includes("meta") ||
-                                lead.source.includes("facebook") ||
-                                lead.source.includes("instagram")
-                                  ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                                  : lead.source.includes("google")
-                                  ? "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
-                                  : lead.source.includes("tiktok")
-                                  ? "bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800"
-                                  : lead.source === "referral"
-                                  ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-                                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
-                              }`}
-                            >
-                              {lead.source.replace(/_/g, " ")}
-                            </span>
-                          </div>
-
-                          {lead.campaign ? (
-                            <div
-                              className="text-[11px] font-semibold text-[#121417] dark:text-white flex items-center gap-1.5 truncate max-w-[200px]"
-                              title={`Campaña: ${lead.campaign}`}
-                            >
-                              <Tag className="w-3 h-3 text-amber-500 shrink-0" />
-                              <span className="truncate">{lead.campaign}</span>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-[#8C929D] italic">Sin campaña asignada</p>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => setSelectedLead(lead)}
-                            className="text-[10px] text-[#667085] dark:text-[#8C929D] hover:text-amber-600 dark:hover:text-amber-400 font-medium flex items-center gap-1 truncate max-w-[200px] text-left transition-colors group cursor-pointer"
-                            title="Ver respuestas del formulario y anuncio de Meta Ads"
-                          >
-                            <FileText className="w-2.5 h-2.5 text-amber-500 shrink-0 group-hover:scale-110 transition-transform" />
-                            <span className="truncate group-hover:underline">
-                              {lead.externalAdId ? `Anuncio: ${lead.externalAdId}` : lead.externalFormId ? `Form: ${lead.externalFormId}` : (lead.campaign || "Ver contenido & respuestas")}
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* Assigned Advisor */}
+                      {/* Asesor */}
                       <td className="py-3.5 px-4 text-[11px]">
                         {lead.owner ? (
-                          <div className="flex items-center gap-1.5 text-[#121417] dark:text-white font-semibold">
-                            <UserCheck className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="truncate max-w-[120px]">{lead.owner.name}</span>
-                          </div>
+                          <span className="block font-semibold text-[#121417] dark:text-white truncate max-w-[130px]">
+                            {lead.owner.name}
+                          </span>
                         ) : (
-                          <span className="text-[#8C929D] italic">Sin asignar</span>
+                          <span className="text-[#8C929D]">Sin asignar</span>
                         )}
                       </td>
 
-                      {/* AI Scoring */}
+                      {/* Calificación */}
                       <td className="py-3.5 px-4">
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                           <span
-                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1 shadow-2xs ${
+                            className={`text-sm font-black inline-flex items-center gap-1 ${
                               score >= 80
-                                ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700"
+                                ? "text-amber-600 dark:text-amber-400"
                                 : score >= 60
-                                ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700"
-                                : "bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-900"
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-red-600 dark:text-red-400"
                             }`}
                           >
                             {score >= 90 && <Flame className="w-3 h-3 text-amber-500 fill-amber-500" />}
-                            <span>{score}/100</span>
+                            <span>{score}</span>
                           </span>
                           {lead.aiSummary && (
                             <p className="text-[10px] text-[#667085] dark:text-[#8C929D] line-clamp-1 max-w-[140px]">
@@ -1112,12 +985,9 @@ function LeadsPageContent() {
                         </div>
                       </td>
 
-                      {/* Budget */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-[#121417] dark:text-white">
-                          ${lead.estimatedValue?.toLocaleString() || 0}
-                        </div>
-                        <div className="text-[10px] text-[#667085] dark:text-[#8C929D]">USD / mes</div>
+                      {/* Presupuesto */}
+                      <td className="py-3.5 px-4 font-bold text-[#121417] dark:text-white">
+                        ${(lead.estimatedValue || 0).toLocaleString()}
                       </td>
 
                       {/* Status */}
@@ -1125,7 +995,7 @@ function LeadsPageContent() {
                         <LeadStatusBadge status={lead.status} />
                       </td>
 
-                      {/* Actions */}
+                      {/* Acciones: una principal visible y el resto en el menú */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {lead.status !== "converted" && (
@@ -1138,41 +1008,7 @@ function LeadsPageContent() {
                               <span>Convertir</span>
                             </button>
                           )}
-
-                          <button
-                            onClick={() => handleOpenEdit(lead)}
-                            className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] hover:bg-white text-[#667085] dark:text-[#8C929D] hover:text-[#121417] dark:hover:text-white border border-[#E2E5EB] dark:border-[#2A2E37] transition-colors cursor-pointer"
-                            title="Editar prospecto"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setSelectedLead(lead)}
-                            className="p-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer"
-                            title="Ver contenido, anuncio y respuestas del formulario Meta Ads"
-                          >
-                            <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                          </button>
-
-                          <Link
-                            href={`/crm/leads/${lead.id}`}
-                            className="p-1.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] hover:bg-white text-[#667085] dark:text-[#8C929D] hover:text-amber-600 border border-[#E2E5EB] dark:border-[#2A2E37] transition-colors cursor-pointer"
-                            title="Ver Expediente Completo (InsightCRM)"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
-                          </Link>
-
-                          {isAdmin && (
-                            <button
-                              onClick={() => handleDelete(lead.id)}
-                              className="p-1.5 rounded-full text-[#8C929D] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
-                              title="Eliminar prospecto (Solo Admin)"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <ActionMenu items={menuItems} />
                         </div>
                       </td>
                     </tr>

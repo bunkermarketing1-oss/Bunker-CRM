@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Mail,
   Phone,
-  Calendar,
   CheckCircle,
   AlertTriangle,
   Clock,
@@ -20,10 +19,8 @@ import {
   Sparkles,
   ChevronRight,
   MessageCircle,
-  MoreHorizontal,
   FileText,
   Loader2,
-  Tag,
   ArrowRightCircle,
   ShieldCheck,
   RefreshCw,
@@ -31,6 +28,8 @@ import {
   MapPin,
 } from "lucide-react";
 import LeadAvatar from "@/components/crm/LeadAvatar";
+import ActionMenu from "@/components/ui/ActionMenu";
+import type { ActionMenuItem } from "@/components/ui/ActionMenu";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants/appointments";
 import type { CreateAppointmentInput } from "@/types/appointments";
@@ -479,6 +478,55 @@ export default function LeadDetailPage() {
 
   const waNumber = lead.normalizedPhone || lead.phone?.replace(/\D/g, "");
 
+  // Contacto y cita viven en un solo menú: la ficha deja visible únicamente la acción principal (convertir).
+  const profileActions: ActionMenuItem[] = [];
+  if (lead.email) {
+    profileActions.push({
+      key: "email",
+      label: "Enviar correo",
+      icon: Mail,
+      onSelect: () => {
+        window.location.href = `mailto:${lead.email}`;
+      },
+    });
+  }
+  if (lead.phone) {
+    profileActions.push({
+      key: "call",
+      label: "Llamar",
+      icon: Phone,
+      onSelect: () => {
+        window.location.href = `tel:${lead.phone}`;
+      },
+    });
+  }
+  if (waNumber) {
+    profileActions.push({
+      key: "whatsapp",
+      label: "Abrir WhatsApp",
+      icon: MessageCircle,
+      external: true,
+      href: `https://wa.me/${waNumber}?text=${encodeURIComponent(
+        `Hola ${lead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento.`
+      )}`,
+    });
+  }
+  profileActions.push({
+    key: "appointment",
+    label: "Agendar cita",
+    icon: CalendarDays,
+    onSelect: () => setIsBookingOpen(true),
+  });
+
+  // Datos de contexto en una sola línea en vez de píldoras.
+  const contextLine = [
+    lead.companyName,
+    isAdmin ? lead.client?.name : null,
+    lead.source ? lead.source.replace(/_/g, " ") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200 max-w-[1600px] mx-auto pb-12">
       {/* Toast Feedback */}
@@ -538,114 +586,18 @@ export default function LeadDetailPage() {
                 }`}
                 title={`Estado: ${lead.status}`}
               />
-              {/* Badge de Canal Social (WhatsApp, Facebook, Instagram, TikTok) */}
-              {lead.source && (
-                <div
-                  className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-md border border-white"
-                  title={`Canal de origen: ${lead.source}`}
-                >
-                  <SocialNetworkIcon
-                    type={
-                      lead.source.includes("instagram")
-                        ? "instagram"
-                        : lead.source.includes("facebook") || lead.source.includes("messenger")
-                        ? "facebook"
-                        : lead.source.includes("whatsapp")
-                        ? "whatsapp"
-                        : lead.source.includes("tiktok")
-                        ? "tiktok"
-                        : "meta"
-                    }
-                    size="xs"
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Nombre y Rol / Empresa */}
+            {/* Nombre y datos de contexto */}
             <div className="space-y-1">
               <h1 className="text-xl font-bold text-[#101828] tracking-tight">{lead.name}</h1>
-              <p className="text-xs text-[#475467] font-medium">
-                {lead.companyName || "Prospecto Comercial"}
-              </p>
-              {isAdmin && lead.client && (
-                <span className="inline-block text-[10px] bg-[#F8F9FA] text-[#101828] font-semibold px-2.5 py-0.5 rounded-full border border-[#EAECF0] mt-1">
-                  {lead.client.name}
-                </span>
-              )}
-            </div>
-
-            {/* Botones Redondos de Acción Rápida (Mail, Phone, More) */}
-            <div className="flex items-center justify-center gap-2.5 pt-1">
-              {lead.email ? (
-                <a
-                  href={`mailto:${lead.email}`}
-                  title={`Enviar correo a ${lead.email}`}
-                  className="w-10 h-10 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
-                >
-                  <Mail className="w-4 h-4 text-[#475467]" />
-                </a>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
-                  <Mail className="w-4 h-4" />
-                </div>
-              )}
-
-              {lead.phone ? (
-                <a
-                  href={`tel:${lead.phone}`}
-                  title={`Llamar a ${lead.phone}`}
-                  className="w-10 h-10 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#101828] transition-colors shadow-2xs"
-                >
-                  <Phone className="w-4 h-4 text-[#475467]" />
-                </a>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-[#F8F9FA] border border-[#EAECF0] flex items-center justify-center text-[#C7C5BE] cursor-not-allowed">
-                  <Phone className="w-4 h-4" />
-                </div>
-              )}
-
-              {waNumber && (
-                <a
-                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
-                    `Hola ${lead.name}, te escribo de Bunker Agency para dar seguimiento a tu requerimiento.`
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="Abrir chat en WhatsApp"
-                  className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 flex items-center justify-center text-emerald-700 transition-colors shadow-2xs"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
-                </a>
-              )}
-
-              {/* Botón Agendar Cita */}
-              <button
-                type="button"
-                onClick={() => setIsBookingOpen(true)}
-                title="Agendar Cita Comercial con este prospecto"
-                className="w-10 h-10 rounded-full bg-purple-50 border border-purple-200 hover:bg-purple-100 flex items-center justify-center text-purple-700 transition-colors shadow-2xs cursor-pointer"
-              >
-                <CalendarDays className="w-4 h-4 text-purple-600" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActivityType("note");
-                  setIsActivityModalOpen(true);
-                }}
-                title="Registrar nota o llamada"
-                className="w-10 h-10 rounded-full bg-white border border-[#EAECF0] hover:border-[#101828] hover:bg-[#F8F9FA] flex items-center justify-center text-[#475467] transition-colors shadow-2xs"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
+              {contextLine && <p className="text-xs text-[#82807C] font-medium">{contextLine}</p>}
             </div>
 
             {/* Botón Principal: Convert to contract (Convertir a Negocio) */}
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-2">
               {lead.status === "converted" ? (
-                <div className="w-full py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5">
+                <div className="flex-1 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
                   <span>Convertido a Cliente</span>
                 </div>
@@ -654,7 +606,7 @@ export default function LeadDetailPage() {
                   type="button"
                   onClick={handleConvert}
                   disabled={converting}
-                  className="w-full py-3 rounded-2xl btn-black-gold text-xs font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-3 rounded-2xl btn-black-gold text-xs font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {converting ? (
                     <>
@@ -664,11 +616,12 @@ export default function LeadDetailPage() {
                   ) : (
                     <>
                       <ArrowRightCircle className="w-4 h-4 text-amber-400" />
-                      <span>Convertir a Contrato / Negocio</span>
+                      <span>Convertir a cliente</span>
                     </>
                   )}
                 </button>
               )}
+              <ActionMenu items={profileActions} title="Contactar y agendar" />
             </div>
 
             {/* Sub-tabs: Contacto (Address) / Empresa (Company) */}
@@ -693,7 +646,7 @@ export default function LeadDetailPage() {
                     leftTab === "company" ? "text-[#101828]" : "text-[#82807C] hover:text-[#101828]"
                   }`}
                 >
-                  <span>Empresa & Pauta</span>
+                  <span>Gestión</span>
                   {leftTab === "company" && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400" />
                   )}
@@ -737,47 +690,34 @@ export default function LeadDetailPage() {
                       <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
                         Campaña de Origen
                       </div>
-                      <div className="font-medium text-[#101828] mt-0.5 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{lead.campaign}</span>
-                      </div>
+                      <div className="font-medium text-[#101828] mt-0.5">{lead.campaign}</div>
                     </div>
                   )}
 
                   <div className="pt-2 border-t border-[#EAECF0]">
                     <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
-                      Consentimiento Twilio / A2P 10DLC
+                      Consentimiento SMS
                     </div>
-                    <div className="mt-1 flex items-center justify-between">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border shadow-2xs ${
-                          lead.smsConsent !== false
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-rose-50 text-rose-800 border-rose-200"
-                        }`}
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>{lead.smsConsent !== false ? "SMS Autorizado (10DLC Opt-In)" : "Sin Consentimiento"}</span>
-                      </span>
-                    </div>
-                    {lead.smsConsentAt && (
-                      <p className="text-[10px] text-[#82807C] mt-1">
-                        Registrado el {new Date(lead.smsConsentAt).toLocaleDateString("es-ES")} vía {lead.smsConsentSource || "formulario"}
+                    {lead.smsConsent !== false ? (
+                      <p className="mt-1 font-semibold text-[#101828]">
+                        Autorizado
+                        {lead.smsConsentAt && (
+                          <span className="font-normal text-[#82807C]">
+                            {" "}
+                            · {new Date(lead.smsConsentAt).toLocaleDateString("es-ES")} vía {lead.smsConsentSource || "formulario"}
+                          </span>
+                        )}
                       </p>
+                    ) : (
+                      <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border bg-rose-50 text-rose-800 border-rose-200">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Sin consentimiento</span>
+                      </span>
                     )}
                   </div>
                 </div>
               ) : (
                 <div className="pt-4 space-y-3 text-xs">
-                  <div>
-                    <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
-                      Empresa
-                    </div>
-                    <div className="font-semibold text-[#101828] mt-0.5">
-                      {lead.companyName || "Sin especificar"}
-                    </div>
-                  </div>
-
                   <div>
                     <div className="text-[10px] text-[#82807C] uppercase tracking-wider font-semibold">
                       Presupuesto Estimado
@@ -813,15 +753,12 @@ export default function LeadDetailPage() {
                   </div>
 
                   {/* AI Qualification Bar */}
-                  <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-amber-700">
-                      <span className="flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                        Scoring Bunker AI
-                      </span>
+                  <div className="p-3 rounded-2xl bg-[#F8F9FA] border border-[#EAECF0] space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-[#101828]">
+                      <span>Calificación IA</span>
                       <span>{lead.qualification || 75}/100</span>
                     </div>
-                    <div className="w-full bg-white h-2 rounded-full overflow-hidden border border-amber-200">
+                    <div className="w-full bg-white h-2 rounded-full overflow-hidden border border-[#EAECF0]">
                       <div
                         className="h-full bg-gradient-to-r from-yellow-400 via-amber-500 to-amber-600 rounded-full"
                         style={{ width: `${Math.min(lead.qualification || 75, 100)}%` }}
@@ -894,7 +831,7 @@ export default function LeadDetailPage() {
                 className="text-xs text-[#475467] hover:text-[#101828] flex items-center gap-1 font-medium"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-500" />
-                <span>Nueva actividad</span>
+                <span>Nueva tarea</span>
               </button>
             </div>
 
@@ -923,22 +860,17 @@ export default function LeadDetailPage() {
                         <div>
                           <h3 className="text-xs font-bold text-[#101828] leading-snug">{t.title}</h3>
                           <p className="text-[11px] text-[#82807C]">
-                            Asignado a: {t.user?.name || "Sin asignar"}
+                            {t.user?.name || "Sin asignar"}
+                            {t.dueDate && ` · Vence ${new Date(t.dueDate).toLocaleDateString("es-CO")}`}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {t.dueDate && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-[#F8F9FA] text-[#4D4C48] border border-[#EAECF0] flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-[#475467]" />
-                            <span>Vence: {new Date(t.dueDate).toLocaleDateString("es-CO")}</span>
-                          </span>
-                        )}
                         <button
                           type="button"
                           onClick={() => handleToggleTask(t)}
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-[#101828] border border-[#EAECF0] hover:bg-[#F8F9FA] cursor-pointer"
                         >
                           Completar
                         </button>
@@ -959,17 +891,14 @@ export default function LeadDetailPage() {
           {/* SECTION: Tab Content */}
           {activeTab === "appointments" ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#101828] tracking-tight">
-                  Citas Agendadas ({lead.appointments?.length ?? 0})
-                </h2>
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => setIsBookingOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#101828] text-white text-xs font-bold hover:bg-[#1E293B] flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Nueva Cita</span>
+                  <span>Nueva cita</span>
                 </button>
               </div>
 
@@ -980,15 +909,8 @@ export default function LeadDetailPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[#101828]">No hay citas registradas</p>
-                    <p className="text-[11px] text-[#82807C] mt-0.5">Programa una reunión comercial, demo o visita para este prospecto.</p>
+                    <p className="text-[11px] text-[#82807C] mt-0.5">Usa «Nueva cita» para programar una reunión o demo.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsBookingOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold hover:bg-purple-100 transition-colors cursor-pointer"
-                  >
-                    Agendar Cita Ahora
-                  </button>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -1040,12 +962,6 @@ export default function LeadDetailPage() {
             </div>
           ) : activeTab === "calls" ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#101828] tracking-tight">
-                  Llamadas con Inteligencia Artificial ({lead.calls?.length ?? 0})
-                </h2>
-              </div>
-
               {(!lead.calls || lead.calls.length === 0) ? (
                 <div className="p-8 rounded-2xl bg-white border border-[#EAECF0] text-center space-y-2">
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center">
@@ -1116,8 +1032,6 @@ export default function LeadDetailPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Historial de actividades</h2>
-
               {filteredActivities.length === 0 ? (
                 <div className="p-5 rounded-2xl bg-white border border-[#EAECF0] text-center text-xs text-[#82807C]">
                   Aún no hay actividades registradas en esta sección.
@@ -1142,14 +1056,9 @@ export default function LeadDetailPage() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-xs font-bold text-[#101828] leading-tight">{act.title}</h4>
-                          <span className="text-[10px] text-[#82807C] shrink-0">
-                            {timeAgo(act.performedAt)}
-                          </span>
-                        </div>
+                        <h4 className="text-xs font-bold text-[#101828] leading-tight">{act.title}</h4>
                         <p className="text-[11px] text-[#82807C] mt-0.5">
-                          Por {act.user?.name || "Asesor comercial"}
+                          {timeAgo(act.performedAt)} · {act.user?.name || "Asesor comercial"}
                         </p>
                         {act.description && (
                           <p className="text-xs text-[#4D4C48] mt-2 whitespace-pre-line leading-relaxed">
@@ -1172,24 +1081,25 @@ export default function LeadDetailPage() {
           {/* SECCIÓN 1: DEALS (Negocios) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Deals (Negocios)</h2>
-              <Link
-                href="/crm/pipeline"
-                className="text-xs text-[#475467] hover:text-[#101828] flex items-center gap-0.5 font-medium"
-              >
-                <span>Ver todos</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Negocios</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDealModalOpen(true)}
+                  className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nuevo</span>
+                </button>
+                <Link
+                  href="/crm/pipeline"
+                  className="text-xs text-[#475467] hover:text-[#101828] flex items-center gap-0.5 font-medium"
+                >
+                  <span>Ver todos</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsDealModalOpen(true)}
-              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors hover:border-amber-400/50"
-            >
-              <Plus className="w-4 h-4 text-amber-500" />
-              <span>Crear nuevo negocio</span>
-            </button>
 
             {lead.opportunities.length === 0 ? (
               <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] text-center text-xs text-[#82807C]">
@@ -1202,24 +1112,21 @@ export default function LeadDetailPage() {
                     key={opp.id}
                     className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-2 hover:border-[#C7C5BE] transition-all"
                   >
-                    <div className="flex items-center justify-between text-[11px] text-[#82807C]">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-xs font-bold text-[#101828]">{opp.title}</h3>
+                      <span className="font-bold text-[#101828] text-xs shrink-0">
+                        {fmtMoney(opp.value)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#82807C]">
                         {new Date(opp.createdAt).toLocaleDateString("es-CO", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}
                       </span>
-                      <span className="font-bold text-[#101828] text-xs">
-                        {fmtMoney(opp.value)}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xs font-bold text-[#101828]">{opp.title}</h3>
-
-                    <div className="flex items-center justify-between pt-1 border-t border-[#F0EFEA] text-[11px]">
-                      <span className="text-[#82807C] truncate">{lead.name}</span>
                       <span
                         className="font-bold px-2 py-0.5 rounded-full text-[10px]"
                         style={{
@@ -1239,7 +1146,7 @@ export default function LeadDetailPage() {
           {/* SECCIÓN 2: TICKETS (Tareas & Casos de Seguimiento) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Tickets (Tareas)</h2>
+              <h2 className="text-sm font-bold text-[#101828] tracking-tight">Tareas</h2>
               <Link
                 href="/crm/tasks"
                 className="text-xs text-[#475467] hover:text-[#101828] flex items-center gap-0.5 font-medium"
@@ -1249,18 +1156,9 @@ export default function LeadDetailPage() {
               </Link>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsTaskModalOpen(true)}
-              className="w-full py-2.5 rounded-2xl bg-white border border-[#EAECF0] hover:bg-[#F8F9FA] text-[#101828] text-xs font-bold tracking-tight shadow-xs flex items-center justify-center gap-1.5 transition-colors hover:border-amber-400/50"
-            >
-              <Plus className="w-4 h-4 text-amber-500" />
-              <span>Crear nuevo ticket</span>
-            </button>
-
             {lead.tasks.length === 0 ? (
               <div className="p-4 rounded-2xl bg-white border border-[#EAECF0] text-center text-xs text-[#82807C]">
-                Sin tareas ni tickets registrados.
+                Sin tareas registradas.
               </div>
             ) : (
               <div className="space-y-3">
@@ -1269,24 +1167,11 @@ export default function LeadDetailPage() {
                     key={task.id}
                     className="p-4 rounded-2xl bg-white border border-[#EAECF0] shadow-xs space-y-2 hover:border-[#C7C5BE] transition-all"
                   >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                          task.status === "completed"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-amber-50 text-amber-800 border border-amber-200"
-                        }`}
-                      >
-                        {task.status === "completed" ? "Completado" : "Pendiente"}
-                      </span>
-                      {task.dueDate && (
-                        <span className="text-[10px] text-[#82807C] font-mono">
-                          {new Date(task.dueDate).toLocaleDateString("es-CO")}
-                        </span>
-                      )}
-                    </div>
-
                     <h4 className="text-xs font-bold text-[#101828] leading-snug">{task.title}</h4>
+                    <p className="text-[11px] text-[#82807C]">
+                      {task.status === "completed" ? "Completada" : "Pendiente"}
+                      {task.dueDate && ` · ${new Date(task.dueDate).toLocaleDateString("es-CO")}`}
+                    </p>
 
                     {task.description && (
                       <p className="text-[11px] text-[#6B6966] line-clamp-2 leading-relaxed">

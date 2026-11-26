@@ -9,16 +9,13 @@ import {
   ChevronRight,
   Plus,
   RefreshCw,
-  Share2,
-  BarChart3,
-  Clock,
   Calendar as CalendarIcon,
-  Building2,
   X,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { ROUTES } from "@/lib/constants/routes";
 import EmptyState from "@/components/ui/EmptyState";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 interface CalendarPostItem {
   id: string;
@@ -195,92 +192,36 @@ function EditorialCalendarContent() {
 
   return (
     <div className="space-y-6">
-      {/* Cabecera Estilo Cápsula Orvion con Paleta Dorado y Negro */}
+      {/* Cabecera: título, una línea de contexto y una sola acción principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="orvion-badge-gold text-[10px]">
-              Estrategia & Parrilla Social
-            </span>
-            {activeClient ? (
-              <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-amber-500" />
-                Marca: <strong>{activeClient.name}</strong>
-              </span>
-            ) : (
-              <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
-                Todas las Marcas de la Agencia
-              </span>
-            )}
-          </div>
-
           <h1 className="text-3xl font-extrabold text-[#121417] dark:text-white tracking-tight leading-tight flex items-center gap-2.5">
             <CalendarDays className="w-7 h-7 text-amber-400 shrink-0" />
-            <span>Calendario Editorial de Contenidos</span>
+            <span>Calendario Editorial</span>
           </h1>
-          <p className="text-xs text-[#8C929D] font-medium flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-xs animate-pulse" />
-            <span>
-              {activeClient
-                ? `Cronograma de publicaciones en Instagram, Facebook y TikTok para ${activeClient.name}.`
-                : "Planificación mensual, semanal y fechas clave de lanzamientos para todas las marcas."}
-            </span>
+          <p className="text-xs text-[#8C929D] font-medium">
+            {[
+              activeClient ? activeClient.name : "Todas las marcas",
+              `${scheduledThisMonthCount} programadas en ${monthName}`,
+              `${posts.length} publicaciones`,
+              `${campaigns.length} campañas activas`,
+            ].join(" · ")}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={fetchCalendarData}
-            className="w-10 h-10 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] flex items-center justify-center text-[#121417] dark:text-white hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] shadow-orvion transition-all cursor-pointer"
-            title="Refrescar calendario"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
-          </button>
+          <ActionMenu
+            title="Más acciones"
+            items={[{ key: "refresh", label: loading ? "Actualizando..." : "Actualizar calendario", icon: RefreshCw, onSelect: fetchCalendarData }]}
+          />
 
           <Link
             href={activeClient ? `${ROUTES.SOCIAL_POSTS}?clientId=${activeClient.id}` : ROUTES.SOCIAL_POSTS}
             className="btn-black-gold rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-orvion"
           >
             <Plus className="w-4 h-4 text-amber-400" />
-            <span>Programar Contenido</span>
+            <span>Programar contenido</span>
           </Link>
-        </div>
-      </div>
-
-      {/* KPI Cards de Resumen en Cápsula Orvion */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
-            <span>Publicaciones Programadas</span>
-            <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-amber-500">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{scheduledThisMonthCount}</div>
-          <div className="text-[11px] text-[#8C929D]">Para el mes de {monthName}</div>
-        </div>
-
-        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
-            <span>Campañas Activas de Pauta</span>
-            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-              <BarChart3 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{campaigns.length}</div>
-          <div className="text-[11px] text-[#8C929D]">Tráfico e inversión en Meta Ads</div>
-        </div>
-
-        <div className="p-5 rounded-[24px] bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#8C929D]">
-            <span>Total Publicaciones</span>
-            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <Share2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{posts.length}</div>
-          <div className="text-[11px] text-[#8C929D]">En histórico y parrilla social</div>
         </div>
       </div>
 
@@ -375,12 +316,6 @@ function EditorialCalendarContent() {
                   >
                     {item.date.getDate()}
                   </span>
-
-                  {postList.length > 0 && (
-                    <span className="text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700/50">
-                      {postList.length}
-                    </span>
-                  )}
                 </div>
 
                 {/* Eventos del día */}
@@ -424,6 +359,7 @@ function EditorialCalendarContent() {
               <button
                 type="button"
                 onClick={() => setSelectedDayEvents(null)}
+                aria-label="Cerrar"
                 className="w-8 h-8 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -440,7 +376,7 @@ function EditorialCalendarContent() {
                     <span className="font-bold text-[#121417] dark:text-white">
                       {post.connectedAccount?.accountName || "Cuenta Social"}
                     </span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/50">
+                    <span className="text-[10px] font-semibold text-[#8C929D]">
                       {post.status}
                     </span>
                   </div>
@@ -449,16 +385,6 @@ function EditorialCalendarContent() {
                   </p>
                 </div>
               ))}
-            </div>
-
-            <div className="p-4 bg-white dark:bg-[#121417] border-t border-[#E2E5EB] dark:border-[#1F242D] flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedDayEvents(null)}
-                className="px-4 py-2 rounded-full bg-[#F3F4F7] dark:bg-[#1E2229] border border-[#E2E5EB] dark:border-[#262C36] text-xs font-semibold text-[#121417] dark:text-white hover:bg-[#E2E5EB] cursor-pointer"
-              >
-                Cerrar
-              </button>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { ROLES, isClientOwnerRole, type StoredUserRole } from "@/lib/roles";
+import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
 import type {
   PortalUser,
   CreatePortalUserInput,
@@ -197,19 +198,9 @@ export function ClientPortalUsersPanel({
       {/* Cabecera del Panel */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F2F4F7] dark:border-[#1F242D]">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-black text-sm text-[#121417] dark:text-white flex items-center gap-2 tracking-tight">
-              <UserCog className="w-4 h-4 text-amber-500" />
-              Usuarios del portal
-            </h3>
-            {users.length > 0 && (
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#121417] dark:text-white border border-[#E2E5EB] dark:border-[#242A35]">
-                {users.length} {users.length === 1 ? "usuario" : "usuarios"}
-              </span>
-            )}
-          </div>
+          <h3 className="font-black text-sm text-[#121417] dark:text-white tracking-tight">Usuarios del portal</h3>
           <p className="text-[11px] text-[#8C929D] font-medium leading-relaxed">
-            Estructura del cliente: Cuenta del Dueño (supervisa vendedores y llamadas) y Vendedores comerciales (atienden leads e inbox). Ambos ven métricas de campañas publicitarias en modo de solo lectura.
+            {users.length} {users.length === 1 ? "usuario" : "usuarios"} · El Dueño supervisa; los Asesores atienden leads e inbox.
           </p>
         </div>
 
@@ -255,6 +246,44 @@ export function ClientPortalUsersPanel({
         <ul className="divide-y divide-[#F2F4F7] dark:divide-[#1F242D]">
           {users.map((portalUser) => {
             const isOwner = isClientOwnerRole(portalUser.role);
+            const menuItems: ActionMenuItem[] = [
+              ...(onGenerateResetLink
+                ? [
+                    {
+                      key: "reset",
+                      label: "Enlace de acceso / restablecer contraseña",
+                      icon: KeyRound,
+                      onSelect: () => {
+                        if (generatingResetId !== portalUser.id) handleGenerateReset(portalUser);
+                      },
+                    },
+                  ]
+                : []),
+              {
+                key: "role",
+                label: isOwner ? "Cambiar a Asesor" : "Cambiar a Dueño",
+                icon: UserCog,
+                onSelect: () => {
+                  if (savingId !== portalUser.id) {
+                    onSetRole(portalUser.id, isOwner ? ROLES.CLIENT : ROLES.CLIENT_OWNER);
+                  }
+                },
+              },
+              ...(onDeleteUser
+                ? [
+                    {
+                      key: "delete",
+                      label: "Eliminar usuario",
+                      icon: Trash2,
+                      onSelect: () => {
+                        if (savingId === portalUser.id || isDeletingUser) return;
+                        setDeleteError(null);
+                        setUserToDelete(portalUser);
+                      },
+                    },
+                  ]
+                : []),
+            ];
             return (
               <li key={portalUser.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -264,72 +293,20 @@ export function ClientPortalUsersPanel({
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-[#121417] dark:text-white flex items-center gap-1.5 truncate">
                       {portalUser.name}
-                      {isOwner ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                          <Crown className="w-3 h-3 text-amber-500" /> Dueño
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-[#667085] dark:text-[#8C929D] bg-[#F8F9FA] dark:bg-[#1A1D24] px-2 py-0.5 rounded-full border border-[#E2E5EB] dark:border-[#242A35]">
-                          Asesor
-                        </span>
-                      )}
                       {!portalUser.isActive && (
                         <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50">
-                          (inactivo)
+                          Inactivo
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-[#8C929D] font-medium truncate mt-0.5">{portalUser.email}</p>
+                    <p className="text-[11px] text-[#8C929D] font-medium truncate mt-0.5">
+                      {portalUser.email} · {isOwner ? "Dueño" : "Asesor"}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                  {/* Botón para generar enlace de acceso directo */}
-                  {onGenerateResetLink && (
-                    <button
-                      type="button"
-                      disabled={generatingResetId === portalUser.id}
-                      onClick={() => handleGenerateReset(portalUser)}
-                      title="Generar enlace de acceso / restablecer contraseña"
-                      className="p-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] hover:bg-[#F8F9FA] dark:hover:bg-[#1A1D24] text-[#8C929D] hover:text-[#121417] dark:hover:text-white transition-colors text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    >
-                      {generatingResetId === portalUser.id ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-500" />
-                      ) : (
-                        <KeyRound className="w-3.5 h-3.5 text-amber-500" />
-                      )}
-                      <span className="text-[11px] font-bold hidden md:inline">Enlace Acceso</span>
-                    </button>
-                  )}
-
-                  {/* Selector de Rol: Asesor vs Dueño */}
-                  <select
-                    aria-label={`Rol de ${portalUser.name}`}
-                    value={isOwner ? ROLES.CLIENT_OWNER : ROLES.CLIENT}
-                    disabled={savingId === portalUser.id}
-                    onChange={(e) => onSetRole(portalUser.id, e.target.value as StoredUserRole)}
-                    className="px-3 py-1.5 rounded-full bg-white dark:bg-[#181B22] border border-[#E2E5EB] dark:border-[#242A35] hover:border-amber-400 text-[11px] font-bold text-[#121417] dark:text-white disabled:opacity-50 transition-colors shadow-2xs cursor-pointer focus:outline-hidden"
-                  >
-                    <option value={ROLES.CLIENT}>Asesor</option>
-                    <option value={ROLES.CLIENT_OWNER}>Dueño</option>
-                  </select>
-
-                  {/* Botón para Eliminar Usuario */}
-                  {onDeleteUser && (
-                    <button
-                      type="button"
-                      disabled={savingId === portalUser.id || isDeletingUser}
-                      onClick={() => {
-                        setDeleteError(null);
-                        setUserToDelete(portalUser);
-                      }}
-                      title={`Eliminar ${portalUser.name}`}
-                      className="p-2 rounded-full border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 transition-colors text-xs flex items-center gap-1 shadow-2xs cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span className="text-[11px] font-bold hidden lg:inline">Eliminar</span>
-                    </button>
-                  )}
+                <div className="self-end sm:self-auto flex-shrink-0">
+                  <ActionMenu items={menuItems} />
                 </div>
               </li>
             );

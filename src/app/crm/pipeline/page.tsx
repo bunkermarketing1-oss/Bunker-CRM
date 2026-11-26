@@ -6,12 +6,11 @@ import {
   KanbanSquare,
   Plus,
   ChevronRight,
-  Building,
   X,
-  Sparkles,
   RefreshCw,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 interface OpportunityItem {
   id: string;
@@ -168,58 +167,40 @@ function PipelineContent() {
       {/* Header Orvion Capsule */}
       <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] p-6 shadow-orvion">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="orvion-badge-gold">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>Embudo Comercial</span>
-              </span>
-              {activeClient && (
-                <span className="orvion-badge-dark text-xs py-1 px-3">
-                  <Building className="w-3 h-3 text-amber-400" />
-                  <span>{activeClient.name}</span>
-                </span>
-              )}
-            </div>
-
+          <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-              Pipeline de Negocios y Cierres
+              Pipeline
             </h1>
-            <p className="text-xs text-[#8C929D] font-medium max-w-2xl leading-relaxed">
-              Monitoreo visual de negociaciones comerciales, probabilidad de conversión y valor proyectado por etapas.
+            <p className="text-xs text-[#8C929D] font-medium">
+              {[
+                activeClient?.name,
+                `${stats.openDealsCount} abiertos`,
+                `$${stats.totalPipelineValue.toLocaleString()} USD en juego`,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
 
-          {/* Acciones y Métricas Resumen */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Cápsula de Valor Total */}
-            <div className="px-4 py-2 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] text-right hidden sm:block">
-              <span className="text-[10px] uppercase font-bold text-[#8C929D] tracking-wider block">
-                Valor Total Pipeline
-              </span>
-              <span className="text-sm font-black text-[#121417] dark:text-white">
-                ${stats.totalPipelineValue.toLocaleString()} USD
-              </span>
-            </div>
-
-            {/* Botón Refrescar */}
-            <button
-              onClick={fetchPipeline}
-              aria-label="Actualizar datos del pipeline"
-              className="p-2.5 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] text-[#8C929D] hover:text-[#121417] dark:hover:text-white transition-colors cursor-pointer"
-              title="Actualizar datos"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-500" : ""}`} />
-            </button>
-
-            {/* Botón Nueva Oportunidad */}
+          {/* Una acción principal; actualizar queda en el menú */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsCreateOpen(true)}
               className="px-5 py-2.5 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold flex items-center gap-2 shadow-orvion transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
               <Plus className="w-4 h-4 text-amber-400 dark:text-[#121417]" />
-              <span>Nueva Oportunidad</span>
+              <span>Nueva oportunidad</span>
             </button>
+            <ActionMenu
+              items={[
+                {
+                  key: "refresh",
+                  label: loading ? "Actualizando..." : "Actualizar datos",
+                  icon: RefreshCw,
+                  onSelect: fetchPipeline,
+                },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -295,39 +276,28 @@ function PipelineContent() {
                         <div className="font-bold text-[#121417] dark:text-white text-xs leading-snug">
                           {opp.title}
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#8C929D] font-medium flex items-center gap-1.5 truncate max-w-[150px]">
-                          <Building className="w-3.5 h-3.5 text-[#8C929D] shrink-0" />
-                          <span className="truncate">{opp.client?.name || opp.lead?.name || "Directo"}</span>
-                        </span>
-                        <span className="font-black text-[#121417] dark:text-white text-sm">
+                        <span className="font-black text-[#121417] dark:text-white text-sm shrink-0">
                           ${opp.value.toLocaleString()}
                         </span>
                       </div>
 
-                      {/* Barra de Probabilidad */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-[#8C929D] font-bold">
-                          <span>Probabilidad</span>
-                          <span>{opp.probability}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-[#F2F4F7] dark:bg-[#242A35] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(5, opp.probability))}%` }}
-                          />
-                        </div>
+                      <div className="text-[11px] text-[#8C929D] font-medium truncate">
+                        {opp.client?.name || opp.lead?.name || "Directo"} · {opp.probability}%
                       </div>
 
-                      {/* Acciones de Avance de Etapa */}
-                      <div className="flex items-center justify-between pt-2.5 border-t border-[#F2F4F7] dark:border-[#1F242D] text-[11px]">
-                        <span className="text-[10px] font-bold text-[#8C929D]">
-                          {opp.status === "won" ? "Ganado" : "Abierto"}
-                        </span>
+                      <div className="w-full h-1.5 bg-[#F2F4F7] dark:bg-[#242A35] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(5, opp.probability))}%` }}
+                        />
+                      </div>
 
-                        <div className="flex items-center gap-1">
+                      {/* Avanzar es la única acción de la tarjeta; el estado abierto ya lo dice la columna */}
+                      {(opp.status === "won" || stageIdx < stages.length - 1) && (
+                        <div className="flex items-center justify-between pt-2.5 border-t border-[#F2F4F7] dark:border-[#1F242D]">
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            {opp.status === "won" ? "Ganado" : ""}
+                          </span>
                           {stageIdx < stages.length - 1 && (
                             <button
                               onClick={() =>
@@ -344,7 +314,7 @@ function PipelineContent() {
                             </button>
                           )}
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -367,7 +337,6 @@ function PipelineContent() {
                   <h2 className="text-sm font-black text-[#121417] dark:text-white tracking-tight">
                     Registrar Oportunidad
                   </h2>
-                  <p className="text-[11px] text-[#8C929D] font-medium">Añade un negocio al embudo de ventas</p>
                 </div>
               </div>
               <button
