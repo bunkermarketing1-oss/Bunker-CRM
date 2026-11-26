@@ -192,7 +192,6 @@ function isImageUrl(url: string): boolean {
     lower.includes("fbcdn.net") ||
     lower.includes("cdninstagram.com") ||
     lower.includes("profilepic") ||
-    lower.includes("whatsapp_business/attachments") ||
     lower.includes("randomuser.me/api/portraits")
   ) {
     return true;
@@ -226,6 +225,9 @@ function getFilenameFromUrl(url: string): string {
   }
 }
 
+/** Ruta de las URLs temporales con las que Meta entrega los archivos de WhatsApp (caducan y exigen token). */
+const WHATSAPP_TEMP_MEDIA_PATH = "whatsapp_business/attachments";
+
 function renderMessageContent(body: string, isOutbound: boolean) {
   if (!body) return null;
 
@@ -237,6 +239,14 @@ function renderMessageContent(body: string, isOutbound: boolean) {
     <div className="space-y-2">
       {parts.map((part, idx) => {
         if (/^https?:\/\/[^\s]+$/i.test(part)) {
+          // Enlaces temporales de Meta guardados antes de copiar los archivos a nuestro almacenamiento: ya caducaron.
+          if (part.includes(WHATSAPP_TEMP_MEDIA_PATH)) {
+            return (
+              <p key={idx} className="text-[11px] italic opacity-70">
+                Archivo no disponible
+              </p>
+            );
+          }
           const isImg = isImageUrl(part);
           if (isImg) {
             return (

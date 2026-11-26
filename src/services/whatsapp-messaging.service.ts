@@ -5,8 +5,10 @@ import {
   sendWhatsAppMediaMessage,
   cleanWhatsAppNumber,
   getWhatsAppMediaUrl,
+  downloadWhatsAppMedia,
   type WhatsAppSendResult,
 } from "@/lib/integrations/whatsapp";
+import { storeInboxMedia } from "@/services/inbox-media.service";
 import { getLeadAvatarUrl } from "@/lib/avatar";
 import { ACCOUNT_STATUS, ACCOUNT_TYPE } from "@/lib/constants/integrations";
 import { MESSAGE_CHANNEL, MESSAGE_DIRECTION, MESSAGE_STATUS, type MessageStatus } from "@/lib/constants/messaging";
@@ -79,6 +81,26 @@ export async function resolveWhatsAppCredentials(
   }
 
   return null;
+}
+
+/**
+ * Convierte un archivo recibido por WhatsApp en una URL permanente: descarga el archivo con el token
+ * (la URL de Meta es temporal y privada) y lo guarda en nuestro almacenamiento.
+ */
+async function resolveInboundMediaUrl(
+  mediaId: string,
+  accessToken: string,
+  organizationId: string
+): Promise<string | null> {
+  const info = await getWhatsAppMediaUrl(mediaId, accessToken);
+  if (!info?.url) return null;
+  const file = await downloadWhatsAppMedia(info.url, accessToken);
+  if (!file) return null;
+  return storeInboxMedia({
+    organizationId,
+    buffer: file.buffer,
+    contentType: info.mimeType || file.contentType,
+  });
 }
 
 export interface SendWhatsAppOutboundParams {
@@ -290,8 +312,7 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
           const mediaId = img?.id;
           const caption = (img?.caption || "").trim();
           if (mediaId && waAccessToken) {
-            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
-            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+            mediaUrlFound = await resolveInboundMediaUrl(mediaId, waAccessToken, organizationId);
           }
           textBody = caption ? `[Foto de WhatsApp: ${caption}]` : "[Foto enviada por WhatsApp]";
           if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;
@@ -299,8 +320,7 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
           const audio = (msg.audio || msg.voice) as Record<string, string> | undefined;
           const mediaId = audio?.id;
           if (mediaId && waAccessToken) {
-            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
-            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+            mediaUrlFound = await resolveInboundMediaUrl(mediaId, waAccessToken, organizationId);
           }
           textBody = "[Mensaje de voz de WhatsApp]";
           if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;
@@ -309,8 +329,7 @@ export async function processWhatsAppWebhook(payload: Record<string, unknown>): 
           const mediaId = doc?.id;
           const filename = (doc?.filename || "archivo").trim();
           if (mediaId && waAccessToken) {
-            const mediaInfo = await getWhatsAppMediaUrl(mediaId, waAccessToken);
-            if (mediaInfo?.url) mediaUrlFound = mediaInfo.url;
+            mediaUrlFound = await resolveInboundMediaUrl(mediaId, waAccessToken, organizationId);
           }
           textBody = `[Documento de WhatsApp: ${filename}]`;
           if (mediaUrlFound) textBody = `${textBody}\n${mediaUrlFound}`;

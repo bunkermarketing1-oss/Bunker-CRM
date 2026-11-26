@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { randomUUID } from "crypto";
+import { INBOX_MEDIA_BUCKET } from "@/lib/constants/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     const contentType = file.type || "application/octet-stream";
 
     const { error: uploadError } = await supabaseAdmin.storage
-      .from("inbox-media")
+      .from(INBOX_MEDIA_BUCKET)
       .upload(fileName, buffer, {
         contentType,
         upsert: true,
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: urlData } = supabaseAdmin.storage
-      .from("inbox-media")
+      .from(INBOX_MEDIA_BUCKET)
       .getPublicUrl(fileName);
 
     const isImage = contentType.startsWith("image/") || ["jpg", "jpeg", "png", "webp", "gif"].includes(cleanExt);

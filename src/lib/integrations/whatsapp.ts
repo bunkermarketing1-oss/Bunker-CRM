@@ -255,3 +255,29 @@ export async function getWhatsAppMediaUrl(
     return null;
   }
 }
+
+export interface DownloadedWhatsAppMedia {
+  buffer: Buffer;
+  contentType: string;
+}
+
+/**
+ * Descarga el archivo desde la URL temporal que entrega Meta. Esa URL exige el token de acceso
+ * y caduca en minutos, por eso el archivo se copia a nuestro almacenamiento en cuanto llega.
+ */
+export async function downloadWhatsAppMedia(
+  url: string,
+  accessToken: string
+): Promise<DownloadedWhatsAppMedia | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return { buffer, contentType: res.headers.get("content-type") || "application/octet-stream" };
+  } catch {
+    return null;
+  }
+}
