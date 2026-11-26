@@ -384,154 +384,6 @@ function formatSlaTimer(isoDate: string, currentNow: number) {
   }
 }
 
-// Conversaciones realistas de demostración para presentaciones a prospectos y clientes
-const DEMO_CONVERSATIONS: ConversationItem[] = [
-  {
-    id: "demo-conv-1",
-    channel: "whatsapp",
-    senderName: "Mateo Bermúdez",
-    senderAvatar: null,
-    recipient: "+57 312 456 7890",
-    clientId: "c1",
-    clientName: "Grupo Alianza Constructora",
-    connectedAccountId: "acc-wa-1",
-    accountName: "Línea WhatsApp Ventas",
-    unreadCount: 1,
-    lastMessageText: "Excelente, por favor envíamelo y coordinamos una videollamada para hoy mismo.",
-    lastMessageTime: new Date(Date.now() - 4 * 60000).toISOString(),
-    waitingForReply: true,
-    lastInboundTime: new Date(Date.now() - 4 * 60000).toISOString(),
-    postContext: null,
-    leadId: "demo-lead-1",
-    leadPhone: "+57 312 456 7890",
-    leadEmail: "m.bermudez@constructorabolivar.com",
-    assignedAdvisorId: "demo-adv-1",
-    assignedAdvisorName: "Valeria Mendoza",
-    messages: [
-      {
-        id: "msg-1-1",
-        senderName: "Mateo Bermúdez",
-        body: "Hola, vi su anuncio de los Penthouses en Instagram. ¿Tienen disponibilidad de entrega este año?",
-        createdAt: new Date(Date.now() - 25 * 60000).toISOString(),
-        direction: "inbound",
-        status: "delivered",
-        channel: "whatsapp",
-      },
-      {
-        id: "msg-1-2",
-        senderName: "Valeria Mendoza",
-        body: "¡Hola Mateo! Un gusto saludarte. Sí, tenemos 2 unidades en pisos 14 y 16 con vista panorámica y entrega garantizada en octubre. ¿Te gustaría que te comparta el dossier ejecutivo y planos en PDF?",
-        createdAt: new Date(Date.now() - 24 * 60000).toISOString(),
-        direction: "outbound",
-        status: "read",
-        channel: "whatsapp",
-      },
-      {
-        id: "msg-1-3",
-        senderName: "Mateo Bermúdez",
-        body: "Excelente, por favor envíamelo y coordinamos una videollamada para hoy mismo.",
-        createdAt: new Date(Date.now() - 4 * 60000).toISOString(),
-        direction: "inbound",
-        status: "delivered",
-        channel: "whatsapp",
-      },
-    ],
-  },
-  {
-    id: "demo-conv-2",
-    channel: "instagram",
-    senderName: "Valentina Castro",
-    senderAvatar: null,
-    recipient: "@bunkermarketing",
-    clientId: "c1",
-    clientName: "Grupo Alianza Constructora",
-    connectedAccountId: "acc-ig-1",
-    accountName: "Instagram Oficial",
-    unreadCount: 0,
-    lastMessageText: "¡Hola Valentina! Nos alegra mucho. El m² en la etapa de preventa arranca desde $2,100 USD.",
-    lastMessageTime: new Date(Date.now() - 32 * 60000).toISOString(),
-    waitingForReply: false,
-    lastInboundTime: new Date(Date.now() - 35 * 60000).toISOString(),
-    postContext: null,
-    leadId: "demo-lead-2",
-    leadPhone: "+57 310 987 6543",
-    leadEmail: "vcastro@inmobiliariaandina.co",
-    assignedAdvisorId: "demo-adv-2",
-    assignedAdvisorName: "Carlos Andrés Rivas",
-    messages: [
-      {
-        id: "msg-2-1",
-        senderName: "Valentina Castro",
-        body: "Hola Bunker! Me encantó el reel sobre retorno de inversión en proyectos comerciales. ¿Qué costo por metro cuadrado manejan?",
-        createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
-        direction: "inbound",
-        status: "delivered",
-        channel: "instagram",
-      },
-      {
-        id: "msg-2-2",
-        senderName: "Carlos Andrés Rivas",
-        body: "¡Hola Valentina! Nos alegra mucho. El m² en la etapa de preventa arranca desde $2,100 USD con alta plusvalía proyectada.",
-        createdAt: new Date(Date.now() - 32 * 60000).toISOString(),
-        direction: "outbound",
-        status: "read",
-        channel: "instagram",
-      },
-    ],
-  },
-  {
-    id: "demo-conv-3",
-    channel: "messenger",
-    senderName: "Dr. Alejandro Morales",
-    senderAvatar: null,
-    recipient: "Página Facebook Bunker",
-    clientId: "c2",
-    clientName: "Clínica Especialistas Orales",
-    connectedAccountId: "acc-fb-1",
-    accountName: "Facebook Fanpage",
-    unreadCount: 1,
-    lastMessageText: "¿Tienen algún plan especial para equipos médicos con atención 24/7?",
-    lastMessageTime: new Date(Date.now() - 55 * 60000).toISOString(),
-    waitingForReply: true,
-    lastInboundTime: new Date(Date.now() - 55 * 60000).toISOString(),
-    postContext: null,
-    leadId: "demo-lead-3",
-    leadPhone: "+57 301 234 5678",
-    leadEmail: "amorales@especialistasorales.com",
-    assignedAdvisorId: "demo-adv-1",
-    assignedAdvisorName: "Valeria Mendoza",
-    messages: [
-      {
-        id: "msg-3-1",
-        senderName: "Dr. Alejandro Morales",
-        body: "Buenas tardes, quiero información sobre el plan de automatización de citas y pauta digital.",
-        createdAt: new Date(Date.now() - 75 * 60000).toISOString(),
-        direction: "inbound",
-        status: "delivered",
-        channel: "messenger",
-      },
-      {
-        id: "msg-3-2",
-        senderName: "Valeria Mendoza",
-        body: "Buenas tardes Dr. Morales, con gusto. Nuestro sistema conecta directamente los formularios de Meta con WhatsApp y confirmación en tiempo real.",
-        createdAt: new Date(Date.now() - 72 * 60000).toISOString(),
-        direction: "outbound",
-        status: "read",
-        channel: "messenger",
-      },
-      {
-        id: "msg-3-3",
-        senderName: "Dr. Alejandro Morales",
-        body: "¿Tienen algún plan especial para equipos médicos con atención 24/7?",
-        createdAt: new Date(Date.now() - 55 * 60000).toISOString(),
-        direction: "inbound",
-        status: "delivered",
-        channel: "messenger",
-      },
-    ],
-  },
-];
-
 export default function UnifiedInboxPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando bandeja de entrada...</div>}>
@@ -562,7 +414,6 @@ function UnifiedInboxPageContent() {
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Filtros
   const [activeChannel, setActiveChannel] = useState<string>(() => searchParams.get("channel") || "all");
@@ -741,15 +592,7 @@ function UnifiedInboxPageContent() {
     };
   }, [fetchInbox]);
 
-  const isShowingDemo = isDemoMode;
-
-  const activeConversations = useMemo(() => {
-    if (isShowingDemo) {
-      if (activeChannel === "all") return DEMO_CONVERSATIONS;
-      return DEMO_CONVERSATIONS.filter((c) => c.channel === activeChannel);
-    }
-    return conversations;
-  }, [isShowingDemo, activeChannel, conversations]);
+  const activeConversations = conversations;
 
   const activeConversation = useMemo(() => {
     return activeConversations.find((c) => c.id === selectedConvId) || activeConversations[0] || null;
@@ -1071,35 +914,6 @@ function UnifiedInboxPageContent() {
     setFeedback(null);
     setErrorMessage(null);
 
-    // Si está en Modo Demo, simular respuesta exitosa al instante para presentaciones
-    if (isShowingDemo && activeConversation) {
-      const messageBody = replyText.trim() && attachedFile?.uploadedUrl
-        ? `${replyText.trim()}\n${attachedFile.uploadedUrl}`
-        : (attachedFile?.uploadedUrl || replyText.trim());
-
-      const newMsg: ConversationMessage = {
-        id: `demo_sent_${Date.now()}`,
-        senderName: "Tú (Asesor)",
-        body: messageBody,
-        createdAt: new Date().toISOString(),
-        direction: "outbound",
-        status: "sent",
-        channel: activeConversation.channel,
-      };
-
-      activeConversation.messages.push(newMsg);
-      activeConversation.lastMessageText = messageBody;
-      activeConversation.lastMessageTime = new Date().toISOString();
-      activeConversation.waitingForReply = false;
-      activeConversation.unreadCount = 0;
-      setReplyText("");
-      removeAttachedFile();
-      setFeedback("¡Respuesta enviada en 24s! ⚡ (Modo Demo)");
-      setTimeout(() => setFeedback(null), 3500);
-      setSending(false);
-      return;
-    }
-
     try {
       const res = await fetch("/api/inbox", {
         method: "POST",
@@ -1190,26 +1004,6 @@ function UnifiedInboxPageContent() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Switch Modo Demo Interactivo */}
-          <button
-            type="button"
-            onClick={() => {
-              const next = !isDemoMode;
-              setIsDemoMode(next);
-              if (next && DEMO_CONVERSATIONS.length > 0) {
-                setSelectedConvId(DEMO_CONVERSATIONS[0].id);
-              }
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-orvion cursor-pointer border ${isDemoMode
-                ? "bg-amber-400 text-[#121417] border-amber-500 shadow-amber-400/20"
-                : "bg-white dark:bg-[#121417] text-[#8C929D] border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
-              }`}
-            title="Activar conversaciones demostrativas con leads reales"
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isDemoMode ? "text-[#121417] fill-current" : "text-amber-500"}`} />
-            <span>{isDemoMode ? "⚡ Modo Demo Activo" : "Modo Demo"}</span>
-          </button>
-
           {/* Botón de Alertas Sonoras */}
           <button
             type="button"
@@ -1342,13 +1136,6 @@ function UnifiedInboxPageContent() {
                   No se encontraron mensajes en este canal o filtro seleccionado.
                 </p>
                 <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setIsDemoMode(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-400 text-[#121417] text-xs font-bold shadow-orvion hover:bg-amber-300 transition-all cursor-pointer"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 fill-current" />
-                    <span>Ver Demo con Datos</span>
-                  </button>
                   <button
                     onClick={() => fetchInbox(false, true)}
                     disabled={loading}
