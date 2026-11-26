@@ -31,6 +31,7 @@ import {
   Sparkles,
   Calendar,
   Copy,
+  Mic,
 } from "lucide-react";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
@@ -38,6 +39,7 @@ import { getLeadAvatarUrl } from "@/lib/avatar";
 import SlidingTabs from "@/components/ui/SlidingTabs";
 import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
 import { conversationMatchesChannel, mergeConversations } from "@/lib/inbox-merge";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import type {
   ConversationItem,
   ConversationMessage,
@@ -175,6 +177,7 @@ interface AttachedFile {
   file: File;
   previewUrl?: string;
   isImage: boolean;
+  isAudio?: boolean;
   uploading: boolean;
   uploadedUrl?: string;
   fileName: string;
@@ -223,6 +226,12 @@ function getFilenameFromUrl(url: string): string {
   } catch {
     return "Archivo adjunto";
   }
+}
+
+function formatDuration(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 /** Ruta de las URLs temporales con las que Meta entrega los archivos de WhatsApp (caducan y exigen token). */
@@ -445,6 +454,7 @@ function UnifiedInboxPageContent() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const voice = useVoiceRecorder();
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -615,6 +625,14 @@ function UnifiedInboxPageContent() {
     return activeConversations.find((c) => c.id === selectedConvId) || activeConversations[0] || null;
   }, [activeConversations, selectedConvId]);
 
+  // Fija la selección: sin esto, el chat abierto sería "el primero de la lista" y saltaría a otro cuando entra
+  // un mensaje nuevo en otra conversación, justo mientras se escribe o se graba una respuesta.
+  useEffect(() => {
+    if (activeConversations.length > 0 && !activeConversations.some((c) => c.id === selectedConvId)) {
+      setSelectedConvId(activeConversations[0].id);
+    }
+  }, [activeConversations, selectedConvId]);
+
   const lastInboundMsg = useMemo(() => {
     if (!activeConversation?.messages || activeConversation.messages.length === 0) return null;
     return [...activeConversation.messages].reverse().find((m) => m.direction === "inbound") || null;
@@ -678,6 +696,11 @@ function UnifiedInboxPageContent() {
       }).catch(() => { });
     }
   }, []);
+
+  // Una grabación a medias no debe terminar enviándose a otra persona al cambiar de chat.
+  useEffect(() => {
+    voice.cancel();
+  }, [convId, voice.cancel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Al abrir o cambiar de conversación activa, remover el punto de pendiente si no está leída
   useEffect(() => {
@@ -843,20 +866,17 @@ function UnifiedInboxPageContent() {
     headerMenuItems.push({ key: "copy", label: "Copiar historial del chat", icon: Copy, onSelect: handleCopyTranscript });
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const attachFile = async (file: File) => {
     const isImg = file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif)$/i.test(file.name);
-    let localPreview: string | undefined;
-    if (isImg) {
-      localPreview = URL.createObjectURL(file);
-    }
+    const isAud = file.type.startsWith("audio/");
+    // La vista previa local deja revisar la foto o escuchar la nota de voz antes de enviarla.
+    const localPreview = isImg || isAud ? URL.createObjectURL(file) : undefined;
 
     setAttachedFile({
       file,
       previewUrl: localPreview,
       isImage: isImg,
+      isAudio: isAud,
       uploading: true,
       fileName: file.name,
       fileSize: file.size,
@@ -904,6 +924,16 @@ function UnifiedInboxPageContent() {
           : null
       );
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void attachFile(file);
+  };
+
+  const handleStopRecording = async () => {
+    const file = await voice.stop();
+    if (file) await attachFile(file);
   };
 
   const removeAttachedFile = () => {
@@ -1505,6 +1535,44 @@ function UnifiedInboxPageContent() {
 
               {/* Composer: Cuadro de Respuesta */}
               <form onSubmit={handleSendReply} className="p-3 border-t border-[#E2E5EB] dark:border-[#1F242D] bg-white dark:bg-[#121417]">
+                {/* Barra de grabación de nota de voz */}
+                {voice.state !== "idle" && (
+                  <div className="mb-2 p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-rose-700 dark:text-rose-300">
+                      {voice.state === "recording" ? (
+                        <>
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                          <span>Grabando {formatDuration(voice.seconds)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Preparando la nota de voz...</span>
+                        </>
+                      )}
+                    </div>
+                    {voice.state === "recording" && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={voice.cancel}
+                          className="px-3 py-1 rounded-full text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleStopRecording}
+                          className="px-3.5 py-1 rounded-full text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
+                        >
+                          Listo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {voice.error && <p className="mb-2 text-[11px] text-rose-600 font-semibold">{voice.error}</p>}
+
                 {/* Previsualización del archivo adjunto */}
                 {attachedFile && (
                   <div className="mb-2 p-2 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] flex items-center justify-between gap-3 animate-in fade-in">
@@ -1517,13 +1585,21 @@ function UnifiedInboxPageContent() {
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 flex items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5 text-amber-500" />
+                          {attachedFile.isAudio ? (
+                            <Mic className="w-5 h-5 text-amber-500" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-amber-500" />
+                          )}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#121417] dark:text-white truncate max-w-[240px]">
-                          {attachedFile.fileName}
-                        </p>
+                        {attachedFile.isAudio && attachedFile.previewUrl ? (
+                          <audio controls src={attachedFile.previewUrl} className="h-8 max-w-[260px]" preload="metadata" />
+                        ) : (
+                          <p className="text-xs font-bold text-[#121417] dark:text-white truncate max-w-[240px]">
+                            {attachedFile.fileName}
+                          </p>
+                        )}
                         <div className="flex items-center gap-1.5 text-[10px]">
                           {attachedFile.uploading ? (
                             <span className="text-amber-500 flex items-center gap-1 font-semibold">
@@ -1588,6 +1664,19 @@ function UnifiedInboxPageContent() {
                     <Paperclip className="w-4 h-4" />
                   </button>
 
+                  {/* Nota de voz: solo en WhatsApp; los demás canales no la admiten desde aquí. */}
+                  {activeConversation.channel === "whatsapp" && (
+                    <button
+                      type="button"
+                      onClick={voice.start}
+                      disabled={sending || voice.state !== "idle" || Boolean(attachedFile)}
+                      className="p-2.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-[#F8F9FA] dark:bg-[#1A1D24] hover:bg-[#E2E5EB] dark:hover:bg-[#2A2E37] text-[#64748B] dark:text-[#94A3B8] hover:text-[#121417] dark:hover:text-white transition-all h-[40px] w-[40px] shrink-0 flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-2xs"
+                      title="Grabar una nota de voz"
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+                  )}
+
                   <textarea
                     rows={2}
                     value={replyText}
@@ -1606,6 +1695,7 @@ function UnifiedInboxPageContent() {
                     type="submit"
                     disabled={
                       sending ||
+                      voice.state !== "idle" ||
                       attachedFile?.uploading ||
                       (!replyText.trim() && !attachedFile?.uploadedUrl)
                     }

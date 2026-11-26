@@ -46,6 +46,7 @@
     "test:roles": "node --experimental-strip-types --no-warnings --test tests/roles.test.mjs",
     "test:team-live": "node --experimental-strip-types --no-warnings --test tests/team-live.test.mjs",
     "test:inbox-merge": "node --experimental-strip-types --no-warnings --test tests/inbox-merge.test.mjs",
+    "test:whatsapp-media-type": "node --experimental-strip-types --no-warnings --test tests/whatsapp-media-type.test.mjs",
     "test:ai-assistant": "node --experimental-strip-types --no-warnings --test tests/ai-assistant.test.mjs",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
@@ -54,6 +55,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@prisma/client": "^5.21.1",
     "@supabase/supabase-js": "^2.117.3",
     "@twilio/voice-sdk": "2.18.5",

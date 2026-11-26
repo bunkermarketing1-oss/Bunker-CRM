@@ -6,6 +6,8 @@ import {
   cleanWhatsAppNumber,
   getWhatsAppMediaUrl,
   downloadWhatsAppMedia,
+  whatsAppMediaTypeFromUrl,
+  filenameFromUrl,
   type WhatsAppSendResult,
 } from "@/lib/integrations/whatsapp";
 import { storeInboxMedia } from "@/services/inbox-media.service";
@@ -134,13 +136,26 @@ export async function sendWhatsAppOutboundMessage({
 
   if (credentials) {
     if (mediaUrl) {
+      const mediaType = whatsAppMediaTypeFromUrl(mediaUrl);
+      // WhatsApp no admite texto adjunto a una nota de voz: el texto, si hay, se manda aparte.
+      const isAudio = mediaType === "audio";
       sendResult = await sendWhatsAppMediaMessage({
         phoneNumberId: credentials.phoneNumberId,
         accessToken: credentials.accessToken,
         to: recipient,
         mediaUrl,
-        caption: body || undefined,
+        mediaType,
+        caption: isAudio ? undefined : body || undefined,
+        filename: mediaType === "document" ? filenameFromUrl(mediaUrl) : undefined,
       });
+      if (sendResult.success && isAudio && body) {
+        await sendWhatsAppTextMessage({
+          phoneNumberId: credentials.phoneNumberId,
+          accessToken: credentials.accessToken,
+          to: recipient,
+          text: body,
+        });
+      }
     } else {
       sendResult = await sendWhatsAppTextMessage({
         phoneNumberId: credentials.phoneNumberId,

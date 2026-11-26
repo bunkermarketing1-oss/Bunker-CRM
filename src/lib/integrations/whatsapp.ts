@@ -281,3 +281,27 @@ export async function downloadWhatsAppMedia(
     return null;
   }
 }
+
+export type WhatsAppMediaType = "image" | "document" | "audio" | "video";
+
+const AUDIO_EXTENSIONS = new Set(["mp3", "ogg", "opus", "m4a", "aac", "amr"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "3gp"]);
+const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
+
+/** WhatsApp exige declarar el tipo de archivo al enviarlo; se deduce de la terminación de la URL. */
+export function whatsAppMediaTypeFromUrl(url: string): WhatsAppMediaType {
+  const extension = url.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
+  if (AUDIO_EXTENSIONS.has(extension)) return "audio";
+  if (VIDEO_EXTENSIONS.has(extension)) return "video";
+  if (IMAGE_EXTENSIONS.has(extension)) return "image";
+  return "document";
+}
+
+export function filenameFromUrl(url: string): string | undefined {
+  try {
+    const last = new URL(url).pathname.split("/").pop();
+    return last ? decodeURIComponent(last) : undefined;
+  } catch {
+    return undefined;
+  }
+}
