@@ -22,6 +22,8 @@ import { useAuth } from "@/context/AuthContext";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import SocialNetworkIcon from "@/components/common/SocialNetworkIcon";
 import CampaignAdsModal from "@/components/campaigns/CampaignAdsModal";
+import Pagination from "@/components/ui/Pagination";
+import { CAMPAIGNS_PAGE_SIZE } from "@/lib/constants/pagination";
 
 interface CampaignVisualInfo {
   type: "video" | "image" | "whatsapp" | "lead" | "web";
@@ -448,6 +450,7 @@ function CampaignsPageContent() {
   const [selectedAccountId, setSelectedAccountId] = useState("all");
   const [activeNetwork, setActiveNetwork] = useState<CampaignNetwork>("all");
   const [campaignSearch, setCampaignSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [metric, setMetric] = useState<Metric>("spend");
   const [data, setData] = useState<CampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -559,6 +562,18 @@ function CampaignsPageContent() {
 
     return list;
   }, [displayData?.campaigns, activeNetwork, campaignSearch]);
+
+  // Al cambiar cualquier filtro se vuelve a la primera página; si no, se podría quedar en una página que ya no existe.
+  useEffect(() => {
+    setPage(1);
+  }, [activeNetwork, campaignSearch, clientId, selectedAccountId, days]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedCampaigns = useMemo(
+    () => filteredCampaigns.slice((currentPage - 1) * CAMPAIGNS_PAGE_SIZE, currentPage * CAMPAIGNS_PAGE_SIZE),
+    [filteredCampaigns, currentPage]
+  );
 
   const kpis = totals
     ? [
@@ -989,7 +1004,7 @@ function CampaignsPageContent() {
                       </td>
                     </tr>
                   )}
-                  {filteredCampaigns.map((c) => {
+                  {pagedCampaigns.map((c) => {
                     const st = STATUS_STYLES[c.status] || STATUS_STYLES.completed;
                     const visual = getCampaignVisualInfo(c.name, c.objective);
                     const netInfo = detectCampaignNetwork(c.name, c.platform, c.objective);
@@ -1072,6 +1087,12 @@ function CampaignsPageContent() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              page={currentPage}
+              pageSize={CAMPAIGNS_PAGE_SIZE}
+              total={filteredCampaigns.length}
+              onPageChange={setPage}
+            />
           </div>
         </>
       )}
