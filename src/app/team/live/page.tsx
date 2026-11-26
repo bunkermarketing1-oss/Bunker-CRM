@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -14,7 +14,6 @@ import {
   Trash2,
   AlertTriangle,
   X,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTeamLive } from "@/hooks/useTeamLive";
@@ -27,163 +26,6 @@ import { SellerAttendanceModal } from "@/components/team/SellerAttendanceModal";
 import { ADVISOR_STATUS } from "@/lib/constants/team";
 import { formatClock } from "@/lib/team-live";
 import { ROUTES } from "@/lib/constants/routes";
-import type { AdvisorLiveRow } from "@/types/team";
-import type { CallSummary } from "@/types/voice";
-
-// Ejecutivos y llamadas de demostración para presentaciones
-const DEMO_ADVISORS: AdvisorLiveRow[] = [
-  {
-    userId: "demo-adv-1",
-    name: "Valeria Mendoza",
-    email: "valeria@bunkermarketing.io",
-    clientId: "c1",
-    clientName: "Grupo Alianza Constructora",
-    isOwner: false,
-    status: ADVISOR_STATUS.AVAILABLE,
-    currentCall: null,
-    today: {
-      callsMade: 22,
-      callsAnswered: 18,
-      talkTimeSec: 4800,
-      smsSent: 8,
-      whatsappSent: 42,
-      messengerSent: 12,
-      instagramSent: 15,
-      totalMessagesSent: 77,
-      leadsContacted: 24,
-      tasksCompleted: 9,
-      channelsAttended: ["whatsapp", "messenger", "instagram", "sms", "calls"],
-      slaOkCount: 38,
-      slaWarningCount: 3,
-      slaBreachedCount: 1,
-      slaResponseRate: 95,
-    },
-    lastActivityAt: new Date(Date.now() - 3 * 60000).toISOString(),
-    isCheckedIn: true,
-    checkedInAt: new Date(Date.now() - 6 * 3600000).toISOString(),
-    checkedOutAt: null,
-  },
-  {
-    userId: "demo-adv-2",
-    name: "Carlos Andrés Rivas",
-    email: "carlos@bunkermarketing.io",
-    clientId: "c1",
-    clientName: "Grupo Alianza Constructora",
-    isOwner: false,
-    status: ADVISOR_STATUS.ON_CALL,
-    currentCall: {
-      callId: "demo-call-1",
-      leadName: "Mauricio Restrepo (Inversiones Terranova)",
-      counterpart: "+57 310 456 7890",
-      durationSec: 184,
-      answered: true,
-    },
-    today: {
-      callsMade: 28,
-      callsAnswered: 22,
-      talkTimeSec: 6200,
-      smsSent: 5,
-      whatsappSent: 54,
-      messengerSent: 18,
-      instagramSent: 8,
-      totalMessagesSent: 85,
-      leadsContacted: 31,
-      tasksCompleted: 14,
-      channelsAttended: ["whatsapp", "messenger", "instagram", "calls"],
-      slaOkCount: 45,
-      slaWarningCount: 4,
-      slaBreachedCount: 2,
-      slaResponseRate: 91,
-    },
-    lastActivityAt: new Date().toISOString(),
-    isCheckedIn: true,
-    checkedInAt: new Date(Date.now() - 7 * 3600000).toISOString(),
-    checkedOutAt: null,
-  },
-  {
-    userId: "demo-adv-3",
-    name: "Sofía Benítez",
-    email: "sofia@bunkermarketing.io",
-    clientId: "c2",
-    clientName: "Kroma Brands Latam",
-    isOwner: false,
-    status: ADVISOR_STATUS.AVAILABLE,
-    currentCall: null,
-    today: {
-      callsMade: 17,
-      callsAnswered: 14,
-      talkTimeSec: 3600,
-      smsSent: 4,
-      whatsappSent: 35,
-      messengerSent: 10,
-      instagramSent: 20,
-      totalMessagesSent: 69,
-      leadsContacted: 19,
-      tasksCompleted: 8,
-      channelsAttended: ["whatsapp", "instagram", "calls"],
-      slaOkCount: 30,
-      slaWarningCount: 2,
-      slaBreachedCount: 1,
-      slaResponseRate: 92,
-    },
-    lastActivityAt: new Date(Date.now() - 8 * 60000).toISOString(),
-    isCheckedIn: true,
-    checkedInAt: new Date(Date.now() - 5 * 3600000).toISOString(),
-    checkedOutAt: null,
-  },
-  {
-    userId: "demo-adv-4",
-    name: "Mateo Restrepo",
-    email: "mateo@bunkermarketing.io",
-    clientId: "c3",
-    clientName: "Nova Cloud Tech",
-    isOwner: false,
-    status: ADVISOR_STATUS.AVAILABLE,
-    currentCall: null,
-    today: {
-      callsMade: 19,
-      callsAnswered: 16,
-      talkTimeSec: 4100,
-      smsSent: 6,
-      whatsappSent: 38,
-      messengerSent: 14,
-      instagramSent: 12,
-      totalMessagesSent: 70,
-      leadsContacted: 22,
-      tasksCompleted: 11,
-      channelsAttended: ["whatsapp", "messenger", "sms", "calls"],
-      slaOkCount: 34,
-      slaWarningCount: 3,
-      slaBreachedCount: 0,
-      slaResponseRate: 98,
-    },
-    lastActivityAt: new Date(Date.now() - 15 * 60000).toISOString(),
-    isCheckedIn: true,
-    checkedInAt: new Date(Date.now() - 6 * 3600000).toISOString(),
-    checkedOutAt: null,
-  },
-];
-
-const DEMO_LIVE_CALLS: CallSummary[] = [
-  {
-    id: "demo-call-1",
-    direction: "outbound",
-    status: "in_progress",
-    fromNumber: "+57 601 345 6789",
-    toNumber: "+57 310 456 7890",
-    durationSec: 184,
-    hasRecording: false,
-    recordingUrl: null,
-    leadId: "lead-demo",
-    leadName: "Mauricio Restrepo",
-    userId: "demo-adv-2",
-    userName: "Carlos Andrés Rivas",
-    lineLabel: "Línea Principal Ventas",
-    createdAt: new Date(Date.now() - 184 * 1000).toISOString(),
-    answeredAt: new Date(Date.now() - 180 * 1000).toISOString(),
-    endedAt: null,
-  },
-];
 
 export default function TeamLivePage() {
   return (
@@ -212,7 +54,6 @@ function TeamLiveContent() {
     urlClientId && urlClientId !== "all" ? urlClientId : null
   );
   const [selectedSellerForModal, setSelectedSellerForModal] = useState<{ id: string; name: string } | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Estado de eliminación de asesor
   const [advisorToDelete, setAdvisorToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -249,10 +90,6 @@ function TeamLiveContent() {
 
   const handleDeleteAdvisor = async () => {
     if (!advisorToDelete) return;
-    if (advisorToDelete.id.startsWith("demo-")) {
-      setAdvisorToDelete(null);
-      return;
-    }
     setIsDeletingAdvisor(true);
     setDeleteAdvisorError(null);
     try {
@@ -273,15 +110,8 @@ function TeamLiveContent() {
     }
   };
 
-  // Si no hay asesores reales o el modo demo está encendido, mostrar datos de presentación
-  const isShowingDemo = isDemoMode || (!loading && (view?.advisors?.length ?? 0) === 0);
-  const advisors = useMemo(() => {
-    return isShowingDemo ? DEMO_ADVISORS : (view?.advisors ?? []);
-  }, [isShowingDemo, view?.advisors]);
-
-  const liveCalls = useMemo(() => {
-    return isShowingDemo ? DEMO_LIVE_CALLS : (view?.liveCalls ?? []);
-  }, [isShowingDemo, view?.liveCalls]);
+  const advisors = view?.advisors ?? [];
+  const liveCalls = view?.liveCalls ?? [];
 
   // Métricas agregadas de hoy
   const onCallCount = advisors.filter((a) => a.status === ADVISOR_STATUS.ON_CALL).length;
@@ -304,11 +134,6 @@ function TeamLiveContent() {
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
                 <span>Supervisión de Ventas & SLA</span>
               </span>
-              {isShowingDemo && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400">
-                  ✦ Modo Presentación Activo
-                </span>
-              )}
               {activeClient ? (
                 <span className="orvion-badge-dark text-xs py-1 px-3">
                   <Building2 className="w-3 h-3 text-amber-400" />
@@ -331,21 +156,6 @@ function TeamLiveContent() {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Toggle Modo Demo para Presentaciones */}
-            <button
-              type="button"
-              onClick={() => setIsDemoMode(!isDemoMode)}
-              className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
-                isShowingDemo
-                  ? "bg-[#121417] text-white border-[#121417] dark:bg-amber-400 dark:text-[#121417] dark:border-amber-400"
-                  : "bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#667085] border-[#E2E5EB] dark:border-[#242A35] hover:text-[#121417]"
-              }`}
-              title="Alternar datos demo para presentación a clientes"
-            >
-              <Zap className={`w-3.5 h-3.5 ${isShowingDemo ? "text-amber-400 dark:text-[#121417]" : "text-[#8C929D]"}`} />
-              <span>{isShowingDemo ? "Demo Activa" : "Modo Demo"}</span>
-            </button>
-
             {/* Selector de Empresa para Administradores de Bunker */}
             {isAdmin && (
               <select

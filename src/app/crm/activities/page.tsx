@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense, useMemo } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   PhoneCall,
@@ -14,7 +14,6 @@ import {
   X,
   Building2,
   AlertCircle,
-  Sparkles,
   Activity,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
@@ -30,75 +29,6 @@ interface ActivityItem {
   client?: { id: string; name: string } | null;
   lead?: { id: string; name: string | null } | null;
 }
-
-const DEMO_ACTIVITIES: ActivityItem[] = [
-  {
-    id: "act-demo-1",
-    type: "call",
-    title: "Llamada de Calificación SLA - Presupuesto Corporativo",
-    description: "Se validó interés en paquete anual de adquisición de leads calificados por Meta Ads y Google Search. Requiere propuesta formal antes del viernes.",
-    outcome: "completed",
-    performedAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-    user: { id: "u-1", name: "Carlos Mendoza (Senior)", role: "ADMIN" },
-    client: { id: "c-1", name: "Constructora Bolívar" },
-    lead: { id: "l-101", name: "Arq. Roberto Gómez" },
-  },
-  {
-    id: "act-demo-2",
-    type: "meeting",
-    title: "Presentación de Propuesta Comercial & Pipeline",
-    description: "Reunión por Google Meet con el comité comercial. Se expuso la proyección de CPL a $3.20 USD y tasa de conversión del 18.5%. Muy buena recepción.",
-    outcome: "completed",
-    performedAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    user: { id: "u-2", name: "Valentina Ramos (Asesora)", role: "CLIENT_OWNER" },
-    client: { id: "c-2", name: "Inmobiliaria Andina" },
-    lead: { id: "l-102", name: "Dra. Sofía Navarro" },
-  },
-  {
-    id: "act-demo-3",
-    type: "email",
-    title: "Envío de Cotización & Términos de SLA Contractual",
-    description: "Se remitió por correo el documento PDF con especificaciones técnicas del CRM Bunker, integración con WhatsApp Cloud API y número de agentes asignados.",
-    outcome: "follow_up_needed",
-    performedAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    user: { id: "u-3", name: "Andrés Silva", role: "CLIENT" },
-    client: { id: "c-3", name: "Automotriz del Valle" },
-    lead: { id: "l-103", name: "Ing. Mauricio Herrera" },
-  },
-  {
-    id: "act-demo-4",
-    type: "note",
-    title: "Nota Interna: Acuerdo de Visita a Sala de Ventas",
-    description: "El cliente solicitó capacitación presencial para 5 asesores de ventas el día martes 10:00 AM para el uso de la bandeja multicanal.",
-    outcome: "completed",
-    performedAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    user: { id: "u-1", name: "Carlos Mendoza (Senior)", role: "ADMIN" },
-    client: { id: "c-4", name: "Clínica Especialistas Orales" },
-    lead: { id: "l-104", name: "Dr. Camilo Restrepo" },
-  },
-  {
-    id: "act-demo-5",
-    type: "call",
-    title: "Seguimiento Telefónico Post-Campaña Meta Ads",
-    description: "Cliente reporta incremento de leads inbound. Se acordó ajustar el horario de respuesta en WhatsApp para no superar los 5 minutos de SLA.",
-    outcome: "completed",
-    performedAt: new Date(Date.now() - 32 * 3600 * 1000).toISOString(),
-    user: { id: "u-2", name: "Valentina Ramos (Asesora)", role: "CLIENT_OWNER" },
-    client: { id: "c-1", name: "Constructora Bolívar" },
-    lead: { id: "l-105", name: "Mariana Silva" },
-  },
-  {
-    id: "act-demo-6",
-    type: "meeting",
-    title: "Sesión de Cierre de Negocio & Firma Digital",
-    description: "Revisión final de cláusulas contractuales y activación de cuenta de pagos recurrentes. Proyecto cerrado exitosamente.",
-    outcome: "completed",
-    performedAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-    user: { id: "u-1", name: "Carlos Mendoza (Senior)", role: "ADMIN" },
-    client: { id: "c-5", name: "Grupo Empresarial Norte" },
-    lead: { id: "l-106", name: "Lic. Fernando Ortiz" },
-  },
-];
 
 export default function ActivitiesPage() {
   return (
@@ -124,7 +54,6 @@ function ActivitiesContent() {
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -174,45 +103,10 @@ function ActivitiesContent() {
     fetchActivities();
   }, [fetchActivities]);
 
-  // Si no hay datos en DB y terminó de cargar, activar modo demostración para presentación comercial fluida
-  const isAutoDemoFallback = !loading && activities.length === 0 && !isDemoMode;
-
-  const displayedActivities = useMemo(() => {
-    const list = isDemoMode || isAutoDemoFallback ? DEMO_ACTIVITIES : activities;
-    if (selectedType === "all") return list;
-    return list.filter((a) => a.type === selectedType);
-  }, [isDemoMode, isAutoDemoFallback, activities, selectedType]);
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setFeedback(null);
-
-    if (isDemoMode || isAutoDemoFallback) {
-      // Simulación inmediata para presentaciones comerciales sin alterar la base de datos
-      const newMockActivity: ActivityItem = {
-        id: `act-mock-${Date.now()}`,
-        type: formData.type,
-        title: formData.title,
-        description: formData.description || null,
-        outcome: formData.outcome,
-        performedAt: new Date().toISOString(),
-        user: { id: "u-me", name: "Mi Asesor Comercial", role: "ADMIN" },
-        client: activeClient ? { id: activeClient.id, name: activeClient.name } : { id: "c-demo", name: "Empresa Demo" },
-      };
-      setActivities((prev) => [newMockActivity, ...prev]);
-      setIsModalOpen(false);
-      setFormData({
-        type: "call",
-        title: "",
-        description: "",
-        outcome: "completed",
-        clientId: activeClient ? activeClient.id : "",
-      });
-      setFeedback({ type: "success", text: "Actividad registrada exitosamente (Modo Demo Activo)." });
-      setSubmitting(false);
-      return;
-    }
 
     try {
       const payload = {
@@ -293,10 +187,10 @@ function ActivitiesContent() {
   ];
 
   // Métricas rápidas
-  const totalCount = displayedActivities.length;
-  const callCount = displayedActivities.filter((a) => a.type === "call").length;
-  const meetingCount = displayedActivities.filter((a) => a.type === "meeting").length;
-  const emailCount = displayedActivities.filter((a) => a.type === "email").length;
+  const totalCount = activities.length;
+  const callCount = activities.filter((a) => a.type === "call").length;
+  const meetingCount = activities.filter((a) => a.type === "meeting").length;
+  const emailCount = activities.filter((a) => a.type === "email").length;
 
   return (
     <div className="space-y-6">
@@ -307,12 +201,7 @@ function ActivitiesContent() {
             <span className="orvion-badge-gold text-[10px]">
               Operaciones Comerciales
             </span>
-            {isDemoMode || isAutoDemoFallback ? (
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-current" />
-                {isAutoDemoFallback ? "Métricas de Demostración Activas" : "Modo Demostrativo Activo"}
-              </span>
-            ) : activeClient ? (
+            {activeClient ? (
               <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-amber-500" />
                 Marca: <strong>{activeClient.name}</strong>
@@ -336,21 +225,6 @@ function ActivitiesContent() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Switch Modo Demo Interactivo */}
-          <button
-            type="button"
-            onClick={() => setIsDemoMode((prev) => !prev)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-orvion cursor-pointer border ${
-              isDemoMode
-                ? "bg-amber-400 text-[#121417] border-amber-500 shadow-amber-400/20"
-                : "bg-white dark:bg-[#121417] text-[#8C929D] border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
-            }`}
-            title="Ver actividades de demostración preconfiguradas"
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isDemoMode ? "text-[#121417] fill-current" : "text-amber-500"}`} />
-            <span>{isDemoMode ? "⚡ Modo Demo Activo" : "Modo Demo"}</span>
-          </button>
-
           <button
             type="button"
             onClick={() => {
@@ -364,25 +238,6 @@ function ActivitiesContent() {
           </button>
         </div>
       </div>
-
-      {/* Banner Informativo si aplica Auto-Demo */}
-      {isAutoDemoFallback && (
-        <div className="p-4 rounded-[28px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-medium text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-orvion">
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>
-              <strong>Visualización Demostrativa Activa:</strong> Mostrando el historial comercial de ejemplo para presentación ante clientes. Puedes registrar nuevas actividades libremente.
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={fetchActivities}
-            className="px-3.5 py-1 rounded-full bg-white dark:bg-[#1E2229] border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-2xs shrink-0"
-          >
-            Sincronizar Servidor
-          </button>
-        </div>
-      )}
 
       {/* Feedback Banner */}
       {feedback && (
@@ -482,21 +337,21 @@ function ActivitiesContent() {
             </span>
           </div>
           <span className="text-xs text-[#8C929D] font-mono">
-            {displayedActivities.length} {displayedActivities.length === 1 ? "registro" : "registros"}
+            {activities.length} {activities.length === 1 ? "registro" : "registros"}
           </span>
         </div>
 
         <div className="divide-y divide-[#F0F2F6] dark:divide-[#1F242D] p-3">
-          {loading && !isDemoMode && !isAutoDemoFallback ? (
+          {loading ? (
             <div className="py-16 text-center text-[#8C929D] text-xs font-mono animate-pulse">
               Consultando registros en la base de datos...
             </div>
-          ) : displayedActivities.length === 0 ? (
+          ) : activities.length === 0 ? (
             <div className="py-16 text-center text-[#8C929D] text-xs">
               No hay actividades registradas en esta vista con los filtros seleccionados.
             </div>
           ) : (
-            displayedActivities.map((act) => (
+            activities.map((act) => (
               <div
                 key={act.id}
                 className="p-4 flex items-start gap-4 hover:bg-[#F9FAFC] dark:hover:bg-[#181C22] transition-colors rounded-[22px]"

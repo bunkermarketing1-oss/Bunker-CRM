@@ -84,7 +84,6 @@ interface ClientDetail {
   status: string;
   revenue: number | null;
   notes: string | null;
-  isDemo: boolean;
   createdAt: string;
   owner: TeamMember | null;
   contacts: Contact[];
@@ -407,11 +406,6 @@ export default function ClientProfile360Page() {
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadge.color}`}>
                 ● {statusBadge.label}
               </span>
-              {client.isDemo && (
-                <span className="text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-2 py-0.5 rounded-full border border-[#F3D6CB]">
-                  DEMO
-                </span>
-              )}
             </div>
 
             <p className="text-xs text-[#475467] font-medium truncate">

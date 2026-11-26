@@ -13,12 +13,12 @@ import {
   BarChart3,
   Clock,
   Calendar as CalendarIcon,
-  Sparkles,
   Building2,
   X,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { ROUTES } from "@/lib/constants/routes";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface CalendarPostItem {
   id: string;

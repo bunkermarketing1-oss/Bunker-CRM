@@ -298,139 +298,6 @@ interface CampaignsData {
   };
 }
 
-const DEMO_CAMPAIGNS_DATA: CampaignsData = {
-  success: true,
-  days: 30,
-  clientId: null,
-  selectedAccountId: "all",
-  currency: "USD",
-  accounts: [
-    {
-      id: "demo-acc-1",
-      accountName: "Meta Ads Agency · Bunker VIP",
-      accountType: "meta_ads",
-      status: "active",
-      lastSyncAt: new Date().toISOString(),
-      client: { id: "c1", name: "Grupo Alianza Constructora" },
-    },
-  ],
-  campaigns: [
-    {
-      id: "demo-camp-1",
-      name: "Meta Ads · Captación WhatsApp Leads Inmobiliaria Preventa",
-      platform: "meta_ads",
-      objective: "MESSAGES",
-      status: "active",
-      currency: "USD",
-      budget: 150,
-      budgetType: "daily",
-      startDate: new Date(Date.now() - 25 * 86400000).toISOString(),
-      endDate: null,
-      connectedAccountId: "demo-acc-1",
-      accountName: "Meta Ads Agency",
-      client: { id: "c1", name: "Grupo Alianza Constructora" },
-      spend: 4250,
-      impressions: 185000,
-      clicks: 4820,
-      conversions: 380,
-      ctr: 2.61,
-      cpc: 0.88,
-      cpm: 22.97,
-      costPerConversion: 11.18,
-    },
-    {
-      id: "demo-camp-2",
-      name: "Instagram Reels · Retargeting Carrito Abandonado E-Commerce",
-      platform: "meta_ads",
-      objective: "CONVERSIONS",
-      status: "active",
-      currency: "USD",
-      budget: 100,
-      budgetType: "daily",
-      startDate: new Date(Date.now() - 20 * 86400000).toISOString(),
-      endDate: null,
-      connectedAccountId: "demo-acc-1",
-      accountName: "Meta Ads Agency",
-      client: { id: "c2", name: "Kroma Brands Latam" },
-      spend: 2890,
-      impressions: 142000,
-      clicks: 3910,
-      conversions: 290,
-      ctr: 2.75,
-      cpc: 0.74,
-      cpm: 20.35,
-      costPerConversion: 9.96,
-    },
-    {
-      id: "demo-camp-3",
-      name: "Meta Feed · Formulario Instantáneo LeadGen B2B Software",
-      platform: "meta_ads",
-      objective: "LEAD_GENERATION",
-      status: "active",
-      currency: "USD",
-      budget: 120,
-      budgetType: "daily",
-      startDate: new Date(Date.now() - 18 * 86400000).toISOString(),
-      endDate: null,
-      connectedAccountId: "demo-acc-1",
-      accountName: "Meta Ads Agency",
-      client: { id: "c3", name: "Nova Cloud Tech" },
-      spend: 3120,
-      impressions: 98000,
-      clicks: 2450,
-      conversions: 195,
-      ctr: 2.5,
-      cpc: 1.27,
-      cpm: 31.84,
-      costPerConversion: 16.0,
-    },
-    {
-      id: "demo-camp-4",
-      name: "WhatsApp Direct · Campaña Flash Descuentos Especiales",
-      platform: "meta_ads",
-      objective: "MESSAGES",
-      status: "active",
-      currency: "USD",
-      budget: 80,
-      budgetType: "daily",
-      startDate: new Date(Date.now() - 10 * 86400000).toISOString(),
-      endDate: null,
-      connectedAccountId: "demo-acc-1",
-      accountName: "Meta Ads Agency",
-      client: { id: "c4", name: "MacroAlimentos Corp" },
-      spend: 1840,
-      impressions: 82000,
-      clicks: 2100,
-      conversions: 210,
-      ctr: 2.56,
-      cpc: 0.88,
-      cpm: 22.44,
-      costPerConversion: 8.76,
-    },
-  ],
-  daily: Array.from({ length: 30 }, (_, i) => {
-    const d = new Date(Date.now() - (29 - i) * 86400000);
-    return {
-      date: d.toISOString().slice(0, 10),
-      spend: Math.round(350 + Math.sin(i) * 80 + i * 5),
-      impressions: Math.round(15000 + Math.sin(i) * 3000 + i * 200),
-      clicks: Math.round(400 + Math.sin(i) * 80 + i * 6),
-      conversions: Math.round(32 + Math.sin(i) * 8 + i * 0.5),
-    };
-  }),
-  totals: {
-    spend: 12100,
-    impressions: 507000,
-    clicks: 13280,
-    conversions: 1075,
-    ctr: 2.62,
-    cpc: 0.91,
-    cpm: 23.86,
-    costPerConversion: 11.25,
-    activeCampaigns: 4,
-  },
-};
-
 export default function CampaignsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm text-[#667085]">Cargando campañas...</div>}>
@@ -517,33 +384,25 @@ function CampaignsPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, days, clientId, selectedAccountId]);
 
-  const displayData = useMemo(() => {
-    if (data && data.campaigns && data.campaigns.length > 0) return data;
-    if (!loading && (!data || !data.campaigns || data.campaigns.length === 0)) {
-      return DEMO_CAMPAIGNS_DATA;
-    }
-    return data;
-  }, [data, loading]);
-
-  const currency: string | null = displayData?.currency || null;
-  const totals = displayData?.totals;
-  const hasAccounts = Boolean(displayData?.accounts && displayData.accounts.length > 0);
-  const selectedAccount = displayData?.accounts.find((a) => a.id === selectedAccountId);
+  const currency: string | null = data?.currency || null;
+  const totals = data?.totals;
+  const hasAccounts = Boolean(data?.accounts && data.accounts.length > 0);
+  const selectedAccount = data?.accounts.find((a) => a.id === selectedAccountId);
 
   const networkCounts = useMemo(() => {
     const counts = { all: 0, instagram: 0, facebook: 0, whatsapp: 0, tiktok: 0, google: 0 };
-    if (!displayData?.campaigns) return counts;
-    counts.all = displayData.campaigns.length;
-    for (const c of displayData.campaigns) {
+    if (!data?.campaigns) return counts;
+    counts.all = data.campaigns.length;
+    for (const c of data.campaigns) {
       const net = detectCampaignNetwork(c.name, c.platform, c.objective).network;
       if (counts[net] !== undefined) counts[net]++;
     }
     return counts;
-  }, [displayData?.campaigns]);
+  }, [data?.campaigns]);
 
   const filteredCampaigns = useMemo(() => {
-    if (!displayData?.campaigns) return [];
-    let list = displayData.campaigns;
+    if (!data?.campaigns) return [];
+    let list = data.campaigns;
 
     if (activeNetwork !== "all") {
       list = list.filter(
@@ -561,7 +420,7 @@ function CampaignsPageContent() {
     }
 
     return list;
-  }, [displayData?.campaigns, activeNetwork, campaignSearch]);
+  }, [data?.campaigns, activeNetwork, campaignSearch]);
 
   // Al cambiar cualquier filtro se vuelve a la primera página; si no, se podría quedar en una página que ya no existe.
   useEffect(() => {
@@ -726,11 +585,11 @@ function CampaignsPageContent() {
                     selectedAccountId === "all" ? "bg-white/20 text-white" : "bg-[#F2F4F7] text-[#475467]"
                   }`}
                 >
-                  {displayData?.accounts?.length || 0}
+                  {data?.accounts?.length || 0}
                 </span>
               </button>
 
-              {(displayData?.accounts || []).map((a) => {
+              {(data?.accounts || []).map((a) => {
                 const isSelected = selectedAccountId === a.id;
                 return (
                   <button
@@ -769,7 +628,7 @@ function CampaignsPageContent() {
                 {!isClient && selectedAccount.client && (
                   <span className="text-amber-800/80">({selectedAccount.client.name})</span>
                 )}
-                <span className="text-amber-700 font-mono text-[11px]">· {displayData?.campaigns?.length || 0} campaña(s)</span>
+                <span className="text-amber-700 font-mono text-[11px]">· {data?.campaigns?.length || 0} campaña(s)</span>
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId("all")}
@@ -815,7 +674,7 @@ function CampaignsPageContent() {
                 ))}
               </div>
             </div>
-            <DailyBars daily={displayData?.daily || []} metric={metric} currency={currency} />
+            <DailyBars daily={data?.daily || []} metric={metric} currency={currency} />
           </div>
 
           {/* Pestañas de Clasificación de Red (Instagram, Facebook, WhatsApp, etc.) & Buscador */}
@@ -970,7 +829,7 @@ function CampaignsPageContent() {
                     <tr>
                       <td colSpan={10} className="px-4 py-10 text-center text-[#667085]">
                         <div className="max-w-md mx-auto space-y-3">
-                          {!displayData?.campaigns || displayData.campaigns.length === 0 ? (
+                          {!data?.campaigns || data.campaigns.length === 0 ? (
                             <>
                               <p className="text-xs">No hay campañas sincronizadas todavía para las cuentas seleccionadas.</p>
                               <button
@@ -996,7 +855,7 @@ function CampaignsPageContent() {
                                 }}
                                 className="px-4 py-1.5 rounded-full bg-[#121417] text-white text-xs font-bold hover:bg-[#1E2229] transition-colors cursor-pointer"
                               >
-                                Ver todas las campañas ({displayData?.campaigns?.length || 0})
+                                Ver todas las campañas ({data?.campaigns?.length || 0})
                               </button>
                             </>
                           )}

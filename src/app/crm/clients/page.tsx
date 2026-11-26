@@ -84,7 +84,6 @@ interface Client {
   status: string; // active, on_hold, churned
   revenue: number | null;
   notes: string | null;
-  isDemo: boolean;
   createdAt: string;
   ownerId: string | null;
   owner?: { id: string; name: string; email: string; role?: string } | null;
@@ -890,11 +889,6 @@ export default function ClientsPage() {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
-                          {client.isDemo && (
-                            <span className="text-[9px] bg-[#FBF1ED] text-[#C15F3C] font-semibold px-1.5 py-0.2 rounded border border-[#F3D6CB]">
-                              DEMO
-                            </span>
-                          )}
                         </div>
                       </div>
 

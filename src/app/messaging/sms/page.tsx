@@ -35,7 +35,6 @@ interface MessageItem {
   status: string;
   errorMessage?: string | null;
   createdAt: string;
-  isDemo?: boolean;
   generatedBy?: string | null;
   client?: { id: string; name: string } | null;
   lead?: { id: string; name: string; phone?: string | null } | null;
@@ -561,7 +560,6 @@ function SmsMessagingPageContent() {
 
                     <div className="text-[10px] text-[#82807C] flex items-center justify-between">
                       <span>{new Date(msg.createdAt).toLocaleString()}</span>
-                      {msg.isDemo && <span className="text-amber-700 font-medium">[Simulación / Demo]</span>}
                     </div>
                   </div>
                 ))
