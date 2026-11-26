@@ -30,7 +30,6 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Zap,
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -63,7 +62,6 @@ interface Lead {
   smsConsent?: boolean;
   smsConsentAt?: string | null;
   smsConsentSource?: string | null;
-  isDemo: boolean;
   createdAt: string;
   ownerId: string | null;
   clientId?: string | null;
@@ -94,183 +92,6 @@ interface TeamMember {
   role: string;
 }
 
-// Prospectos realistas de demostración para presentaciones a clientes
-const DEMO_LEADS_DATA: Lead[] = [
-  {
-    id: "demo-lead-1",
-    name: "Mateo Bermúdez",
-    companyName: "Constructora Bolívar",
-    email: "m.bermudez@constructorabolivar.com",
-    phone: "+57 312 456 7890",
-    normalizedPhone: "+573124567890",
-    source: "meta_ads",
-    campaign: "Campañas Penthouse & Suites 2026",
-    externalLeadId: "fb_lead_982341",
-    externalFormId: "form_meta_9823",
-    externalAdId: "ad_video_penthouse",
-    status: "qualified",
-    qualification: 94,
-    aiSummary: "Lead Caliente: Alta capacidad adquisitiva, solicita reunión de presentación de portafolio para esta tarde.",
-    estimatedValue: 125000,
-    notes: "Interesado en 2 penthouses para inversión de renta vacacional.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
-    ownerId: "demo-adv-1",
-    owner: {
-      id: "demo-adv-1",
-      name: "Valeria Mendoza",
-      email: "valeria@bunkermarketing.io",
-      role: "SALES",
-    },
-    client: {
-      id: "c1",
-      name: "Grupo Alianza Constructora",
-    },
-  },
-  {
-    id: "demo-lead-2",
-    name: "Valentina Castro",
-    companyName: "Inmobiliaria Andina",
-    email: "vcastro@inmobiliariaandina.co",
-    phone: "+57 310 987 6543",
-    normalizedPhone: "+573109876543",
-    source: "instagram_ads",
-    campaign: "Reels Edición Gold - Retorno Inversión",
-    externalLeadId: "ig_lead_872134",
-    externalFormId: "form_ig_8721",
-    externalAdId: "ad_reels_gold",
-    status: "proposal",
-    qualification: 88,
-    aiSummary: "Alta Intención: Busca cotización formal para adquisición de 3 unidades comerciales.",
-    estimatedValue: 280000,
-    notes: "Tiene presupuesto aprobado por junta directiva.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-    ownerId: "demo-adv-2",
-    owner: {
-      id: "demo-adv-2",
-      name: "Carlos Andrés Rivas",
-      email: "carlos@bunkermarketing.io",
-      role: "SALES",
-    },
-    client: {
-      id: "c1",
-      name: "Grupo Alianza Constructora",
-    },
-  },
-  {
-    id: "demo-lead-3",
-    name: "Dr. Alejandro Morales",
-    companyName: "Clínica Especialistas Orales",
-    email: "amorales@especialistasorales.com",
-    phone: "+57 301 234 5678",
-    normalizedPhone: "+573012345678",
-    source: "whatsapp",
-    campaign: "Meta Click to WhatsApp",
-    externalLeadId: "wa_lead_651239",
-    status: "contacted",
-    qualification: 91,
-    aiSummary: "Lead Caliente: Consultó por tecnología guiada 3D. Requiere respuesta prioritaria.",
-    estimatedValue: 18500,
-    notes: "Pide agendar demo técnica con asesor senior.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 4 * 3600000).toISOString(),
-    ownerId: "demo-adv-1",
-    owner: {
-      id: "demo-adv-1",
-      name: "Valeria Mendoza",
-      email: "valeria@bunkermarketing.io",
-      role: "SALES",
-    },
-    client: {
-      id: "c2",
-      name: "Clínica Especialistas Orales",
-    },
-  },
-  {
-    id: "demo-lead-4",
-    name: "Camila Restrepo",
-    companyName: "Automotriz del Valle",
-    email: "crestrepo@automotrizvalle.com",
-    phone: "+57 315 678 1234",
-    normalizedPhone: "+573156781234",
-    source: "facebook_ads",
-    campaign: "Test Drive SUV Híbrida 2026",
-    externalLeadId: "fb_lead_441920",
-    status: "contacted",
-    qualification: 82,
-    aiSummary: "Calificado: Pregunta por plan de financiamiento y toma de vehículo usado en parte de pago.",
-    estimatedValue: 45000,
-    notes: "Agendó llamada de seguimiento para mañana 10am.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 7 * 3600000).toISOString(),
-    ownerId: "demo-adv-2",
-    owner: {
-      id: "demo-adv-2",
-      name: "Carlos Andrés Rivas",
-      email: "carlos@bunkermarketing.io",
-      role: "SALES",
-    },
-    client: {
-      id: "c1",
-      name: "Grupo Alianza Constructora",
-    },
-  },
-  {
-    id: "demo-lead-5",
-    name: "Mariana Gómez",
-    companyName: "Luxury Travel Club",
-    email: "mgomez@luxurytravelclub.net",
-    phone: "+57 320 890 4321",
-    normalizedPhone: "+573208904321",
-    source: "tiktok_ads",
-    campaign: "Experiencias VIP Caribe",
-    externalLeadId: "tt_lead_120934",
-    status: "new",
-    qualification: 86,
-    aiSummary: "Alta Intención: Descargó catálogo de paquetes corporativos de fin de año.",
-    estimatedValue: 34000,
-    notes: "Lead recién captado vía formulario instantáneo.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
-    ownerId: null,
-    owner: null,
-    client: {
-      id: "c2",
-      name: "Clínica Especialistas Orales",
-    },
-  },
-  {
-    id: "demo-lead-6",
-    name: "Ing. Roberto Salazar",
-    companyName: "Soluciones Logísticas SAS",
-    email: "rsalazar@solucioneslogisticas.co",
-    phone: "+57 318 432 9876",
-    normalizedPhone: "+573184329876",
-    source: "google_ads",
-    campaign: "Software B2B Cadena de Suministro",
-    externalLeadId: "g_lead_773129",
-    status: "converted",
-    qualification: 89,
-    aiSummary: "Calificado: Empresa con 120 empleados buscando centralizar comunicaciones de su equipo de ventas.",
-    estimatedValue: 62000,
-    notes: "Solicitó reunión con el director de operaciones.",
-    isDemo: true,
-    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
-    ownerId: "demo-adv-1",
-    owner: {
-      id: "demo-adv-1",
-      name: "Valeria Mendoza",
-      email: "valeria@bunkermarketing.io",
-      role: "SALES",
-    },
-    client: {
-      id: "c1",
-      name: "Grupo Alianza Constructora",
-    },
-  },
-];
-
 // Next 14 exige un Suspense alrededor de useSearchParams para prerenderizar la página (si no, falla el build).
 export default function LeadsPage() {
   return (
@@ -294,7 +115,6 @@ function LeadsPageContent() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState(searchParams.get("clientId") ?? "all");
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Sincronizar filtro si cambia el parámetro de URL (ej. navegación desde el Sidebar)
   useEffect(() => {
@@ -697,9 +517,7 @@ function LeadsPageContent() {
     return raw.replace(/[^0-9]/g, "");
   };
 
-  // Si no hay leads o el modo demo está activado, usar datos de presentación
-  const isShowingDemo = isDemoMode || (!loading && leads.length === 0);
-  const activeLeads = isShowingDemo ? DEMO_LEADS_DATA : leads;
+  const activeLeads = leads;
 
   // Metrics Calculations
   const totalLeadsCount = activeLeads.length;
@@ -797,12 +615,6 @@ function LeadsPageContent() {
             <span className="orvion-badge-gold text-[10px]">
               Directorio Central
             </span>
-            {isShowingDemo && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700">
-                <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
-                Demostración Activa
-              </span>
-            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
             Gestión de Leads & Prospectos
@@ -816,11 +628,9 @@ function LeadsPageContent() {
           <LeadsActionsMenu
             syncingMeta={syncingMeta}
             assigningRoundRobin={assigningRoundRobin}
-            isShowingDemo={isShowingDemo}
             onSyncMeta={handleSyncMetaLeads}
             onRoundRobin={handleBulkRoundRobin}
             onExportCsv={handleExportCSV}
-            onToggleDemo={() => setIsDemoMode((prev) => !prev)}
           />
 
           <button
@@ -1135,11 +945,6 @@ function LeadsPageContent() {
                               className="font-bold text-[#121417] dark:text-white hover:text-amber-600 dark:hover:text-amber-400 hover:underline flex items-center gap-1.5 leading-tight transition-colors"
                             >
                               <span>{lead.name}</span>
-                              {lead.isDemo && (
-                                <span className="orvion-badge-gold text-[9px] py-0.2 px-1.5">
-                                  DEMO
-                                </span>
-                              )}
                             </Link>
                             <div className="text-[11px] text-[#667085] dark:text-[#8C929D] flex items-center gap-1.5 mt-0.5">
                               <Building className="w-3 h-3 text-[#8C929D]" />

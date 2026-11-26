@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, RefreshCw, Users, Zap } from "lucide-react";
+import { ChevronDown, Download, RefreshCw, Users } from "lucide-react";
 
 interface LeadsActionsMenuProps {
   syncingMeta: boolean;
   assigningRoundRobin: boolean;
-  isShowingDemo: boolean;
   onSyncMeta: () => void;
   onRoundRobin: () => void;
   onExportCsv: () => void;
-  onToggleDemo: () => void;
 }
 
 const ITEM_CLASS =
@@ -23,11 +21,9 @@ const ITEM_CLASS =
 export default function LeadsActionsMenu({
   syncingMeta,
   assigningRoundRobin,
-  isShowingDemo,
   onSyncMeta,
   onRoundRobin,
   onExportCsv,
-  onToggleDemo,
 }: LeadsActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,18 +93,6 @@ export default function LeadsActionsMenu({
             <span>
               <span className="block text-xs font-bold text-[#121417] dark:text-white">Exportar a CSV</span>
               <span className="block text-[11px] text-[#667085] dark:text-[#8C929D]">Descarga la lista que ves en pantalla</span>
-            </span>
-          </button>
-
-          <div className="my-1.5 border-t border-[#E2E5EB] dark:border-[#1F242D]" />
-
-          <button type="button" role="menuitemcheckbox" aria-checked={isShowingDemo} className={ITEM_CLASS} onClick={() => run(onToggleDemo)}>
-            <Zap className={`w-4 h-4 mt-0.5 ${isShowingDemo ? "text-amber-500 fill-amber-500" : "text-[#8C929D]"}`} />
-            <span>
-              <span className="block text-xs font-bold text-[#121417] dark:text-white">
-                {isShowingDemo ? "Ocultar datos de demostración" : "Ver datos de demostración"}
-              </span>
-              <span className="block text-[11px] text-[#667085] dark:text-[#8C929D]">Para presentaciones a clientes</span>
             </span>
           </button>
         </div>
