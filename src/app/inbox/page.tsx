@@ -1749,16 +1749,7 @@ function UnifiedInboxPageContent() {
                   </div>
                 )}
 
-                <div className="text-[11px] text-[#8C929D] mb-1.5 flex items-center justify-between font-medium">
-                  <span>
-                    Enviando por <strong className="text-[#121417] dark:text-white">{CHANNEL_CONFIG[activeConversation.channel]?.label}</strong>
-                    {activeConversation.accountName &&
-                    activeConversation.accountName.trim().toLowerCase() !== (CHANNEL_CONFIG[activeConversation.channel]?.label || "").trim().toLowerCase() ? (
-                      <span className="opacity-75"> ({activeConversation.accountName})</span>
-                    ) : null}
-                  </span>
-                  <span className="text-[10px] text-[#8C929D]">Enter para enviar</span>
-                </div>
+                <div className="text-[10px] text-[#8C929D] mb-1.5 text-right font-medium">Enter para enviar</div>
 
                 {/* Plantillas de Respuestas Rápidas Comerciales */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-[11px]">
