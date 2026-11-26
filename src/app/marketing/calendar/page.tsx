@@ -44,93 +44,6 @@ interface CalendarCampaignItem {
   endDate?: string | null;
 }
 
-function generateDemoPosts(): CalendarPostItem[] {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-
-  return [
-    {
-      id: "post-demo-1",
-      content: "🏡 Descubre el nuevo proyecto Reserva Campestre. Apartamentos de 2 y 3 alcobas con subsidio Mi Casa Ya. ¡Separa el tuyo con $2,000,000 COP hoy!",
-      scheduledFor: new Date(y, m, 4, 10, 0).toISOString(),
-      createdAt: new Date(y, m, 1).toISOString(),
-      status: "published",
-      connectedAccount: {
-        id: "acc-1",
-        accountName: "Constructora Bolívar Instagram",
-        accountType: "instagram",
-      },
-    },
-    {
-      id: "post-demo-2",
-      content: "🚀 ¿Buscando rentabilidad inmobiliaria en 2026? Rentas cortas tipo Airbnb en el Centro Histórico. Retorno anual proyectado del 14.8% en dólares.",
-      scheduledFor: new Date(y, m, 8, 14, 30).toISOString(),
-      createdAt: new Date(y, m, 2).toISOString(),
-      status: "published",
-      connectedAccount: {
-        id: "acc-2",
-        accountName: "Inmobiliaria Andina Facebook",
-        accountType: "facebook",
-      },
-    },
-    {
-      id: "post-demo-3",
-      content: "⚡ Test Drive Exclusivo: Nueva SUV Híbrida 2026 con 0% arancel y garantía extendida por 5 años. Agenda tu prueba de manejo sin costo.",
-      scheduledFor: new Date(y, m, 12, 11, 0).toISOString(),
-      createdAt: new Date(y, m, 5).toISOString(),
-      status: "scheduled",
-      connectedAccount: {
-        id: "acc-3",
-        accountName: "Automotriz del Valle TikTok",
-        accountType: "tiktok",
-      },
-    },
-    {
-      id: "post-demo-4",
-      content: "✨ Sonríe con confianza: Jornada de valoración 3D para alineadores invisibles. Incluye escaneo digital sin moldes tradicionales.",
-      scheduledFor: new Date(y, m, 15, 9, 0).toISOString(),
-      createdAt: new Date(y, m, 6).toISOString(),
-      status: "scheduled",
-      connectedAccount: {
-        id: "acc-4",
-        accountName: "Clínica Dental Especialistas",
-        accountType: "instagram",
-      },
-    },
-    {
-      id: "post-demo-5",
-      content: "🔴 EN VIVO este jueves 7:00 PM: Cómo elegir el mejor crédito hipotecario para tu primera vivienda con nuestros expertos financieros.",
-      scheduledFor: new Date(y, m, 19, 19, 0).toISOString(),
-      createdAt: new Date(y, m, 8).toISOString(),
-      status: "scheduled",
-      connectedAccount: {
-        id: "acc-1",
-        accountName: "Constructora Bolívar Facebook",
-        accountType: "facebook",
-      },
-    },
-    {
-      id: "post-demo-6",
-      content: "📈 Caso de Éxito: Inversionista local adquirió 3 suites ejecutivas y duplicó su flujo de caja pasivo en 8 meses.",
-      scheduledFor: new Date(y, m, 24, 16, 0).toISOString(),
-      createdAt: new Date(y, m, 10).toISOString(),
-      status: "scheduled",
-      connectedAccount: {
-        id: "acc-2",
-        accountName: "Inmobiliaria Andina LinkedIn",
-        accountType: "linkedin",
-      },
-    },
-  ];
-}
-
-const DEMO_CAMPAIGNS: CalendarCampaignItem[] = [
-  { id: "c-1", name: "Meta Advantage+ Leads Inmobiliarios", platform: "meta_ads", status: "active" },
-  { id: "c-2", name: "Google Search PMax Conversiones", platform: "google_ads", status: "active" },
-  { id: "c-3", name: "TikTok Spark Ads Test Drive", platform: "tiktok", status: "active" },
-];
-
 export default function EditorialCalendarPage() {
   return (
     <Suspense
@@ -155,7 +68,6 @@ function EditorialCalendarContent() {
   const [posts, setPosts] = useState<CalendarPostItem[]>([]);
   const [campaigns, setCampaigns] = useState<CalendarCampaignItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
   const [selectedDayEvents, setSelectedDayEvents] = useState<{
     date: Date;
     posts: CalendarPostItem[];
@@ -199,19 +111,6 @@ function EditorialCalendarContent() {
   useEffect(() => {
     fetchCalendarData();
   }, [fetchCalendarData]);
-
-  // Si no hay posts en la base de datos o falló, activar visualización demostrativa para clientes
-  const isAutoDemoFallback = !loading && posts.length === 0 && !isDemoMode;
-
-  const activePosts = useMemo(() => {
-    if (isDemoMode || isAutoDemoFallback) return generateDemoPosts();
-    return posts;
-  }, [isDemoMode, isAutoDemoFallback, posts]);
-
-  const activeCampaigns = useMemo(() => {
-    if (isDemoMode || isAutoDemoFallback) return DEMO_CAMPAIGNS;
-    return campaigns;
-  }, [isDemoMode, isAutoDemoFallback, campaigns]);
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -272,7 +171,7 @@ function EditorialCalendarContent() {
   const eventsByDate = useMemo(() => {
     const map = new Map<string, { posts: CalendarPostItem[] }>();
 
-    activePosts.forEach((post) => {
+    posts.forEach((post) => {
       const targetDate = post.scheduledFor || post.publishedAt || post.createdAt;
       if (!targetDate) return;
       const key = new Date(targetDate).toISOString().split("T")[0];
@@ -282,15 +181,15 @@ function EditorialCalendarContent() {
     });
 
     return map;
-  }, [activePosts]);
+  }, [posts]);
 
   const scheduledThisMonthCount = useMemo(() => {
-    return activePosts.filter((p) => {
+    return posts.filter((p) => {
       if (!p.scheduledFor) return false;
       const d = new Date(p.scheduledFor);
       return d.getMonth() === month && d.getFullYear() === year;
     }).length;
-  }, [activePosts, month, year]);
+  }, [posts, month, year]);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -303,12 +202,7 @@ function EditorialCalendarContent() {
             <span className="orvion-badge-gold text-[10px]">
               Estrategia & Parrilla Social
             </span>
-            {isDemoMode || isAutoDemoFallback ? (
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-current" />
-                {isAutoDemoFallback ? "Parrilla Demostrativa Activa" : "Modo Demostrativo Activo"}
-              </span>
-            ) : activeClient ? (
+            {activeClient ? (
               <span className="text-[11px] font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-amber-500" />
                 Marca: <strong>{activeClient.name}</strong>
@@ -335,21 +229,6 @@ function EditorialCalendarContent() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Switch Modo Demo Interactivo */}
-          <button
-            type="button"
-            onClick={() => setIsDemoMode((prev) => !prev)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-orvion cursor-pointer border ${
-              isDemoMode
-                ? "bg-amber-400 text-[#121417] border-amber-500 shadow-amber-400/20"
-                : "bg-white dark:bg-[#121417] text-[#8C929D] border-[#E2E5EB] dark:border-[#1F242D] hover:text-[#121417] dark:hover:text-white"
-            }`}
-            title="Ver calendario editorial con contenidos de ejemplo"
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isDemoMode ? "text-[#121417] fill-current" : "text-amber-500"}`} />
-            <span>{isDemoMode ? "⚡ Modo Demo Activo" : "Modo Demo"}</span>
-          </button>
-
           <button
             type="button"
             onClick={fetchCalendarData}
@@ -368,25 +247,6 @@ function EditorialCalendarContent() {
           </Link>
         </div>
       </div>
-
-      {/* Banner Informativo si aplica Auto-Demo */}
-      {isAutoDemoFallback && (
-        <div className="p-4 rounded-[28px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-medium text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-orvion">
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>
-              <strong>Parrilla de Demostración Activa:</strong> Mostrando publicaciones planificadas de ejemplo para presentación comercial ante clientes.
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={fetchCalendarData}
-            className="px-3.5 py-1 rounded-full bg-white dark:bg-[#1E2229] border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-2xs shrink-0"
-          >
-            Sincronizar Servidor
-          </button>
-        </div>
-      )}
 
       {/* KPI Cards de Resumen en Cápsula Orvion */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -408,7 +268,7 @@ function EditorialCalendarContent() {
               <BarChart3 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activeCampaigns.length}</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{campaigns.length}</div>
           <div className="text-[11px] text-[#8C929D]">Tráfico e inversión en Meta Ads</div>
         </div>
 
@@ -419,7 +279,7 @@ function EditorialCalendarContent() {
               <Share2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{activePosts.length}</div>
+          <div className="text-2xl font-extrabold text-[#121417] dark:text-white">{posts.length}</div>
           <div className="text-[11px] text-[#8C929D]">En histórico y parrilla social</div>
         </div>
       </div>
@@ -456,6 +316,16 @@ function EditorialCalendarContent() {
           </button>
         </div>
       </div>
+
+      {!loading && posts.length === 0 && (
+        <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
+          <EmptyState
+            icon={CalendarDays}
+            title="Aún no hay publicaciones"
+            description="Programa contenido y aparecerá en la parrilla del calendario."
+          />
+        </div>
+      )}
 
       {/* Cuadrícula del Calendario Mensual en Cápsula Orvion */}
       <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion overflow-hidden">

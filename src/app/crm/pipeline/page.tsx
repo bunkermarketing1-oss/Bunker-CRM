@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense, useMemo } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   KanbanSquare,
@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Building,
   X,
-  Zap,
   Sparkles,
   RefreshCw,
 } from "lucide-react";
@@ -21,7 +20,6 @@ interface OpportunityItem {
   probability: number;
   status: string;
   stageId: string;
-  isDemo?: boolean;
   client?: {
     id: string;
     name: string;
@@ -48,70 +46,6 @@ interface PipelineStats {
   openDealsCount: number;
 }
 
-// Oportunidades realistas de demostración para presentaciones con clientes
-const DEMO_OPPORTUNITIES: OpportunityItem[] = [
-  {
-    id: "demo-opp-1",
-    title: "Campaña Preventa Inmobiliaria Q4",
-    value: 24500,
-    probability: 45,
-    status: "open",
-    stageId: "stage-0",
-    isDemo: true,
-    client: { id: "c1", name: "Grupo Alianza Constructora" },
-  },
-  {
-    id: "demo-opp-2",
-    title: "Retainer Anual E-Commerce Scaling",
-    value: 14000,
-    probability: 60,
-    status: "open",
-    stageId: "stage-1",
-    isDemo: true,
-    client: { id: "c2", name: "Kroma Brands Latam" },
-  },
-  {
-    id: "demo-opp-3",
-    title: "Auditoría Growth & Funnel Meta Ads",
-    value: 6500,
-    probability: 50,
-    status: "open",
-    stageId: "stage-1",
-    isDemo: true,
-    client: { id: "c3", name: "FinTech Soluciones" },
-  },
-  {
-    id: "demo-opp-4",
-    title: "Optimización Conversión Web SaaS",
-    value: 9800,
-    probability: 75,
-    status: "open",
-    stageId: "stage-2",
-    isDemo: true,
-    client: { id: "c4", name: "Nova Cloud Tech" },
-  },
-  {
-    id: "demo-opp-5",
-    title: "Cierre Expansión Retail B2B",
-    value: 32000,
-    probability: 85,
-    status: "open",
-    stageId: "stage-2",
-    isDemo: true,
-    client: { id: "c5", name: "MacroAlimentos Corp" },
-  },
-  {
-    id: "demo-opp-6",
-    title: "Contrato Anual Branding & Pauta Meta",
-    value: 45000,
-    probability: 100,
-    status: "won",
-    stageId: "stage-3",
-    isDemo: true,
-    client: { id: "c6", name: "AutoPremium Motors" },
-  },
-];
-
 export default function PipelinePage() {
   return (
     <Suspense
@@ -133,8 +67,8 @@ function PipelineContent() {
   const clients = useClientOptions();
   const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
 
-  const [rawStages, setRawStages] = useState<PipelineStageItem[]>([]);
-  const [rawStats, setRawStats] = useState<PipelineStats>({
+  const [stages, setStages] = useState<PipelineStageItem[]>([]);
+  const [stats, setStats] = useState<PipelineStats>({
     totalPipelineValue: 0,
     totalWonValue: 0,
     openDealsCount: 0,
@@ -143,7 +77,6 @@ function PipelineContent() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const [dealForm, setDealForm] = useState({
     title: "",
@@ -159,20 +92,12 @@ function PipelineContent() {
       const res = await fetch(`/api/pipeline${query}`);
       const json = await res.json();
       if (json.success) {
-        setRawStages(json.stages || []);
-        setRawStats(json.stats || { totalPipelineValue: 0, totalWonValue: 0, openDealsCount: 0 });
+        setStages(json.stages || []);
+        setStats(json.stats || { totalPipelineValue: 0, totalWonValue: 0, openDealsCount: 0 });
         if (json.stages && json.stages.length > 0 && !dealForm.stageId) {
           setDealForm((prev) => ({ ...prev, stageId: json.stages[0].id }));
         }
 
-        // Si la base está totalmente vacía de negocios en esta vista, activar demo por defecto
-        const totalLiveDeals = (json.stages || []).reduce(
-          (sum: number, s: PipelineStageItem) => sum + s.opportunities.length,
-          0
-        );
-        if (totalLiveDeals === 0) {
-          setIsDemoMode(true);
-        }
       }
     } catch (e) {
       console.error("Error al obtener pipeline:", e);
@@ -185,60 +110,7 @@ function PipelineContent() {
     fetchPipeline();
   }, [fetchPipeline]);
 
-  // Si el modo demo está activo, fusionamos o poblamos los stages con datos de demostración
-  const stages: PipelineStageItem[] = useMemo(() => {
-    if (!isDemoMode || rawStages.length === 0) return rawStages;
-
-    return rawStages.map((stage, idx) => {
-      // Repartir oportunidades demo según el índice de la columna
-      const assignedDemos = DEMO_OPPORTUNITIES.filter((demo) => {
-        if (idx === 0) return demo.stageId === "stage-0";
-        if (idx === 1) return demo.stageId === "stage-1";
-        if (idx === 2) return demo.stageId === "stage-2";
-        if (idx >= 3) return demo.stageId === "stage-3";
-        return false;
-      });
-
-      return {
-        ...stage,
-        opportunities: [...stage.opportunities, ...assignedDemos],
-      };
-    });
-  }, [isDemoMode, rawStages]);
-
-  // Estadísticas calculadas dinámicamente
-  const stats: PipelineStats = useMemo(() => {
-    if (!isDemoMode) return rawStats;
-
-    let total = rawStats.totalPipelineValue;
-    let won = rawStats.totalWonValue;
-    let count = rawStats.openDealsCount;
-
-    DEMO_OPPORTUNITIES.forEach((opp) => {
-      if (opp.status === "open") {
-        total += opp.value;
-        count += 1;
-      } else if (opp.status === "won") {
-        won += opp.value;
-      }
-    });
-
-    return {
-      totalPipelineValue: total,
-      totalWonValue: won,
-      openDealsCount: count,
-    };
-  }, [isDemoMode, rawStats]);
-
   const handleMoveStage = async (oppId: string, nextStageId: string, status?: string) => {
-    if (oppId.startsWith("demo-")) {
-      setFeedback({
-        type: "success",
-        text: "Oportunidad de demostración avanzada con éxito en el embudo.",
-      });
-      return;
-    }
-
     try {
       const res = await fetch("/api/pipeline", {
         method: "PUT",
@@ -276,7 +148,7 @@ function PipelineContent() {
         setDealForm({
           title: "",
           value: "3500",
-          stageId: rawStages[0]?.id || "",
+          stageId: stages[0]?.id || "",
           probability: "50",
         });
         setFeedback({ type: "success", text: "Oportunidad registrada exitosamente en el pipeline." });
@@ -308,11 +180,6 @@ function PipelineContent() {
                   <span>{activeClient.name}</span>
                 </span>
               )}
-              {isDemoMode && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 border border-amber-400/40 text-amber-600 dark:text-amber-400">
-                  ✦ Modo Presentación Activo
-                </span>
-              )}
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
@@ -325,21 +192,6 @@ function PipelineContent() {
 
           {/* Acciones y Métricas Resumen */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Toggle Modo Demo para Clientes */}
-            <button
-              type="button"
-              onClick={() => setIsDemoMode(!isDemoMode)}
-              className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer shadow-2xs ${
-                isDemoMode
-                  ? "bg-[#121417] text-white border-[#121417] dark:bg-amber-400 dark:text-[#121417] dark:border-amber-400"
-                  : "bg-[#F8F9FA] dark:bg-[#1A1D24] text-[#667085] border-[#E2E5EB] dark:border-[#242A35] hover:text-[#121417]"
-              }`}
-              title="Alternar datos demo para presentación a clientes"
-            >
-              <Zap className={`w-3.5 h-3.5 ${isDemoMode ? "text-amber-400 dark:text-[#121417]" : "text-[#8C929D]"}`} />
-              <span>{isDemoMode ? "Demo Activada" : "Modo Demo"}</span>
-            </button>
-
             {/* Cápsula de Valor Total */}
             <div className="px-4 py-2 rounded-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#242A35] text-right hidden sm:block">
               <span className="text-[10px] uppercase font-bold text-[#8C929D] tracking-wider block">
@@ -443,11 +295,6 @@ function PipelineContent() {
                         <div className="font-bold text-[#121417] dark:text-white text-xs leading-snug">
                           {opp.title}
                         </div>
-                        {opp.isDemo && (
-                          <span className="text-[9px] bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 font-extrabold px-1.5 py-0.5 rounded-md border border-amber-300/40 shrink-0">
-                            DEMO
-                          </span>
-                        )}
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
@@ -568,7 +415,7 @@ function PipelineContent() {
                     onChange={(e) => setDealForm({ ...dealForm, stageId: e.target.value })}
                     className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full px-4 py-2.5 text-xs text-[#121417] dark:text-white focus:outline-hidden focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] transition-all"
                   >
-                    {rawStages.map((st) => (
+                    {stages.map((st) => (
                       <option key={st.id} value={st.id}>
                         {st.name}
                       </option>
