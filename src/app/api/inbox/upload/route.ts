@@ -12,6 +12,22 @@ const DISALLOWED_EXTENSIONS = new Set([
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
+const STORAGE_STATUS = { UNAUTHORIZED: 401, FORBIDDEN: 403, NOT_FOUND: 404, PAYLOAD_TOO_LARGE: 413 } as const;
+
+/** Mensaje para el usuario según el estado que devuelve Supabase Storage. */
+function storageUploadErrorMessage(status: number): string {
+  if (status === STORAGE_STATUS.PAYLOAD_TOO_LARGE) {
+    return "El archivo es demasiado pesado para subirlo. Prueba con uno más pequeño.";
+  }
+  if (status === STORAGE_STATUS.UNAUTHORIZED || status === STORAGE_STATUS.FORBIDDEN) {
+    return "El servidor no tiene permiso para guardar archivos. Avisa a soporte: la llave de Supabase del servidor es inválida.";
+  }
+  if (status === STORAGE_STATUS.NOT_FOUND) {
+    return "No existe el almacenamiento de archivos del servidor. Avisa a soporte.";
+  }
+  return "Error al guardar el archivo en el servidor.";
+}
+
 /**
  * POST /api/inbox/upload
  * Sube una fotografía, documento (PDF, Word, Excel) o archivo a Supabase Storage (bucket público `inbox-media`)
@@ -73,9 +89,17 @@ export async function POST(req: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("[INBOX_UPLOAD] Error uploading to Supabase Storage:", uploadError);
+      // El statusCode distingue "archivo demasiado grande" de "llave inválida" o "bucket
+      // inexistente"; sin él todos los fallos se ven igual en pantalla y en el log.
+      const storageStatus = Number((uploadError as { statusCode?: string | number }).statusCode);
+      console.error("[INBOX_UPLOAD] Error uploading to Supabase Storage:", {
+        statusCode: storageStatus || null,
+        message: uploadError.message,
+        sizeBytes: file.size,
+        contentType,
+      });
       return NextResponse.json(
-        { success: false, error: "Error al guardar el archivo en el servidor." },
+        { success: false, error: storageUploadErrorMessage(storageStatus) },
         { status: 500 }
       );
     }
