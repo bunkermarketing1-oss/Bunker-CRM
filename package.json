@@ -46,6 +46,7 @@
     "test:roles": "node --experimental-strip-types --no-warnings --test tests/roles.test.mjs",
     "test:team-live": "node --experimental-strip-types --no-warnings --test tests/team-live.test.mjs",
     "test:inbox-merge": "node --experimental-strip-types --no-warnings --test tests/inbox-merge.test.mjs",
+    "test:appointment-slots": "node --experimental-strip-types --no-warnings --test tests/appointment-slots.test.mjs",
     "test:whatsapp-media-type": "node --experimental-strip-types --no-warnings --test tests/whatsapp-media-type.test.mjs",
     "test:ai-assistant": "node --experimental-strip-types --no-warnings --test tests/ai-assistant.test.mjs",
     "postinstall": "prisma generate",

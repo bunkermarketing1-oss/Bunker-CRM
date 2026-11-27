@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma, Appointment } from "@prisma/client";
-import { APPOINTMENT_STATUS, type AppointmentStatus, type AppointmentLocation } from "@/lib/constants/appointments";
+import {
+  APPOINTMENT_SLOT_MINUTES,
+  APPOINTMENT_STATUS,
+  type AppointmentStatus,
+  type AppointmentLocation,
+} from "@/lib/constants/appointments";
+import { isSlotTaken } from "@/lib/appointment-slots";
 import type {
   AppointmentDto,
   CreateAppointmentInput,
@@ -12,6 +18,9 @@ import { validateAndNormalizePhone } from "@/lib/phone";
 import { sendTwilioSms } from "@/lib/integrations/twilio";
 import { LEAD_STATUS } from "@/lib/constants/crm";
 import { assignLeadRoundRobin } from "@/services/round-robin.service";
+
+// Una cita larga que empezó antes todavía puede cubrir el bloque pedido: se busca hacia atrás hasta 3 horas.
+const MAX_APPOINTMENT_LOOKBEHIND_MS = 3 * 60 * 60 * 1000;
 
 export interface AppointmentScope {
   organizationId: string;
@@ -204,7 +213,7 @@ export async function createAppointment(scope: AppointmentScope, input: CreateAp
       title: input.title,
       description: input.description || null,
       scheduledAt: scheduledDate,
-      durationMinutes: input.durationMinutes || 45,
+      durationMinutes: input.durationMinutes || APPOINTMENT_SLOT_MINUTES,
       status: APPOINTMENT_STATUS.SCHEDULED,
       locationType: input.locationType || "in_store",
       locationAddress: input.locationAddress || null,
@@ -371,7 +380,7 @@ export async function getPublicBookingClientInfo(slug: string): Promise<PublicBo
     bookingSlug: client.bookingSlug || client.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     bookingTitle: client.bookingTitle || `Reserva tu Cita con ${client.name}`,
     bookingNotice: client.bookingNotice || "Selecciona la fecha y horario que mejor se adapte a tu disponibilidad.",
-    bookingDurationMin: client.bookingDurationMin || 45,
+    bookingDurationMin: APPOINTMENT_SLOT_MINUTES,
     phone: client.phone,
     existingBookings: existingBookings.map((b) => ({
       scheduledAt: b.scheduledAt.toISOString(),
@@ -409,6 +418,32 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
   const normalizedPhone = phoneCheck.normalized;
   const now = new Date();
   const scheduledDate = new Date(input.scheduledAt);
+
+  if (Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() <= now.getTime()) {
+    throw new Error("Elige un horario que todavía no haya pasado.");
+  }
+
+  // La página muestra los bloques libres, pero otra persona pudo reservar el mismo mientras tanto:
+  // se vuelve a comprobar aquí para no dar dos citas al mismo horario.
+  const nearbyBookings = await prisma.appointment.findMany({
+    where: {
+      clientId: client.id,
+      status: { notIn: [APPOINTMENT_STATUS.CANCELLED, APPOINTMENT_STATUS.NO_SHOW] },
+      scheduledAt: {
+        gte: new Date(scheduledDate.getTime() - MAX_APPOINTMENT_LOOKBEHIND_MS),
+        lt: new Date(scheduledDate.getTime() + APPOINTMENT_SLOT_MINUTES * 60_000),
+      },
+    },
+    select: { scheduledAt: true, durationMinutes: true },
+  });
+  const slotTaken = isSlotTaken(
+    scheduledDate,
+    APPOINTMENT_SLOT_MINUTES,
+    nearbyBookings.map((b) => ({ scheduledAt: b.scheduledAt.toISOString(), durationMinutes: b.durationMinutes }))
+  );
+  if (slotTaken) {
+    throw new Error("Ese horario ya fue reservado. Elige otro, por favor.");
+  }
 
   // 1. Buscar o registrar el Lead en el CRM
   let lead = await prisma.lead.findFirst({
@@ -472,7 +507,7 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
       title: `Cita con ${input.customerName} - ${client.name}`,
       description: input.customerNotes || null,
       scheduledAt: scheduledDate,
-      durationMinutes: client.bookingDurationMin || 45,
+      durationMinutes: APPOINTMENT_SLOT_MINUTES,
       status: APPOINTMENT_STATUS.CONFIRMED,
       locationType: input.locationType || "in_store",
       locationAddress: "Showroom / Local Principal",

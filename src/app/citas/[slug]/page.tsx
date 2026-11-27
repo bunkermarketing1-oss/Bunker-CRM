@@ -17,21 +17,18 @@ import {
   Building2,
   ExternalLink,
 } from "lucide-react";
-import { APPOINTMENT_LOCATION, APPOINTMENT_LOCATION_LABELS } from "@/lib/constants/appointments";
+import {
+  APPOINTMENT_LOCATION,
+  APPOINTMENT_LOCATION_LABELS,
+  APPOINTMENT_SLOT_MINUTES,
+  BOOKING_DAY_END,
+  BOOKING_DAY_START,
+} from "@/lib/constants/appointments";
+import { buildDaySlots, isSlotTaken } from "@/lib/appointment-slots";
 import type { PublicBookingClientInfo } from "@/types/appointments";
 import { ROUTES } from "@/lib/constants/routes";
 
-const TIME_SLOTS = [
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-];
+const TIME_SLOTS = buildDaySlots(BOOKING_DAY_START, BOOKING_DAY_END, APPOINTMENT_SLOT_MINUTES);
 
 export default function PublicBookingPage({ params }: { params: { slug: string } }) {
   const [client, setClient] = useState<PublicBookingClientInfo | null>(null);
@@ -68,7 +65,6 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         setSelectedDate(tomorrow.toISOString().split("T")[0]);
-        setSelectedTime("11:00");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar la página de citas.");
       } finally {
@@ -78,11 +74,11 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
     loadClient();
   }, [params.slug]);
 
-  // Horarios ocupados para la fecha seleccionada
-  const isSlotBooked = (time: string) => {
+  // Un bloque no se puede elegir si ya pasó o si se traslapa con otra cita (se comparan instantes, no textos de hora).
+  const isSlotUnavailable = (time: string) => {
     if (!client || !selectedDate) return false;
-    const targetIsoPrefix = `${selectedDate}T${time}`;
-    return client.existingBookings.some((b) => b.scheduledAt.startsWith(targetIsoPrefix));
+    const slotStart = new Date(`${selectedDate}T${time}:00`);
+    return slotStart.getTime() <= Date.now() || isSlotTaken(slotStart, APPOINTMENT_SLOT_MINUTES, client.existingBookings);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -285,7 +281,10 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
                   min={todayStr}
                   required
                   value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setSelectedTime("");
+                  }}
                   className="w-full px-4 py-2.5 rounded-xl border border-[#D0D5DD] dark:border-[#242A35] bg-white dark:bg-[#181B22] text-[#121417] dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-500/50"
                 />
               </div>
@@ -294,11 +293,11 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-[#121417] dark:text-white flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-amber-500" />
-                  <span>2. Horario Disponible ({client.bookingDurationMin} minutos)</span>
+                  <span>2. Horario disponible ({APPOINTMENT_SLOT_MINUTES} minutos)</span>
                 </label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {TIME_SLOTS.map((time) => {
-                    const booked = isSlotBooked(time);
+                    const booked = isSlotUnavailable(time);
                     const isSelected = selectedTime === time;
 
                     return (

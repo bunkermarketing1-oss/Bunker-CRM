@@ -11,8 +11,10 @@ import {
   Loader2,
 } from "lucide-react";
 import {
+  APPOINTMENT_DURATION_OPTIONS,
   APPOINTMENT_LOCATION,
   APPOINTMENT_LOCATION_LABELS,
+  APPOINTMENT_SLOT_MINUTES,
   type AppointmentLocation,
 } from "@/lib/constants/appointments";
 import type { CreateAppointmentInput } from "@/types/appointments";
@@ -45,7 +47,7 @@ export function CreateAppointmentModal({
   const [customerPhone, setCustomerPhone] = useState(initialLeadPhone || "");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
-  const [durationMinutes, setDurationMinutes] = useState(45);
+  const [durationMinutes, setDurationMinutes] = useState<number>(APPOINTMENT_SLOT_MINUTES);
   const [locationType, setLocationType] = useState<AppointmentLocation>(APPOINTMENT_LOCATION.IN_STORE);
   const [locationAddress, setLocationAddress] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
@@ -226,6 +228,7 @@ export function CreateAppointmentModal({
               </label>
               <input
                 type="time"
+                step={APPOINTMENT_SLOT_MINUTES * 60}
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#D0D5DD] dark:border-[#242A35] bg-white dark:bg-[#181B22] text-[#121417] dark:text-white text-xs focus:outline-hidden"
@@ -241,10 +244,11 @@ export function CreateAppointmentModal({
                 onChange={(e) => setDurationMinutes(Number(e.target.value))}
                 className="w-full px-3 py-2 rounded-xl border border-[#D0D5DD] dark:border-[#242A35] bg-white dark:bg-[#181B22] text-[#121417] dark:text-white text-xs focus:outline-hidden"
               >
-                <option value={30}>30 minutos</option>
-                <option value={45}>45 minutos</option>
-                <option value={60}>1 hora</option>
-                <option value={90}>1 hora y media</option>
+                {APPOINTMENT_DURATION_OPTIONS.map((option) => (
+                  <option key={option.minutes} value={option.minutes}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

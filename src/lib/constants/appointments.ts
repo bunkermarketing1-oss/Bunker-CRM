@@ -14,6 +14,20 @@ export const APPOINTMENT_LOCATION = {
   VIDEO_CALL: "video_call",
 } as const;
 
+/** Cada bloque de la agenda dura 20 minutos: citas ágiles y una agenda apretada para que el equipo comercial haga más llamadas. */
+export const APPOINTMENT_SLOT_MINUTES = 20;
+
+/** Horario que ofrece la página pública de reservas (hora local de quien reserva). */
+export const BOOKING_DAY_START = "09:00";
+export const BOOKING_DAY_END = "18:00";
+
+/** Duraciones al crear una cita desde el CRM: uno, dos o tres bloques. */
+export const APPOINTMENT_DURATION_OPTIONS = [
+  { minutes: APPOINTMENT_SLOT_MINUTES, label: "20 minutos" },
+  { minutes: APPOINTMENT_SLOT_MINUTES * 2, label: "40 minutos" },
+  { minutes: APPOINTMENT_SLOT_MINUTES * 3, label: "1 hora" },
+] as const;
+
 export type AppointmentLocation = (typeof APPOINTMENT_LOCATION)[keyof typeof APPOINTMENT_LOCATION];
 
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, { label: string; color: string; bg: string }> = {
