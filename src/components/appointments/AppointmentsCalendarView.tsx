@@ -23,6 +23,7 @@ import {
 import type { AppointmentDto } from "@/types/appointments";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useAuth } from "@/context/AuthContext";
 import { CreateAppointmentModal } from "./CreateAppointmentModal";
 import { AppointmentDetailModal } from "./AppointmentDetailModal";
 
@@ -38,10 +39,11 @@ export function AppointmentsCalendarView() {
   } = useAppointments();
 
   const clients = useClientOptions();
+  const { user } = useAuth();
 
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDto | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -64,11 +66,12 @@ export function AppointmentsCalendarView() {
     });
   }, [appointments, search, statusFilter, clientFilter]);
 
-  const handleCopyBookingLink = (clientSlug: string) => {
-    const url = `${window.location.origin}/citas/${clientSlug}`;
-    navigator.clipboard.writeText(url);
-    setCopiedSlug(clientSlug);
-    setTimeout(() => setCopiedSlug(null), 2500);
+  // Enlace personal: la agenda que ve el cliente es la de este vendedor (sus citas y sus bloqueos), no la de toda la empresa.
+  const handleCopyBookingLink = (clientId: string) => {
+    const personal = user?.id ? `?asesor=${user.id}` : "";
+    navigator.clipboard.writeText(`${window.location.origin}/citas/${clientId}${personal}`);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
   };
 
   return (
@@ -182,22 +185,19 @@ export function AppointmentsCalendarView() {
               type="button"
               onClick={() => {
                 const target = clients.find((c) => c.id === clientFilter) || clients[0];
-                if (target) {
-                  const slug = target.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-                  handleCopyBookingLink(slug);
-                }
+                if (target) handleCopyBookingLink(target.id);
               }}
               className="px-3.5 py-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] text-xs font-bold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#181B22] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              {copiedSlug ? (
+              {linkCopied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-emerald-500">Enlace Copiado!</span>
+                  <span className="text-emerald-500">¡Copiado!</span>
                 </>
               ) : (
                 <>
                   <LinkIcon className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Enlace de Agendamiento</span>
+                  <span>Copiar mi enlace</span>
                 </>
               )}
             </button>

@@ -32,6 +32,7 @@ const TIME_SLOTS = buildDaySlots(BOOKING_DAY_START, BOOKING_DAY_END, APPOINTMENT
 
 export default function PublicBookingPage({ params }: { params: { slug: string } }) {
   const [client, setClient] = useState<PublicBookingClientInfo | null>(null);
+  const [advisorId, setAdvisorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +55,10 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/public/booking/${params.slug}`);
+        // Enlace personal de un vendedor: /citas/<empresa>?asesor=<id>. Sin él, se usa la agenda de la empresa.
+        const advisor = new URLSearchParams(window.location.search).get("asesor");
+        setAdvisorId(advisor);
+        const res = await fetch(`/api/public/booking/${params.slug}${advisor ? `?asesor=${encodeURIComponent(advisor)}` : ""}`);
         const data = await res.json();
         if (!res.ok || !data.success) {
           throw new Error(data.error || "No se encontró la empresa solicitada.");
@@ -114,6 +118,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
           scheduledAt,
           customerNotes: customerNotes.trim() || undefined,
           locationType,
+          advisorId: client?.advisor ? advisorId : undefined,
         }),
       });
 
@@ -191,7 +196,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#121417] dark:text-white">
-            {client.bookingTitle}
+            {client.advisor ? `Agenda una llamada con ${client.advisor.name}` : client.bookingTitle}
           </h1>
           <p className="text-xs sm:text-sm text-[#8C929D] font-medium max-w-md mx-auto">
             {client.bookingNotice}

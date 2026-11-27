@@ -65,6 +65,8 @@ export interface PublicBookingInput {
   scheduledAt: string; // ISO string
   customerNotes?: string;
   locationType?: AppointmentLocation;
+  /** Vendedor cuyo enlace personal usó el cliente; si falta, se asigna por turno. */
+  advisorId?: string | null;
 }
 
 export interface PublicBookingClientInfo {
@@ -77,6 +79,9 @@ export interface PublicBookingClientInfo {
   bookingNotice: string | null;
   bookingDurationMin: number;
   phone: string | null;
+  /** Vendedor del enlace personal (si el enlace lo trae y es válido). */
+  advisor: { id: string; name: string } | null;
+  /** Citas y bloqueos que ya ocupan la agenda; la página los trata igual. */
   existingBookings: { scheduledAt: string; durationMinutes: number }[];
 }
 

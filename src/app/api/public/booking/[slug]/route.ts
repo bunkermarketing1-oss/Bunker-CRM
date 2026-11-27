@@ -7,9 +7,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    const info = await getPublicBookingClientInfo(params.slug);
+    const info = await getPublicBookingClientInfo(params.slug, new URL(req.url).searchParams.get("asesor"));
     if (!info) {
       return NextResponse.json(
         { success: false, error: "Página de citas no disponible o no encontrada." },

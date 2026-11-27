@@ -28,6 +28,15 @@ export const APPOINTMENT_DURATION_OPTIONS = [
   { minutes: APPOINTMENT_SLOT_MINUTES * 3, label: "1 hora" },
 ] as const;
 
+export const BLOCK_KIND = {
+  ONCE: "once",
+  WEEKLY: "weekly",
+} as const;
+
+export type BlockKind = (typeof BLOCK_KIND)[keyof typeof BLOCK_KIND];
+
+export const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"] as const;
+
 export type AppointmentLocation = (typeof APPOINTMENT_LOCATION)[keyof typeof APPOINTMENT_LOCATION];
 
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, { label: string; color: string; bg: string }> = {

@@ -7,6 +7,7 @@ import {
   type AppointmentLocation,
 } from "@/lib/constants/appointments";
 import { isSlotTaken } from "@/lib/appointment-slots";
+import { getAdvisorBlockIntervals } from "@/services/availability.service";
 import type {
   AppointmentDto,
   CreateAppointmentInput,
@@ -329,8 +330,20 @@ export async function deleteAppointment(scope: AppointmentScope, appointmentId: 
   return { success: true };
 }
 
+/** Vendedor al que pertenece un enlace personal de agenda; null si el enlace no trae uno válido de esa organización. */
+async function resolveBookableAdvisor(organizationId: string, advisorId?: string | null) {
+  if (!advisorId) return null;
+  return prisma.user.findFirst({
+    where: { id: advisorId, isActive: true, memberships: { some: { organizationId } } },
+    select: { id: true, name: true },
+  });
+}
+
 /** Obtiene la información pública de un cliente para su página de reservas */
-export async function getPublicBookingClientInfo(slug: string): Promise<PublicBookingClientInfo | null> {
+export async function getPublicBookingClientInfo(
+  slug: string,
+  advisorId?: string | null
+): Promise<PublicBookingClientInfo | null> {
   const cleanSlug = slug.trim().toLowerCase();
 
   const client = await prisma.client.findFirst({
@@ -343,6 +356,7 @@ export async function getPublicBookingClientInfo(slug: string): Promise<PublicBo
     },
     select: {
       id: true,
+      organizationId: true,
       name: true,
       companyName: true,
       logoUrl: true,
@@ -360,9 +374,12 @@ export async function getPublicBookingClientInfo(slug: string): Promise<PublicBo
   const now = new Date();
   const nextTwoWeeks = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
+  // Con enlace personal la agenda es la del vendedor (sus citas y sus bloqueos); con el enlace de la empresa, la de toda la empresa.
+  const advisor = await resolveBookableAdvisor(client.organizationId, advisorId);
+
   const existingBookings = await prisma.appointment.findMany({
     where: {
-      clientId: client.id,
+      ...(advisor ? { userId: advisor.id } : { clientId: client.id }),
       scheduledAt: { gte: now, lte: nextTwoWeeks },
       status: { notIn: [APPOINTMENT_STATUS.CANCELLED, APPOINTMENT_STATUS.NO_SHOW] },
     },
@@ -371,6 +388,7 @@ export async function getPublicBookingClientInfo(slug: string): Promise<PublicBo
       durationMinutes: true,
     },
   });
+  const blockedByAdvisor = advisor ? await getAdvisorBlockIntervals(advisor.id, now.getTime(), nextTwoWeeks.getTime()) : [];
 
   return {
     id: client.id,
@@ -382,10 +400,11 @@ export async function getPublicBookingClientInfo(slug: string): Promise<PublicBo
     bookingNotice: client.bookingNotice || "Selecciona la fecha y horario que mejor se adapte a tu disponibilidad.",
     bookingDurationMin: APPOINTMENT_SLOT_MINUTES,
     phone: client.phone,
-    existingBookings: existingBookings.map((b) => ({
-      scheduledAt: b.scheduledAt.toISOString(),
-      durationMinutes: b.durationMinutes,
-    })),
+    advisor,
+    existingBookings: [
+      ...existingBookings.map((b) => ({ scheduledAt: b.scheduledAt.toISOString(), durationMinutes: b.durationMinutes })),
+      ...blockedByAdvisor,
+    ],
   };
 }
 
@@ -424,23 +443,25 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
   }
 
   // La página muestra los bloques libres, pero otra persona pudo reservar el mismo mientras tanto:
-  // se vuelve a comprobar aquí para no dar dos citas al mismo horario.
+  // se vuelve a comprobar aquí para no dar dos citas al mismo horario (ni sobre un bloqueo del vendedor).
+  const advisor = await resolveBookableAdvisor(client.organizationId, input.advisorId);
+  const slotEndMs = scheduledDate.getTime() + APPOINTMENT_SLOT_MINUTES * 60_000;
   const nearbyBookings = await prisma.appointment.findMany({
     where: {
-      clientId: client.id,
+      ...(advisor ? { userId: advisor.id } : { clientId: client.id }),
       status: { notIn: [APPOINTMENT_STATUS.CANCELLED, APPOINTMENT_STATUS.NO_SHOW] },
       scheduledAt: {
         gte: new Date(scheduledDate.getTime() - MAX_APPOINTMENT_LOOKBEHIND_MS),
-        lt: new Date(scheduledDate.getTime() + APPOINTMENT_SLOT_MINUTES * 60_000),
+        lt: new Date(slotEndMs),
       },
     },
     select: { scheduledAt: true, durationMinutes: true },
   });
-  const slotTaken = isSlotTaken(
-    scheduledDate,
-    APPOINTMENT_SLOT_MINUTES,
-    nearbyBookings.map((b) => ({ scheduledAt: b.scheduledAt.toISOString(), durationMinutes: b.durationMinutes }))
-  );
+  const advisorBlocks = advisor ? await getAdvisorBlockIntervals(advisor.id, scheduledDate.getTime(), slotEndMs) : [];
+  const slotTaken = isSlotTaken(scheduledDate, APPOINTMENT_SLOT_MINUTES, [
+    ...nearbyBookings.map((b) => ({ scheduledAt: b.scheduledAt.toISOString(), durationMinutes: b.durationMinutes })),
+    ...advisorBlocks,
+  ]);
   if (slotTaken) {
     throw new Error("Ese horario ya fue reservado. Elige otro, por favor.");
   }
@@ -480,10 +501,15 @@ export async function createPublicBooking(slug: string, input: PublicBookingInpu
     }
   }
 
-  // 2. Asignar un asesor disponible del cliente vía Round-Robin
+  // 2. Asignar el asesor: el del enlace personal, o uno disponible del cliente vía Round-Robin
   let assignedAdvisorId: string | null = null;
-  const rrResult = await assignLeadRoundRobin(lead.id, { triggerInstantContact: false }).catch(() => null);
-  if (rrResult?.success && rrResult.assignedAdvisorId) {
+  const rrResult = advisor ? null : await assignLeadRoundRobin(lead.id, { triggerInstantContact: false }).catch(() => null);
+  if (advisor) {
+    assignedAdvisorId = advisor.id;
+    if (!lead.ownerId) {
+      await prisma.lead.update({ where: { id: lead.id }, data: { ownerId: advisor.id } });
+    }
+  } else if (rrResult?.success && rrResult.assignedAdvisorId) {
     assignedAdvisorId = rrResult.assignedAdvisorId;
   } else {
     const fallbackAdvisor = await prisma.user.findFirst({

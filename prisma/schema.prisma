@@ -31,6 +31,7 @@ model User {
   clients      Client[]             @relation("ClientOwner")
   calls        Call[]
   appointments Appointment[]
+  availabilityBlocks AvailabilityBlock[]
 }
 
 model Organization {
@@ -60,6 +61,7 @@ model Organization {
   smsOptOuts        SmsOptOut[]
   aiAssistants      ClientAiAssistant[]
   appointments      Appointment[]
+  availabilityBlocks AvailabilityBlock[]
 }
 
 model OrganizationMember {
@@ -577,6 +579,29 @@ model AuditLog {
 }
 
 // Citas comerciales programadas (visitas a showroom, videollamadas o llamadas comerciales)
+/// Horario que un vendedor deja no disponible (comida, reuniones, citas personales). Es único (startsAt/endsAt)
+/// o se repite cada semana (weekdays + startTime/endTime en la zona horaria del vendedor).
+model AvailabilityBlock {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  title          String
+  startsAt       DateTime?
+  endsAt         DateTime?
+  weekdays       Int[]        @default([]) // 0 = domingo … 6 = sábado; vacío = bloqueo único
+  startTime      String? // "13:00"
+  endTime        String? // "14:00"
+  timezone       String? // IANA, p. ej. "America/Chicago"
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
 model Appointment {
   id              String        @id @default(uuid())
   organizationId  String

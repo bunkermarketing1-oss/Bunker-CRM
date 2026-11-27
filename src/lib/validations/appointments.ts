@@ -52,4 +52,5 @@ export const publicBookingSchema = z.object({
   scheduledAt: z.string().datetime({ message: "Por favor selecciona una fecha y horario válido." }),
   customerNotes: z.string().trim().max(500).optional().nullable(),
   locationType: z.enum(locationValues).default(APPOINTMENT_LOCATION.IN_STORE),
+  advisorId: z.string().uuid().optional().nullable(),
 });
