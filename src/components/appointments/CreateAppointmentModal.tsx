@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   X,
   Calendar,
@@ -28,6 +28,9 @@ interface CreateAppointmentModalProps {
   initialLeadName?: string;
   initialLeadPhone?: string;
   initialClientId?: string;
+  /** Fecha (YYYY-MM-DD) y hora (HH:mm) con las que abre, p. ej. al tocar un bloque libre del calendario. */
+  initialDate?: string;
+  initialTime?: string;
 }
 
 export function CreateAppointmentModal({
@@ -38,6 +41,8 @@ export function CreateAppointmentModal({
   initialLeadName,
   initialLeadPhone,
   initialClientId,
+  initialDate,
+  initialTime,
 }: CreateAppointmentModalProps) {
   const clients = useClientOptions();
 
@@ -55,6 +60,12 @@ export function CreateAppointmentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialDate) setDate(initialDate);
+    if (initialTime) setTime(initialTime);
+  }, [isOpen, initialDate, initialTime]);
 
   if (!isOpen) return null;
 

@@ -2,6 +2,9 @@ import type { BookedInterval } from "@/lib/appointment-slots";
 
 /** Un bloqueo tal como se guarda: único (startsAt/endsAt) o semanal (weekdays + horas en una zona horaria). */
 export interface BlockRule {
+  /** Opcionales: la agenda interna los usa para mostrar el nombre del bloqueo; el servidor no los necesita. */
+  id?: string;
+  title?: string;
   startsAt: string | null;
   endsAt: string | null;
   weekdays: number[];
@@ -12,8 +15,8 @@ export interface BlockRule {
 
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 24 * 60 * MS_PER_MINUTE;
-// Tope de días a recorrer al expandir un bloqueo semanal: la agenda pública solo mira dos semanas.
-const MAX_EXPANDED_DAYS = 31;
+// Tope de días a recorrer al expandir un bloqueo semanal: cubre la cuadrícula de un mes (42 días).
+const MAX_EXPANDED_DAYS = 62;
 
 /** Diferencia (zona − UTC) en milisegundos en ese instante; cambia con el horario de verano. */
 function zoneOffsetMs(utcMs: number, timeZone: string): number {
@@ -57,8 +60,13 @@ function minutesOfDay(time: string): number {
  * Convierte los bloqueos de un vendedor en intervalos concretos dentro de [fromMs, toMs],
  * con el mismo formato que las citas, para que la agenda los trate igual que una cita ocupada.
  */
-export function expandBlocksToIntervals(blocks: BlockRule[], fromMs: number, toMs: number): BookedInterval[] {
-  const intervals: BookedInterval[] = [];
+export interface ExpandedBlock extends BookedInterval {
+  blockId?: string;
+  title?: string;
+}
+
+export function expandBlocksToIntervals(blocks: BlockRule[], fromMs: number, toMs: number): ExpandedBlock[] {
+  const intervals: ExpandedBlock[] = [];
 
   for (const block of blocks) {
     const isWeekly = block.weekdays.length > 0 && block.startTime && block.endTime && block.timezone;
@@ -68,7 +76,12 @@ export function expandBlocksToIntervals(blocks: BlockRule[], fromMs: number, toM
       const start = new Date(block.startsAt).getTime();
       const end = new Date(block.endsAt).getTime();
       if (end <= fromMs || start >= toMs || end <= start) continue;
-      intervals.push({ scheduledAt: new Date(start).toISOString(), durationMinutes: Math.round((end - start) / MS_PER_MINUTE) });
+      intervals.push({
+        scheduledAt: new Date(start).toISOString(),
+        durationMinutes: Math.round((end - start) / MS_PER_MINUTE),
+        blockId: block.id,
+        title: block.title,
+      });
       continue;
     }
 
@@ -86,7 +99,7 @@ export function expandBlocksToIntervals(blocks: BlockRule[], fromMs: number, toM
       const startMs = zonedWallTimeToUtcMs(dateStr, block.startTime!, timeZone);
       if (startMs >= toMs) break;
       if (startMs + durationMinutes * MS_PER_MINUTE <= fromMs) continue;
-      intervals.push({ scheduledAt: new Date(startMs).toISOString(), durationMinutes });
+      intervals.push({ scheduledAt: new Date(startMs).toISOString(), durationMinutes, blockId: block.id, title: block.title });
     }
   }
 

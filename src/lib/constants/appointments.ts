@@ -28,6 +28,20 @@ export const APPOINTMENT_DURATION_OPTIONS = [
   { minutes: APPOINTMENT_SLOT_MINUTES * 3, label: "1 hora" },
 ] as const;
 
+export const CALENDAR_VIEW = {
+  DAY: "day",
+  WEEK: "week",
+  MONTH: "month",
+} as const;
+
+export type CalendarView = (typeof CALENDAR_VIEW)[keyof typeof CALENDAR_VIEW];
+
+export const CALENDAR_VIEW_LABELS: Record<CalendarView, string> = {
+  [CALENDAR_VIEW.DAY]: "Día",
+  [CALENDAR_VIEW.WEEK]: "Semana",
+  [CALENDAR_VIEW.MONTH]: "Mes",
+};
+
 export const BLOCK_KIND = {
   ONCE: "once",
   WEEKLY: "weekly",

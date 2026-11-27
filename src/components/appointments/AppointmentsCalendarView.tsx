@@ -26,8 +26,25 @@ import { useClientOptions } from "@/hooks/useClientOptions";
 import { useAuth } from "@/context/AuthContext";
 import { CreateAppointmentModal } from "./CreateAppointmentModal";
 import { AppointmentDetailModal } from "./AppointmentDetailModal";
+import { AgendaCalendar } from "./calendar/AgendaCalendar";
+import type { AvailabilityBlockDto } from "@/types/availability";
 
-export function AppointmentsCalendarView() {
+interface AppointmentsCalendarViewProps {
+  blocks: AvailabilityBlockDto[];
+}
+
+type ViewMode = "calendar" | "list";
+
+/** Fecha local (YYYY-MM-DD) y hora (HH:mm) de un instante, como las espera el formulario de creación. */
+function toFormDateTime(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+  };
+}
+
+export function AppointmentsCalendarView({ blocks }: AppointmentsCalendarViewProps) {
   const {
     appointments,
     stats,
@@ -43,6 +60,8 @@ export function AppointmentsCalendarView() {
 
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDto | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [draftSlot, setDraftSlot] = useState<{ date: string; time: string } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -167,6 +186,21 @@ export function AppointmentsCalendarView() {
             </select>
           )}
 
+          <div className="flex gap-1 p-1 rounded-full bg-[#F3F4F7] dark:bg-[#1A1D24] text-xs font-semibold">
+            {([["calendar", "Calendario"], ["list", "Lista"]] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1 rounded-full transition-colors cursor-pointer ${
+                  viewMode === mode ? "bg-white dark:bg-[#121417] text-[#121417] dark:text-white shadow-2xs" : "text-[#8C929D]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <button
             type="button"
             onClick={refresh}
@@ -205,7 +239,10 @@ export function AppointmentsCalendarView() {
 
           <button
             type="button"
-            onClick={() => setIsCreateOpen(true)}
+            onClick={() => {
+              setDraftSlot(null);
+              setIsCreateOpen(true);
+            }}
             className="px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -214,7 +251,20 @@ export function AppointmentsCalendarView() {
         </div>
       </div>
 
+      {viewMode === "calendar" && (
+        <AgendaCalendar
+          appointments={filteredAppointments}
+          blocks={blocks}
+          onSelectAppointment={setSelectedAppointment}
+          onCreateAt={(date) => {
+            setDraftSlot(toFormDateTime(date));
+            setIsCreateOpen(true);
+          }}
+        />
+      )}
+
       {/* Lista de Citas */}
+      {viewMode === "list" && (
       <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-xs font-semibold text-[#8C929D] flex items-center justify-center gap-2">
@@ -330,12 +380,15 @@ export function AppointmentsCalendarView() {
           </div>
         )}
       </div>
+      )}
 
       {/* Modal de Creación */}
       <CreateAppointmentModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSubmit={create}
+        initialDate={draftSlot?.date}
+        initialTime={draftSlot?.time}
       />
 
       {/* Modal de Detalle / Edición */}

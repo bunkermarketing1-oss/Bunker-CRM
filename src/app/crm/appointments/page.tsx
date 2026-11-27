@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { RefreshCw } from "lucide-react";
 import { AppointmentsCalendarView } from "@/components/appointments/AppointmentsCalendarView";
 import { AvailabilityPanel } from "@/components/appointments/AvailabilityPanel";
+import { useAvailabilityBlocks } from "@/hooks/useAvailabilityBlocks";
 
 export default function AppointmentsPage() {
   return (
@@ -21,6 +22,9 @@ export default function AppointmentsPage() {
 }
 
 function AppointmentsPageContent() {
+  // Un solo origen de bloqueos: el panel los edita y el calendario los dibuja.
+  const availability = useAvailabilityBlocks();
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
@@ -28,10 +32,10 @@ function AppointmentsPageContent() {
         <p className="text-xs text-[#8C929D] mt-0.5">Recordatorios por SMS automáticos 24 h y 2 h antes de cada cita.</p>
       </div>
 
-      <AvailabilityPanel />
+      <AvailabilityPanel {...availability} />
 
       {/* Vista de Citas y Calendario */}
-      <AppointmentsCalendarView />
+      <AppointmentsCalendarView blocks={availability.blocks} />
     </div>
   );
 }

@@ -9,8 +9,7 @@ import {
   BOOKING_DAY_START,
   WEEKDAY_LABELS,
 } from "@/lib/constants/appointments";
-import { useAvailabilityBlocks } from "@/hooks/useAvailabilityBlocks";
-import type { AvailabilityBlockDto } from "@/types/availability";
+import type { AvailabilityBlockDto, CreateAvailabilityBlockInput } from "@/types/availability";
 import { BlockFormModal } from "./BlockFormModal";
 
 const WORKDAYS_KEY = "1,2,3,4,5";
@@ -29,9 +28,15 @@ function describeBlock(block: AvailabilityBlockDto): string {
   return `${start.toLocaleDateString("es", { day: "numeric", month: "short" })} · ${time(start)}–${time(end)}`;
 }
 
+interface AvailabilityPanelProps {
+  blocks: AvailabilityBlockDto[];
+  loading: boolean;
+  create: (input: CreateAvailabilityBlockInput) => Promise<string | null>;
+  remove: (id: string) => Promise<string | null>;
+}
+
 /** Horarios que el vendedor deja no disponibles (comida, reuniones…); las reservas de su enlace los respetan. */
-export function AvailabilityPanel() {
-  const { blocks, loading, create, remove } = useAvailabilityBlocks();
+export function AvailabilityPanel({ blocks, loading, create, remove }: AvailabilityPanelProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
