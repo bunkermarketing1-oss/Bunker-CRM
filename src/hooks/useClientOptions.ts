@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 export interface ClientOption {
   id: string;
@@ -17,9 +18,19 @@ export function emitClientsUpdated() {
   }
 }
 
-/** Lista de clientes (id, nombre y logo) para selectores y barra lateral. */
-export function useClientOptions() {
-  const [clients, setClients] = useState<ClientOption[]>([]);
+interface UseClientOptionsConfig {
+  /** Solo para el selector de marcas de la barra lateral: es lo único que debe listar todas las marcas siempre. */
+  includeAll?: boolean;
+}
+
+/**
+ * Lista de clientes (id, nombre y logo) para selectores y formularios.
+ * Regla de la app: dentro de una marca NO aparece ninguna otra (ni en filtros, ni en formularios, ni en listas);
+ * para ver otra marca se cambia de marca en la barra lateral. Por eso, con una marca activa, la lista tiene solo esa marca.
+ */
+export function useClientOptions({ includeAll = false }: UseClientOptionsConfig = {}) {
+  const [allClients, setClients] = useState<ClientOption[]>([]);
+  const activeClientId = useActiveClientId();
 
   const fetchClients = useCallback(() => {
     let cancelled = false;
@@ -66,5 +77,8 @@ export function useClientOptions() {
     };
   }, [fetchClients]);
 
-  return clients;
+  return useMemo(
+    () => (includeAll || !activeClientId ? allClients : allClients.filter((client) => client.id === activeClientId)),
+    [allClients, includeAll, activeClientId]
+  );
 }

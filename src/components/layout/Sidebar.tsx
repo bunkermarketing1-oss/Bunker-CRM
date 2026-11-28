@@ -39,6 +39,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
     () => [
       ROUTES.DASHBOARD,
       ROUTES.INBOX,
+      ROUTES.APPOINTMENTS,
       ROUTES.LEADS,
       ROUTES.CAMPAIGNS,
       ROUTES.PIPELINE,
@@ -49,6 +50,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
       ROUTES.CALLS,
       ROUTES.SMS,
       ROUTES.TEAM_LIVE,
+      ROUTES.TEAM_USERS,
     ],
     []
   );
@@ -60,7 +62,8 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
 
   const accountName = isClient ? user?.clientName || "Mi Empresa" : user?.organizationName || "Bunker Agency";
 
-  const clients = useClientOptions();
+  // El selector de marcas es lo único de la app que lista todas las marcas, para poder cambiar de una a otra.
+  const clients = useClientOptions({ includeAll: true });
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -156,18 +159,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
           };
         }
         if (
-          item.href === ROUTES.DASHBOARD ||
-          item.href === ROUTES.INBOX ||
-          item.href === ROUTES.LEADS ||
-          item.href === ROUTES.CAMPAIGNS ||
-          item.href === ROUTES.PIPELINE ||
-          item.href === ROUTES.ACTIVITIES ||
-          item.href === ROUTES.TASKS ||
-          item.href === ROUTES.REPORTS ||
-          item.href === ROUTES.INTEGRATIONS ||
-          item.href === ROUTES.CALLS ||
-          item.href === ROUTES.SMS ||
-          item.href === ROUTES.TEAM_LIVE
+          filtrableRoutes.includes(item.href)
         ) {
           return {
             ...item,
@@ -177,7 +169,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
         return item;
       }),
     }));
-  }, [sections, isClient, selectedClientId, selectedClient]);
+  }, [sections, isClient, selectedClientId, selectedClient, filtrableRoutes]);
 
   return (
     <>
