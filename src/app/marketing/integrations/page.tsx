@@ -103,6 +103,15 @@ function IntegrationsPageContent() {
   const [channelSearchFilter, setChannelSearchFilter] = useState("");
   const [unassignedFilter, setUnassignedFilter] = useState<"all" | "pages" | "ads" | "instagram">("all");
   const [unassignedSearch, setUnassignedSearch] = useState("");
+
+  // Al entrar a una marca solo existe la vista de sus canales, y el filtro de "sin asignar" (cuentas de otras marcas
+  // o de la agencia) no puede quedar activo.
+  const activeClientId = activeClient?.id;
+  useEffect(() => {
+    if (!activeClientId) return;
+    setActiveView("channels");
+    setChannelTypeFilter((current) => (current === "unassigned" ? "all" : current));
+  }, [activeClientId]);
   const [refreshingMeta, setRefreshingMeta] = useState(false);
 
   // Connect Modal (claves manuales)
@@ -557,7 +566,9 @@ function IntegrationsPageContent() {
         </div>
       )}
 
-      {/* Selector de Vista: Canales (Buffer) vs Clientes vs Técnico */}
+      {/* Selector de vista: solo en el portafolio de la agencia. Dentro de una marca se ve únicamente lo de esa marca:
+          la lista de todas las empresas y las llaves de las plataformas no le pertenecen. */}
+      {!activeClient && (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 bg-[#FAF9F5] rounded-2xl border border-[#E8E6DF]">
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
@@ -622,6 +633,7 @@ function IntegrationsPageContent() {
           </div>
         )}
       </div>
+      )}
 
       {/* ========================================================================= */}
       {/* VISTA 1: GESTOR DE CANALES SOCIALES & CUENTAS (BUFFER STYLE)              */}
@@ -760,6 +772,7 @@ function IntegrationsPageContent() {
                 }
                 )
               </button>
+              {!activeClient && (
               <button
                 onClick={() => setChannelTypeFilter("unassigned")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${channelTypeFilter === "unassigned"
@@ -769,6 +782,7 @@ function IntegrationsPageContent() {
               >
                 Sin Asignar ({agencyAccounts.filter((a) => a.externalId !== "meta_master_user").length})
               </button>
+              )}
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -819,7 +833,7 @@ function IntegrationsPageContent() {
                     <Plus className="w-4 h-4 text-white" />
                     <span>Conectar WhatsApp Cloud</span>
                   </button>
-                ) : agencyAccounts.length > 0 ? (
+                ) : !activeClient && agencyAccounts.length > 0 ? (
                   <button
                     type="button"
                     onClick={() => setChannelTypeFilter("unassigned")}
@@ -914,6 +928,8 @@ function IntegrationsPageContent() {
 
                     {/* Asignación Rápida a Cliente (Estilo Buffer) */}
                     <div className="pt-3 border-t border-[#F0EEE6] space-y-2">
+                      {!activeClient && (
+                      <>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[11px] font-semibold text-[#4D4C48]">
                           Cliente Asignado:
@@ -958,6 +974,9 @@ function IntegrationsPageContent() {
                           )}
                         </div>
                       </div>
+
+                      </>
+                      )}
 
                       {/* Acción Rápida con la Marca Activa */}
                       {activeClient && (
