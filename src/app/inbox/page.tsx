@@ -42,6 +42,7 @@ import { conversationMatchesChannel, mergeConversations } from "@/lib/inbox-merg
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { findUnattendedChats } from "@/lib/unattended-chats";
 import { playAlarmClockSound } from "@/lib/alarm-sound";
+import { BrandPicker } from "@/components/inbox/BrandPicker";
 import { UnattendedChatsAlert } from "@/components/inbox/UnattendedChatsAlert";
 import type {
   ConversationItem,
@@ -561,6 +562,8 @@ function UnifiedInboxPageContent() {
 
   const fetchInbox = useCallback(
     async (isSilent = false, triggerSync = false) => {
+      // Cada marca es un mundo: sin marca elegida no se carga ningún chat.
+      if (!isClient && activeClientId === "all") return;
       // Si es un sondeo silencioso de fondo y ya hay una petición corriendo, no sobrecargar
       if (isSilent && isFetchingRef.current) return;
 
@@ -1048,6 +1051,11 @@ function UnifiedInboxPageContent() {
     }
   };
 
+  const needsBrand = !isClient && activeClientId === "all";
+  useEffect(() => {
+    if (needsBrand) setConversations([]);
+  }, [needsBrand]);
+
   // Aviso de chats sin atender: reloj de caricatura abajo a la derecha, con sonido al aparecer, cuando entra uno nuevo y como recordatorio.
   const unattended = useMemo(() => findUnattendedChats(conversations, now), [conversations, now]);
   const [silencedUntil, setSilencedUntil] = useState(0);
@@ -1074,6 +1082,8 @@ function UnifiedInboxPageContent() {
     setActiveChannel("all");
     setSelectedConvId(unattended[0].id);
   };
+
+  if (needsBrand) return <BrandPicker />;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -1183,7 +1193,6 @@ function UnifiedInboxPageContent() {
               }}
               className="bg-transparent text-xs text-[#121417] dark:text-white font-medium focus:outline-none cursor-pointer"
             >
-              <option value="all" className="dark:bg-[#1A1D24]">Todas las Marcas</option>
               {visibleClients.map((c) => (
                 <option key={c.id} value={c.id} className="dark:bg-[#1A1D24]">
                   {c.name}

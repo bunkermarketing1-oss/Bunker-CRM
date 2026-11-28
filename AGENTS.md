@@ -9,6 +9,16 @@ Tailwind · pnpm 11 · Node 22 · deploy en Dokploy (Nixpacks).
 
 ---
 
+## 0. Regla de oro: cada marca es un mundo
+
+Cada marca (empresa cliente) es un mundo aparte. Dentro de una marca no aparece **nada** de otra: ni chats, ni
+leads, ni citas, ni campañas, ni filtros, ni formularios, ni totales. Las pantallas con datos por marca no
+mezclan marcas en una sola lista: sin marca activa piden elegir una (ver `BrandPicker` en la bandeja) y para ver
+otra se cambia de marca en la barra lateral (`?clientId=`). El filtro por marca se aplica también en el servidor.
+Antes de dar por terminada cualquier pantalla o endpoint, comprueba que no filtra datos de otra marca.
+
+---
+
 ## 1. Capas: dónde va cada cosa
 
 | Capa | Ubicación | Responsabilidad | No debe |
