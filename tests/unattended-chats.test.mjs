@@ -17,3 +17,8 @@ test("el tiempo de espera se muestra en minutos, horas o días", () => {
   assert.equal(formatWaitLabel(4 * 3600 + 12 * 60), "4 h 12 min");
   assert.equal(formatWaitLabel(51 * 3600), "2 d 3 h");
 });
+
+test("los chats con más de 72 horas esperando se dan por abandonados", () => {
+  const result = findUnattendedChats([chat("abandonado", 73 * 60), chat("vigente", 71 * 60)], NOW);
+  assert.deepEqual(result.map((c) => c.id), ["vigente"]);
+});

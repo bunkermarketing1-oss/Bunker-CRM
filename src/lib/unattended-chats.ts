@@ -3,6 +3,9 @@ import type { ConversationItem } from "@/types/inbox";
 /** Un chat cuenta como "sin atender" cuando el cliente espera respuesta desde hace 5 minutos o más (el mismo umbral del cronómetro). */
 export const UNATTENDED_AFTER_SECONDS = 5 * 60;
 
+/** Pasadas 72 h el chat ya se considera abandonado: seguiría en la lista, pero dejaría de sonar la alarma por él. */
+export const UNATTENDED_GIVE_UP_SECONDS = 72 * 3600;
+
 export interface UnattendedChat {
   id: string;
   senderName: string;
@@ -22,7 +25,7 @@ export function findUnattendedChats(
       senderName: conversation.senderName,
       waitingSeconds: Math.max(0, Math.floor((nowMs - new Date(conversation.lastInboundTime as string).getTime()) / 1000)),
     }))
-    .filter((chat) => chat.waitingSeconds >= thresholdSeconds)
+    .filter((chat) => chat.waitingSeconds >= thresholdSeconds && chat.waitingSeconds <= UNATTENDED_GIVE_UP_SECONDS)
     .sort((a, b) => b.waitingSeconds - a.waitingSeconds);
 }
 
