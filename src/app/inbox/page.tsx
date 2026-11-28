@@ -330,7 +330,6 @@ function renderMessageContent(body: string, isOutbound: boolean) {
   );
 }
 
-const NO_BRAND_LABEL = "Sin marca";
 const UNATTENDED_REMINDER_MS = 5 * 60 * 1000;
 const UNATTENDED_SILENCE_MS = 10 * 60 * 1000;
 
@@ -629,16 +628,13 @@ function UnifiedInboxPageContent() {
   }, [fetchInbox]);
 
   // La pestaña solo filtra lo que ya está en memoria: cambiar de canal es instantáneo y no vuelve a pedir nada.
-  // En la vista de todas las marcas los chats se agrupan por marca (cada grupo conserva el orden por reciente), para que no se mezclen.
-  const groupByBrand = !isClient && activeClientId === "all";
-  const activeConversations = useMemo(() => {
-    const visible = conversations.filter(
-      (c) => conversationMatchesChannel(c.channel, activeChannel) && (!searchMatchIds || searchMatchIds.has(c.id))
-    );
-    if (!groupByBrand) return visible;
-    const brandOf = (c: ConversationItem) => c.clientName || NO_BRAND_LABEL;
-    return [...visible].sort((a, b) => brandOf(a).localeCompare(brandOf(b), "es"));
-  }, [conversations, activeChannel, searchMatchIds, groupByBrand]);
+  const activeConversations = useMemo(
+    () =>
+      conversations.filter(
+        (c) => conversationMatchesChannel(c.channel, activeChannel) && (!searchMatchIds || searchMatchIds.has(c.id))
+      ),
+    [conversations, activeChannel, searchMatchIds]
+  );
 
   const activeConversation = useMemo(() => {
     return activeConversations.find((c) => c.id === selectedConvId) || activeConversations[0] || null;
@@ -1244,18 +1240,11 @@ function UnifiedInboxPageContent() {
                 </div>
               </div>
             ) : (
-              activeConversations.map((conv, index) => {
+              activeConversations.map((conv) => {
                 const isSelected = activeConversation?.id === conv.id;
-                const brand = conv.clientName || NO_BRAND_LABEL;
-                const startsBrand = groupByBrand && (index === 0 || brand !== (activeConversations[index - 1].clientName || NO_BRAND_LABEL));
                 return (
-                  <React.Fragment key={conv.id}>
-                  {startsBrand && (
-                    <div className="sticky top-0 z-10 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-[#1A1710] border-y border-amber-100 dark:border-amber-900/40">
-                      {brand}
-                    </div>
-                  )}
                   <button
+                    key={conv.id}
                     type="button"
                     onClick={() => {
                       setSelectedConvId(conv.id);
@@ -1326,7 +1315,6 @@ function UnifiedInboxPageContent() {
                       <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-2" title="No leído" />
                     )}
                   </button>
-                  </React.Fragment>
                 );
               })
             )}
