@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCalls } from "@/hooks/useCalls";
 import { useCallableLeads } from "@/hooks/useCallableLeads";
 import { usePhoneLines } from "@/hooks/usePhoneLines";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { useVoiceDevice } from "@/hooks/useVoiceDevice";
 import { PhonePanel } from "@/components/calls/PhonePanel";
@@ -32,8 +33,11 @@ function CallsContent() {
   const urlName = searchParams.get("name");
 
   // Si en la URL viene clientId, se inicializa con ese o con "all"
-  const [selectedClientId, setSelectedClientId] = useState<string>(urlClientId || "all");
+  const [pickedClientId, setSelectedClientId] = useState<string>(urlClientId || "all");
   const clientOptions = useClientOptions();
+  const activeClientId = useActiveClientId();
+  // Con marca activa manda ella; el estado solo sirve en la vista de agencia.
+  const selectedClientId = activeClientId ?? pickedClientId;
 
   useEffect(() => {
     if (urlClientId) {
@@ -95,7 +99,7 @@ function CallsContent() {
 
         {/* Controles del encabezado: Selector de Marca + Botón de Actualizar */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          {isAdmin && (
+          {isAdmin && clientOptions.length > 1 && (
             <div className="flex items-center gap-1.5 bg-white border border-[#EAECF0] rounded-xl px-3 py-2 shadow-2xs">
               <Building2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
               <select

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   PhoneCall,
   Video,
@@ -16,6 +15,7 @@ import {
   AlertCircle,
   Activity,
 } from "lucide-react";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 
 interface ActivityItem {
@@ -45,8 +45,7 @@ export default function ActivitiesPage() {
 }
 
 function ActivitiesContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
   const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
 
@@ -67,12 +66,8 @@ function ActivitiesContent() {
 
   // Inicializar clientId en formulario según la marca seleccionada
   useEffect(() => {
-    if (activeClient) {
-      setFormData((prev) => ({ ...prev, clientId: activeClient.id }));
-    } else {
-      setFormData((prev) => ({ ...prev, clientId: "" }));
-    }
-  }, [activeClient]);
+    setFormData((prev) => ({ ...prev, clientId: clientId ?? "" }));
+  }, [clientId]);
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -111,7 +106,7 @@ function ActivitiesContent() {
     try {
       const payload = {
         ...formData,
-        clientId: formData.clientId || undefined,
+        clientId: clientId ?? (formData.clientId || undefined),
       };
       const res = await fetch("/api/activities", {
         method: "POST",
@@ -126,7 +121,7 @@ function ActivitiesContent() {
           title: "",
           description: "",
           outcome: "completed",
-          clientId: activeClient ? activeClient.id : "",
+          clientId: clientId ?? "",
         });
         setFeedback({ type: "success", text: "Actividad comercial registrada exitosamente." });
         fetchActivities();
@@ -432,7 +427,8 @@ function ActivitiesContent() {
             </div>
 
             <form onSubmit={handleCreate} className="p-6 space-y-4">
-              {/* Cliente / Marca */}
+              {/* Cliente / Marca: con marca activa queda fija y no se ofrece elegir otra */}
+              {!clientId && (
               <div>
                 <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1.5">
                   Empresa / Marca Asignada
@@ -450,6 +446,7 @@ function ActivitiesContent() {
                   ))}
                 </select>
               </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1.5">

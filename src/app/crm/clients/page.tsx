@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
+  Loader2,
   Building,
   Mail,
   Phone,
@@ -32,6 +33,7 @@ import {
 } from "lucide-react";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 import { emitClientsUpdated } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAccountModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import TwilioSmsConsentNotice from "@/components/common/TwilioSmsConsentNotice";
@@ -137,6 +139,7 @@ export default function ClientsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const isClient = Boolean(user?.isClientUser);
+  const activeClientId = useActiveClientId();
 
   // Tab principal: Directorio Comercial (Clientes) vs Cuentas de Nuestros Clientes (BM & Anuncios)
   const [activeTab, setActiveTab] = useState<"directory" | "ad_accounts">("directory");
@@ -156,6 +159,13 @@ export default function ClientsPage() {
       router.replace(`/crm/clients/${user.clientId}`);
     }
   }, [user, router]);
+
+  // Con una marca activa no se lista el directorio (mostraría otras marcas ni sus cuentas): se va directo a su ficha.
+  useEffect(() => {
+    if (activeClientId && !user?.isClientUser) {
+      router.replace(`/crm/clients/${activeClientId}`);
+    }
+  }, [activeClientId, user, router]);
 
   // Filters & Search para Directorio Comercial
   const [search, setSearch] = useState("");
@@ -503,6 +513,14 @@ export default function ClientsPage() {
     fetchClients();
     fetchIntegrations();
   };
+
+  if (activeClientId && !isClient) {
+    return (
+      <div className="flex items-center justify-center py-20 text-xs text-[#667085]">
+        <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

@@ -456,7 +456,8 @@ export async function getInboxConversations(
   const clientsList = isClientUser
     ? []
     : await prisma.client.findMany({
-        where: { organizationId, isDeleted: false },
+        // Con una marca activa solo se devuelve esa marca: la lista completa no debe viajar al navegador.
+        where: { organizationId, isDeleted: false, ...(targetClientId ? { id: targetClientId } : {}) },
         select: { id: true, name: true, companyName: true },
         orderBy: { name: "asc" },
       });
@@ -465,7 +466,12 @@ export async function getInboxConversations(
   const userWhere: Prisma.UserWhereInput = {
     memberships: { some: { organizationId } },
     isActive: true,
-    ...(isClientUser && targetClientId ? { clientId: targetClientId } : {}),
+    // Un usuario CLIENT solo ve a su equipo; con una marca activa, el administrador ve el de la marca y al personal de agencia.
+    ...(targetClientId
+      ? isClientUser
+        ? { clientId: targetClientId }
+        : { OR: [{ clientId: targetClientId }, { clientId: null }] }
+      : {}),
   };
 
   const advisors: AdvisorOption[] = await prisma.user.findMany({

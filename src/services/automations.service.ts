@@ -87,9 +87,10 @@ async function audit(organizationId: string, userId: string, action: string, rul
   });
 }
 
-export async function listSmsAutomations(organizationId: string) {
+/** Con una marca activa solo se devuelven sus reglas y las generales (sin marca), que también le aplican. */
+export async function listSmsAutomations(organizationId: string, clientId?: string | null) {
   const rules = await prisma.automationRule.findMany({
-    where: smsRuleWhere(organizationId),
+    where: { ...smsRuleWhere(organizationId), ...(clientId ? { OR: [{ clientId }, { clientId: null }] } : {}) },
     select: ruleSelect,
     orderBy: { createdAt: "desc" },
   });

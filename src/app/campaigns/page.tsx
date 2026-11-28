@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   RefreshCw,
@@ -18,6 +18,7 @@ import {
   Search,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { ACCOUNT_STATUS } from "@/lib/constants/integrations";
 import SocialNetworkIcon from "@/components/common/SocialNetworkIcon";
 import CampaignAdsModal from "@/components/campaigns/CampaignAdsModal";
@@ -308,11 +309,12 @@ export default function CampaignsPage() {
 function CampaignsPageContent() {
   const { user } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const activeClientId = useActiveClientId();
   const isClient = Boolean(user?.isClientUser || user?.role === "CLIENT");
 
   const [days, setDays] = useState(30);
-  const [clientId, setClientId] = useState(searchParams.get("clientId") ?? "all");
+  // La marca activa (barra lateral) es la única fuente del filtro de marca.
+  const clientId = activeClientId ?? "all";
   const [selectedAccountId, setSelectedAccountId] = useState("all");
   const [activeNetwork, setActiveNetwork] = useState<CampaignNetwork>("all");
   const [campaignSearch, setCampaignSearch] = useState("");
@@ -351,11 +353,6 @@ function CampaignsPageContent() {
       setSyncing(false);
     }
   };
-
-  useEffect(() => {
-    const param = searchParams.get("clientId") ?? "all";
-    setClientId(param);
-  }, [searchParams]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -450,7 +447,7 @@ function CampaignsPageContent() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#121417] dark:text-white tracking-tight">
-            {isClient ? "Rendimiento de tus Campañas" : "Campañas & Métricas por Empresa"}
+            {isClient ? "Rendimiento de tus Campañas" : activeClientId ? "Campañas & Métricas" : "Campañas & Métricas por Empresa"}
           </h1>
           <p className="text-xs text-[#8C929D] font-medium mt-0.5">
             Inversión, alcance y resultados de las campañas pagadas en Meta (Facebook e Instagram) y TikTok.
@@ -605,7 +602,7 @@ function CampaignsPageContent() {
                       <AlertTriangle className={`w-3 h-3 ${isSelected ? "text-amber-400" : "text-amber-600"}`} />
                     )}
                     <span>{a.accountName}</span>
-                    {!isClient && a.client && (
+                    {!isClient && !activeClientId && a.client && (
                       <span className={isSelected ? "text-slate-300 text-[11px]" : "text-[#667085] text-[11px]"}>
                         · {a.client.name}
                       </span>
@@ -624,7 +621,7 @@ function CampaignsPageContent() {
                 <span>
                   Viendo datos de <strong>{selectedAccount.accountName}</strong>
                 </span>
-                {!isClient && selectedAccount.client && (
+                {!isClient && !activeClientId && selectedAccount.client && (
                   <span className="text-amber-800/80">({selectedAccount.client.name})</span>
                 )}
                 <span className="text-amber-700 font-mono text-[11px]">· {data?.campaigns?.length || 0} campaña(s)</span>

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ROLES, type StoredUserRole } from "@/lib/roles";
 import { useUsersManagement, type ManagedUser } from "@/hooks/useUsersManagement";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
 
@@ -42,6 +43,7 @@ export function UsersManagementPanel() {
   } = useUsersManagement();
 
   const clients = useClientOptions();
+  const activeClientId = useActiveClientId();
 
   // Filtros
   const [search, setSearch] = useState("");
@@ -53,7 +55,9 @@ export function UsersManagementPanel() {
   const [createName, setCreateName] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createRole, setCreateRole] = useState<StoredUserRole>(ROLES.CLIENT);
-  const [createClientId, setCreateClientId] = useState<string>("");
+  const [pickedCreateClientId, setCreateClientId] = useState<string>("");
+  // Con marca activa el usuario nuevo queda fijado a ella, sin ofrecer otras empresas.
+  const createClientId = activeClientId ?? (pickedCreateClientId || clients[0]?.id || "");
   const [createPassword, setCreatePassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,7 +99,7 @@ export function UsersManagementPanel() {
     setCreateName("");
     setCreateEmail("");
     setCreateRole(ROLES.CLIENT);
-    setCreateClientId(clients[0]?.id || "");
+    setCreateClientId(activeClientId ?? clients[0]?.id ?? "");
     setCreatePassword(generateRandomPassword());
     setCreateError(null);
     setIsCreateOpen(true);
@@ -164,6 +168,8 @@ export function UsersManagementPanel() {
   // Filtrado
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
+      // Con marca activa solo se listan los usuarios de esa marca (el API devuelve toda la organización).
+      if (activeClientId && u.clientId !== activeClientId) return false;
       const q = search.toLowerCase().trim();
       const matchSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
       const matchRole =
@@ -177,7 +183,7 @@ export function UsersManagementPanel() {
         u.clientId === clientFilter;
       return matchSearch && matchRole && matchClient;
     });
-  }, [users, search, roleFilter, clientFilter]);
+  }, [users, search, roleFilter, clientFilter, activeClientId]);
 
   return (
     <div className="space-y-4">
@@ -238,11 +244,12 @@ export function UsersManagementPanel() {
             className="px-3 py-1.5 rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] bg-[#F8F9FA] dark:bg-[#1A1D24] text-xs text-[#121417] dark:text-white font-semibold focus:outline-none cursor-pointer"
           >
             <option value="all" className="dark:bg-[#1A1D24]">Todos los roles</option>
-            <option value="ADMIN" className="dark:bg-[#1A1D24]">Administrador / CEO</option>
+            {!activeClientId && <option value="ADMIN" className="dark:bg-[#1A1D24]">Administrador / CEO</option>}
             <option value="CLIENT_OWNER" className="dark:bg-[#1A1D24]">Director de Empresa</option>
             <option value="CLIENT" className="dark:bg-[#1A1D24]">Asesor de Ventas</option>
           </select>
 
+          {!activeClientId && (
           <select
             value={clientFilter}
             onChange={(e) => setClientFilter(e.target.value)}
@@ -256,6 +263,7 @@ export function UsersManagementPanel() {
               </option>
             ))}
           </select>
+          )}
         </div>
       </div>
 
@@ -284,7 +292,9 @@ export function UsersManagementPanel() {
                 {filteredUsers.map((u) => {
                   const isOwner = u.role === ROLES.CLIENT_OWNER;
                   const isAdmin = u.role === ROLES.ADMIN;
-                  const detail = [ROLE_LABEL[u.role] ?? u.role, u.client?.name ?? "Bunker Agency"].join(" · ");
+                  const detail = [ROLE_LABEL[u.role] ?? u.role, activeClientId ? null : (u.client?.name ?? "Bunker Agency")]
+                    .filter(Boolean)
+                    .join(" · ");
                   const menuItems: ActionMenuItem[] = [
                     {
                       key: "reset",
@@ -413,11 +423,13 @@ export function UsersManagementPanel() {
                 >
                   <option value={ROLES.CLIENT} className="dark:bg-[#1A1D24]">👤 Asesor de Ventas (Atiende prospectos, WhatsApp y llamadas)</option>
                   <option value={ROLES.CLIENT_OWNER} className="dark:bg-[#1A1D24]">🏢 Director de Empresa (Supervisión comercial y escucha de llamadas)</option>
-                  <option value={ROLES.ADMIN} className="dark:bg-[#1A1D24]">👑 Administrador / CEO (Acceso total de Agencia)</option>
+                  {!activeClientId && (
+                    <option value={ROLES.ADMIN} className="dark:bg-[#1A1D24]">👑 Administrador / CEO (Acceso total de Agencia)</option>
+                  )}
                 </select>
               </div>
 
-              {createRole !== ROLES.ADMIN && (
+              {createRole !== ROLES.ADMIN && clients.length > 1 && !activeClientId && (
                 <div>
                   <label className="block font-bold text-[#121417] dark:text-white mb-1.5">
                     Empresa Asignada *

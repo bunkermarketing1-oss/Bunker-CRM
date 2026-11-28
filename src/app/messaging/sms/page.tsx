@@ -18,6 +18,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { BulkSmsPanel } from "@/components/messaging/BulkSmsPanel";
 import {
@@ -62,17 +63,21 @@ function SmsMessagingPageContent() {
   const paramClientId = searchParams.get("clientId");
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
   const clients = useClientOptions();
+  const activeClientId = useActiveClientId();
   const activeClient = paramClientId && paramClientId !== "all" ? clients.find((c) => c.id === paramClientId) : null;
 
   // Estado de mensajes
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterClient, setFilterClient] = useState<string>(paramClientId ?? "all");
+  const [pickedFilterClient, setFilterClient] = useState<string>(paramClientId ?? "all");
+  // Con marca activa manda ella; el estado solo sirve en la vista de agencia.
+  const filterClient = activeClientId ?? pickedFilterClient;
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"direct" | "bulk" | "rules">("direct");
 
   // Estado de envío manual
-  const [selectedClientId, setSelectedClientId] = useState<string>(paramClientId && paramClientId !== "all" ? paramClientId : "");
+  const [pickedClientId, setSelectedClientId] = useState<string>(paramClientId && paramClientId !== "all" ? paramClientId : "");
+  const selectedClientId = activeClientId ?? pickedClientId;
 
   useEffect(() => {
     if (paramClientId) {
@@ -308,8 +313,8 @@ function SmsMessagingPageContent() {
             )}
 
             <div className="space-y-3">
-              {/* Selección de cliente (para admin) */}
-              {isAdmin && (
+              {/* Selección de cliente (para admin; con marca activa no se ofrece otra) */}
+              {isAdmin && clients.length > 1 && (
                 <div>
                   <label className="block text-xs font-medium text-[#4D4C48] mb-1">Empresa / Cliente</label>
                   <select
@@ -429,7 +434,7 @@ function SmsMessagingPageContent() {
               </div>
 
               <div className="flex items-center gap-2">
-                {isAdmin && (
+                {isAdmin && clients.length > 1 && (
                   <select
                     value={filterClient}
                     onChange={(e) => {
@@ -506,7 +511,7 @@ function SmsMessagingPageContent() {
                         {msg.lead?.name && (
                           <span className="font-sans font-normal text-[#82807C]">· {msg.lead.name}</span>
                         )}
-                        {isAdmin && msg.client?.name && (
+                        {isAdmin && !activeClientId && msg.client?.name && (
                           <span className="font-sans text-[10px] text-[#6B6966] bg-white px-1.5 py-0.5 rounded border border-[#E8E6DF]">
                             {msg.client.name}
                           </span>

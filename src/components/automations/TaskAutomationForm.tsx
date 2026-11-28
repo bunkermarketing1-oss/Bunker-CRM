@@ -11,6 +11,7 @@ import {
 } from "@/lib/constants/automations";
 import { OnboardingFields, StageFollowupFields, StaleReactivationFields, inputClass } from "@/components/automations/TaskAutomationFields";
 import type { ClientOption } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import type { MutationResult } from "@/hooks/useSmsAutomations";
 import type { PipelineStageOption, TaskAutomationDraft, TaskAutomationSummary } from "@/types/task-automations";
 
@@ -24,10 +25,10 @@ interface TaskAutomationFormProps {
 }
 
 /** Borrador inicial: la regla que se edita o valores sugeridos para una nueva. */
-function initialDraft(kind: TaskAutomationKind, initial: TaskAutomationSummary | null): TaskAutomationDraft {
+function initialDraft(kind: TaskAutomationKind, initial: TaskAutomationSummary | null, activeClientId: string | null): TaskAutomationDraft {
   const common = {
     name: initial?.name ?? TASK_AUTOMATION_KIND_LABEL[kind],
-    clientId: initial?.clientId ?? null,
+    clientId: initial ? initial.clientId : activeClientId,
     isActive: initial?.isActive ?? true,
   };
   if (initial) {
@@ -53,7 +54,8 @@ function initialDraft(kind: TaskAutomationKind, initial: TaskAutomationSummary |
 }
 
 export function TaskAutomationForm({ kind, initial, clients, stages, onSubmit, onClose }: TaskAutomationFormProps) {
-  const [draft, setDraft] = useState<TaskAutomationDraft>(() => initialDraft(kind, initial));
+  const activeClientId = useActiveClientId();
+  const [draft, setDraft] = useState<TaskAutomationDraft>(() => initialDraft(kind, initial, activeClientId));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,16 +96,18 @@ export function TaskAutomationForm({ kind, initial, clients, stages, onSubmit, o
             />
           </label>
 
-          <label className="block">
-            <span className="block text-xs font-medium text-[#4D4C48] mb-1">Cliente</span>
-            <select value={draft.clientId ?? ""} onChange={(e) => patch({ clientId: e.target.value || null })} className={inputClass}>
-              <option value="">Todos los clientes</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <span className="block mt-1 text-[10px] text-[#82807C]">Una regla de un cliente reemplaza a la general para ese cliente.</span>
-          </label>
+          {!activeClientId && (
+            <label className="block">
+              <span className="block text-xs font-medium text-[#4D4C48] mb-1">Cliente</span>
+              <select value={draft.clientId ?? ""} onChange={(e) => patch({ clientId: e.target.value || null })} className={inputClass}>
+                <option value="">Todos los clientes</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <span className="block mt-1 text-[10px] text-[#82807C]">Una regla de un cliente reemplaza a la general para ese cliente.</span>
+            </label>
+          )}
 
           {draft.kind === TASK_AUTOMATION_KIND.ONBOARDING && <OnboardingFields draft={draft} onChange={patch} />}
           {draft.kind === TASK_AUTOMATION_KIND.STAGE_FOLLOWUP && <StageFollowupFields draft={draft} stages={stages} onChange={patch} />}

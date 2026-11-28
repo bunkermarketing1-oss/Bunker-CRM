@@ -24,6 +24,7 @@ import {
   type AccountType,
   type AdProvider,
 } from "@/lib/constants/integrations";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useConnectSocialAccount } from "@/hooks/useConnectSocialAccount";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 
@@ -59,15 +60,18 @@ export function ConnectSocialAccountModal({
   isOpen,
   onClose,
   onSuccess,
-  clients,
+  clients: allClients,
   initialProvider = "meta",
   initialClientId = "",
 }: ConnectSocialAccountModalProps) {
   const [activeTab, setActiveTab] = useState<"meta" | "tiktok" | "whatsapp" | "manual">(
     initialProvider === "tiktok" ? "tiktok" : initialProvider === "whatsapp" ? "whatsapp" : "meta"
   );
-  const [targetClientId, setTargetClientId] = useState<string>(initialClientId);
-  const [channels, setChannels] = useState<ChannelItem[]>([]);
+  // Con marca activa todo queda fijado a ella: no se listan otras marcas ni las cuentas asignadas a otras marcas.
+  const lockedClientId = useActiveClientId();
+  const [pickedClientId, setTargetClientId] = useState<string>(initialClientId);
+  const targetClientId = lockedClientId ?? pickedClientId;
+  const [allChannels, setChannels] = useState<ChannelItem[]>([]);
   const [isMetaConnected, setIsMetaConnected] = useState<boolean>(false);
   const [metaIntegrationId, setMetaIntegrationId] = useState<string | null>(null);
   const [disconnectingMeta, setDisconnectingMeta] = useState<boolean>(false);
@@ -91,6 +95,15 @@ export function ConnectSocialAccountModal({
   const [manualTargetType, setManualTargetType] = useState<"client" | "agency">("client");
 
   const { connect: connectManual, submitting: manualSubmitting, error: manualError } = useConnectSocialAccount();
+
+  const clients = useMemo(
+    () => (lockedClientId ? allClients.filter((c) => c.id === lockedClientId) : allClients),
+    [allClients, lockedClientId]
+  );
+  const channels = useMemo(
+    () => (lockedClientId ? allChannels.filter((c) => !c.clientId || c.clientId === lockedClientId) : allChannels),
+    [allChannels, lockedClientId]
+  );
 
   const activeClient = useMemo(() => {
     return clients.find((c) => c.id === targetClientId);
@@ -285,7 +298,7 @@ export function ConnectSocialAccountModal({
     const targetClient =
       overrides?.clientId !== undefined
         ? overrides.clientId
-        : manualTargetType === "client"
+        : manualTargetType === "client" || lockedClientId
         ? targetClientId || null
         : null;
 
@@ -1055,6 +1068,7 @@ export function ConnectSocialAccountModal({
                   <h4 className="text-xs font-bold text-[#121417] dark:text-white">
                     Datos de la Línea
                   </h4>
+                  {!lockedClientId && (
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium">
                       Asignar a:
@@ -1072,6 +1086,7 @@ export function ConnectSocialAccountModal({
                       ))}
                     </select>
                   </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1142,7 +1157,7 @@ export function ConnectSocialAccountModal({
                       ? `Líneas de WhatsApp de ${activeClient.name} (${waChannelsForView.length})`
                       : `Líneas de WhatsApp Vinculadas (${waChannelsForView.length})`}
                   </h4>
-                  {targetClientId && (
+                  {targetClientId && !lockedClientId && (
                     <button
                       type="button"
                       onClick={() => setTargetClientId("")}
@@ -1305,6 +1320,7 @@ export function ConnectSocialAccountModal({
                 </div>
               </div>
 
+              {!lockedClientId && (
               <div>
                 <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">
                   Destino de la cuenta
@@ -1320,6 +1336,7 @@ export function ConnectSocialAccountModal({
                   <option value="agency">Portafolio BM Agencia (Sin cliente)</option>
                 </select>
               </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold text-[#1F1E1D] mb-1">

@@ -8,6 +8,7 @@ import { leadSourceLabel } from "@/lib/constants/crm";
 import { SMS_MAX_LENGTH } from "@/lib/constants/messaging";
 import { LEAD_SOURCES } from "@/lib/validations/lead";
 import type { ClientOption } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import type { MutationResult, SmsAutomationDraft } from "@/hooks/useSmsAutomations";
 import type { SmsAutomationSummary } from "@/types/automations";
 
@@ -31,9 +32,10 @@ const inputClass =
   "w-full bg-[#FAF9F5] border border-[#E8E6DF] rounded-xl px-3 py-2 text-xs text-[#1F1E1D] focus:outline-none focus:border-[#D97757]";
 
 export function SmsAutomationForm({ initial, clients, onSubmit, onClose }: SmsAutomationFormProps) {
+  const activeClientId = useActiveClientId();
   const [draft, setDraft] = useState<SmsAutomationDraft>({
     name: initial?.name ?? "SMS de calificación inmediata",
-    clientId: initial?.clientId ?? null,
+    clientId: initial ? initial.clientId : activeClientId,
     sources: initial?.sources ?? ["meta_ads"],
     template: initial?.template ?? DEFAULT_TEMPLATE,
     isActive: initial?.isActive ?? true,
@@ -80,19 +82,21 @@ export function SmsAutomationForm({ initial, clients, onSubmit, onClose }: SmsAu
             <input required maxLength={120} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className={inputClass} />
           </label>
 
-          <label className="block">
-            <span className="block text-xs font-medium text-[#4D4C48] mb-1">Cliente</span>
-            <select
-              value={draft.clientId ?? ""}
-              onChange={(e) => setDraft({ ...draft, clientId: e.target.value || null })}
-              className={inputClass}
-            >
-              <option value="">Todos los clientes</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
+          {!activeClientId && (
+            <label className="block">
+              <span className="block text-xs font-medium text-[#4D4C48] mb-1">Cliente</span>
+              <select
+                value={draft.clientId ?? ""}
+                onChange={(e) => setDraft({ ...draft, clientId: e.target.value || null })}
+                className={inputClass}
+              >
+                <option value="">Todos los clientes</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <fieldset>
             <legend className="block text-xs font-medium text-[#4D4C48] mb-1.5">Fuentes del lead (ninguna = todas)</legend>

@@ -4,6 +4,7 @@ import React, { useState, type FormEvent } from "react";
 import { PhoneForwarded, Plus, Check, Copy } from "lucide-react";
 import type { MutationResult } from "@/hooks/useSmsAutomations";
 import type { PhoneLineDraft } from "@/hooks/usePhoneLines";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import type { ClientOption } from "@/hooks/useClientOptions";
 import type { PhoneLineSummary } from "@/types/voice";
 
@@ -21,7 +22,12 @@ const EMPTY: PhoneLineDraft = { phoneNumber: "", label: "", clientId: null, reco
 
 /** Control de líneas: qué número de Twilio usa cada cliente y si graba. */
 export function PhoneLinesPanel({ lines, clients, onCreate, onUpdate }: PhoneLinesPanelProps) {
-  const [draft, setDraft] = useState<PhoneLineDraft>(EMPTY);
+  const activeClientId = useActiveClientId();
+  const [pickedDraft, setDraft] = useState<PhoneLineDraft>(EMPTY);
+  // Con marca activa la línea nueva queda fijada a ella.
+  const draft = activeClientId ? { ...pickedDraft, clientId: activeClientId } : pickedDraft;
+  // Las líneas de otras marcas no se listan dentro de una marca; las generales (sin marca) sí.
+  const visibleLines = activeClientId ? lines.filter((l) => !l.clientId || l.clientId === activeClientId) : lines;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
@@ -59,7 +65,7 @@ export function PhoneLinesPanel({ lines, clients, onCreate, onUpdate }: PhoneLin
           </div>
         </div>
         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border bg-[#F8F9FA] text-[#667085] border-[#EAECF0]">
-          {lines.length} {lines.length === 1 ? "línea" : "líneas"}
+          {visibleLines.length} {visibleLines.length === 1 ? "línea" : "líneas"}
         </span>
       </div>
 
@@ -75,9 +81,9 @@ export function PhoneLinesPanel({ lines, clients, onCreate, onUpdate }: PhoneLin
         </div>
       )}
 
-      {lines.length > 0 && (
+      {visibleLines.length > 0 && (
         <ul className="space-y-3">
-          {lines.map((line) => (
+          {visibleLines.map((line) => (
             <li key={line.id} className="p-4 rounded-2xl bg-[#F9FAFB] border border-[#EAECF0] space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="min-w-0 flex items-center gap-2">
@@ -165,6 +171,7 @@ export function PhoneLinesPanel({ lines, clients, onCreate, onUpdate }: PhoneLin
           />
         </div>
 
+        {!activeClientId && (
         <select
           value={draft.clientId ?? ""}
           onChange={(e) => setDraft({ ...draft, clientId: e.target.value || null })}
@@ -178,6 +185,7 @@ export function PhoneLinesPanel({ lines, clients, onCreate, onUpdate }: PhoneLin
             </option>
           ))}
         </select>
+        )}
 
         <div className="flex items-center justify-between gap-2 pt-1">
           <label className="flex items-center gap-1.5 text-xs text-[#475467] cursor-pointer">

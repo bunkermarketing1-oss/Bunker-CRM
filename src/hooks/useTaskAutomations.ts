@@ -9,6 +9,7 @@ import type {
   TaskAutomationSummary,
   TaskAutomationsResponse,
 } from "@/types/task-automations";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 const BASE_URL = "/api/automations/tasks";
 
@@ -25,6 +26,7 @@ export function useTaskAutomations() {
   const [stages, setStages] = useState<PipelineStageOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const activeClientId = useActiveClientId();
   const [staleCheck, setStaleCheck] = useState<{ running: boolean; result: StaleLeadsCheckResult | null; error: string | null }>({
     running: false,
     result: null,
@@ -35,7 +37,7 @@ export function useTaskAutomations() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(BASE_URL);
+      const res = await fetch(activeClientId ? `${BASE_URL}?clientId=${encodeURIComponent(activeClientId)}` : BASE_URL);
       const json: TaskAutomationsResponse | { success: false; error: string } = await res.json();
       // `in` en vez de `json.success`: sin strictNullChecks TS no estrecha por el literal booleano.
       if ("automations" in json) {
@@ -47,7 +49,7 @@ export function useTaskAutomations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     refresh();

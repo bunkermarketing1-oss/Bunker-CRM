@@ -1,7 +1,7 @@
 "use client";
 
 import "./globals.css";
-import React from "react";
+import React, { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
@@ -43,11 +43,15 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {isStandalonePage ? (
-                children
-              ) : (
-                <AppShell>{children}</AppShell>
-              )}
+              {/* La marca activa vive en la dirección (?clientId=) y la leen la barra lateral, el buscador y casi todas las
+                  pantallas con useSearchParams, que Next exige dentro de un Suspense para poder compilar las páginas. */}
+              <Suspense fallback={null}>
+                {isStandalonePage ? (
+                  children
+                ) : (
+                  <AppShell>{children}</AppShell>
+                )}
+              </Suspense>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

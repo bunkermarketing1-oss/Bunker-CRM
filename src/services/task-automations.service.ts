@@ -134,9 +134,10 @@ async function audit(organizationId: string, userId: string, action: string, rul
   });
 }
 
-export async function listTaskAutomations(organizationId: string): Promise<TaskAutomationSummary[]> {
+/** Con una marca activa solo se devuelven sus reglas y las generales (sin marca), que también le aplican. */
+export async function listTaskAutomations(organizationId: string, clientId?: string | null): Promise<TaskAutomationSummary[]> {
   const rules = await prisma.automationRule.findMany({
-    where: taskRuleWhere(organizationId),
+    where: { ...taskRuleWhere(organizationId), ...(clientId ? { OR: [{ clientId }, { clientId: null }] } : {}) },
     select: ruleSelect,
     orderBy: { createdAt: "desc" },
   });

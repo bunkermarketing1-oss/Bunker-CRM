@@ -146,8 +146,13 @@ const toLineSummary = (line: LineRow): PhoneLineSummary => ({
   isActive: line.isActive,
 });
 
-export async function listPhoneLines(organizationId: string) {
-  const lines = await prisma.phoneLine.findMany({ where: { organizationId }, select: lineSelect, orderBy: { createdAt: "asc" } });
+/** Con una marca activa solo se devuelven sus líneas y las generales (sin marca). */
+export async function listPhoneLines(organizationId: string, clientId?: string | null) {
+  const lines = await prisma.phoneLine.findMany({
+    where: { organizationId, ...(clientId ? { OR: [{ clientId }, { clientId: null }] } : {}) },
+    select: lineSelect,
+    orderBy: { createdAt: "asc" },
+  });
   return lines.map(toLineSummary);
 }
 

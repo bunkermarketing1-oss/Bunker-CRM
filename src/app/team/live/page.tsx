@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTeamLive } from "@/hooks/useTeamLive";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import { useVoiceDevice } from "@/hooks/useVoiceDevice";
 import { AdvisorLiveTable } from "@/components/team/AdvisorLiveTable";
@@ -49,8 +50,9 @@ function TeamLiveContent() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN" && !user?.isClientUser;
   const clientOptions = useClientOptions();
+  const activeClientId = useActiveClientId();
 
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(
+  const [pickedClientId, setSelectedClientId] = useState<string | null>(
     urlClientId && urlClientId !== "all" ? urlClientId : null
   );
   const [selectedSellerForModal, setSelectedSellerForModal] = useState<{ id: string; name: string } | null>(null);
@@ -59,6 +61,9 @@ function TeamLiveContent() {
   const [advisorToDelete, setAdvisorToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeletingAdvisor, setIsDeletingAdvisor] = useState(false);
   const [deleteAdvisorError, setDeleteAdvisorError] = useState<string | null>(null);
+
+  // Con marca activa manda ella; el estado solo sirve en la vista de agencia.
+  const selectedClientId = activeClientId ?? pickedClientId;
 
   useEffect(() => {
     if (urlClientId && urlClientId !== "all") {
@@ -157,7 +162,7 @@ function TeamLiveContent() {
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Selector de Empresa para Administradores de Bunker */}
-            {isAdmin && (
+            {isAdmin && clientOptions.length > 1 && (
               <select
                 value={selectedClientId ?? ""}
                 onChange={(e) => handleSelectClient(e.target.value ? e.target.value : null)}
@@ -173,7 +178,7 @@ function TeamLiveContent() {
             )}
 
             <Link
-              href={ROUTES.TEAM_USERS}
+              href={activeClientId ? `${ROUTES.TEAM_USERS}?clientId=${encodeURIComponent(activeClientId)}` : ROUTES.TEAM_USERS}
               className="px-4 py-2 rounded-full bg-[#121417] dark:bg-white text-white dark:text-[#121417] text-xs font-bold flex items-center gap-1.5 shadow-orvion hover:scale-102 transition-all cursor-pointer"
             >
               <Users className="w-3.5 h-3.5 text-amber-400" />

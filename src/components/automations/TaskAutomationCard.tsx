@@ -1,5 +1,6 @@
 import { ArrowRight, ListChecks, Pencil, Trash2 } from "lucide-react";
 import { TASK_AUTOMATION_KIND, TASK_AUTOMATION_KIND_LABEL } from "@/lib/constants/automations";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import type { TaskAutomationSummary } from "@/types/task-automations";
 
 interface TaskAutomationCardProps {
@@ -53,6 +54,7 @@ function ActionText({ automation }: { automation: TaskAutomationSummary }) {
 }
 
 export function TaskAutomationCard({ automation, busy, onToggle, onEdit, onDelete }: TaskAutomationCardProps) {
+  const activeClientId = useActiveClientId();
   return (
     <div className="p-5 rounded-2xl bg-white border border-[#E8E6DF] hover:border-[#D1CFCA] transition-all flex flex-col justify-between space-y-4 shadow-sm">
       <div>
@@ -82,7 +84,7 @@ export function TaskAutomationCard({ automation, busy, onToggle, onEdit, onDelet
         <div className="mt-4 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-xs space-y-2">
           <div className="text-[#6B6966]">
             <strong className="text-[#1F1E1D]">Disparador:</strong> <TriggerText automation={automation} /> ·{" "}
-            {automation.clientName ?? "todos los clientes"}
+            {automation.clientName ?? (activeClientId ? "regla general" : "todos los clientes")}
           </div>
           <div className="text-[#6B6966] flex items-start gap-1.5">
             <ArrowRight className="w-3.5 h-3.5 text-[#D97757] flex-shrink-0 mt-0.5" />

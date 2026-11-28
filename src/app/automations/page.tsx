@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Workflow,
   CheckSquare,
@@ -12,9 +11,9 @@ import {
   ShieldCheck,
   Flame,
   Building2,
-  Sparkles,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useTaskAutomations } from "@/hooks/useTaskAutomations";
 import { useSmsAutomations } from "@/hooks/useSmsAutomations";
 import { TaskAutomationsSection } from "@/components/automations/TaskAutomationsSection";
@@ -39,10 +38,9 @@ export default function AutomationsPage() {
 }
 
 function AutomationsPageContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
 
   const [activeTab, setActiveTab] = useState<"tasks" | "sms" | "stale">("tasks");
   const [smsFormOpen, setSmsFormOpen] = useState(false);
@@ -74,12 +72,12 @@ function AutomationsPageContent() {
 
   // Filtrar por cliente si hay uno seleccionado
   const filteredTaskAutomations = useMemo(() => {
-    if (!clientId || clientId === "all") return taskAutomations;
+    if (!clientId) return taskAutomations;
     return taskAutomations.filter((a) => !a.clientId || a.clientId === clientId);
   }, [taskAutomations, clientId]);
 
   const filteredSmsAutomations = useMemo(() => {
-    if (!clientId || clientId === "all") return smsAutomations;
+    if (!clientId) return smsAutomations;
     return smsAutomations.filter((a) => !a.clientId || a.clientId === clientId);
   }, [smsAutomations, clientId]);
 

@@ -152,7 +152,7 @@ export default function IndividualBrandDashboard({
             <Panel
               icon={Plug}
               title="Conexiones activas"
-              action={!isClient ? <PanelLink href={ROUTES.INTEGRATIONS}>Administrar</PanelLink> : undefined}
+              action={!isClient ? <PanelLink href={activeClientId ? `${ROUTES.INTEGRATIONS}?clientId=${activeClientId}` : ROUTES.INTEGRATIONS}>Administrar</PanelLink> : undefined}
             >
               <IntegrationStatusList integrations={dashboard.integrations} />
             </Panel>

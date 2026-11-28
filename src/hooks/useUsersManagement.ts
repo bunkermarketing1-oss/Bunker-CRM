@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { StoredUserRole } from "@/lib/roles";
 import { USER_ACTION } from "@/lib/validations/users";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 export interface ManagedUser {
   id: string;
@@ -49,6 +50,7 @@ export interface DeleteUserResult {
  * Hook centralizado para la administración integral de usuarios y permisos en Bunker CRM.
  */
 export function useUsersManagement() {
+  const activeClientId = useActiveClientId();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function useUsersManagement() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/users");
+      const res = await fetch(activeClientId ? `/api/users?clientId=${encodeURIComponent(activeClientId)}` : "/api/users");
       const json = await res.json();
       if (json.success) {
         setUsers(json.users || []);
@@ -70,7 +72,7 @@ export function useUsersManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     fetchUsers();

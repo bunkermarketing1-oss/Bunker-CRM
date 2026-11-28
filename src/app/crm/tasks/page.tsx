@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Plus,
   Calendar,
@@ -14,6 +13,7 @@ import {
   RefreshCw,
   Clock,
 } from "lucide-react";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 
 interface TaskItem {
@@ -46,8 +46,7 @@ export default function TasksPage() {
 }
 
 function TasksContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
   const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
 
@@ -67,12 +66,8 @@ function TasksContent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (activeClient) {
-      setFormData((prev) => ({ ...prev, clientId: activeClient.id }));
-    } else {
-      setFormData((prev) => ({ ...prev, clientId: "" }));
-    }
-  }, [activeClient]);
+    setFormData((prev) => ({ ...prev, clientId: clientId ?? "" }));
+  }, [clientId]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -129,7 +124,7 @@ function TasksContent() {
         description: formData.description || undefined,
         priority: formData.priority,
         dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
-        clientId: formData.clientId || undefined,
+        clientId: clientId ?? (formData.clientId || undefined),
       };
       const res = await fetch("/api/tasks", {
         method: "POST",
@@ -144,7 +139,7 @@ function TasksContent() {
           description: "",
           priority: "medium",
           dueDate: "",
-          clientId: activeClient ? activeClient.id : "",
+          clientId: clientId ?? "",
         });
         setFeedback({ type: "success", text: "Tarea creada correctamente." });
         fetchTasks();
@@ -421,6 +416,7 @@ function TasksContent() {
             </div>
 
             <form onSubmit={handleCreate} className="p-6 space-y-4">
+              {!clientId && (
               <div>
                 <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1.5">Empresa / Marca Asignada</label>
                 <select
@@ -436,6 +432,7 @@ function TasksContent() {
                   ))}
                 </select>
               </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1.5">Título de la Tarea *</label>

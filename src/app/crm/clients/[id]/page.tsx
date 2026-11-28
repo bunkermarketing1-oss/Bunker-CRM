@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ROUTES } from "@/lib/constants/routes";
 import { useAuth } from "@/context/AuthContext";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientPortalUsers } from "@/hooks/useClientPortalUsers";
 import { emitClientsUpdated } from "@/hooks/useClientOptions";
 import { ClientPortalUsersPanel } from "@/components/clients/ClientPortalUsersPanel";
@@ -97,6 +98,8 @@ export default function ClientProfile360Page() {
   const params = useParams();
   const clientId = params?.id as string;
   const { user } = useAuth();
+  // Con marca activa no se ofrece volver al directorio de empresas (listaría otras marcas).
+  const activeClientId = useActiveClientId();
   const isBunkerUser = isBunkerRole(user?.role) && !user?.isClientUser;
   const isAdmin = isBunkerUser;
 
@@ -324,13 +327,15 @@ export default function ClientProfile360Page() {
         <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
         <h2 className="text-base font-bold text-[#101828]">No se pudo abrir la ficha</h2>
         <p className="text-xs text-[#667085]">{error || "Cliente no encontrado o sin permisos."}</p>
-        <Link
-          href="/crm/clients"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#101828] text-white text-xs font-semibold hover:bg-black transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Volver a Clientes</span>
-        </Link>
+        {!activeClientId && (
+          <Link
+            href="/crm/clients"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#101828] text-white text-xs font-semibold hover:bg-black transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Volver a Clientes</span>
+          </Link>
+        )}
       </div>
     );
   }
@@ -361,15 +366,17 @@ export default function ClientProfile360Page() {
       )}
 
       {/* Navegación de Regreso */}
-      <div>
-        <Link
-          href="/crm/clients"
-          className="inline-flex items-center gap-1.5 text-xs text-[#475467] hover:text-[#101828] font-medium transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Volver a clientes</span>
-        </Link>
-      </div>
+      {!activeClientId && (
+        <div>
+          <Link
+            href="/crm/clients"
+            className="inline-flex items-center gap-1.5 text-xs text-[#475467] hover:text-[#101828] font-medium transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Volver a clientes</span>
+          </Link>
+        </div>
+      )}
 
       {/* Encabezado Principal / Tarjeta Resumen de la Marca */}
       <div className="bg-white rounded-2xl border border-[#EAECF0] p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-5">

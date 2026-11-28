@@ -11,6 +11,7 @@ import {
 } from "@/lib/constants/appointments";
 import type { CreateAppointmentInput } from "@/types/appointments";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { Modal } from "@/components/ui/Modal";
 
 interface CreateAppointmentModalProps {
@@ -38,9 +39,10 @@ export function CreateAppointmentModal({
   initialTime,
 }: CreateAppointmentModalProps) {
   const clients = useClientOptions();
+  const activeClientId = useActiveClientId();
 
   const [title, setTitle] = useState("");
-  const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || "");
+  const [clientId, setClientId] = useState(activeClientId || initialClientId || clients[0]?.id || "");
   const [customerName, setCustomerName] = useState(initialLeadName || "");
   const [customerPhone, setCustomerPhone] = useState(initialLeadPhone || "");
   const [date, setDate] = useState("");
@@ -80,7 +82,7 @@ export function CreateAppointmentModal({
 
       const res = await onSubmit({
         title: title.trim(),
-        clientId: clientId || null,
+        clientId: activeClientId || clientId || null,
         leadId: initialLeadId || null,
         customerName: customerName.trim() || undefined,
         customerPhone: customerPhone.trim() || undefined,
@@ -185,7 +187,7 @@ export function CreateAppointmentModal({
         </Section>
 
         <Section title="Cliente">
-          {clients.length > 0 && (
+          {!activeClientId && clients.length > 1 && (
             <Field label="Empresa / marca">
               <select value={clientId} onChange={(e) => setClientId(e.target.value)} className={INPUT_CLASS}>
                 {clients.map((c) => (

@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
   if (errorResponse) return errorResponse;
 
   try {
-    return NextResponse.json({ success: true, lines: await listPhoneLines(user!.organizationId) });
+    const clientId = new URL(req.url).searchParams.get("clientId");
+    return NextResponse.json({ success: true, lines: await listPhoneLines(user!.organizationId, clientId) });
   } catch (error) {
     return voiceErrorResponse(error, "GET /api/voice/lines", "Error al consultar líneas.");
   }

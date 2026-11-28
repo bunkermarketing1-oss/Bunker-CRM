@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { SmsAutomationSummary } from "@/types/automations";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 /** Datos que envía el formulario de una regla (mismo formato que acepta la API). */
 export interface SmsAutomationDraft {
@@ -34,6 +35,7 @@ export async function sendJsonMutation(url: string, method: string, body?: unkno
 }
 
 export function useSmsAutomations() {
+  const activeClientId = useActiveClientId();
   const [automations, setAutomations] = useState<SmsAutomationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function useSmsAutomations() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/automations");
+      const res = await fetch(activeClientId ? `/api/automations?clientId=${encodeURIComponent(activeClientId)}` : "/api/automations");
       const json = await res.json();
       if (json.success) setAutomations(json.automations);
       else setError(json.error);
@@ -51,7 +53,7 @@ export function useSmsAutomations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     refresh();

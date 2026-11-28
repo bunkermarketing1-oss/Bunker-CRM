@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import {
   AlertCircle,
   BarChart3,
@@ -37,10 +37,9 @@ export default function ReportsPage() {
 
 function ReportsContent() {
   const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
 
   const [days, setDays] = useState<ReportRangeDays>(DEFAULT_REPORT_RANGE_DAYS);
   const [showTrendTable, setShowTrendTable] = useState(false);
@@ -53,6 +52,8 @@ function ReportsContent() {
     ? user.clientName ?? "tu empresa"
     : activeClient
     ? activeClient.name
+    : clientId
+    ? "tu marca"
     : "toda la agencia";
 
   return (
@@ -69,7 +70,7 @@ function ReportsContent() {
                 <Building2 className="w-3.5 h-3.5 text-amber-500" />
                 Marca: <strong>{activeClient.name}</strong>
               </span>
-            ) : !user?.isClientUser ? (
+            ) : !user?.isClientUser && !clientId ? (
               <span className="text-[11px] font-medium text-[#8C929D] bg-white dark:bg-[#121417] px-3 py-1 rounded-full border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion">
                 Vista Global Agencia
               </span>

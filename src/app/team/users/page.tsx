@@ -2,6 +2,7 @@
 
 import React, { Suspense } from "react";
 import Link from "next/link";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { Users, Radio, ShieldCheck, RefreshCw } from "lucide-react";
 import { UsersManagementPanel } from "@/components/settings/UsersManagementPanel";
 import { ROUTES } from "@/lib/constants/routes";
@@ -22,6 +23,7 @@ export default function TeamUsersPage() {
 }
 
 function TeamUsersContent() {
+  const activeClientId = useActiveClientId();
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Cabecera Estilo Cápsula Orvion */}
@@ -50,7 +52,7 @@ function TeamUsersContent() {
           {/* Navegación rápida entre Supervisión en Vivo y Directorio */}
           <div className="flex items-center gap-2 p-1.5 bg-[#F8F9FA] dark:bg-[#1A1D24] rounded-full border border-[#E2E5EB] dark:border-[#242A35] self-start lg:self-center shadow-2xs">
             <Link
-              href={ROUTES.TEAM_LIVE}
+              href={activeClientId ? `${ROUTES.TEAM_LIVE}?clientId=${encodeURIComponent(activeClientId)}` : ROUTES.TEAM_LIVE}
               className="px-4 py-2 rounded-full text-xs font-semibold text-[#8C929D] hover:text-[#121417] dark:hover:text-white flex items-center gap-1.5 transition-all"
             >
               <Radio className="w-3.5 h-3.5" />

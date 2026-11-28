@@ -440,6 +440,15 @@ function UnifiedInboxPageContent() {
   // Filtros
   const [activeChannel, setActiveChannel] = useState<string>(() => searchParams.get("channel") || "all");
   const activeClientId = isClient ? (user?.clientId ?? "all") : (searchParams.get("clientId") ?? "all");
+  // Con marca activa la API devuelve todas las marcas y asesores de la organización: aquí se recortan a la activa.
+  const visibleClients = useMemo(
+    () => (activeClientId === "all" ? clients : clients.filter((c) => c.id === activeClientId)),
+    [clients, activeClientId]
+  );
+  const visibleAdvisors = useMemo(
+    () => (activeClientId === "all" ? advisors : advisors.filter((a) => !a.clientId || a.clientId === activeClientId)),
+    [advisors, activeClientId]
+  );
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -1119,7 +1128,7 @@ function UnifiedInboxPageContent() {
         />
 
         {/* Selector de Marca (solo para administradores) */}
-        {!isClient && clients.length > 0 && (
+        {!isClient && visibleClients.length > 1 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F8F9FA] dark:bg-[#1A1D24] rounded-full border border-[#E2E5EB] dark:border-[#2A2E37] self-end lg:self-auto shrink-0 shadow-2xs">
             <Building2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <select
@@ -1135,7 +1144,7 @@ function UnifiedInboxPageContent() {
               className="bg-transparent text-xs text-[#121417] dark:text-white font-medium focus:outline-none cursor-pointer"
             >
               <option value="all" className="dark:bg-[#1A1D24]">Todas las Marcas</option>
-              {clients.map((c) => (
+              {visibleClients.map((c) => (
                 <option key={c.id} value={c.id} className="dark:bg-[#1A1D24]">
                   {c.name}
                 </option>
@@ -1314,7 +1323,7 @@ function UnifiedInboxPageContent() {
                     <p className="text-[11px] text-[#8C929D] mt-0.5 truncate">
                       {[
                         isRealPhoneNumber(activeConversation.leadPhone) ? activeConversation.leadPhone : null,
-                        !isClient ? activeConversation.clientName : null,
+                        !isClient && activeClientId === "all" ? activeConversation.clientName : null,
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -1334,7 +1343,7 @@ function UnifiedInboxPageContent() {
                       className="bg-transparent text-xs text-[#121417] dark:text-white font-semibold focus:outline-none cursor-pointer pr-1"
                     >
                       <option value="" className="dark:bg-[#121417]">Sin asignar</option>
-                      {advisors.map((adv) => (
+                      {visibleAdvisors.map((adv) => (
                         <option key={adv.id} value={adv.id} className="dark:bg-[#121417]">
                           {adv.name} {user?.id === adv.id ? "(Tú)" : ""}
                         </option>

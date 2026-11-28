@@ -1,6 +1,7 @@
 import { ArrowRight, Pencil, Trash2, Zap } from "lucide-react";
 import { AUTOMATION_ACTION_LABEL, AUTOMATION_TRIGGER, AUTOMATION_TRIGGER_LABEL, AUTOMATION_ACTION } from "@/lib/constants/automations";
 import { leadSourceLabel } from "@/lib/constants/crm";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import type { SmsAutomationSummary } from "@/types/automations";
 
 interface SmsAutomationCardProps {
@@ -12,6 +13,7 @@ interface SmsAutomationCardProps {
 }
 
 export function SmsAutomationCard({ automation, busy, onToggle, onEdit, onDelete }: SmsAutomationCardProps) {
+  const activeClientId = useActiveClientId();
   const sources = automation.sources.length ? automation.sources.map(leadSourceLabel).join(", ") : "cualquier fuente";
 
   return (
@@ -40,7 +42,7 @@ export function SmsAutomationCard({ automation, busy, onToggle, onEdit, onDelete
         <div className="mt-4 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8E6DF] text-xs space-y-2">
           <div className="text-[#6B6966]">
             <strong className="text-[#1F1E1D]">Disparador:</strong> {AUTOMATION_TRIGGER_LABEL[AUTOMATION_TRIGGER.LEAD_CREATED]} de{" "}
-            {sources} · {automation.clientName ?? "todos los clientes"}
+            {sources} · {automation.clientName ?? (activeClientId ? "regla general" : "todos los clientes")}
           </div>
           <div className="text-[#6B6966] flex items-start gap-1.5">
             <ArrowRight className="w-3.5 h-3.5 text-[#D97757] flex-shrink-0 mt-0.5" />

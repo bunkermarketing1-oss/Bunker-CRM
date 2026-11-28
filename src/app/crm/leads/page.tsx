@@ -29,6 +29,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
+import { useClientOptions } from "@/hooks/useClientOptions";
 import { buildCsv } from "@/lib/csv";
 import LeadStatusBadge from "@/components/crm/LeadStatusBadge";
 import LeadAvatar from "@/components/crm/LeadAvatar";
@@ -106,21 +108,15 @@ function LeadsPageContent() {
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
+  const activeClientId = useActiveClientId();
+  const clients = useClientOptions();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState(searchParams.get("clientId") ?? "all");
-
-  // Sincronizar filtro si cambia el parámetro de URL (ej. navegación desde el Sidebar)
-  useEffect(() => {
-    const cid = searchParams.get("clientId") ?? "all";
-    if (cid !== clientFilter) {
-      setClientFilter(cid);
-    }
-  }, [searchParams, clientFilter]);
+  // La marca activa (barra lateral) es la única fuente del filtro: no se puede cambiar desde esta pantalla.
+  const clientFilter = activeClientId ?? "all";
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const tableTopRef = React.useRef<HTMLDivElement>(null);
@@ -248,20 +244,6 @@ function LeadsPageContent() {
     }
   }, []);
 
-  // Fetch Clientes (solo para administradores)
-  const fetchClients = useCallback(async () => {
-    if (!isAdmin) return;
-    try {
-      const res = await fetch("/api/clients");
-      const json = await res.json();
-      if (json.success && json.clients) {
-        setClients(json.clients);
-      }
-    } catch (e) {
-      console.error("Error fetching clients:", e);
-    }
-  }, [isAdmin]);
-
   // Fetch Leads
   useEffect(() => {
     const term = searchParams.get("search");
@@ -294,8 +276,7 @@ function LeadsPageContent() {
 
   useEffect(() => {
     fetchTeam();
-    fetchClients();
-  }, [fetchTeam, fetchClients]);
+  }, [fetchTeam]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -320,7 +301,7 @@ function LeadsPageContent() {
         campaign: createData.campaign || null,
         estimatedValue: parseFloat(createData.estimatedValue) || 0,
         ownerId: createData.ownerId || null,
-        clientId: createData.clientId || (clientFilter !== "all" ? clientFilter : null),
+        clientId: activeClientId ?? (createData.clientId || null),
         notes: createData.notes || null,
         smsConsent: createData.smsConsent,
         smsConsentSource: "crm_manual",
@@ -628,7 +609,7 @@ function LeadsPageContent() {
               setCreateFieldErrors({});
               setCreateData((prev) => ({
                 ...prev,
-                clientId: clientFilter !== "all" ? clientFilter : "",
+                clientId: activeClientId ?? "",
               }));
               setIsCreateOpen(true);
             }}
@@ -809,7 +790,6 @@ function LeadsPageContent() {
                         setStatusFilter("all");
                         setSourceFilter("all");
                         setOwnerFilter("all");
-                        setClientFilter("all");
                       }}
                       className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
                     >
@@ -1543,7 +1523,7 @@ function LeadsPageContent() {
               </div>
 
               {/* Client Selection (Admin only) */}
-              {!user?.isClientUser && (
+              {!user?.isClientUser && !activeClientId && (
                 <div>
                   <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1 pl-1">
                     Empresa / Marca del Cliente
@@ -1590,8 +1570,8 @@ function LeadsPageContent() {
                 checked={createData.smsConsent}
                 onChange={(checked) => setCreateData({ ...createData, smsConsent: checked })}
                 brandName={
-                  createData.clientId
-                    ? clients.find((c) => c.id === createData.clientId)?.name || "Bunker Agency"
+                  (activeClientId ?? createData.clientId)
+                    ? clients.find((c) => c.id === (activeClientId ?? createData.clientId))?.name || "Bunker Agency"
                     : "Bunker Agency"
                 }
               />

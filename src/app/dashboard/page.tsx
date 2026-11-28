@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import Link from "next/link";
 import {
   AlertCircle,
-  ArrowLeft,
   Building2,
   Calendar,
   ChevronRight,
@@ -23,12 +22,11 @@ import { useAuth } from "@/context/AuthContext";
 import { ROUTES } from "@/lib/constants/routes";
 
 function DashboardPageContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams?.get("clientId") || undefined;
+  const clientId = useActiveClientId();
   const { dashboard, loading, error } = useDashboard(clientId);
   const { user } = useAuth();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
   const [now] = useState(() => new Date());
   const [searchTerm, setSearchTerm] = useState("");
   const isClient = Boolean(user?.isClientUser);
@@ -80,7 +78,7 @@ function DashboardPageContent() {
             <span>{formattedToday}</span>
           </div>
 
-          {!isClient && (
+          {!isClient && !clientId && (
             <Link
               href={ROUTES.CLIENTS}
               className="px-4 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:hover:bg-[#F3F4F7] text-white dark:text-[#121417] text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all hover:scale-105"
@@ -127,13 +125,6 @@ function DashboardPageContent() {
         {activeClient && !isClient && (
           <div className="flex items-center gap-2 flex-wrap">
             <Link
-              href={ROUTES.DASHBOARD}
-              className="px-4 py-2 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] text-xs font-semibold text-[#121417] dark:text-white shadow-orvion flex items-center gap-1.5 transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#8C929D]" />
-              <span>Volver a todas</span>
-            </Link>
-            <Link
               href={`/inbox?clientId=${activeClient.id}`}
               className="px-4 py-2 rounded-full bg-white dark:bg-[#121417] border border-[#E2E5EB] dark:border-[#1F242D] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] text-xs font-semibold text-[#121417] dark:text-white shadow-orvion flex items-center gap-1.5 transition-all"
             >
@@ -176,7 +167,7 @@ function DashboardPageContent() {
         <DashboardSkeleton />
       ) : dashboard && metrics ? (
         <>
-          {!activeClient && !isClient ? (
+          {!clientId && !isClient ? (
             <GeneralDashboardGrid
               clientCards={dashboard.clientCards || []}
               metrics={metrics}
@@ -187,7 +178,7 @@ function DashboardPageContent() {
             <IndividualBrandDashboard
               metrics={metrics}
               dashboard={dashboard}
-              activeClientId={activeClient?.id}
+              activeClientId={clientId ?? undefined}
               isClient={isClient}
               now={now}
             />

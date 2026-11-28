@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Share2,
   Plus,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 interface SocialPostItem {
   id: string;
@@ -54,10 +54,9 @@ export default function PostsPage() {
 }
 
 function PostsPageContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
 
   const [posts, setPosts] = useState<SocialPostItem[]>([]);
   const [accounts, setAccounts] = useState<ConnectedAccountOption[]>([]);
@@ -82,7 +81,7 @@ function PostsPageContent() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      if (clientId && clientId !== "all") params.set("clientId", clientId);
+      if (clientId) params.set("clientId", clientId);
       const url = params.toString() ? `/api/posts?${params.toString()}` : "/api/posts";
       const res = await fetch(url);
       const json = await res.json();
@@ -116,6 +115,8 @@ function PostsPageContent() {
         const accs: ConnectedAccountOption[] = [];
         (json.integrations as RawIntegration[]).forEach((it) => {
           (it.connectedAccounts || []).forEach((acc) => {
+            // Con marca activa solo se ofrecen sus cuentas (o las que no pertenecen a ninguna marca).
+            if (clientId && acc.clientId && acc.clientId !== clientId) return;
             if (
               acc.accountType === "facebook_page" ||
               acc.accountType === "instagram_business" ||
@@ -132,14 +133,12 @@ function PostsPageContent() {
           });
         });
         setAccounts(accs);
-        if (accs.length > 0 && !selectedAccountId) {
-          setSelectedAccountId(accs[0].id);
-        }
+        setSelectedAccountId((prev) => (accs.some((a) => a.id === prev) ? prev : accs[0]?.id ?? ""));
       }
     } catch (err) {
       console.error("Error al cargar cuentas sociales:", err);
     }
-  }, [selectedAccountId]);
+  }, [clientId]);
 
   useEffect(() => {
     fetchPosts();

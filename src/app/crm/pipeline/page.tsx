@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   KanbanSquare,
   Plus,
@@ -9,6 +8,7 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useClientOptions } from "@/hooks/useClientOptions";
 import ActionMenu from "@/components/ui/ActionMenu";
 
@@ -61,8 +61,7 @@ export default function PipelinePage() {
 }
 
 function PipelineContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
   const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
 

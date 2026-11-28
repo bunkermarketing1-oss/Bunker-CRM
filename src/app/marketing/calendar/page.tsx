@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -13,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { ROUTES } from "@/lib/constants/routes";
 import EmptyState from "@/components/ui/EmptyState";
 import ActionMenu from "@/components/ui/ActionMenu";
@@ -56,10 +56,9 @@ export default function EditorialCalendarPage() {
 }
 
 function EditorialCalendarContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [posts, setPosts] = useState<CalendarPostItem[]>([]);
@@ -79,11 +78,11 @@ function EditorialCalendarContent() {
     setLoading(true);
     try {
       const postsUrl =
-        clientId && clientId !== "all"
+        clientId
           ? `/api/posts?clientId=${encodeURIComponent(clientId)}`
           : "/api/posts";
       const campaignsUrl =
-        clientId && clientId !== "all"
+        clientId
           ? `/api/campaigns?clientId=${encodeURIComponent(clientId)}`
           : "/api/campaigns";
 

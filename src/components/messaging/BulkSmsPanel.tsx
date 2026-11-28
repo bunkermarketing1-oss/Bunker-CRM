@@ -6,6 +6,7 @@ import { SMS_TEMPLATE_VARIABLES } from "@/lib/constants/automations";
 import { LEAD_STATUS_LABEL, leadSourceLabel, type LeadStatusValue } from "@/lib/constants/crm";
 import { BULK_SMS_RESEND_WINDOW_HOURS, SMS_MAX_LENGTH } from "@/lib/constants/messaging";
 import { LEAD_SOURCES, LEAD_STATUSES } from "@/lib/validations/lead";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useBulkSms, type BulkSmsDraftFilter } from "@/hooks/useBulkSms";
 import type { ClientOption } from "@/hooks/useClientOptions";
 
@@ -36,7 +37,10 @@ const toggle = (list: string[], value: string) => (list.includes(value) ? list.f
 
 /** Envío masivo (solo admin): filtros → cuántos recibirían → confirmar y enviar. */
 export function BulkSmsPanel({ clients, onSent }: BulkSmsPanelProps) {
-  const [filter, setFilter] = useState<BulkSmsDraftFilter>({ clientId: null, statuses: [], sources: [] });
+  const activeClientId = useActiveClientId();
+  const [draftFilter, setFilter] = useState<BulkSmsDraftFilter>({ clientId: null, statuses: [], sources: [] });
+  // Con marca activa el envío queda fijado a ella, aunque el selector no se dibuje.
+  const filter = activeClientId ? { ...draftFilter, clientId: activeClientId } : draftFilter;
   const [template, setTemplate] = useState("Hola {{nombre}}, ");
   const { preview, result, loading, error, reset, previewRecipients, send } = useBulkSms();
 
@@ -61,6 +65,7 @@ export function BulkSmsPanel({ clients, onSent }: BulkSmsPanelProps) {
         Envío masivo
       </h2>
 
+      {clients.length > 1 && (
       <label className="block">
         <span className="block text-xs font-medium text-[#4D4C48] mb-1">Cliente</span>
         <select
@@ -74,6 +79,7 @@ export function BulkSmsPanel({ clients, onSent }: BulkSmsPanelProps) {
           ))}
         </select>
       </label>
+      )}
 
       <fieldset>
         <legend className="block text-xs font-medium text-[#4D4C48] mb-1.5">Estado del lead (ninguno = todos)</legend>

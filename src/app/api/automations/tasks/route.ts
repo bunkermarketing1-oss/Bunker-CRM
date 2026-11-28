@@ -16,8 +16,9 @@ export async function GET(req: NextRequest) {
   if (errorResponse) return errorResponse;
 
   try {
+    const clientId = new URL(req.url).searchParams.get("clientId");
     const [automations, stages] = await Promise.all([
-      listTaskAutomations(user!.organizationId),
+      listTaskAutomations(user!.organizationId, clientId),
       listPipelineStageOptions(user!.organizationId),
     ]);
     return NextResponse.json({ success: true, automations, stages });

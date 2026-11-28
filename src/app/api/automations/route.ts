@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
   if (errorResponse) return errorResponse;
 
   try {
-    const automations = await listSmsAutomations(user!.organizationId);
+    const clientId = new URL(req.url).searchParams.get("clientId");
+    const automations = await listSmsAutomations(user!.organizationId, clientId);
     return NextResponse.json({ success: true, automations });
   } catch (error) {
     console.error("GET /api/automations error:", error);

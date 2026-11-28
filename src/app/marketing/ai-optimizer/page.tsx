@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Sparkles,
   AlertTriangle,
@@ -10,6 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import EmptyState from "@/components/ui/EmptyState";
 
 interface OptimizerInsight {
@@ -58,10 +58,9 @@ export default function MetaAiOptimizerPage() {
 }
 
 function MetaAiOptimizerContent() {
-  const searchParams = useSearchParams();
-  const clientId = searchParams.get("clientId");
+  const clientId = useActiveClientId();
   const clients = useClientOptions();
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeClient = clientId ? clients.find((c) => c.id === clientId) : null;
 
   const [campaigns, setCampaigns] = useState<OptimizerCampaign[]>([]);
   const [rules, setRules] = useState<MetaAlgorithmRule[]>([]);
@@ -77,7 +76,7 @@ function MetaAiOptimizerContent() {
     setError(null);
     try {
       const url =
-        clientId && clientId !== "all"
+        clientId
           ? `/api/marketing/ai-optimizer?clientId=${encodeURIComponent(clientId)}`
           : "/api/marketing/ai-optimizer";
       const res = await fetch(url);
@@ -230,7 +229,7 @@ function MetaAiOptimizerContent() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="text-base font-extrabold text-[#121417] dark:text-white">{camp.campaignName}</h3>
-                  <p className="text-[11px] text-[#8C929D] mt-0.5">{[camp.clientName, camp.objective].filter(Boolean).join(" · ")}</p>
+                  <p className="text-[11px] text-[#8C929D] mt-0.5">{[activeClient ? activeClient.name : camp.clientName, camp.objective].filter(Boolean).join(" · ")}</p>
                 </div>
                 {isDanger || isWarning ? (
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0 ${badgeCls}`}>

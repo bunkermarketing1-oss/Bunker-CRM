@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MutationResult } from "@/hooks/useSmsAutomations";
 import type { PhoneLineSummary } from "@/types/voice";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 
 export interface PhoneLineDraft {
   phoneNumber: string;
@@ -23,20 +24,21 @@ async function send(url: string, method: string, body: unknown): Promise<Mutatio
 
 /** Líneas telefónicas (solo admin). `enabled: false` no consulta nada (usuario CLIENT). */
 export function usePhoneLines(enabled: boolean) {
+  const activeClientId = useActiveClientId();
   const [lines, setLines] = useState<PhoneLineSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!enabled) return;
     try {
-      const res = await fetch("/api/voice/lines");
+      const res = await fetch(activeClientId ? `/api/voice/lines?clientId=${encodeURIComponent(activeClientId)}` : "/api/voice/lines");
       const json = await res.json();
       if (json.success) setLines(json.lines);
       else setError(json.error);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red");
     }
-  }, [enabled]);
+  }, [enabled, activeClientId]);
 
   useEffect(() => {
     refresh();

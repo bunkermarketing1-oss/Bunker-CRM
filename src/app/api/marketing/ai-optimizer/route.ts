@@ -110,80 +110,8 @@ export async function GET(req: NextRequest) {
         };
       });
     } else {
-      campaigns = [
-        {
-          id: "meta-camp-1",
-          clientName: "Grupo Inmobiliario Altamira",
-          campaignName: "Captación Inversionistas Luxury — Cancún 2026",
-          objective: "LEADS_INSTANT_FORMS",
-          status: "active",
-          health: "warning",
-          budgetDaily: 60,
-          spentTotal: 920,
-          leadsGenerated: 78,
-          costPerLead: 11.79,
-          targetCpl: 10.0,
-          frequency: 4.1,
-          algorithmInsight: {
-            issue: "Fatiga Creativa Detectada (Frecuencia > 4.0)",
-            metaAlgorithmContext:
-              "El algoritmo de Meta (Advantage+) está mostrando el mismo anuncio a la misma audiencia repetidamente, incrementando el costo por lead en un 18% los últimos 3 días.",
-            recommendation:
-              "Rotar creativos inmediatamente: Pausar la imagen estática y activar 2 variaciones de video corto (Reels) con gancho directo al dolor del inversionista.",
-            actionLabel: "Rotar Creativos con 1 Clic",
-            actionType: "rotate_creative",
-            estimatedSaving: "$120 USD / mes",
-          },
-        },
-        {
-          id: "meta-camp-2",
-          clientName: "Clínicas Odontológicas DentPrime",
-          campaignName: "Ortodoncia Invisible — Mensajes a WhatsApp",
-          objective: "MESSAGES_WHATSAPP",
-          status: "active",
-          health: "success",
-          budgetDaily: 40,
-          spentTotal: 710,
-          leadsGenerated: 142,
-          costPerLead: 5.0,
-          targetCpl: 6.0,
-          frequency: 1.8,
-          algorithmInsight: {
-            issue: "Campaña en Zona de Alto Rendimiento (ROAS 4.8x)",
-            metaAlgorithmContext:
-              "La fase de aprendizaje de Meta se completó con éxito. El anuncio 'Antes y Después' tiene un CTR del 3.8% (muy superior al promedio de la industria del 1.2%).",
-            recommendation:
-              "Escalar presupuesto diario un 20% de forma segura sin reiniciar la fase de aprendizaje del algoritmo.",
-            actionLabel: "Escalar Presupuesto (+20%)",
-            actionType: "scale_budget",
-            estimatedImpact: "+25 citas adicionales al mes",
-          },
-        },
-        {
-          id: "meta-camp-3",
-          clientName: "FinTech Soluciones Ya",
-          campaignName: "Registro Créditos Pymes — Conversiones Web",
-          objective: "CONVERSIONS",
-          status: "active",
-          health: "danger",
-          budgetDaily: 125,
-          spentTotal: 1560,
-          leadsGenerated: 62,
-          costPerLead: 25.16,
-          targetCpl: 17.5,
-          frequency: 2.2,
-          algorithmInsight: {
-            issue: "Fuga de Conversión en Landing Page Móvil",
-            metaAlgorithmContext:
-              "Meta envía tráfico calificado con buen CTR (2.4%), pero la tasa de caída en la página de destino supera el 84% debido a tiempos de carga y formulario extenso.",
-            recommendation:
-              "Migrar la campaña a Formularios Nativos Instantáneos de Meta (Instant Forms) para capturar el prospecto sin salir de Instagram/Facebook.",
-            actionLabel: "Activar Formulario Instantáneo",
-            actionType: "switch_instant_form",
-            estimatedSaving: "Reducción de CPA estimada en -35%",
-          },
-        },
-      ];
+      // Sin campañas reales no se inventa nada: un dato de ejemplo con el nombre de otra empresa rompería el aislamiento por marca.
+      campaigns = [];
     }
 
     return NextResponse.json({

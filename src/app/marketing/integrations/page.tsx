@@ -90,11 +90,17 @@ function IntegrationsPageContent() {
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
-  const [clients, setClients] = useState<ClientItem[]>([]);
+  const [allClients, setClients] = useState<ClientItem[]>([]);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const clientId = searchParams.get("clientId");
-  const activeClient = clientId && clientId !== "all" ? clients.find((c) => c.id === clientId) : null;
+  const activeParamId = clientId && clientId !== "all" ? clientId : null;
+  // Con marca activa la lista de empresas se reduce a esa marca: ninguna pantalla, selector o modal ve otras.
+  const clients = useMemo(
+    () => (activeParamId ? allClients.filter((c) => c.id === activeParamId) : allClients),
+    [allClients, activeParamId]
+  );
+  const activeClient = activeParamId ? clients.find((c) => c.id === activeParamId) ?? null : null;
 
   // Vista comercial vs canales (Buffer) vs técnica
   const [activeView, setActiveView] = useState<"channels" | "clients" | "platforms">("channels");
@@ -404,9 +410,6 @@ function IntegrationsPageContent() {
 
       // Si hay una marca/cliente activa seleccionada en el CRM
       if (activeClient) {
-        if (channelTypeFilter === "unassigned") {
-          return !acc.clientId;
-        }
         if (acc.clientId !== activeClient.id) return false;
       } else {
         if (channelTypeFilter === "unassigned") return !acc.clientId;
@@ -456,7 +459,7 @@ function IntegrationsPageContent() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Selector de Marca / Empresa para Aislamiento Total */}
-          {clients.length > 0 && (
+          {clients.length > 1 && (
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#E8E6DF] shadow-sm">
               <Building2 className="w-4 h-4 text-amber-500 shrink-0" />
               <select
@@ -1014,7 +1017,7 @@ function IntegrationsPageContent() {
                       {isWA && (
                         <div className="pt-2">
                           <Link
-                            href="/inbox?channel=whatsapp"
+                            href={activeClient ? `/inbox?channel=whatsapp&clientId=${encodeURIComponent(activeClient.id)}` : "/inbox?channel=whatsapp"}
                             className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />

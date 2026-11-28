@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -23,6 +23,7 @@ import {
 import type { AppointmentDto } from "@/types/appointments";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useClientOptions } from "@/hooks/useClientOptions";
+import { useActiveClientId } from "@/hooks/useActiveClientId";
 import { useAuth } from "@/context/AuthContext";
 import { CreateAppointmentModal } from "./CreateAppointmentModal";
 import { AppointmentDetailModal } from "./AppointmentDetailModal";
@@ -45,6 +46,7 @@ function toFormDateTime(date: Date) {
 }
 
 export function AppointmentsCalendarView({ blocks }: AppointmentsCalendarViewProps) {
+  const activeClientId = useActiveClientId();
   const {
     appointments,
     stats,
@@ -53,7 +55,16 @@ export function AppointmentsCalendarView({ blocks }: AppointmentsCalendarViewPro
     create,
     update,
     remove,
-  } = useAppointments();
+    filters,
+    setFilters,
+  } = useAppointments({ clientId: activeClientId });
+
+  // La marca activa viaja en la URL: si cambia en la barra lateral, la lista se vuelve a pedir solo para esa marca.
+  useEffect(() => {
+    if ((filters.clientId ?? null) !== activeClientId) {
+      setFilters((prev) => ({ ...prev, clientId: activeClientId }));
+    }
+  }, [activeClientId, filters.clientId, setFilters]);
 
   const clients = useClientOptions();
   const { user } = useAuth();
@@ -171,7 +182,7 @@ export function AppointmentsCalendarView({ blocks }: AppointmentsCalendarViewPro
           </select>
 
           {/* Filtro de Empresa */}
-          {clients.length > 0 && (
+          {clients.length > 1 && (
             <select
               value={clientFilter}
               onChange={(e) => setClientFilter(e.target.value)}
@@ -214,12 +225,12 @@ export function AppointmentsCalendarView({ blocks }: AppointmentsCalendarViewPro
 
         {/* Botones de Acción */}
         <div className="flex items-center gap-2">
-          {clients.length > 0 && (
+          {(activeClientId || clients.length > 0) && (
             <button
               type="button"
               onClick={() => {
-                const target = clients.find((c) => c.id === clientFilter) || clients[0];
-                if (target) handleCopyBookingLink(target.id);
+                const targetId = activeClientId || clients.find((c) => c.id === clientFilter)?.id || clients[0]?.id;
+                if (targetId) handleCopyBookingLink(targetId);
               }}
               className="px-3.5 py-2 rounded-full border border-[#E2E5EB] dark:border-[#242A35] text-xs font-bold text-[#121417] dark:text-white hover:bg-[#F8F9FA] dark:hover:bg-[#181B22] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
