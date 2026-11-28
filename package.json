@@ -45,6 +45,7 @@
     "test:live-view": "node tests/live-view-suite.js",
     "test:roles": "node --experimental-strip-types --no-warnings --test tests/roles.test.mjs",
     "test:team-live": "node --experimental-strip-types --no-warnings --test tests/team-live.test.mjs",
+    "test:unattended-chats": "node --experimental-strip-types --no-warnings --test tests/unattended-chats.test.mjs",
     "test:inbox-merge": "node --experimental-strip-types --no-warnings --test tests/inbox-merge.test.mjs",
     "test:appointment-slots": "node --experimental-strip-types --no-warnings --test tests/appointment-slots.test.mjs",
     "test:availability-blocks": "node --experimental-strip-types --no-warnings --test tests/availability-blocks.test.mjs",

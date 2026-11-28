@@ -40,6 +40,9 @@ import SlidingTabs from "@/components/ui/SlidingTabs";
 import ActionMenu, { type ActionMenuItem } from "@/components/ui/ActionMenu";
 import { conversationMatchesChannel, mergeConversations } from "@/lib/inbox-merge";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { findUnattendedChats } from "@/lib/unattended-chats";
+import { playAlarmClockSound } from "@/lib/alarm-sound";
+import { UnattendedChatsAlert } from "@/components/inbox/UnattendedChatsAlert";
 import type {
   ConversationItem,
   ConversationMessage,
@@ -326,6 +329,9 @@ function renderMessageContent(body: string, isOutbound: boolean) {
     </div>
   );
 }
+
+const UNATTENDED_REMINDER_MS = 5 * 60 * 1000;
+const UNATTENDED_SILENCE_MS = 10 * 60 * 1000;
 
 function playNotificationSound() {
   try {
@@ -1042,8 +1048,42 @@ function UnifiedInboxPageContent() {
     }
   };
 
+  // Aviso de chats sin atender: reloj de caricatura abajo a la derecha, con sonido al aparecer, cuando entra uno nuevo y como recordatorio.
+  const unattended = useMemo(() => findUnattendedChats(conversations, now), [conversations, now]);
+  const [silencedUntil, setSilencedUntil] = useState(0);
+  const alertedIdsRef = useRef<Set<string>>(new Set());
+  const lastAlarmAtRef = useRef(0);
+  const alertVisible = unattended.length > 0 && now >= silencedUntil;
+
+  useEffect(() => {
+    if (!alertVisible) {
+      alertedIdsRef.current = new Set();
+      lastAlarmAtRef.current = 0;
+      return;
+    }
+    const hasNewChat = unattended.some((chat) => !alertedIdsRef.current.has(chat.id));
+    const reminderDue = now - lastAlarmAtRef.current >= UNATTENDED_REMINDER_MS;
+    alertedIdsRef.current = new Set(unattended.map((chat) => chat.id));
+    if (!hasNewChat && !reminderDue) return;
+    lastAlarmAtRef.current = now;
+    if (soundEnabled) playAlarmClockSound();
+  }, [alertVisible, unattended, now, soundEnabled]);
+
+  const openOldestUnattended = () => {
+    if (unattended.length === 0) return;
+    setActiveChannel("all");
+    setSelectedConvId(unattended[0].id);
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+      {alertVisible && (
+        <UnattendedChatsAlert
+          chats={unattended}
+          onOpenOldest={openOldestUnattended}
+          onSilence={() => setSilencedUntil(Date.now() + UNATTENDED_SILENCE_MS)}
+        />
+      )}
       {/* Header Estilo Cápsula Orvion */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-1">

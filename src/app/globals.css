@@ -358,3 +358,43 @@ body {
   align-items: center;
   gap: 0.35rem;
 }
+
+/* ===== Reloj despertador de caricatura (aviso de chats sin atender) =====
+   Salta, se aplasta al caer, rebota y se sacude; las manecillas giran sin parar. */
+@keyframes cc-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  8% { transform: translateY(0) scale(1.14, 0.86); }
+  26% { transform: translateY(-18px) scale(0.9, 1.12); }
+  44% { transform: translateY(0) scale(1.16, 0.84); }
+  52% { transform: translateY(-6px) scale(0.97, 1.04); }
+  60% { transform: translateY(0) scale(1.05, 0.95); }
+  68% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes cc-shake {
+  0%, 70%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-9deg); }
+  20% { transform: rotate(9deg); }
+  30% { transform: rotate(-7deg); }
+  40% { transform: rotate(7deg); }
+  50% { transform: rotate(-4deg); }
+  60% { transform: rotate(4deg); }
+}
+@keyframes cc-shadow {
+  0%, 100% { transform: scale(1, 1); opacity: 0.28; }
+  26% { transform: scale(0.55, 1); opacity: 0.12; }
+  44% { transform: scale(1.1, 1); opacity: 0.34; }
+}
+@keyframes cc-spin { to { transform: rotate(360deg); } }
+@keyframes cc-ring-lines {
+  0%, 70%, 100% { opacity: 0; }
+  10%, 55% { opacity: 1; }
+}
+.cc-body { transform-box: fill-box; transform-origin: 50% 100%; animation: cc-hop 1.7s ease-in-out infinite; }
+.cc-bells { transform-box: fill-box; transform-origin: 50% 100%; animation: cc-shake 1.7s linear infinite; }
+.cc-shadow { transform-box: fill-box; transform-origin: 50% 50%; animation: cc-shadow 1.7s ease-in-out infinite; }
+.cc-minute { transform-box: view-box; transform-origin: 32px 36px; animation: cc-spin 1.2s linear infinite; }
+.cc-hour { transform-box: view-box; transform-origin: 32px 36px; animation: cc-spin 14.4s linear infinite; }
+.cc-ring-lines { animation: cc-ring-lines 1.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cc-body, .cc-bells, .cc-shadow, .cc-minute, .cc-hour, .cc-ring-lines { animation: none; }
+}

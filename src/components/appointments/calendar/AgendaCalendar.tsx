@@ -126,6 +126,11 @@ function AgendaCalendarContent({ appointments, blocks, onSelectAppointment, onCr
     if (appointment) onSelectAppointment(appointment);
   };
 
+  const openDay = (day: Date) => {
+    setSelectedDate(day);
+    setView(CALENDAR_VIEW.DAY);
+  };
+
   const week = weekDays(selectedDate);
   const gridProps = { selectedDate, events, now, gridStartMin: startMin, gridEndMin: endMin, onSelectDay: setSelectedDate, onEventClick: handleEventClick, onSlotClick: onCreateAt };
 
@@ -141,7 +146,7 @@ function AgendaCalendarContent({ appointments, blocks, onSelectAppointment, onCr
       />
 
       {view === CALENDAR_VIEW.MONTH && (
-        <MonthGrid days={monthDays} month={month} selectedDate={selectedDate} now={now} events={events} onSelectDay={setSelectedDate} onEventClick={handleEventClick} />
+        <MonthGrid days={monthDays} month={month} selectedDate={selectedDate} now={now} events={events} onSelectDay={openDay} />
       )}
 
       {view === CALENDAR_VIEW.WEEK && <TimeGrid days={week} showHeaders {...gridProps} />}
