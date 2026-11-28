@@ -29,7 +29,6 @@ import { ConnectSocialAccountModal } from "@/components/modals/ConnectSocialAcco
 import { PageLeadgenStatus } from "@/components/integrations/PageLeadgenStatus";
 import { ClientOnboardingWizardModal } from "@/components/modals/ClientOnboardingWizardModal";
 import { SocialNetworkIcon } from "@/components/common/SocialNetworkIcon";
-import { initialsOf } from "@/lib/greeting";
 
 // Proveedores que se conectan con OAuth real en lugar de claves manuales
 const OAUTH_PROVIDERS: Record<string, { href: string; label: string }> = {
@@ -534,38 +533,6 @@ function IntegrationsPageContent() {
             <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
           )}
           <span>{feedback.message}</span>
-        </div>
-      )}
-
-      {/* Banner Informativo de Marca Seleccionada (Sin botones redundantes) */}
-      {activeClient && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
-              {initialsOf(activeClient.name, "CL")}
-            </div>
-            <div className="min-w-0 space-y-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold tracking-wider text-amber-900 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full uppercase">
-                  Marca Activa
-                </span>
-                <span className="text-xs text-amber-900/80 font-medium">
-                  {allConnectedAccounts.filter((a) => a.clientId === activeClient.id).length} activos vinculados
-                </span>
-              </div>
-              <h2 className="text-sm font-bold text-slate-950 truncate">
-                Activos y Redes de {activeClient.name}
-              </h2>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => router.push("/marketing/integrations")}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-300 text-amber-950 text-xs font-semibold transition-colors shrink-0 cursor-pointer self-start sm:self-auto"
-          >
-            ✕ Quitar filtro de marca
-          </button>
         </div>
       )}
 
