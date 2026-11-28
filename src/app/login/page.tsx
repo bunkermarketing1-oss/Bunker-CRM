@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -13,6 +13,7 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
+import { loadRememberedEmail, rememberLogin } from "@/lib/remember-login";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,13 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [remember, setRemember] = useState(true);
+
+  // Precarga el correo recordado (solo en el navegador: el servidor no tiene acceso a localStorage).
+  useEffect(() => {
+    const remembered = loadRememberedEmail();
+    if (remembered) setEmail(remembered);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +75,7 @@ function LoginForm() {
         return;
       }
 
+      await rememberLogin(email.trim(), password, remember);
       window.location.href = callbackUrl;
     } catch (err: unknown) {
       const isAbort = err instanceof Error && err.name === "AbortError";
@@ -93,18 +102,20 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Campo Correo Electrónico */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-[#121417] dark:text-white pl-1">
+          <label htmlFor="email" className="block text-xs font-bold text-[#121417] dark:text-white pl-1">
             Correo Electrónico
           </label>
           <div className="relative group">
             <Mail className="w-4 h-4 text-[#8C929D] group-focus-within:text-amber-500 absolute left-4 top-1/2 -translate-y-1/2 transition-colors" />
             <input
+              id="email"
+              name="username"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nombre@empresa.com"
               disabled={isLoading}
-              autoComplete="email"
+              autoComplete="username"
               className="w-full bg-[#F8F9FA] dark:bg-[#1A1D24] border border-[#E2E5EB] dark:border-[#2A2E37] rounded-full pl-11 pr-4 py-3 text-xs text-[#121417] dark:text-white placeholder:text-[#8C929D] focus:outline-hidden focus:border-amber-400 dark:focus:border-amber-400 focus:bg-white dark:focus:bg-[#121417] focus:ring-2 focus:ring-amber-400/20 transition-all shadow-2xs"
             />
           </div>
@@ -112,12 +123,14 @@ function LoginForm() {
 
         {/* Campo Contraseña */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-[#121417] dark:text-white pl-1">
+          <label htmlFor="password" className="block text-xs font-bold text-[#121417] dark:text-white pl-1">
             Contraseña
           </label>
           <div className="relative group">
             <Lock className="w-4 h-4 text-[#8C929D] group-focus-within:text-amber-500 absolute left-4 top-1/2 -translate-y-1/2 transition-colors" />
             <input
+              id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -140,6 +153,17 @@ function LoginForm() {
             </button>
           </div>
         </div>
+
+        <label className="flex items-center gap-2 pl-1 text-xs text-[#667085] dark:text-[#8C929D] cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            disabled={isLoading}
+            className="w-3.5 h-3.5 rounded accent-amber-500 cursor-pointer"
+          />
+          <span>Recordar usuario y contraseña</span>
+        </label>
 
         {/* Botón Principal de Acceso */}
         <button
