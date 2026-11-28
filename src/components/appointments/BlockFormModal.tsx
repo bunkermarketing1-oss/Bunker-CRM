@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import {
   APPOINTMENT_SLOT_MINUTES,
   BLOCK_KIND,
@@ -68,18 +69,29 @@ export function BlockFormModal({ onClose, onSave }: BlockFormModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] shadow-orvion p-6 space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#121417] dark:text-white">Bloquear horario</h2>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-full text-[#8C929D] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] cursor-pointer" title="Cerrar">
-            <X className="w-4 h-4" />
+    <Modal
+      open
+      onClose={onClose}
+      title="Bloquear horario"
+      maxWidthClass="max-w-md"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-full text-xs font-semibold text-[#667085] hover:text-[#121417] dark:hover:text-white cursor-pointer">
+            Cancelar
           </button>
-        </div>
-
+          <button
+            type="submit"
+            form="block-form"
+            disabled={saving}
+            className="px-5 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:text-[#121417] text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
+          >
+            {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            <span>Guardar</span>
+          </button>
+        </>
+      }
+    >
+      <form id="block-form" onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-bold text-[#121417] dark:text-white mb-1.5">Nombre</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} className={INPUT_CLASS} placeholder="Comida, reunión…" />
@@ -136,21 +148,7 @@ export function BlockFormModal({ onClose, onSave }: BlockFormModalProps) {
         </div>
 
         {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}
-
-        <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-full text-xs font-semibold text-[#667085] hover:bg-[#F3F4F7] dark:hover:bg-[#1E2229] cursor-pointer">
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-5 py-2 rounded-full bg-[#121417] hover:bg-[#1E2229] dark:bg-white dark:text-[#121417] text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
-          >
-            {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            <span>Guardar</span>
-          </button>
-        </div>
       </form>
-    </div>
+    </Modal>
   );
 }

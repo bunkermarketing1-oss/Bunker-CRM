@@ -20,6 +20,7 @@ import {
   type AppointmentStatus,
 } from "@/lib/constants/appointments";
 import type { AppointmentDto, UpdateAppointmentInput } from "@/types/appointments";
+import { Portal } from "@/components/ui/Portal";
 
 interface AppointmentDetailModalProps {
   appointment: AppointmentDto | null;
@@ -107,7 +108,8 @@ export function AppointmentDetailModal({
   const statusConfig = APPOINTMENT_STATUS_LABELS[status];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+    <Portal>
+    <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-[2px] flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
       <div className="bg-white dark:bg-[#121417] rounded-[28px] border border-[#E2E5EB] dark:border-[#1F242D] w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-6 my-8">
         {/* Cabecera */}
         <div className="flex items-start justify-between pb-4 border-b border-[#E2E5EB] dark:border-[#1F242D]">
@@ -324,5 +326,6 @@ export function AppointmentDetailModal({
         </div>
       </div>
     </div>
+    </Portal>
   );
 }
