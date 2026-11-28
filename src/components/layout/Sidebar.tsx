@@ -86,12 +86,21 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
         }
       }
     } else if (filtrableRoutes.includes(pathname) || pathname === ROUTES.CLIENTS) {
+      // La marca elegida en la barra lateral es la que manda: si se llega a una pantalla sin ?clientId=
+      // (un enlace interno, recargar), se vuelve a poner en vez de perderla. "all" solo si se eligió a propósito.
+      const storedId = typeof window !== "undefined" ? localStorage.getItem("bunker_selected_client_id") : null;
+      if (!isClient && pathname !== ROUTES.CLIENTS && storedId && storedId !== "all") {
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.set("clientId", storedId);
+        router.replace(`${pathname}?${nextParams.toString()}`);
+        return;
+      }
       setSelectedClientId("all");
       if (typeof window !== "undefined") {
         localStorage.setItem("bunker_selected_client_id", "all");
       }
     }
-  }, [searchParams, pathname, filtrableRoutes]);
+  }, [searchParams, pathname, filtrableRoutes, isClient, router]);
 
   const handleSelectClient = (id: string) => {
     setSelectedClientId(id);

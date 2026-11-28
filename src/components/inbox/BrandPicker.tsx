@@ -16,7 +16,7 @@ export function BrandPicker() {
       <Building2 className="w-10 h-10 text-amber-500 mx-auto" />
       <div className="space-y-1">
         <h1 className="text-2xl font-extrabold text-[#121417] dark:text-white">Elige una marca</h1>
-        <p className="text-xs text-[#8C929D]">Cada marca tiene su propia bandeja. Entra a la que vas a atender.</p>
+        <p className="text-xs text-[#8C929D]">Cada marca tiene su propia bandeja. También puedes cambiar de marca en la barra lateral.</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
         {clients.map((client) => (
